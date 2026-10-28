@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
   ASK_STAFF_MESSAGE,
+  DOWNLOAD_TIMEOUT_MS,
   MAP_LOAD_FAILED,
   Navigator,
   SIGN_NOT_IN_MAP,
@@ -15,6 +16,7 @@ import {
   findRoute,
   gateChangeMessage,
   lineAhead,
+  loadMapWithTimeout,
   locateSign,
   parseMap,
   routePoints,
@@ -203,6 +205,37 @@ test("S9/E1 logic: a valid download is used online; a failed or timed-out downlo
   assert.equal(offline.source, "offline");
   assert.equal(offline.notice, null);
   assert.equal(findRoute(offline.map, "sign", "gateB12", "walk").status, "route");
+});
+
+test("S9/E1 logic: loadMapWithTimeout uses the download when it arrives in time", async () => {
+  const r = await loadMapWithTimeout(async () => MAP_TEXT, "https://example.test/map.json", MAP_TEXT, 50);
+  assert.equal(r.source, "online");
+});
+
+test("E1 logic: a download slower than the timeout falls back to the built-in map", async () => {
+  const slow = () => new Promise<string>((res) => setTimeout(() => res(MAP_TEXT), 200));
+  const started = Date.now();
+  const r = await loadMapWithTimeout(slow, "https://example.test/map.json", MAP_TEXT, 50);
+  assert.equal(r.source, "offline");
+  assert.equal(r.notice, null);
+  assert.ok(Date.now() - started < 190, "should not wait for the slow download");
+  assert.equal(findRoute(r.map, "sign", "gateB12", "walk").status, "route");
+  assert.equal(DOWNLOAD_TIMEOUT_MS, 5000);
+});
+
+test("E1 logic: a failed or throwing download falls back to the built-in map", async () => {
+  const rejected = await loadMapWithTimeout(() => Promise.reject(new Error("offline")), "u", MAP_TEXT, 50);
+  assert.equal(rejected.source, "offline");
+  const thrown = await loadMapWithTimeout(() => {
+    throw new Error("no InternetModule");
+  }, "u", MAP_TEXT, 50);
+  assert.equal(thrown.source, "offline");
+});
+
+test("E2 logic: an invalid download in time still falls back with 'Map couldn't load'", async () => {
+  const r = await loadMapWithTimeout(async () => "<html>404</html>", "u", MAP_TEXT, 50);
+  assert.equal(r.source, "offline");
+  assert.equal(r.notice, MAP_LOAD_FAILED);
 });
 
 test.todo("E1 Lens: download fails or takes over 5 s -> built-in map, 'offline map' badge, route works (Prototype C)");

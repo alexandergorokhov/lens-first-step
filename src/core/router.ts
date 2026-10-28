@@ -220,6 +220,41 @@ export function chooseMap(downloaded: string | null, builtIn: string): { map: Ma
   return { map: fallback.map, source: "offline", notice: downloaded === null ? null : MAP_LOAD_FAILED };
 }
 
+export const DOWNLOAD_TIMEOUT_MS = 5000;
+
+// `fetchText` is whatever the platform provides (the Lens wraps InternetModule;
+// tests pass a fake). It should resolve with the body text or reject. Anything
+// slower than `timeoutMs`, a rejection, or an invalid body falls back to the
+// built-in map, so the route always works.
+export function loadMapWithTimeout(
+  fetchText: (url: string) => Promise<string>,
+  url: string,
+  builtIn: string,
+  timeoutMs: number = DOWNLOAD_TIMEOUT_MS,
+): Promise<{ map: MapData; source: MapSource; notice: string | null }> {
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (downloaded: string | null) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve(chooseMap(downloaded, builtIn));
+    };
+    const timer = setTimeout(() => finish(null), timeoutMs);
+    let request: Promise<string>;
+    try {
+      request = fetchText(url);
+    } catch (e) {
+      finish(null);
+      return;
+    }
+    request.then(
+      (text) => finish(typeof text === "string" ? text : null),
+      () => finish(null),
+    );
+  });
+}
+
 function gateCode(map: MapData, gateId: string): string {
   const n = findNode(map, gateId);
   const label = n && n.label ? n.label : gateId;

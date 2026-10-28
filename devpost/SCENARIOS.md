@@ -16,7 +16,7 @@ where they become LEAF tests or preview checks.
 | S7 | Off route | >5 m from the line re-routes from nearest node | Logic: passing |
 | S8 | Next turn out of view | Edge arrow toward next turn | Pending (Prototype B) |
 | S9 | Map download works | Downloads map.json from URL; "online map" badge | Map choice logic: passing. Download and badge: pending (Prototype C) |
-| E1 | Download fails or >5 s | Built-in map; "offline map" badge; route works | Fallback logic: passing. Timeout and badge: pending (Prototype C) |
+| E1 | Download fails or >5 s | Built-in map; "offline map" badge; route works | Fallback and 5 s timeout logic (`loadMapWithTimeout`, fake fetch): passing. Real InternetModule download and badge: pending (Prototype C) |
 | E2 | Invalid map.json | "Map couldn't load"; falls back to built-in map; no crash | Logic: passing |
 | E3 | No step-free route (lift + ramp closed) | "No step-free route. Ask staff at the assistance point"; line to nearest assistance point | Logic: passing |
 | E4 | Destination = current position | Arrival card right away; no line | Logic: passing |
