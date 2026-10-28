@@ -35,15 +35,28 @@ export interface MapData {
 
 export type ParseResult = { ok: true; map: MapData } | { ok: false; error: string };
 
+export interface Path {
+  nodes: string[];
+  edges: MapEdge[];
+  length: number;
+}
+
 export type RouteResult =
-  | { status: "route"; profile: Profile; nodes: string[]; edges: MapEdge[]; length: number }
+  | ({ status: "route"; profile: Profile } & Path)
   | { status: "arrived"; profile: Profile; nodes: string[]; edges: MapEdge[]; length: 0 }
-  | { status: "askStaff"; profile: Profile; message: string }
+  | { status: "askStaff"; profile: Profile; message: string; assistance?: Path }
   | { status: "error"; profile: Profile; message: string };
 
 export const EDGE_KINDS: EdgeKind[] = ["walk", "stairs", "escalator", "lift", "ramp"];
 
-export const ASK_STAFF_MESSAGE = "No step-free route right now. Please ask a member of staff.";
+export const ASK_STAFF_MESSAGE = "No step-free route. Ask staff at the assistance point.";
+export const NO_ROUTE_MESSAGE = "No route right now. Ask staff at the assistance point.";
+export const SIGN_NOT_IN_MAP = "This sign isn't in the map";
+export const MAP_LOAD_FAILED = "Map couldn't load";
+
+// Distances in metres from the brief's scenarios.
+export const ARRIVAL_RADIUS = 3;
+export const OFF_ROUTE_DISTANCE = 5;
 
 const STEP_FREE_BLOCKED: EdgeKind[] = ["stairs", "escalator"];
 
@@ -120,14 +133,15 @@ function neighbours(map: MapData, profile: Profile): { [id: string]: Step[] } {
   return adj;
 }
 
+interface Tree {
+  dist: { [id: string]: number };
+  prev: { [id: string]: Step & { from: string } };
+}
+
 // Dijkstra over edge length. Both profiles minimise distance; Step-Free just
 // never sees stairs or escalators. The graph is small, so a linear scan for the
 // closest unvisited node is plenty.
-export function findRoute(map: MapData, from: string, to: string, profile: Profile): RouteResult {
-  if (!findNode(map, from)) return { status: "error", profile, message: "unknown start " + from };
-  if (!findNode(map, to)) return { status: "error", profile, message: "unknown destination " + to };
-  if (from === to) return { status: "arrived", profile, nodes: [from], edges: [], length: 0 };
-
+function shortestTree(map: MapData, from: string, profile: Profile): Tree {
   const adj = neighbours(map, profile);
   const dist: { [id: string]: number } = {};
   const prev: { [id: string]: Step & { from: string } } = {};
@@ -140,7 +154,7 @@ export function findRoute(map: MapData, from: string, to: string, profile: Profi
     for (const n of map.nodes) {
       if (!done[n.id] && dist[n.id] < Infinity && (current === null || dist[n.id] < dist[current])) current = n.id;
     }
-    if (current === null || current === to) break;
+    if (current === null) break;
     done[current] = true;
     for (const step of adj[current]) {
       const d = dist[current] + step.edge.length;
@@ -150,22 +164,74 @@ export function findRoute(map: MapData, from: string, to: string, profile: Profi
       }
     }
   }
+  return { dist, prev };
+}
 
-  if (dist[to] === Infinity) {
-    if (profile === "stepFree") return { status: "askStaff", profile, message: ASK_STAFF_MESSAGE };
-    return { status: "askStaff", profile, message: "No route right now. Please ask a member of staff." };
-  }
-
+function pathTo(tree: Tree, from: string, to: string): Path {
   const nodes: string[] = [to];
   const edges: MapEdge[] = [];
   let at = to;
   while (at !== from) {
-    const p = prev[at];
+    const p = tree.prev[at];
     edges.unshift(p.edge);
     at = p.from;
     nodes.unshift(at);
   }
-  return { status: "route", profile, nodes, edges, length: Math.round(dist[to] * 1000) / 1000 };
+  return { nodes, edges, length: Math.round(tree.dist[to] * 1000) / 1000 };
+}
+
+export function findRoute(map: MapData, from: string, to: string, profile: Profile): RouteResult {
+  if (!findNode(map, from)) return { status: "error", profile, message: "unknown start " + from };
+  if (!findNode(map, to)) return { status: "error", profile, message: "unknown destination " + to };
+  if (from === to) return { status: "arrived", profile, nodes: [from], edges: [], length: 0 };
+
+  const tree = shortestTree(map, from, profile);
+  if (tree.dist[to] < Infinity) return { status: "route", profile, ...pathTo(tree, from, to) };
+
+  // No way through: point the traveller at the nearest assistance point they can reach.
+  let help: string | null = null;
+  for (const n of map.nodes) {
+    if (n.kind === "assistance" && tree.dist[n.id] < Infinity && (help === null || tree.dist[n.id] < tree.dist[help])) help = n.id;
+  }
+  const message = profile === "stepFree" ? ASK_STAFF_MESSAGE : NO_ROUTE_MESSAGE;
+  if (help === null) return { status: "askStaff", profile, message };
+  return { status: "askStaff", profile, message, assistance: pathTo(tree, from, help) };
+}
+
+// The sign's code tells us where the traveller is standing.
+export function locateSign(map: MapData, signId: string): { ok: true; node: MapNode } | { ok: false; message: string } {
+  const node = findNode(map, signId);
+  if (!node || node.kind !== "sign") return { ok: false, message: SIGN_NOT_IN_MAP };
+  return { ok: true, node };
+}
+
+export type MapSource = "online" | "offline";
+
+// Picks the map to use: the downloaded copy if it arrived and is valid,
+// otherwise the copy shipped in the Lens. `downloaded` is null when the
+// download failed or timed out.
+export function chooseMap(downloaded: string | null, builtIn: string): { map: MapData; source: MapSource; notice: string | null } {
+  if (downloaded !== null) {
+    const parsed = parseMap(downloaded);
+    if (parsed.ok) return { map: parsed.map, source: "online", notice: null };
+  }
+  const fallback = parseMap(builtIn);
+  if (!fallback.ok) throw new Error("built-in map is broken: " + fallback.error);
+  return { map: fallback.map, source: "offline", notice: downloaded === null ? null : MAP_LOAD_FAILED };
+}
+
+function gateCode(map: MapData, gateId: string): string {
+  const n = findNode(map, gateId);
+  const label = n && n.label ? n.label : gateId;
+  return label.replace(/^Gate\s+/, "");
+}
+
+export function gateChangeMessage(map: MapData, oldGate: string, newGate: string): string {
+  return "Gate change: " + gateCode(map, oldGate) + " → " + gateCode(map, newGate);
+}
+
+export function arrivalMessage(map: MapData, gateId: string, boardingMinutes: number): string {
+  return "Gate " + gateCode(map, gateId) + ". Boarding in " + boardingMinutes + " min.";
 }
 
 export interface Vec3 {
@@ -235,14 +301,39 @@ export function lineAhead(points: Vec3[], user: Vec3, ahead: number = 10): Vec3[
   return out;
 }
 
+export function nearestNode(map: MapData, pos: Vec3): MapNode {
+  let best = map.nodes[0];
+  let bestD = Infinity;
+  for (const n of map.nodes) {
+    const d = dist3(n, pos);
+    if (d < bestD) {
+      bestD = d;
+      best = n;
+    }
+  }
+  return best;
+}
+
+export function distanceToLine(points: Vec3[], pos: Vec3): number {
+  if (points.length === 0) return Infinity;
+  if (points.length === 1) return dist3(points[0], pos);
+  const clipped = lineAhead(points, pos, 0);
+  return dist3(clipped[0], pos);
+}
+
+export type Progress = "onRoute" | "rerouted" | "arrived";
+
 // Holds the traveller's current choices and re-routes whenever one changes:
-// a gate change, a profile switch, or a lift marked out of service.
+// a gate change, a profile switch, a lift marked out of service, or walking
+// off the line. Once a position is known, re-routes start from the node
+// nearest to it.
 export class Navigator {
   map: MapData;
   from: string;
   to: string;
   profile: Profile;
   route: RouteResult;
+  position: Vec3 | null = null;
 
   constructor(map: MapData, from: string, to: string, profile: Profile) {
     this.map = map;
@@ -253,6 +344,7 @@ export class Navigator {
   }
 
   private recompute(): boolean {
+    if (this.position) this.from = nearestNode(this.map, this.position).id;
     const before = this.route.status === "route" ? this.route.nodes.join(">") : this.route.status;
     this.route = findRoute(this.map, this.from, this.to, this.profile);
     const after = this.route.status === "route" ? this.route.nodes.join(">") : this.route.status;
@@ -269,13 +361,31 @@ export class Navigator {
     return this.recompute();
   }
 
-  setPosition(nodeId: string): boolean {
-    this.from = nodeId;
-    return this.recompute();
-  }
-
   setEdgeOpen(edgeId: string, open: boolean): boolean {
     this.map = setEdgeOpen(this.map, edgeId, open);
     return this.recompute();
+  }
+
+  // Call as the traveller moves. Within ARRIVAL_RADIUS of the gate the route
+  // becomes "arrived" (the line stops); more than OFF_ROUTE_DISTANCE from the
+  // line it re-routes from the nearest node.
+  updatePosition(pos: Vec3): Progress {
+    this.position = pos;
+    const gate = findNode(this.map, this.to);
+    if (gate && dist3(gate, pos) <= ARRIVAL_RADIUS) {
+      this.from = this.to;
+      this.route = { status: "arrived", profile: this.profile, nodes: [this.to], edges: [], length: 0 };
+      return "arrived";
+    }
+    if (this.route.status === "arrived") {
+      if (gate && dist3(gate, pos) <= OFF_ROUTE_DISTANCE) return "arrived";
+      this.recompute();
+      return "rerouted";
+    }
+    if (this.route.status === "route" && distanceToLine(routePoints(this.map, this.route), pos) > OFF_ROUTE_DISTANCE) {
+      this.recompute();
+      return "rerouted";
+    }
+    return "onRoute";
   }
 }

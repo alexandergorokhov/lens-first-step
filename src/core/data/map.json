@@ -6,6 +6,7 @@
   "nodes": [
     { "id": "sign",        "x": 30, "y": 0, "z": 2,  "kind": "sign",     "label": "You are here (entrance)" },
     { "id": "hall",        "x": 30, "y": 0, "z": 8,  "kind": "junction", "label": "Check-in hall" },
+    { "id": "assist",      "x": 24, "y": 0, "z": 8,  "kind": "assistance", "label": "Assistance point" },
     { "id": "escFoot",     "x": 30, "y": 0, "z": 18, "kind": "junction", "label": "Escalator (bottom)" },
     { "id": "stairsFoot",  "x": 34, "y": 0, "z": 18, "kind": "junction", "label": "Stairs (bottom)" },
     { "id": "lift1G",      "x": 48, "y": 0, "z": 10, "kind": "lift",     "label": "Lift 1 (ground)" },
@@ -23,6 +24,7 @@
   ],
   "edges": [
     { "from": "sign",       "to": "hall",       "length": 6,    "kind": "walk",      "open": true },
+    { "from": "hall",       "to": "assist",     "length": 6,    "kind": "walk",      "open": true },
     { "from": "hall",       "to": "escFoot",    "length": 10,   "kind": "walk",      "open": true },
     { "from": "escFoot",    "to": "escTop",     "length": 11.7, "kind": "escalator", "open": true },
     { "from": "escTop",     "to": "concourse",  "length": 4,    "kind": "walk",      "open": true },
@@ -39,7 +41,7 @@
     { "from": "lift2U",     "to": "cTop",       "length": 13.9, "kind": "walk",      "open": true },
     { "from": "concourse",  "to": "cTop",       "length": 15,   "kind": "walk",      "open": true },
     { "from": "cTop",       "to": "cJunction",  "length": 7.4,  "kind": "stairs",    "open": true },
-    { "from": "cTop",       "to": "cJunction",  "length": 12,   "kind": "ramp",      "open": true },
+    { "id": "rampC", "from": "cTop", "to": "cJunction", "length": 12, "kind": "ramp", "open": true },
     { "from": "cJunction",  "to": "gateC3",     "length": 5,    "kind": "walk",      "open": true }
   ]
 }
