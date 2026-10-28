@@ -1,0 +1,12 @@
+{
+  "name": "find-your-way-inside",
+  "private": true,
+  "type": "module",
+  "description": "Indoor navigation Lens for Snap Specs (Learn AR with SPECS)",
+  "scripts": {
+    "test": "node --test src/core/tests/router.test.ts"
+  },
+  "engines": {
+    "node": ">=22.18"
+  }
+}
