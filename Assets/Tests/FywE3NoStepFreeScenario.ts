@@ -4,7 +4,7 @@ import {DefaultLeafInteractor} from "Leaf.lspkg/Interactors/interactor/DefaultLe
 import {expect} from "Leaf.lspkg/Utils/common/Expect"
 import {sleep} from "Leaf.lspkg/Utils/common/Utils"
 import {findNode} from "../Scripts/FindYourWayRouter"
-import {getMain, log, startTrip, tap, waitFor} from "./FindYourWayLeafSupport"
+import {getMain, log, startTrip, tap, waitFor, shot, SHOT} from "./FindYourWayLeafSupport"
 
 // E3 — no step-free route (both lifts out): ask-staff message, a line to the assistance point,
 // and arriving there shows its arrival card.
@@ -19,6 +19,7 @@ export class FywE3NoStepFreeScenario extends Scenario {
     await sleep(300)
     expect(main.getRouteStatus(), "route status").toBe("askStaff")
     expect(main.getHudCardTextOrEmpty(), "card").toBe("No step-free route. Ask staff at the assistance point.")
+    await shot(main, "e3-no-step-free-ask-staff-1")
     // From the check-in hall the line runs to the assistance point.
     const hall = findNode(main.getMapData(), "hall")!
     main.debugSetPose(hall.x, 0, hall.z, 270)
@@ -32,6 +33,7 @@ export class FywE3NoStepFreeScenario extends Scenario {
     main.debugSetPose(assist.x + 1, 0, assist.z, 270)
     await waitFor(() => main.getPhase() === "arrived", 2000, "arrived at the assistance point")
     expect(main.getArrivalText(), "arrival card at the assistance point").toBe("Assistance point")
+    await shot(main, "e3-no-step-free-ask-staff-2", true)
     log("E3 pass")
   }
 }

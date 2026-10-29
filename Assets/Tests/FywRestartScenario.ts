@@ -4,7 +4,7 @@ import {DefaultLeafInteractor} from "Leaf.lspkg/Interactors/interactor/DefaultLe
 import {expect} from "Leaf.lspkg/Utils/common/Expect"
 import {sleep} from "Leaf.lspkg/Utils/common/Utils"
 import {findNode} from "../Scripts/FindYourWayRouter"
-import {getMain, log, startTrip, tap, waitFor} from "./FindYourWayLeafSupport"
+import {getMain, log, startTrip, tap, waitFor, shot, SHOT} from "./FindYourWayLeafSupport"
 
 // Restart trip resets cleanly: mode panel back, no line, no stale cards, closures reopened.
 @component
@@ -18,6 +18,7 @@ export class FywRestartScenario extends Scenario {
     await tap(it, "GateChangeButton")
     expect(main.getDestinationId(), "gate changed").toBe("gateC3")
     expect(main.isLineVisible(), "line before restart").toBe(true)
+    await shot(main, "restart-resets-trip-1")
     await tap(it, "RestartButton")
     await sleep(500)
     expect(main.getPhase(), "phase").toBe("mode")
@@ -30,6 +31,7 @@ export class FywRestartScenario extends Scenario {
     expect(main.isEdgeOpen("lift1"), "lift1 reopened").toBe(true)
     expect(main.getDestinationId(), "destination back to B12").toBe("gateB12")
     expect(main.getRideOffsetCm().length, "no ride offset").toBeCloseTo(0, 1)
+    await shot(main, "restart-resets-trip-2")
     log("Restart pass")
   }
 }

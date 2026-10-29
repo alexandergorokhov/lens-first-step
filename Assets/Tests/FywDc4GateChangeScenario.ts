@@ -4,7 +4,7 @@ import {DefaultLeafInteractor} from "Leaf.lspkg/Interactors/interactor/DefaultLe
 import {expect} from "Leaf.lspkg/Utils/common/Expect"
 import {sleep} from "Leaf.lspkg/Utils/common/Utils"
 import {findNode, findRoute, parseMap, setEdgeOpen, MapData} from "../Scripts/FindYourWayRouter"
-import {bruteShortest, bundledMaps, kindsOf, log, nodePoints, startTrip, tap, waitFor, walkAlong} from "./FindYourWayLeafSupport"
+import {bruteShortest, bundledMaps, kindsOf, log, nodePoints, startTrip, tap, waitFor, walkAlong, shot, SHOT} from "./FindYourWayLeafSupport"
 
 // DC4 — Gate change: Walk takes the stairs down to the C pier; Step-Free takes the ramp.
 @component
@@ -21,6 +21,7 @@ export class FywDc4GateChangeScenario extends Scenario {
     expect(walk.getDestinationId(), "new destination").toBe("gateC3")
     expect(walk.getHudCardText(), "gate-change card").toBe("Gate change B12 → C3")
     expect(walk.isLineSwinging(), "line swings round").toBe(true)
+    await shot(walk, "dc4-gate-change-stairs-and-ramp-1", true)
     const k = walk.getRouteEdgeKinds()
     expect(k.indexOf("stairs") >= 0, "walk takes the stairs: " + k.join(",")).toBe(true)
     const nodes = walk.getRouteNodes()
@@ -31,6 +32,7 @@ export class FywDc4GateChangeScenario extends Scenario {
     const k2 = sf.getRouteEdgeKinds()
     expect(k2.indexOf("ramp") >= 0, "step-free takes the ramp: " + k2.join(",")).toBe(true)
     expect(k2.indexOf("stairs") < 0 && k2.indexOf("escalator") < 0, "no stairs/escalator").toBe(true)
+    await shot(sf, "dc4-gate-change-stairs-and-ramp-2")
     log("DC4 pass")
   }
 }

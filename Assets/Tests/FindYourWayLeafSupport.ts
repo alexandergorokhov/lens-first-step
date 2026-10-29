@@ -116,6 +116,20 @@ export function kindsOf(edges: MapEdge[]): string[] {
   return edges.map((e) => e.kind)
 }
 
+// Screenshot mode: when the runner's shotPauseMs > 0, shot() logs "[FYW-LEAF] SHOT <name>" and pauses
+// so the Preview panel can be captured at that moment. followPose = render from the simulated
+// pose (for moments deep inside the building). Off by default: shot() returns at once.
+export const SHOT = {pauseMs: 0}
+
+export async function shot(main: FindYourWayMain, name: string, followPose: boolean = false): Promise<void> {
+  if (SHOT.pauseMs <= 0) return
+  if (followPose) main.debugSetViewFollowsPose(true)
+  await sleep(400)
+  log("SHOT " + name)
+  await sleep(SHOT.pauseMs)
+  if (followPose) main.debugSetViewFollowsPose(false)
+}
+
 export function log(msg: string): void {
   print("[FYW-LEAF] " + msg)
 }

@@ -4,7 +4,7 @@ import {DefaultLeafInteractor} from "Leaf.lspkg/Interactors/interactor/DefaultLe
 import {expect} from "Leaf.lspkg/Utils/common/Expect"
 import {sleep} from "Leaf.lspkg/Utils/common/Utils"
 import {findNode} from "../Scripts/FindYourWayRouter"
-import {getMain, log, startTrip, tap, waitFor} from "./FindYourWayLeafSupport"
+import {getMain, log, startTrip, tap, waitFor, shot, SHOT} from "./FindYourWayLeafSupport"
 
 // E5 — the scanned sign isn't in the map: "This sign isn't in the map", nothing drawn.
 @component
@@ -17,6 +17,7 @@ export class FywE5UnknownSignScenario extends Scenario {
     expect(main.getHudCardTextOrEmpty(), "card").toBe("This sign isn't in the map")
     expect(main.isLineVisible(), "nothing drawn").toBe(false)
     expect(main.getRouteStatus(), "no route").toBe("none")
+    await shot(main, "e5-unknown-sign-1")
     log("E5 pass")
   }
 }

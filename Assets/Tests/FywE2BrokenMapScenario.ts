@@ -4,7 +4,7 @@ import {DefaultLeafInteractor} from "Leaf.lspkg/Interactors/interactor/DefaultLe
 import {expect} from "Leaf.lspkg/Utils/common/Expect"
 import {sleep} from "Leaf.lspkg/Utils/common/Utils"
 import {findNode} from "../Scripts/FindYourWayRouter"
-import {getMain, log, startTrip, tap, waitFor} from "./FindYourWayLeafSupport"
+import {getMain, log, startTrip, tap, waitFor, shot, SHOT} from "./FindYourWayLeafSupport"
 
 // E2 — an invalid map.json arrives: "Map couldn't load", the built-in map is used, no crash.
 @component
@@ -18,6 +18,7 @@ export class FywE2BrokenMapScenario extends Scenario {
     expect(main.getMapSource(), "source").toBe("offline")
     expect(main.getRouteNodes().join(">"), "built-in map still routes").toBe("sign>hall>escFoot>escTop>concourse>bJunction>gateB12")
     await waitFor(() => main.isLineVisible(), 3000, "line visible")
+    await shot(main, "e2-broken-map-fallback-1")
     log("E2 pass")
   }
 }

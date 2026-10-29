@@ -4,7 +4,7 @@ import {DefaultLeafInteractor} from "Leaf.lspkg/Interactors/interactor/DefaultLe
 import {expect} from "Leaf.lspkg/Utils/common/Expect"
 import {sleep} from "Leaf.lspkg/Utils/common/Utils"
 import {findNode, findRoute, parseMap, setEdgeOpen, MapData} from "../Scripts/FindYourWayRouter"
-import {log, nodePoints, startTrip, tap, waitFor, walkAlong} from "./FindYourWayLeafSupport"
+import {log, nodePoints, startTrip, tap, waitFor, walkAlong, shot, SHOT} from "./FindYourWayLeafSupport"
 
 // DC3 — Step-Free at seated height: the line goes round the corner to the lift, never stairs or
 // escalator; pinching the red sign on Lift 1 re-routes to Lift 2.
@@ -50,6 +50,7 @@ export class FywDc3StepFreeScenario extends Scenario {
     expect(k2.indexOf("stairs") < 0 && k2.indexOf("escalator") < 0, "still step-free").toBe(true)
     expect((main.getHudCardText() || "").indexOf("Lift 1 out of service") >= 0, "card: " + main.getHudCardText()).toBe(true)
     expect(main.isLineVisible(), "line still drawn after re-route").toBe(true)
+    await shot(main, "dc3-stepfree-seated-lift-reroute-1")
 
     // Lift 1 is closed: its floor button refuses even when you stand in it.
     const lift1 = findNode(main.getMapData(), "lift1G")!
@@ -68,6 +69,7 @@ export class FywDc3StepFreeScenario extends Scenario {
     await tap(it, "RideButton_" + lift2Ride)
     expect(main.getRideOffsetCm().y, "lift carried the traveller up 6 m").toBeCloseTo(600, 0)
     expect(main.getHudCardTextOrEmpty(), "ride card names the level once").toBe("Lift up to Departures")
+    await shot(main, "dc3-stepfree-seated-lift-reroute-2", true)
     const rest = main.getRouteNodes()
     const iu = rest.indexOf("lift2U")
     expect(iu >= 0, "route continues from the top of Lift 2: " + rest.join(">")).toBe(true)

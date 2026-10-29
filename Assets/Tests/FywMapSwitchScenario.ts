@@ -4,7 +4,7 @@ import {DefaultLeafInteractor} from "Leaf.lspkg/Interactors/interactor/DefaultLe
 import {expect} from "Leaf.lspkg/Utils/common/Expect"
 import {sleep} from "Leaf.lspkg/Utils/common/Utils"
 import {findNode} from "../Scripts/FindYourWayRouter"
-import {getMain, log, startTrip, tap, waitFor} from "./FindYourWayLeafSupport"
+import {getMain, log, startTrip, tap, waitFor, shot, SHOT} from "./FindYourWayLeafSupport"
 
 // Map switch: "Map: … (switch)" cycles Airport → Hospital → Campus → Room → Airport, and each
 // switch restarts at the mode panel with nothing drawn.
@@ -28,6 +28,14 @@ export class FywMapSwitchScenario extends Scenario {
       expect(main.isModePanelShown(), key + ": mode panel").toBe(true)
       expect(main.isScanSignVisible(), key + ": scan sign hidden").toBe(false)
       expect(main.isLineVisible(), key + ": no line").toBe(false)
+    }
+    // Screenshot mode only: each map after its sign is scanned.
+    if (SHOT.pauseMs > 0) {
+      const keys = ["airport", "hospital", "campus", "room"]
+      for (let i = 0; i < keys.length; i++) {
+        const m = await startTrip(it, "walk", 0, undefined, ["nav"], keys[i])
+        await shot(m, "map-switch-cycle-" + (i + 1))
+      }
     }
     log("Map switch pass")
   }

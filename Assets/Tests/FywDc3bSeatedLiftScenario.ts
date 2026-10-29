@@ -4,7 +4,7 @@ import {DefaultLeafInteractor} from "Leaf.lspkg/Interactors/interactor/DefaultLe
 import {expect} from "Leaf.lspkg/Utils/common/Expect"
 import {sleep} from "Leaf.lspkg/Utils/common/Utils"
 import {findNode} from "../Scripts/FindYourWayRouter"
-import {log, startTrip, tap} from "./FindYourWayLeafSupport"
+import {log, startTrip, tap, shot, SHOT} from "./FindYourWayLeafSupport"
 
 // dc3b — a seated traveller: sitting down before choosing the mode does not lower the building
 // (anchoring ignores the crouch), and 0.5 m from Lift 2 with the feet estimate 0.45 m below
@@ -27,6 +27,7 @@ export class FywDc3bSeatedLiftScenario extends Scenario {
     await tap(it, "RideButton_" + ride)
     expect(main.getRideOffsetCm().y, "seated traveller rode Lift 2 up 6 m").toBeCloseTo(600, 0)
     expect(main.getHudCardTextOrEmpty(), "ride card").toBe("Lift up to Departures")
+    await shot(main, "dc3b-seated-lift-ride-1", true)
     log("DC3b pass")
   }
 }

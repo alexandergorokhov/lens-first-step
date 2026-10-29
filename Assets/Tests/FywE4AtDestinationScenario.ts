@@ -4,7 +4,7 @@ import {DefaultLeafInteractor} from "Leaf.lspkg/Interactors/interactor/DefaultLe
 import {expect} from "Leaf.lspkg/Utils/common/Expect"
 import {sleep} from "Leaf.lspkg/Utils/common/Utils"
 import {findNode} from "../Scripts/FindYourWayRouter"
-import {getMain, log, startTrip, tap, waitFor} from "./FindYourWayLeafSupport"
+import {getMain, log, startTrip, tap, waitFor, shot, SHOT} from "./FindYourWayLeafSupport"
 
 // E4 — destination is where you already are: arrival right away, no line.
 @component
@@ -16,6 +16,7 @@ export class FywE4AtDestinationScenario extends Scenario {
     expect(main.getPhase(), "phase").toBe("arrived")
     expect(main.isLineVisible(), "no line").toBe(false)
     expect(main.isArrivalCardShown(), "arrival card").toBe(true)
+    await shot(main, "e4-already-at-destination-1")
     log("E4 pass")
   }
 }

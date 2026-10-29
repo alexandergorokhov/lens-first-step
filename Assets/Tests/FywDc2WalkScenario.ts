@@ -4,7 +4,7 @@ import {DefaultLeafInteractor} from "Leaf.lspkg/Interactors/interactor/DefaultLe
 import {expect} from "Leaf.lspkg/Utils/common/Expect"
 import {sleep} from "Leaf.lspkg/Utils/common/Utils"
 import {findNode} from "../Scripts/FindYourWayRouter"
-import {log, nodePoints, startTrip, tap, walkAlong} from "./FindYourWayLeafSupport"
+import {log, nodePoints, startTrip, tap, walkAlong, shot, SHOT} from "./FindYourWayLeafSupport"
 
 // DC2 — Walk: following the line goes through the hall and up the escalator to B12, the line
 // goes round corners, and an arrow shows when the next turn is out of view.
@@ -35,6 +35,7 @@ export class FywDc2WalkScenario extends Scenario {
     }
     await walkAlong(main, [{x: sign.x, y: 0, z: sign.z - 1.5}].concat(nodePoints(map, ["sign", "hall", "escFoot"])), 1.0, watch)
     expect(main.getRouteNodes()[0], "still on the planned route (no re-route)").toBe("sign")
+    await shot(main, "dc2-walk-escalator-corners-arrow-1", true)
 
     // Ride up: the traveller is carried to the top landing; the route is unchanged.
     await tap(it, "RideButton_" + rideId)
@@ -60,6 +61,7 @@ export class FywDc2WalkScenario extends Scenario {
     main2.debugSetPose(escTop.x, escTop.y, escTop.z + 0.5, 180)
     await sleep(400)
     expect(main2.isTurnArrowVisible(), "arrow shows when the turn is behind").toBe(true)
+    await shot(main2, "dc2-walk-escalator-corners-arrow-2", true)
     main2.debugSetPose(escTop.x, escTop.y, escTop.z + 0.5, 0)
     await sleep(400)
     expect(main2.isTurnArrowVisible(), "arrow hidden when the turn is in view").toBe(false)

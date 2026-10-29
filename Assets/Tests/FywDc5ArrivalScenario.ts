@@ -4,7 +4,7 @@ import {DefaultLeafInteractor} from "Leaf.lspkg/Interactors/interactor/DefaultLe
 import {expect} from "Leaf.lspkg/Utils/common/Expect"
 import {sleep} from "Leaf.lspkg/Utils/common/Utils"
 import {findNode, findRoute, parseMap, setEdgeOpen, MapData} from "../Scripts/FindYourWayRouter"
-import {bruteShortest, bundledMaps, kindsOf, log, nodePoints, startTrip, tap, waitFor, walkAlong} from "./FindYourWayLeafSupport"
+import {bruteShortest, bundledMaps, kindsOf, log, nodePoints, startTrip, tap, waitFor, walkAlong, shot, SHOT} from "./FindYourWayLeafSupport"
 
 // DC5 — Arrival: within 3 m of the gate the line stops and "Gate C3. Boarding in 6 min." shows.
 @component
@@ -24,6 +24,7 @@ export class FywDc5ArrivalScenario extends Scenario {
     expect(main.getPhase(), "arrived within 3 m").toBe("arrived")
     expect(main.isLineVisible(), "line stops").toBe(false)
     expect(main.getArrivalText(), "arrival card").toBe("Gate C3. Boarding in 6 min.")
+    await shot(main, "dc5-arrival-card-1", true)
     log("DC5 pass")
   }
 }

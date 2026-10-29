@@ -30,6 +30,7 @@
   ScriptInputsHidden:
     autoRun: false
     only: false
+    shotPauseMs: false
   ScriptTypesHidden:
     {}
   ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
@@ -41,6 +42,7 @@
   DefaultScriptInputs:
     - autoRun: false
       only: ""
+      shotPauseMs: !<float> 0.000000
   ScriptTypes:
     -
       {}
@@ -50,4 +52,5 @@
     - '// @ui {"widget":"group_start", "label":"Settings"}'
     - '// @input bool autoRun {"hint":"Run all registered scenarios when the Lens starts"}'
     - '// @input string only {"hint":"Comma-separated scenario ids to run (empty = all)"}'
+    - '// @input float shotPauseMs {"hint":"Screenshot mode: pause this many ms at each shot() moment (0 = off)"}'
     - '// @ui {"widget":"group_end"}'

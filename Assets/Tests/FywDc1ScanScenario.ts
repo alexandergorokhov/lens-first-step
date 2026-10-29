@@ -4,7 +4,7 @@ import {DefaultLeafInteractor} from "Leaf.lspkg/Interactors/interactor/DefaultLe
 import {expect} from "Leaf.lspkg/Utils/common/Expect"
 import {sleep} from "Leaf.lspkg/Utils/common/Utils"
 import {findNode, findRoute, parseMap, setEdgeOpen, MapData} from "../Scripts/FindYourWayRouter"
-import {bruteShortest, bundledMaps, kindsOf, log, nodePoints, startTrip, tap, waitFor, walkAlong} from "./FindYourWayLeafSupport"
+import {bruteShortest, bundledMaps, kindsOf, log, nodePoints, startTrip, tap, waitFor, walkAlong, shot, SHOT} from "./FindYourWayLeafSupport"
 
 // DC1 — Scanning the start: after choosing a mode, pinching the "you are here" sign places you
 // at the entrance and a blue line appears on the floor toward gate B12.
@@ -33,6 +33,7 @@ export class FywDc1ScanScenario extends Scenario {
     expect(local.length >= 2, "line mesh points").toBe(true)
     expect(local[0].y, "line 1 cm above the floor").toBeCloseTo(1, 1)
     expect(main.getBadgeText() === "online map" || main.getBadgeText() === "offline map", "map badge").toBe(true)
+    await shot(main, "dc1-scan-sign-line-appears-1")
     log("DC1 pass; badge=" + main.getBadgeText())
   }
 }

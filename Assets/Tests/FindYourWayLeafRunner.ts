@@ -4,6 +4,7 @@
 
 import {DefaultScenarioManager} from "Leaf.lspkg/Scenarios/scenario/manager/DefaultLeafScenarioManager"
 import {sleep} from "Leaf.lspkg/Utils/common/Utils"
+import {SHOT} from "./FindYourWayLeafSupport"
 
 @component
 export class FindYourWayLeafRunner extends BaseScriptComponent {
@@ -17,9 +18,14 @@ export class FindYourWayLeafRunner extends BaseScriptComponent {
   @input
   @hint("Comma-separated scenario ids to run (empty = all)")
   only: string = ""
+
+  @input
+  @hint("Screenshot mode: pause this many ms at each shot() moment (0 = off)")
+  shotPauseMs: number = 0
   @ui.group_end
 
   onAwake() {
+    SHOT.pauseMs = this.shotPauseMs
     if (!this.autoRun) return
     this.createEvent("OnStartEvent").bind(() => {
       this.runAll().catch((e) => print("[FYW-LEAF] RUNNER ERROR " + e))

@@ -5207,12 +5207,14 @@
   ScriptInputsDefault:
     autoRun: true
     only: true
+    shotPauseMs: true
   ScriptTypesDefault:
     {}
   ScriptInputs:
     "":
       autoRun: false
       only: ""
+      shotPauseMs: !<float> 0.000000
   ScriptTypes:
     "":
       {}

@@ -1,0 +1,277 @@
+[
+  {
+    "file": "demo-run/01-intro.png",
+    "title": "Intro: the stand-in airport",
+    "caption": "Caption 'Find Your Way Inside: stand-in airport' top centre; Demo controls low-left; the mode panel is about to appear."
+  },
+  {
+    "file": "demo-run/02-walk-choose.png",
+    "title": "Choose Walk",
+    "caption": "Caption 'Choose Walk, once for the whole trip'; the 'How are you getting there?' panel with Walk and Step-Free (wheelchair)."
+  },
+  {
+    "file": "demo-run/03-walk-scan.png",
+    "title": "Scan the sign",
+    "caption": "Caption 'Scan the you are here sign'; the scan sign stands about 2.5 m ahead with its Scan sign button."
+  },
+  {
+    "file": "demo-run/04-walk-follow.png",
+    "title": "The blue line appears",
+    "caption": "Caption 'Follow the blue line through the hall'; the 'offline map' badge; the blue floor line runs straight ahead into the check-in hall, escalator on the right."
+  },
+  {
+    "file": "demo-run/04b-walk-follow-midway.png",
+    "title": "Walking the hall",
+    "caption": "Midway to the escalator: the line still leads ahead; the escalator steps are on the right."
+  },
+  {
+    "file": "demo-run/05-walk-escalator.png",
+    "title": "Ride the escalator",
+    "caption": "Caption 'Ride the escalator up' at the escalator foot; the gold Ride escalator up button is the next action."
+  },
+  {
+    "file": "demo-run/06-walk-concourse.png",
+    "title": "On the concourse",
+    "caption": "After the ride: card 'Escalator up to Departures' (the ride card names the level once); caption 'On to the departures concourse'."
+  },
+  {
+    "file": "demo-run/07-gate-change.png",
+    "title": "Gate change coming",
+    "caption": "Caption 'Gate change B12 → C3' before the Demo controls button is pressed."
+  },
+  {
+    "file": "demo-run/07b-gate-change-card.png",
+    "title": "Gate change card",
+    "caption": "Notice card 'Gate change B12 → C3' top-right (with chime); the line swings round toward the C pier."
+  },
+  {
+    "file": "demo-run/08-walk-to-pier.png",
+    "title": "Line swings to the C pier",
+    "caption": "Caption 'The line swings round to the C pier'; the new route concourse > C pier top > C3."
+  },
+  {
+    "file": "demo-run/09-stairs-down.png",
+    "title": "Stairs down",
+    "caption": "Caption 'Stairs down to the C pier' at the top of the stairs (Walk takes the stairs)."
+  },
+  {
+    "file": "demo-run/10-arrive-c3.png",
+    "title": "Walking to C3",
+    "caption": "Card 'Stairs down to C pier' after the ride; caption 'Within 3 m of Gate C3: arrived'."
+  },
+  {
+    "file": "demo-run/10b-arrive-c3-card.png",
+    "title": "Arrived at C3",
+    "caption": "Arrival card 'Gate C3. Boarding in 6 min.' (the demo moves straight on, so the next caption 'Restart: now in a wheelchair' is already showing)."
+  },
+  {
+    "file": "demo-run/11-restart.png",
+    "title": "Restart",
+    "caption": "Caption 'Restart: now in a wheelchair'; Restart trip pressed, the mode panel is back."
+  },
+  {
+    "file": "demo-run/12-stepfree-choose.png",
+    "title": "Choose Step-Free",
+    "caption": "Caption 'Choose Step-Free, seated height'; the mode panel before Step-Free (wheelchair) is pressed."
+  },
+  {
+    "file": "demo-run/13-stepfree-scan.png",
+    "title": "Same sign, Step-Free",
+    "caption": "Caption 'Same sign, same gate B12'; scanning again at seated height."
+  },
+  {
+    "file": "demo-run/14-to-lift1.png",
+    "title": "Line to Lift 1",
+    "caption": "Caption 'The line goes round the corner to Lift 1'; no escalator or stairs in the Step-Free route."
+  },
+  {
+    "file": "demo-run/15-lift1-out.png",
+    "title": "At Lift 1",
+    "caption": "Caption 'Lift 1 is out: pinch the red sign' at the Lift 1 door; the red out-of-service sign hangs at about 1.2 m."
+  },
+  {
+    "file": "demo-run/15b-lift1-out-card.png",
+    "title": "Lift 1 out of service",
+    "caption": "Card 'Lift 1 out of service. Re-routing.' (the route used Lift 1); caption 'Re-routed to Lift 2'; the turn arrow points back through the hall."
+  },
+  {
+    "file": "demo-run/16-to-lift2.png",
+    "title": "Heading to Lift 2",
+    "caption": "Caption 'Re-routed to Lift 2'; walking (wheeling) back through the hall toward Lift 2."
+  },
+  {
+    "file": "demo-run/17-lift2-ride.png",
+    "title": "Ride Lift 2",
+    "caption": "Caption 'Ride Lift 2 up to Departures' inside Lift 2; the floor button is next to the traveller."
+  },
+  {
+    "file": "demo-run/18-arrive-b12.png",
+    "title": "Lift ridden",
+    "caption": "Card 'Lift up to Departures' after the ride; caption 'Step-free all the way to Gate B12'."
+  },
+  {
+    "file": "demo-run/18b-arrive-b12-card.png",
+    "title": "Arrived at B12",
+    "caption": "Arrival card 'Gate B12. Boarding in 6 min.' at the end of the step-free route (next caption 'Same Lens, another map: a campus' already showing)."
+  },
+  {
+    "file": "demo-run/19-campus.png",
+    "title": "Campus map",
+    "caption": "Caption 'Same Lens, another map: a campus'; Map: Campus on Demo controls; the mode panel."
+  },
+  {
+    "file": "demo-run/20-campus-scan.png",
+    "title": "Campus, Step-Free",
+    "caption": "Caption 'Step-Free to Lecture Hall 1'; the main gate sign before scanning; outdoor quad ahead."
+  },
+  {
+    "file": "demo-run/21-campus-lift-out.png",
+    "title": "Science lift",
+    "caption": "Caption 'Science lift out: re-routed' at the Science building door; the red sign by the Science lift."
+  },
+  {
+    "file": "demo-run/21b-campus-lift-out-card.png",
+    "title": "Science lift out of service",
+    "caption": "Card 'Science lift out of service. Re-routing.'; caption 'Up the ramp instead'; the turn arrow points to the ramp."
+  },
+  {
+    "file": "demo-run/22-campus-ramp.png",
+    "title": "To the ramp",
+    "caption": "Caption 'Up the ramp instead'; the line leads to the ramp foot."
+  },
+  {
+    "file": "demo-run/23-arrive-lecture-hall.png",
+    "title": "Ramp ridden",
+    "caption": "Card 'Ramp up to First floor' after the ride; caption 'Arrived at Lecture Hall 1'."
+  },
+  {
+    "file": "demo-run/23b-arrive-lecture-hall-card.png",
+    "title": "Arrived at Lecture Hall 1",
+    "caption": "Arrival card 'Lecture Hall 1. Lecture starts in 10 min.'."
+  },
+  {
+    "file": "demo-run/24-end.png",
+    "title": "End",
+    "caption": "Caption 'That's the demo. Find Your Way Inside.'; all 24 beats reached, three arrival cards shown."
+  },
+  {
+    "file": "scenarios/dc1-scan-sign-line-appears-1.png",
+    "title": "DC1 Scan → line",
+    "caption": "After scanning the sign (Walk): the blue line starts at the sign and runs into the hall; badge 'offline map'. The green 'RUNS: …' text is LEAF's own overlay."
+  },
+  {
+    "file": "scenarios/dc2-walk-escalator-corners-arrow-1.png",
+    "title": "DC2 At the escalator foot",
+    "caption": "Rendered from the traveller's pose at the escalator foot: the escalator and its gold ride button; the line goes up the escalator."
+  },
+  {
+    "file": "scenarios/dc2-walk-escalator-corners-arrow-2.png",
+    "title": "DC2 Turn arrow",
+    "caption": "At the escalator top facing back (south): the next turn is behind, so the blue turn arrow shows at the lower edge of view, pointing the way."
+  },
+  {
+    "file": "scenarios/dc3-stepfree-seated-lift-reroute-1.png",
+    "title": "DC3 Lift 1 closed",
+    "caption": "Seated Step-Free after pinching Lift 1's red sign: card 'Lift 1 out of service. Re-routing.' and the line re-routed toward Lift 2."
+  },
+  {
+    "file": "scenarios/dc3-stepfree-seated-lift-reroute-2.png",
+    "title": "DC3 Lift 2 ridden",
+    "caption": "From the pose at the top of Lift 2: card 'Lift up to Departures'; the route continues to B12."
+  },
+  {
+    "file": "scenarios/dc3b-seated-lift-ride-1.png",
+    "title": "DC3b Seated rider",
+    "caption": "Seated traveller 0.5 m from Lift 2 (feet 0.45 m below the floor) rode the lift: card 'Lift up to Departures'."
+  },
+  {
+    "file": "scenarios/dc4-gate-change-stairs-and-ramp-1.png",
+    "title": "DC4 Gate change (Walk)",
+    "caption": "From the escalator top: card 'Gate change B12 → C3'; the line swings toward the C pier stairs."
+  },
+  {
+    "file": "scenarios/dc4-gate-change-stairs-and-ramp-2.png",
+    "title": "DC4 Gate change (Step-Free)",
+    "caption": "Step-Free after the gate change: card 'Gate change B12 → C3'; the route uses Lift 2 and the ramp, no stairs."
+  },
+  {
+    "file": "scenarios/dc5-arrival-card-1.png",
+    "title": "DC5 Arrival at C3",
+    "caption": "2.9 m from Gate C3: the line has stopped and the arrival card 'Gate C3. Boarding in 6 min.' is shown (the frame is rendered from the start view, so the gate itself is far off-screen)."
+  },
+  {
+    "file": "scenarios/e2-broken-map-fallback-1.png",
+    "title": "E2 Broken download",
+    "caption": "A broken downloaded map: card 'Map couldn't load', badge 'offline map', and the built-in map still routes (line visible)."
+  },
+  {
+    "file": "scenarios/e3-no-step-free-ask-staff-1.png",
+    "title": "E3 No step-free route",
+    "caption": "Both lifts out: card 'No step-free route. Ask staff at the assistance point.'."
+  },
+  {
+    "file": "scenarios/e3-no-step-free-ask-staff-2.png",
+    "title": "E3 At the assistance point",
+    "caption": "From the traveller's pose 1 m from the assistance point: arrival card 'Assistance point'. At this distance the card is very large and fills the top of the view (see report)."
+  },
+  {
+    "file": "scenarios/e3b-no-step-free-at-scan-1.png",
+    "title": "E3b Ask staff right at scan",
+    "caption": "The downloaded map already has both lifts closed: the ask-staff card shows straight after the Step-Free scan."
+  },
+  {
+    "file": "scenarios/e4-already-at-destination-1.png",
+    "title": "E4 Already there",
+    "caption": "Destination = the start sign: arrival card right away, no line."
+  },
+  {
+    "file": "scenarios/e5-unknown-sign-1.png",
+    "title": "E5 Unknown sign",
+    "caption": "Card 'This sign isn't in the map'; nothing drawn."
+  },
+  {
+    "file": "scenarios/map-switch-cycle-1.png",
+    "title": "Map: Airport after scan",
+    "caption": "Airport, Walk, after scanning: line into the check-in hall; Demo controls show 'Gate change B12 → C3' and 'Map: Airport'."
+  },
+  {
+    "file": "scenarios/map-switch-cycle-2.png",
+    "title": "Map: Hospital after scan",
+    "caption": "Hospital wing, Walk, after scanning: line through the lobby toward the stairs; Demo controls show 'Room change Ward 4 → X-ray'."
+  },
+  {
+    "file": "scenarios/map-switch-cycle-3.png",
+    "title": "Map: Campus after scan",
+    "caption": "Campus, Walk, after scanning: outdoor path to the quad and the two buildings; Demo controls show 'Room change Lecture Hall 1 → Lab 2'."
+  },
+  {
+    "file": "scenarios/map-switch-cycle-4.png",
+    "title": "Map: Preview room after scan",
+    "caption": "Preview room, Walk, after scanning: no stand-in building; 'Window' and 'Door' signs at the sides; Demo controls show 'Change to the door'. The floor line is not visible in this frame (see report)."
+  },
+  {
+    "file": "scenarios/restart-resets-trip-1.png",
+    "title": "Restart: before",
+    "caption": "Mid-trip after closing Lift 1 and the gate change: line drawn, card showing."
+  },
+  {
+    "file": "scenarios/restart-resets-trip-2.png",
+    "title": "Restart: after",
+    "caption": "After Restart trip: mode panel back, no line, no cards, no badge."
+  },
+  {
+    "file": "scenarios/dest-change-before-scan-sticks-1.png",
+    "title": "Gate change before the scan",
+    "caption": "Gate change pressed before scanning: card 'Gate change B12 → C3' while the scan sign is still up."
+  },
+  {
+    "file": "scenarios/dest-change-before-scan-sticks-2.png",
+    "title": "…and it sticks after the scan",
+    "caption": "After scanning (a downloaded map replaced the built-in one): the route goes to C3, not B12."
+  },
+  {
+    "file": "scenarios/closure-card-signs-and-5s-hide-1.png",
+    "title": "Closing an unused lift",
+    "caption": "Step-Free route via Lift 1; pinching Lift 2's red sign shows 'Lift 2 out of service' (no 'Re-routing') and the line is unchanged."
+  }
+]
