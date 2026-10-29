@@ -78,7 +78,7 @@ The **mapKey** setting on `FindYourWay` (Inspector) picks the start map: Airport
 - [ ] **Floor height:** the blue line should lie flat on the floor, not float or sink. If it's off, select `FindYourWay` in the Scene Hierarchy and change **eyeHeightCm** in the Inspector (now 180). Larger moves the line down.
 - [ ] **Start position:** the sign and the start of the line should be in open floor, not behind the sofa.
 - [ ] **Map switch:** the Map button cycles all four maps (a LEAF test checks this; confirm it by clicking).
-- [ ] **Online map:** the badge says "offline map" unless a map server is reachable over **https** (see section 11).
+- [ ] **Online map:** with internet, the badge says **online map** after scanning the sign (maps download from the public gist, see section 11). Without internet it says "offline map".
 
 ## 9. How to test it (no glasses needed)
 
@@ -93,7 +93,7 @@ cd C:\Sasha\Projects\Lens\first-step\first-step
 npm test
 ```
 
-It first checks the Lens copies (`npm run sync:check`). Expect `pass 94`, `fail 0`, `todo 1` (the todo is the real online download, which needs a public https map URL). Covers: Walk and Step-Free routes on all four maps, Step-Free never uses stairs or escalators, Walk is always shortest, closures and re-routes, destination changes, broken maps, unknown signs, the turn arrow maths, the map download URL, the local map server, the demo's beats and walking speed, and that the Lens copies of the code and maps match `src/core`.
+It first checks the Lens copies (`npm run sync:check`). Expect `pass 96`, `fail 0` (one test downloads the maps from the public gist; set `OFFLINE=1` to skip it with no internet). Covers: Walk and Step-Free routes on all four maps, Step-Free never uses stairs or escalators, Walk is always shortest, closures and re-routes, destination changes, broken maps, unknown signs, the turn arrow maths, the map download URL, the local map server, the demo's beats and walking speed, and that the Lens copies of the code and maps match `src/core`.
 
 After editing anything in `src/core`, run `npm run sync` to copy it into `Assets/`. `npm run hooks` (once) makes git run `npm test` before every commit.
 
@@ -163,13 +163,16 @@ During the demo the stand-in building moves so your view follows the demo's posi
 The Lens tries to download each map before falling back to its built-in copy (5 s timeout). The download address is **mapBaseUrl** + the map's file name (`map.json`, `hospital.json`, `campus.json`, `room.json`).
 
 1. In a terminal: `npm run maps`. It serves `src/core/data/*.json` at `http://localhost:8787/<name>.json` (CORS on). `PORT=9000 npm run maps` picks another port.
-2. In Lens Studio select **FindYourWay**, set **mapBaseUrl** in the Inspector (default `http://localhost:8787/`). Leave it empty to always use the built-in map.
+2. In Lens Studio select **FindYourWay**, set **mapBaseUrl** in the Inspector. Leave it empty to always use the built-in map.
 3. Scan the sign. The Logger shows `[FYW] map download: …` and the badge top-left says **online map** or **offline map**.
 
-**What you'll see today: "offline map".** Lens Studio's preview only allows **https** downloads. For `http://localhost` the Logger says *"URL is not secure (Experimental API must be enabled to access insecure URLs)"*. The Lens then uses its built-in map, which is identical, and routes normally. Two ways to get "online map":
+**Default: the public gist.** The repo is private, so its files can't be downloaded. **mapBaseUrl** defaults to a public gist holding the same four files as `src/core/data`:
+`https://gist.githubusercontent.com/alexandergorokhov/ac59c2c8d02687651f256b320fff27b8/raw/`
+(gist: https://gist.github.com/alexandergorokhov/ac59c2c8d02687651f256b320fff27b8). The preview only allows **https**, which the gist provides, so the badge says **online map**.
 
-- **Once the repo is public (recommended):** set **mapBaseUrl** to `https://raw.githubusercontent.com/alexandergorokhov/lens-first-step/master/src/core/data/`. While the repo is private these URLs return 404, so the badge stays "offline map".
-- **Local testing only:** host the map files on any **https** address and put that folder in **mapBaseUrl**. Turning on Lens Studio's Experimental API would also allow `http://localhost`, but Lenses using experimental APIs can't be published, so this build leaves it off.
+If you change a map in `src/core/data`, update the gist too: `gh gist edit ac59c2c8d02687651f256b320fff27b8 --filename map.json src/core/data/map.json` (same for the others). `npm test` fails if the gist copy differs. GitHub may serve the old copy for a few minutes after an edit.
+
+**Local server:** `http://localhost:8787/` is refused by the preview (*"URL is not secure (Experimental API must be enabled to access insecure URLs)"*), so the Lens falls back to its built-in map ("offline map"). Turning on the Experimental API would allow it, but Lenses that use experimental APIs can't be published.
 
 ## Tips for the video
 

@@ -15,6 +15,7 @@ import {
   findRoute,
   lineAhead,
   loadMapWithTimeout,
+  mapDownloadUrl,
   locateSign,
   parseMap,
   routePoints,
@@ -197,7 +198,31 @@ test("S7 Off route: more than 5 m from the line re-routes from the nearest node"
 // S8 Lens part: LEAF dc2-walk-escalator-corners-arrow (arrow shown/hidden); the maths is
 // tested in geometry.test.ts.
 
-test.todo("S9 Lens: a real map.json download from a public URL shows the 'online map' badge (needs the repo to be public)");
+// S9 real download: the Lens's default mapBaseUrl is a public https copy of src/core/data (a gist,
+// since the repo is private). Needs internet; set OFFLINE=1 to skip.
+const ONLINE_BASE = "https://gist.githubusercontent.com/alexandergorokhov/ac59c2c8d02687651f256b320fff27b8/raw/";
+
+test("S9 Lens default mapBaseUrl is the public https map copy", () => {
+  const main = readFileSync(new URL("../../../Assets/Scripts/FindYourWayMain.ts", import.meta.url), "utf8");
+  assert.ok(main.includes(`mapBaseUrl: string = "${ONLINE_BASE}"`));
+  const scene = readFileSync(new URL("../../../Assets/Scene.scene", import.meta.url), "utf8");
+  assert.deepEqual([...scene.matchAll(/mapBaseUrl: "([^"]*)"/g)].map((m) => m[1]), [ONLINE_BASE], "FindYourWay in Scene.scene");
+});
+
+test("S9 real download: every map downloads from the public URL, matches src/core/data and loads online", { skip: !!process.env.OFFLINE }, async () => {
+  for (const file of ["map.json", "hospital.json", "campus.json", "room.json"]) {
+    const builtIn = readFileSync(new URL("../data/" + file, import.meta.url), "utf8");
+    const fetchText = async (u: string) => {
+      const r = await fetch(u);
+      if (!r.ok) throw new Error(u + " -> " + r.status);
+      return r.text();
+    };
+    const url = mapDownloadUrl(ONLINE_BASE, file);
+    assert.equal(await fetchText(url), builtIn, file + ": online copy differs from src/core/data (update the gist)");
+    const r = await loadMapWithTimeout(fetchText, url, builtIn);
+    assert.equal(r.source, "online", file);
+  }
+});
 
 test("S9/E1 logic: a valid download is used online; a failed or timed-out download uses the built-in map offline", () => {
   const online = chooseMap(MAP_TEXT, MAP_TEXT);

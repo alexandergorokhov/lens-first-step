@@ -8492,7 +8492,7 @@
       chime: !<reference.AudioTrackAsset> fed4446f-8a97-484e-8dd6-713dc07e2d7c
       mapKey: airport
       tryOnlineMap: true
-      mapBaseUrl: "http://localhost:8787/"
+      mapBaseUrl: "https://gist.githubusercontent.com/alexandergorokhov/ac59c2c8d02687651f256b320fff27b8/raw/"
       eyeHeightCm: !<float> 180.000000
       signOffset: !<Vec3> {x: 0.000000, y: 0.000000, z: -250.000000}
       lineAheadM: !<float> 10.000000

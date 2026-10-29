@@ -27,7 +27,7 @@ export interface MapSource {
   // Built-in copy shipped in the Lens (used when the download fails or is slow).
   asset: JsonAsset
   // File name of this map on the map server: the download URL is FindYourWay's mapBaseUrl + file
-  // (e.g. http://localhost:8787/map.json from `npm run maps`, or the GitHub raw folder once public).
+  // (e.g. the public gist copy of src/core/data, or http://localhost:8787/map.json from `npm run maps`).
   file: string
 }
 

@@ -18,7 +18,7 @@ configured (or `tryOnlineMap` is off), the built-in map SHALL be used immediatel
 - **WHEN** the user pinches "Scan sign" and the download arrives within 5 s
 - **THEN** the downloaded map is used (`source: "online"`, no notice)
 - **AND** the badge reads "online map"
-- Verified by: S9/E1 logic: a valid download is used online; a failed or timed-out download uses the built-in map offline; S9/E1 logic: loadMapWithTimeout uses the download when it arrives in time; TODO S9 Lens: a real map.json download from a public URL shows the 'online map' badge (needs the repo to be public) | none (gap: no LEAF run with a reachable URL)
+- Verified by: S9/E1 logic: a valid download is used online; a failed or timed-out download uses the built-in map offline; S9/E1 logic: loadMapWithTimeout uses the download when it arrives in time; S9 Lens default mapBaseUrl is the public https map copy; S9 real download: every map downloads from the public URL, matches src/core/data and loads online | none (badge checked by eye)
 
 ### Requirement: Fallback to the built-in map
 If the download fails, rejects, throws synchronously, returns a non-string, or takes longer than
@@ -74,10 +74,10 @@ that completes after the user restarted or switched map SHALL be ignored.
 
 ## Known gaps
 
-- **S9 real download unproven.** The Lens downloads `mapBaseUrl` + the map's file name. The default
-  `http://localhost:8787/` (`npm run maps`) is refused by the Lens ("URL is not secure") and the
-  GitHub raw folder returns 404 while the repo is private, so the preview shows "offline map". The
-  Node test for a real download is a TODO.
+- **S9 online source.** The Lens downloads `mapBaseUrl` + the map's file name. The default is a
+  public gist copy of `src/core/data` (https; the repo is private). A Node test downloads all four
+  maps from it and fails if they differ from `src/core/data`. No LEAF run checks the badge; it is
+  checked by eye. `http://localhost:8787/` (`npm run maps`) is still refused by the preview.
 - **Fixed (review round):** a slow load from an earlier trip is ignored (X6) and a rebuild for a
   downloaded map keeps closures and the destination change (X58).
 - The brief says "Map couldn't load" is shown; the Lens shows it as a notice card (5 s) with no

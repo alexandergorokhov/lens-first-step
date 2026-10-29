@@ -118,8 +118,8 @@ export class FindYourWayMain extends BaseScriptComponent {
   tryOnlineMap: boolean = true
 
   @input
-  @hint("Map server folder; each map downloads from here + its file name (map.json, hospital.json…). Local: http://localhost:8787/ (npm run maps). Once the repo is public: https://raw.githubusercontent.com/alexandergorokhov/lens-first-step/master/src/core/data/")
-  mapBaseUrl: string = "http://localhost:8787/"
+  @hint("Map server folder; each map downloads from here + its file name (map.json, hospital.json…). Default: public gist copy of src/core/data. Local: http://localhost:8787/ (npm run maps, needs https in the preview)")
+  mapBaseUrl: string = "https://gist.githubusercontent.com/alexandergorokhov/ac59c2c8d02687651f256b320fff27b8/raw/"
 
   @input
   @hint("Standing eye height above the floor, cm — used when the floor can't be detected")

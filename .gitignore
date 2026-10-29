@@ -20,3 +20,8 @@ node_modules/
 # Lens Studio / agent leftovers
 Plugins/
 .virtual-scene*.json
+
+# Locally installed agent skills (plan-lens)
+agent/
+skills-lock.json
+.claude/skills/

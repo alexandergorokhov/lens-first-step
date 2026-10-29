@@ -21,7 +21,7 @@ Capabilities of "Find Your Way Inside" (see `../project.md` for context and conv
 
 ## Traceability
 
-Status: **Pass (auto)** = covered by a passing Node test and/or LEAF scenario (Node 94 pass / 1 todo;
+Status: **Pass (auto)** = covered by a passing Node test and/or LEAF scenario (Node 96 pass / 0 todo;
 LEAF 19/19 as of the last recorded run in `devpost/SCENARIOS.md`); **Partial** = logic tested but
 part of the behaviour only manual or untested; **Manual** = checked by hand in the preview only;
 **Gap** = no test.
@@ -38,7 +38,7 @@ part of the behaviour only manual or untested; **Manual** = checked by hand in t
 | S7b | Off route does not re-trigger every frame | routing | S7b Off route: staying off the line… | — | Pass (auto, Node only) |
 | S7c | Nearest node on own level | routing | S7c Off route: the nearest node is on the traveller's own level… | dc2-walk-escalator-corners-arrow | Pass (auto) |
 | S8 | Turn arrow when next turn out of view | turn-guidance | turn arrow: shows only when…; S8 on the airport… | dc2-walk-escalator-corners-arrow | Pass (auto) |
-| S9 | Map download works, "online map" | map-loading | S9/E1 logic ×2; TODO S9 Lens: a real map.json download… | — | Partial (logic only; real download todo) |
+| S9 | Map download works, "online map" | map-loading | S9/E1 logic ×2; S9 default URL; S9 real download (public gist) | — | Pass (auto); badge by eye |
 | E1 | Download fails / > 5 s → offline map | map-loading | E1 logic ×2; S9/E1 logic: a valid download… | dc1-scan-sign-line-appears | Pass (auto) |
 | E2 | Invalid map.json → "Map couldn't load" | map-loading, map-format | E2 Invalid map.json…; E2 logic…; E2 parseMap names… | e2-broken-map-fallback | Pass (auto) |
 | E3 | No step-free route → assistance point | connection-closure, accessibility | E3 No step-free route…; E3 Both lifts closed…; hospital: both lifts out…; C5 noticeFor… | e3-no-step-free-ask-staff, e3b-no-step-free-at-scan | Pass (auto) |
