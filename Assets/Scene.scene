@@ -5,6 +5,8 @@
     - !<own> 0005641c-028d-459a-0000-000000014b4d
     - !<own> d029bf48-19f5-41ef-add6-c6cc721f8ad4
     - !<own> beae2714-1555-483e-8750-5ad8ad6d00ed
+    - !<own> 49237bc4-f9e6-442f-b388-f2f7c7ddc103
+    - !<own> abd7f7cc-fe64-4a6c-9229-15566f25581c
   layers: !<Layers/267ee9a7-aff2-4f9d-9a49-f71214747d03>
     userLayers:
       - id: 1
@@ -30,7 +32,8 @@
     Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
     HasSegmentScaleCompensation: false
   Children:
-    []
+    - !<own> 42ead967-0554-42bc-836f-3449f3dd08a0
+    - !<own> c054aee9-8261-4bf2-bfcf-97d846fd7743
   Components:
     - !<own> 00000000-0000-0065-0000-000000000065
     - !<own> e5553c8a-0b7e-4ef4-92d9-3e1318fb82c1
@@ -177,6 +180,35 @@
   FalloffType: None
   FalloffRange: .inf
   ShadowType: None
+- !<ScriptComponent/002dd432-bc4f-4dda-b0fc-0526213373b1>
+  PrefabRemaps:
+    []
+  Name: FindYourWayStandIn
+  Enabled: true
+  ScriptAsset: !<reference> c6fa0bf4-058a-4efb-aa32-dd916ef124e5
+  ScriptInputsDefault:
+    floorColor: true
+    wallColor: true
+    connectorColor: true
+    liftColor: true
+    groundColor: true
+    pathColor: true
+    wallHeightM: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      material: !<reference.Material> 3ebf5e90-21a7-4a2c-bf89-4429ddb2c375
+      floorColor: !<Vec4> {x: 0.920000, y: 0.950000, z: 1.000000, w: 0.100000}
+      wallColor: !<Vec4> {x: 0.850000, y: 0.900000, z: 1.000000, w: 0.070000}
+      connectorColor: !<Vec4> {x: 0.800000, y: 0.880000, z: 1.000000, w: 0.320000}
+      liftColor: !<Vec4> {x: 0.900000, y: 0.940000, z: 1.000000, w: 0.220000}
+      groundColor: !<Vec4> {x: 0.750000, y: 1.000000, z: 0.820000, w: 0.080000}
+      pathColor: !<Vec4> {x: 1.000000, y: 0.950000, z: 0.850000, w: 0.220000}
+      wallHeightM: !<float> 3.000000
+  ScriptTypes:
+    "":
+      {}
 - !<SceneObject/0038f0b3-f198-4816-8283-39ed1e4137f6>
   PrefabRemaps:
     []
@@ -613,6 +645,28 @@
     CapitalizationOverride: None
   DepthTest: false
   TwoSided: false
+- !<ScriptComponent/0765650c-0d53-4ab6-aa34-92f150efc8ff>
+  PrefabRemaps:
+    []
+  Name: FindYourWayDemoControlsUI
+  Enabled: true
+  ScriptAsset: !<reference> cebf47d7-923a-4f04-a358-5ee756b1a20b
+  ScriptInputsDefault:
+    title: true
+    note: true
+    textColor: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      title: Demo controls
+      note: Not part of the real app
+      widthCm: !<float> 13.000000
+      readingDistanceCm: !<float> 80.000000
+      textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ScriptTypes:
+    "":
+      {}
 - !<SceneObject/086ef229-8e1e-4387-aaee-ddd8acf9bfe2>
   PrefabRemaps:
     []
@@ -2295,6 +2349,37 @@
   ScriptTypes:
     "":
       {}
+- !<ScriptComponent/415ed586-cafc-4e9b-8119-927a4a9f8f5a>
+  PrefabRemaps:
+    []
+  Name: FindYourWayLeafIndex
+  Enabled: true
+  ScriptAsset: !<reference> be9419a5-a8ec-49a2-bf2b-4b5f50de2871
+  ScriptInputsDefault:
+    {}
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      {}
+  ScriptTypes:
+    "":
+      {}
+- !<SceneObject/42ead967-0554-42bc-836f-3449f3dd08a0>
+  PrefabRemaps:
+    []
+  Name: HUD
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> bc3ed2f0-9cd6-4e6f-bd29-b0130523290d
 - !<SceneObject/43d29e2b-122a-42c2-b18f-b89e369765ba>
   PrefabRemaps:
     []
@@ -2398,6 +2483,23 @@
     []
   Components:
     - !<own> 1bd06c1f-9c70-4ba4-bcf1-711c294c154c
+- !<SceneObject/49237bc4-f9e6-442f-b388-f2f7c7ddc103>
+  PrefabRemaps:
+    []
+  Name: FindYourWay
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 57b932a0-8e3b-4dee-b16b-cf8c437c47a5
+    - !<own> f7932dd0-befa-4905-a37f-9f9d1dc7bc65
+    - !<own> c40b343e-dde6-445f-8cae-07bfdadb7e4d
+  Components:
+    - !<own> e9c3f69a-bd88-461d-ade2-27d16c927262
 - !<SceneObject/49603135-9b47-46e9-9d10-8b76f7de786d>
   PrefabRemaps:
     []
@@ -2805,6 +2907,21 @@
     - !<own> fa4a4289-98a9-4a8f-9965-16e63cda1ad0
   Components:
     []
+- !<SceneObject/57b932a0-8e3b-4dee-b16b-cf8c437c47a5>
+  PrefabRemaps:
+    []
+  Name: World
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 79346b69-5c29-4cc1-9ab9-d8c8ef373ed4
+  Components:
+    []
 - !<SceneObject/582cc305-b9aa-447f-b32d-91afa60e3d18>
   PrefabRemaps:
     []
@@ -3169,6 +3286,28 @@
     - !<own> 03e5d190-5009-4724-a2a6-73358244de01
   Components:
     []
+- !<ScriptComponent/62c836e9-e760-4baf-9049-062172800389>
+  PrefabRemaps:
+    []
+  Name: FindYourWayTurnArrow
+  Enabled: true
+  ScriptAsset: !<reference> a88335a0-59b1-4fa6-92de-35ed0c2d3e3a
+  ScriptInputsDefault:
+    color: true
+    depthCm: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      material: !<reference.Material> 3ebf5e90-21a7-4a2c-bf89-4429ddb2c375
+      color: !<Vec4> {x: 0.259000, y: 0.522000, z: 0.957000, w: 0.900000}
+      depthCm: !<float> 60.000000
+      dropCm: !<float> 10.000000
+      sideCm: !<float> 4.000000
+      sizeCm: 4.500000
+  ScriptTypes:
+    "":
+      {}
 - !<SceneObject/633a2c02-330e-4df5-a2d7-92c9a7f9e2ed>
   PrefabRemaps:
     []
@@ -4088,6 +4227,23 @@
     - !<own> 7ee880c5-2275-474d-9887-5c940cd107bb
   Components:
     []
+- !<SceneObject/79346b69-5c29-4cc1-9ab9-d8c8ef373ed4>
+  PrefabRemaps:
+    []
+  Name: StandInBuilding
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: -160.000000, z: -150.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> b49404d7-04ab-42b5-8ae8-3494b97b5c3a
+    - !<own> fbec315a-2f96-4e36-b54e-8f9c237f3e12
+    - !<own> ce3b8dd8-84bc-479b-80e2-af2dd594acff
+  Components:
+    - !<own> 002dd432-bc4f-4dda-b0fc-0526213373b1
 - !<SceneObject/796d02fc-8ab1-4c47-a3e8-7a0530d1b8bf>
   PrefabRemaps:
     []
@@ -4605,6 +4761,24 @@
     []
   Components:
     - !<own> 20157230-f113-4f15-8523-52391e53b1ee
+- !<ScriptComponent/8885f245-15db-4224-a2ef-6afac601eb19>
+  PrefabRemaps:
+    []
+  Name: FindYourWayArrivalUI
+  Enabled: true
+  ScriptAsset: !<reference> d7432ea3-43b9-4852-8246-6dc8b0c530e9
+  ScriptInputsDefault:
+    cardScale: true
+    textColor: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      cardScale: 2.400000
+      textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ScriptTypes:
+    "":
+      {}
 - !<SceneObject/8899e8b7-5b6d-43e8-9596-fa7abe94e489>
   PrefabRemaps:
     []
@@ -5023,6 +5197,24 @@
     - !<own> 33a3eb70-d345-4527-b4b5-a9d3e385070a
   Components:
     []
+- !<ScriptComponent/9245ba65-ec01-4c5b-a9e7-46eefb769dfc>
+  PrefabRemaps:
+    []
+  Name: FindYourWayLeafRunner
+  Enabled: true
+  ScriptAsset: !<reference> ebea0cbb-3329-49b4-9a1a-b3e10d249619
+  ScriptInputsDefault:
+    autoRun: true
+    only: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      autoRun: false
+      only: ""
+  ScriptTypes:
+    "":
+      {}
 - !<SceneObject/92aaa7a7-e208-4e41-9090-a97efdda29df>
   PrefabRemaps:
     []
@@ -5231,6 +5423,25 @@
       textColor: white
       enableLogging: false
       enableLoggingLifecycle: false
+  ScriptTypes:
+    "":
+      {}
+- !<ScriptComponent/9a871616-805d-4668-82e7-6a948e06b8d8>
+  PrefabRemaps:
+    []
+  Name: FindYourWayBuildingUI
+  Enabled: true
+  ScriptAsset: !<reference> 088a80ae-1715-4e93-84af-8a035046538c
+  ScriptInputsDefault:
+    textColor: true
+    placeSignScale: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+      controlScale: !<float> 2.000000
+      placeSignScale: 3.200000
   ScriptTypes:
     "":
       {}
@@ -5658,6 +5869,22 @@
     - !<own> 185d83c4-afd2-4cb3-a560-1efffa56fa06
     - !<own> 4580f4db-0934-4559-a9bb-43274806a8a0
     - !<own> 0253552a-90e8-4806-ba00-cbe5b839edec
+- !<SceneObject/abd7f7cc-fe64-4a6c-9229-15566f25581c>
+  PrefabRemaps:
+    []
+  Name: LeafIndex
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 415ed586-cafc-4e9b-8119-927a4a9f8f5a
+    - !<own> 9245ba65-ec01-4c5b-a9e7-46eefb769dfc
 - !<ScriptComponent/ac972e23-af21-4d36-b714-03f995003ba4>
   PrefabRemaps:
     []
@@ -6054,6 +6281,21 @@
     - !<own> 7317df02-cf35-4847-92df-8da0c5241633
   Components:
     []
+- !<SceneObject/b49404d7-04ab-42b5-8ae8-3494b97b5c3a>
+  PrefabRemaps:
+    []
+  Name: RouteLine
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> bdbe89a1-c3df-4d36-a9c8-07c60423726c
 - !<SceneObject/b5d70949-9b97-4ef3-a457-a9356654be51>
   PrefabRemaps:
     []
@@ -6411,6 +6653,26 @@
   ScriptTypes:
     "":
       {}
+- !<ScriptComponent/bc3ed2f0-9cd6-4e6f-bd29-b0130523290d>
+  PrefabRemaps:
+    []
+  Name: FindYourWayHudUI
+  Enabled: true
+  ScriptAsset: !<reference> 1c808812-8022-4137-91bc-6e33a237a6a7
+  ScriptInputsDefault:
+    cardSeconds: true
+    textColor: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      cardPosition: !<Vec3> {x: 7.000000, y: 7.000000, z: -70.000000}
+      badgePosition: !<Vec3> {x: -8.000000, y: 8.000000, z: -70.000000}
+      cardSeconds: !<float> 5.000000
+      textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ScriptTypes:
+    "":
+      {}
 - !<SceneObject/bcb684b3-b533-4013-a3e3-b6d32407d5d0>
   PrefabRemaps:
     []
@@ -6446,6 +6708,31 @@
       counterText: !<reference.Text> dc61e56c-4cf1-44b6-87a2-a1efd5c9535b
       nextButton: !<MappingBased.AssignableType_1> 36f705c4-17e7-41fa-9b27-71337b8ae6aa
       previousButton: !<MappingBased.AssignableType_2> 81b36dfc-922c-4823-b60d-c5eceb021854
+  ScriptTypes:
+    "":
+      {}
+- !<ScriptComponent/bdbe89a1-c3df-4d36-a9c8-07c60423726c>
+  PrefabRemaps:
+    []
+  Name: FindYourWayRouteLine
+  Enabled: true
+  ScriptAsset: !<reference> d5879dd9-9412-4fc5-b20f-d5d50a02309e
+  ScriptInputsDefault:
+    lineColor: true
+    widthCm: true
+    glowCm: true
+    fadeShare: true
+    swingSeconds: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      material: !<reference.Material> 3ebf5e90-21a7-4a2c-bf89-4429ddb2c375
+      lineColor: !<Vec4> {x: 0.259000, y: 0.522000, z: 0.957000, w: 0.500000}
+      widthCm: !<float> 30.000000
+      glowCm: !<float> 12.000000
+      fadeShare: 0.300000
+      swingSeconds: 0.900000
   ScriptTypes:
     "":
       {}
@@ -6643,7 +6930,7 @@
     - fa104dde-c383-42e2-851a-3d782fc41b3f: 737c1da7-fc67-4d97-44e4-019e8bd3fdc7
     - fa4a4289-98a9-4a8f-9965-16e63cda1ad0: 1cffd4fc-cf46-4ac2-7349-926540d00423
   Name: SIKExamples
-  Enabled: true
+  Enabled: false
   Layers: 1
   LocalTransform: !<TransformEntity>
     Position: {x: 0.000000, y: 0.000000, z: 0.000000}
@@ -6657,6 +6944,32 @@
     - !<own> 687552b3-0b5e-4940-9d76-162f7072be9b
   Components:
     []
+- !<ScriptComponent/becbfa63-7068-4326-acd2-a488cf116f7f>
+  PrefabRemaps:
+    []
+  Name: FindYourWayModePanelUI
+  Enabled: true
+  ScriptAsset: !<reference> 87439cd4-55b7-4645-88af-d1c3a12c9e84
+  ScriptInputsDefault:
+    title: true
+    subtitle: true
+    walkLabel: true
+    stepFreeLabel: true
+    textColor: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      title: "How are you getting there?"
+      subtitle: Choose once for the whole trip
+      walkLabel: Walk
+      stepFreeLabel: Step-Free (wheelchair)
+      buttonWidthCm: !<float> 30.000000
+      buttonHeightCm: 7.500000
+      textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ScriptTypes:
+    "":
+      {}
 - !<ScriptComponent/bee1bfd7-28b2-4d0c-a48f-567d14dfb75e>
   PrefabRemaps:
     []
@@ -6712,6 +7025,21 @@
     - !<own> 7111f745-0ae3-43a7-88f2-99a98ecce5ac
   Components:
     - !<own> e1b890ae-9848-458a-ba0d-a76b79fd933c
+- !<SceneObject/c054aee9-8261-4bf2-bfcf-97d846fd7743>
+  PrefabRemaps:
+    []
+  Name: TurnArrow
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 62c836e9-e760-4baf-9049-062172800389
 - !<SceneObject/c1a62fa3-d14f-4a8e-936f-03991a4ae6c5>
   PrefabRemaps:
     []
@@ -6809,6 +7137,21 @@
   BlendNormals: false
   BlendShapes:
     {}
+- !<SceneObject/c40b343e-dde6-445f-8cae-07bfdadb7e4d>
+  PrefabRemaps:
+    []
+  Name: DemoControls
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: -38.000000, y: -60.000000, z: -42.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 0765650c-0d53-4ab6-aa34-92f150efc8ff
 - !<Image/c51e9ac1-a97d-4c18-bcad-2484ecf21430>
   PrefabRemaps:
     []
@@ -7097,6 +7440,21 @@
   ScriptTypes:
     "":
       {}
+- !<SceneObject/ce3b8dd8-84bc-479b-80e2-af2dd594acff>
+  PrefabRemaps:
+    []
+  Name: ArrivalCard
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 8885f245-15db-4224-a2ef-6afac601eb19
 - !<SceneObject/d029bf48-19f5-41ef-add6-c6cc721f8ad4>
   PrefabRemaps:
     - 00880ed6-4e71-401a-be8e-283b0661f485: faa471eb-2331-4766-6fd1-526f145525c6
@@ -8060,6 +8418,45 @@
     InvertRotation: false
   SurfaceOptions: !<SurfaceOptions>
     EnhanceWithNativeAR: false
+- !<ScriptComponent/e9c3f69a-bd88-461d-ade2-27d16c927262>
+  PrefabRemaps:
+    []
+  Name: FindYourWayMain
+  Enabled: true
+  ScriptAsset: !<reference> d0bdf33e-8bba-4454-9763-31fde3229a3d
+  ScriptInputsDefault:
+    mapKey: true
+    tryOnlineMap: true
+    lineAheadM: true
+    halfViewDeg: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      camera: !<reference.SceneObject> 00000000-0000-0065-0000-000000000064
+      world: !<reference.SceneObject> 57b932a0-8e3b-4dee-b16b-cf8c437c47a5
+      building: !<reference.SceneObject> 79346b69-5c29-4cc1-9ab9-d8c8ef373ed4
+      routeLine: !<MappingBased.AssignableType_1> bdbe89a1-c3df-4d36-a9c8-07c60423726c
+      standIn: !<MappingBased.AssignableType_2> 002dd432-bc4f-4dda-b0fc-0526213373b1
+      turnArrow: !<MappingBased.AssignableType_3> 62c836e9-e760-4baf-9049-062172800389
+      modePanel: !<MappingBased.AssignableType_4> becbfa63-7068-4326-acd2-a488cf116f7f
+      buildingUI: !<MappingBased.AssignableType_5> 9a871616-805d-4668-82e7-6a948e06b8d8
+      demoControls: !<MappingBased.AssignableType_6> 0765650c-0d53-4ab6-aa34-92f150efc8ff
+      hud: !<MappingBased.AssignableType_7> bc3ed2f0-9cd6-4e6f-bd29-b0130523290d
+      arrivalCard: !<MappingBased.AssignableType_8> 8885f245-15db-4224-a2ef-6afac601eb19
+      internetModule: !<reference.InternetModule> 4ce0c535-05ea-4273-ab39-6e2d18686686
+      chime: !<reference.AudioTrackAsset> fed4446f-8a97-484e-8dd6-713dc07e2d7c
+      mapKey: airport
+      tryOnlineMap: true
+      eyeHeightCm: !<float> 180.000000
+      signOffset: !<Vec3> {x: 0.000000, y: 0.000000, z: -250.000000}
+      lineAheadM: !<float> 10.000000
+      halfViewDeg: !<float> 16.000000
+      modePanelOffset: !<Vec3> {x: 8.000000, y: -4.000000, z: -100.000000}
+      demoOffset: !<Vec3> {x: -15.000000, y: -16.000000, z: -80.000000}
+  ScriptTypes:
+    "":
+      {}
 - !<SceneObject/ea809365-8119-4c93-84d8-8bd5ba3ba0a9>
   PrefabRemaps:
     []
@@ -8563,6 +8960,21 @@
     []
   Components:
     - !<own> 541cf08f-dd5a-4e26-82dc-94694c80be49
+- !<SceneObject/f7932dd0-befa-4905-a37f-9f9d1dc7bc65>
+  PrefabRemaps:
+    []
+  Name: ModePanel
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: -20.000000, z: -100.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> becbfa63-7068-4326-acd2-a488cf116f7f
 - !<SceneObject/f7cefa9a-efd1-4a0b-b211-b614e3469272>
   PrefabRemaps:
     []
@@ -8689,6 +9101,21 @@
     - !<own> 9fd08568-00f8-4d90-9a83-e819cd1cae6c
   Components:
     []
+- !<SceneObject/fbec315a-2f96-4e36-b54e-8f9c237f3e12>
+  PrefabRemaps:
+    []
+  Name: BuildingUI
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 9a871616-805d-4668-82e7-6a948e06b8d8
 - !<SceneObject/fd2a8e9f-6679-46b5-a39b-5626570dcf96>
   PrefabRemaps:
     []

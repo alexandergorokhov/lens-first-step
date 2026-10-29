@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "name": "Preview room floor",
+  "units": "m",
+  "axes": "x east, y up, z north; a short route on the preview room's real floor (no stand-in model)",
+  "place": {
+    "title": "Preview room",
+    "standInLabel": "Line on the room's real floor",
+    "standInModel": false,
+    "start": "sign",
+    "destination": "window",
+    "levels": [ { "y": 0, "name": "Room floor" } ],
+    "footprint": { "minX": -2, "maxX": 2, "minZ": 0, "maxZ": 4 },
+    "scanSign": { "title": "You are here", "button": "Scan sign", "hint": "on real Specs: look at the sign" },
+    "events": [
+      { "id": "spotChange", "type": "destinationChanged", "to": "door", "button": "Change to the door", "card": "Destination changed: door" }
+    ]
+  },
+  "nodes": [
+    { "id": "sign",   "x": 0,    "y": 0, "z": 0,   "kind": "sign",        "label": "You are here" },
+    { "id": "mid",    "x": 0,    "y": 0, "z": 2.5, "kind": "junction",    "label": "Middle of the room" },
+    { "id": "window", "x": -1.5, "y": 0, "z": 3.5, "kind": "destination", "type": "spot", "code": "Window", "label": "Window", "arrivalCard": "Window. You made it." },
+    { "id": "door",   "x": 1.5,  "y": 0, "z": 3,   "kind": "destination", "type": "spot", "code": "Door", "label": "Door", "arrivalCard": "Door. You made it." }
+  ],
+  "edges": [
+    { "from": "sign", "to": "mid",    "length": 2.5, "kind": "walk", "open": true },
+    { "from": "mid",  "to": "window", "length": 1.8, "kind": "walk", "open": true },
+    { "from": "mid",  "to": "door",   "length": 1.6, "kind": "walk", "open": true }
+  ]
+}

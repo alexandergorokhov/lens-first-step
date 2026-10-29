@@ -1,0 +1,125 @@
+// Shared helpers for the Find Your Way LEAF scenarios.
+// Interactions go through LEAF's DefaultLeafInteractor against the real UIKit/SIK buttons
+// (found by SceneObject name). Walking is simulated with FindYourWayMain.debugSetPose
+// (map metres), because LEAF cannot move the device-tracked camera.
+
+import {DefaultLeafInteractor} from "Leaf.lspkg/Interactors/interactor/DefaultLeafInteractor"
+import {findInteractableByName} from "Leaf.lspkg/Interactors/InteractableUtils"
+import {findSceneObjectByName, sleep} from "Leaf.lspkg/Utils/common/Utils"
+import {FindYourWayMain} from "../Scripts/FindYourWayMain"
+import {findNode, MapData, MapEdge, parseMap, Profile, Vec3} from "../Scripts/FindYourWayRouter"
+import {MAP_SOURCES} from "../Scripts/FindYourWayMapLibrary"
+import {headingOf} from "../Scripts/FindYourWayGeometry"
+
+export function getMain(): FindYourWayMain {
+  const so = findSceneObjectByName("FindYourWay")
+  if (!so) throw new Error("SceneObject 'FindYourWay' not found")
+  const main = so.getComponent(FindYourWayMain.getTypeName()) as FindYourWayMain
+  if (!main) throw new Error("FindYourWayMain component not found")
+  return main
+}
+
+export async function tap(interactor: DefaultLeafInteractor, name: string): Promise<void> {
+  const target = findInteractableByName(name, undefined, true)
+  if (!target) throw new Error("Interactable '" + name + "' not found or not enabled")
+  await interactor.trigger(target)
+  await sleep(250)
+}
+
+export async function waitFor(cond: () => boolean, ms: number, what: string): Promise<void> {
+  const t0 = getTime()
+  while (!cond()) {
+    if ((getTime() - t0) * 1000 > ms) throw new Error("Timed out waiting for: " + what)
+    await sleep(100)
+  }
+}
+
+// Restart on the airport map, choose a mode, stand 1.5 m in front of the sign, pinch it.
+export async function startTrip(interactor: DefaultLeafInteractor, profile: Profile,
+    footY: number = 0, beforeScan?: (m: FindYourWayMain) => void,
+    until: string[] = ["nav"], mapKey: string = "airport"): Promise<FindYourWayMain> {
+  const main = getMain()
+  for (let i = 0; i < 5 && main.getMapKey() !== mapKey; i++) {
+    await tap(interactor, "NextMapButton")
+    await sleep(800)
+  }
+  await tap(interactor, "RestartButton")
+  await waitFor(() => main.getPhase() === "mode" && main.isModePanelShown(), 3000, "mode panel")
+  await sleep(800) // world anchor settles
+  await tap(interactor, profile === "walk" ? "WalkButton" : "StepFreeButton")
+  await waitFor(() => main.getPhase() === "scan" && main.isScanSignVisible(), 3000, "scan sign")
+  const sign = findNode(main.getMapData(), main.getStartId())!
+  main.debugSetPose(sign.x, footY, sign.z - 1.5, 0)
+  if (beforeScan) beforeScan(main)
+  await tap(interactor, "ScanSignButton")
+  await waitFor(() => until.indexOf(main.getPhase()) >= 0, 8000, "phase " + until.join("/") + " after scan (map load ≤ 5 s)")
+  await sleep(300)
+  return main
+}
+
+// Simulated walk along map points (metres), `stepM` per frame-ish step, facing travel direction.
+// Stops early when `stop()` returns true. Returns the number of steps taken.
+export async function walkAlong(main: FindYourWayMain, pts: Vec3[], stepM: number,
+    stop?: () => boolean): Promise<number> {
+  let steps = 0
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i], b = pts[i + 1]
+    const d = Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2 + (b.z - a.z) ** 2)
+    const n = Math.max(1, Math.ceil(d / stepM))
+    const h = headingOf(a, b)
+    for (let k = 1; k <= n; k++) {
+      const t = k / n
+      main.debugSetPose(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t, h === null ? 0 : h)
+      await sleep(60)
+      steps++
+      if (stop && stop()) return steps
+    }
+  }
+  return steps
+}
+
+export function nodePoints(map: MapData, ids: string[]): Vec3[] {
+  return ids.map((id) => {
+    const n = findNode(map, id)!
+    return {x: n.x, y: n.y, z: n.z}
+  })
+}
+
+// Brute force over every simple path, honouring one-way escalators and the profile's rules.
+// Independent of the router's Dijkstra, so it can check "shortest".
+export function bruteShortest(map: MapData, from: string, to: string, profile: Profile): number {
+  let best = Infinity
+  const seen: {[id: string]: boolean} = {}
+  seen[from] = true
+  const walk = (at: string, sofar: number): void => {
+    if (sofar >= best) return
+    if (at === to) { best = sofar; return }
+    for (const e of map.edges) {
+      if (!e.open) continue
+      if (profile === "stepFree" && (e.kind === "stairs" || e.kind === "escalator")) continue
+      const next = e.from === at ? e.to : e.to === at && e.kind !== "escalator" ? e.from : null
+      if (next === null || seen[next]) continue
+      seen[next] = true
+      walk(next, sofar + e.length)
+      seen[next] = false
+    }
+  }
+  walk(from, 0)
+  return best
+}
+
+export function kindsOf(edges: MapEdge[]): string[] {
+  return edges.map((e) => e.kind)
+}
+
+export function log(msg: string): void {
+  print("[FYW-LEAF] " + msg)
+}
+
+export function bundledMaps(): {key: string; map: MapData}[] {
+  return MAP_SOURCES.map((s) => {
+    const r = parseMap(s.asset.getString())
+    if (!r.ok) throw new Error("bundled map " + s.key + " is invalid")
+    return {key: s.key, map: r.map}
+  })
+}

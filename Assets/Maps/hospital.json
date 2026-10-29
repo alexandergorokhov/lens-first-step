@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "name": "Stand-in hospital wing",
+  "units": "m",
+  "axes": "x east, y up, z north; wing 30 x 20 m; ground level y=0, level 1 y=4",
+  "place": {
+    "title": "Hospital",
+    "standInLabel": "Stand-in building",
+    "standInModel": true,
+    "start": "sign",
+    "destination": "ward4",
+    "levels": [
+      { "y": 0, "name": "Ground floor" },
+      { "y": 4, "name": "Level 1" }
+    ],
+    "footprint": { "minX": 0, "maxX": 30, "minZ": 0, "maxZ": 20 },
+    "scanSign": { "title": "You are here", "button": "Scan sign", "hint": "on real Specs: look at the sign" },
+    "events": [
+      { "id": "roomChange", "type": "destinationChanged", "to": "xray", "button": "Room change Ward 4 → X-ray", "card": "Room change Ward 4 → X-ray" },
+      { "id": "liftAOut", "type": "connectionClosed", "edge": "liftA", "at": "liftAG", "sign": "Lift A out of service", "card": "Lift A out of service. Re-routing." }
+    ]
+  },
+  "nodes": [
+    { "id": "sign",       "x": 15, "y": 0, "z": 1,  "kind": "sign",       "label": "You are here (main entrance)" },
+    { "id": "lobby",      "x": 15, "y": 0, "z": 6,  "kind": "junction",   "label": "Lobby" },
+    { "id": "reception",  "x": 10, "y": 0, "z": 6,  "kind": "assistance", "label": "Reception" },
+    { "id": "stairsFoot", "x": 20, "y": 0, "z": 10, "kind": "junction",   "label": "Stairs (bottom)" },
+    { "id": "stairsTop",  "x": 20, "y": 4, "z": 14, "kind": "junction",   "label": "Stairs (top)" },
+    { "id": "liftAG",     "x": 5,  "y": 0, "z": 10, "kind": "lift",       "label": "Lift A (ground)" },
+    { "id": "liftAU",     "x": 5,  "y": 4, "z": 10, "kind": "lift",       "label": "Lift A (level 1)" },
+    { "id": "liftBG",     "x": 25, "y": 0, "z": 4,  "kind": "lift",       "label": "Lift B (ground)" },
+    { "id": "liftBU",     "x": 25, "y": 4, "z": 4,  "kind": "lift",       "label": "Lift B (level 1)" },
+    { "id": "corridor1",  "x": 12, "y": 4, "z": 16, "kind": "junction",   "label": "Level 1 corridor" },
+    { "id": "ward4",      "x": 4,  "y": 4, "z": 18, "kind": "destination", "icon": "local_hospital", "type": "ward", "code": "Ward 4", "label": "Ward 4", "arrivalCard": "Ward 4. Visiting hours until 8 pm." },
+    { "id": "xray",       "x": 26, "y": 0, "z": 16, "kind": "destination", "icon": "local_hospital", "type": "room", "code": "X-ray", "label": "X-ray", "arrivalCard": "X-ray. Please take a seat." }
+  ],
+  "edges": [
+    { "from": "sign",       "to": "lobby",      "length": 5,    "kind": "walk",   "open": true },
+    { "from": "lobby",      "to": "reception",  "length": 5,    "kind": "walk",   "open": true },
+    { "from": "lobby",      "to": "stairsFoot", "length": 6.4,  "kind": "walk",   "open": true },
+    { "from": "stairsFoot", "to": "stairsTop",  "length": 5.7,  "kind": "stairs", "open": true },
+    { "from": "stairsTop",  "to": "corridor1",  "length": 8.2,  "kind": "walk",   "open": true },
+    { "from": "lobby",      "to": "liftAG",     "length": 10.8, "kind": "walk",   "open": true },
+    { "id": "liftA", "from": "liftAG", "to": "liftAU", "length": 4, "kind": "lift", "open": true },
+    { "from": "liftAU",     "to": "corridor1",  "length": 9.2,  "kind": "walk",   "open": true },
+    { "from": "lobby",      "to": "liftBG",     "length": 10.2, "kind": "walk",   "open": true },
+    { "id": "liftB", "from": "liftBG", "to": "liftBU", "length": 4, "kind": "lift", "open": true },
+    { "from": "liftBU",     "to": "corridor1",  "length": 17.7, "kind": "walk",   "open": true },
+    { "from": "corridor1",  "to": "ward4",      "length": 8.2,  "kind": "walk",   "open": true },
+    { "from": "lobby",      "to": "xray",       "length": 14.9, "kind": "walk",   "open": true }
+  ]
+}

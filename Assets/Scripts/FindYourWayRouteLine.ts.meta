@@ -1,0 +1,68 @@
+- !<AssetImportMetadata/9e7d9e27-5b4a-4f51-8a44-fd454737e005>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> d5879dd9-9412-4fc5-b20f-d5d50a02309e
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> d5879dd9-9412-4fc5-b20f-d5d50a02309e
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> a263414b-746f-4ade-aec0-09a5e82f8954
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/a263414b-746f-4ade-aec0-09a5e82f8954>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  VersionPrerelease: ""
+  UpdateOrder: 0
+  ComponentUid: 510b8041-6054-4558-bc18-67bf641eac71
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    fadeShare: false
+    glowCm: false
+    lineColor: false
+    material: false
+    swingSeconds: false
+    widthCm: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - material: !<reference.Material> 00000000-0000-0000-0000-000000000000
+      lineColor: !<Vec4> {x: 0.259000, y: 0.522000, z: 0.957000, w: 0.500000}
+      widthCm: !<float> 30.000000
+      glowCm: !<float> 12.000000
+      fadeShare: 0.300000
+      swingSeconds: 0.900000
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @ui {"widget":"label", "label":"<span style=\"color: #60A5FA;\">Route line – floor ribbon with glow and fade</span>"}'
+    - '// @ui {"widget":"separator"}'
+    - '// @ui {"widget":"group_start", "label":"References"}'
+    - '// @input Asset.Material material {"hint":"Unlit material to clone for the line (blend/depth are set in code)"}'
+    - '// @ui {"widget":"group_end"}'
+    - '// @ui {"widget":"separator"}'
+    - '// @ui {"widget":"group_start", "label":"Settings"}'
+    - '// @input vec4 lineColor = "{0.259,0.522,0.957,0.5}" {"hint":"Line colour and opacity (Google Maps blue #4285F4 at 50%)", "widget":"color"}'
+    - '// @input float widthCm = 30 {"hint":"Line width on the floor, cm", "widget":"slider", "min":10, "max":80, "step":1}'
+    - '// @input float glowCm = 12 {"hint":"Soft glow added on each side of the line, cm", "widget":"slider", "min":0, "max":40, "step":1}'
+    - '// @input float fadeShare = 0.3 {"hint":"Length over which the line fades out at its far end, as a share of the look-ahead", "widget":"slider", "min":0.05, "max":0.6, "step":0.05}'
+    - '// @input float swingSeconds = 0.9 {"hint":"Seconds for the re-route swing (old line fades, new line grows)", "widget":"slider", "min":0.2, "max":2, "step":0.1}'
+    - '// @ui {"widget":"group_end"}'

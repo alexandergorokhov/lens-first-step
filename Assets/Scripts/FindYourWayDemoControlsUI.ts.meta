@@ -1,0 +1,62 @@
+- !<AssetImportMetadata/d597e5e3-7143-4821-8ab0-f7b935213c5f>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> cebf47d7-923a-4f04-a358-5ee756b1a20b
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> cebf47d7-923a-4f04-a358-5ee756b1a20b
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> b55b2044-7195-4f2c-a8b0-d4d99e95a92e
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/b55b2044-7195-4f2c-a8b0-d4d99e95a92e>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  VersionPrerelease: ""
+  UpdateOrder: 0
+  ComponentUid: d5c10a27-7def-4a82-a2f6-8d76b72e93e8
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    note: false
+    readingDistanceCm: false
+    textColor: false
+    title: false
+    widthCm: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - title: Demo controls
+      note: Not part of the real app
+      widthCm: !<float> 24.000000
+      readingDistanceCm: !<float> 60.000000
+      textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @ui {"widget":"label", "label":"<span style=\"color: #60A5FA;\">Demo controls – low-left panel, not part of the real app</span>"}'
+    - '// @ui {"widget":"separator"}'
+    - '// @ui {"widget":"group_start", "label":"Settings"}'
+    - '// @input string title = "Demo controls" {"hint":"Panel title"}'
+    - '// @input string note = "Not part of the real app" {"hint":"Line under the title"}'
+    - '// @input float widthCm = 13 {"hint":"Panel width, cm", "widget":"slider", "min":12, "max":36, "step":1}'
+    - '// @input float readingDistanceCm = 80 {"hint":"Distance the panel is read from, cm (sizes the text)", "widget":"slider", "min":40, "max":110, "step":1}'
+    - '// @input vec4 textColor = "{1,1,1,1}" {"hint":"Text colour", "widget":"color"}'
+    - '// @ui {"widget":"group_end"}'

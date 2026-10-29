@@ -1,0 +1,68 @@
+- !<AssetImportMetadata/f295b19f-8861-43d2-8948-45886c5643bb>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> a88335a0-59b1-4fa6-92de-35ed0c2d3e3a
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> a88335a0-59b1-4fa6-92de-35ed0c2d3e3a
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> 49e3c393-df59-4191-9004-23b604355dc7
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/49e3c393-df59-4191-9004-23b604355dc7>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  VersionPrerelease: ""
+  UpdateOrder: 0
+  ComponentUid: 9831c391-dac6-452b-8070-e74b4734fe01
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    color: false
+    depthCm: false
+    dropCm: false
+    material: false
+    sideCm: false
+    sizeCm: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - material: !<reference.Material> 00000000-0000-0000-0000-000000000000
+      color: !<Vec4> {x: 0.259000, y: 0.522000, z: 0.957000, w: 0.900000}
+      depthCm: !<float> 60.000000
+      dropCm: !<float> 9.000000
+      sideCm: !<float> 9.000000
+      sizeCm: !<float> 3.000000
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @ui {"widget":"label", "label":"<span style=\"color: #60A5FA;\">Turn arrow – lower edge of view, toward the next turn</span>"}'
+    - '// @ui {"widget":"separator"}'
+    - '// @ui {"widget":"group_start", "label":"References"}'
+    - '// @input Asset.Material material {"hint":"Unlit material to clone for the arrow"}'
+    - '// @ui {"widget":"group_end"}'
+    - '// @ui {"widget":"separator"}'
+    - '// @ui {"widget":"group_start", "label":"Settings"}'
+    - '// @input vec4 color = "{0.259,0.522,0.957,0.9}" {"hint":"Arrow colour", "widget":"color"}'
+    - '// @input float depthCm = 60 {"hint":"Distance in front of the eyes, cm", "widget":"slider", "min":40, "max":120, "step":1}'
+    - '// @input float dropCm = 10 {"hint":"How far below the centre of view, cm (at depthCm)", "widget":"slider", "min":0, "max":20, "step":0.5}'
+    - '// @input float sideCm = 4 {"hint":"Max sideways shift toward the turn, cm", "widget":"slider", "min":0, "max":15, "step":0.5}'
+    - '// @input float sizeCm = 4.5 {"hint":"Arrow size, cm", "widget":"slider", "min":1, "max":8, "step":0.25}'
+    - '// @ui {"widget":"group_end"}'

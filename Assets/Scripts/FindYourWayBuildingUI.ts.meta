@@ -1,0 +1,56 @@
+- !<AssetImportMetadata/6534c68e-7d5f-408e-81bf-e4dca408da8e>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> 088a80ae-1715-4e93-84af-8a035046538c
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> 088a80ae-1715-4e93-84af-8a035046538c
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> c7cea801-8304-4eb4-8321-1560b5bbc96d
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/c7cea801-8304-4eb4-8321-1560b5bbc96d>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  VersionPrerelease: ""
+  UpdateOrder: 0
+  ComponentUid: 80745399-f272-47f6-ad8b-0367d192f486
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    controlScale: false
+    placeSignScale: false
+    textColor: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+      controlScale: 1.300000
+      placeSignScale: 3.200000
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @ui {"widget":"label", "label":"<span style=\"color: #60A5FA;\">Building UI – signs and pinch targets inside the stand-in</span>"}'
+    - '// @ui {"widget":"separator"}'
+    - '// @ui {"widget":"group_start", "label":"Settings"}'
+    - '// @input vec4 textColor = "{1,1,1,1}" {"hint":"Sign text colour (light — the display is additive)", "widget":"color"}'
+    - '// @input float controlScale = 2 {"hint":"Scale of the scan sign and ride / closure controls (1 = sized for ~1.1 m reading distance)", "widget":"slider", "min":0.5, "max":3, "step":0.1}'
+    - '// @input float placeSignScale = 3.2 {"hint":"Scale of overhead place signs (gates, lifts) read from several metres away", "widget":"slider", "min":1, "max":6, "step":0.1}'
+    - '// @ui {"widget":"group_end"}'

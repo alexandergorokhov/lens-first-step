@@ -1,0 +1,74 @@
+- !<AssetImportMetadata/46d2441c-21b2-46e0-ae09-1b370d8060bd>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> c6fa0bf4-058a-4efb-aa32-dd916ef124e5
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> c6fa0bf4-058a-4efb-aa32-dd916ef124e5
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> 80e33018-2c55-491a-96d1-94d2ce5a9d43
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/80e33018-2c55-491a-96d1-94d2ce5a9d43>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  VersionPrerelease: ""
+  UpdateOrder: 0
+  ComponentUid: 5ccb99b8-3423-49ad-bf8f-57602ee50b08
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    connectorColor: false
+    floorColor: false
+    groundColor: false
+    liftColor: false
+    material: false
+    pathColor: false
+    wallColor: false
+    wallHeightM: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - material: !<reference.Material> 00000000-0000-0000-0000-000000000000
+      floorColor: !<Vec4> {x: 0.920000, y: 0.950000, z: 1.000000, w: 0.100000}
+      wallColor: !<Vec4> {x: 0.850000, y: 0.900000, z: 1.000000, w: 0.070000}
+      connectorColor: !<Vec4> {x: 0.800000, y: 0.880000, z: 1.000000, w: 0.320000}
+      liftColor: !<Vec4> {x: 0.900000, y: 0.940000, z: 1.000000, w: 0.220000}
+      groundColor: !<Vec4> {x: 0.750000, y: 1.000000, z: 0.820000, w: 0.080000}
+      pathColor: !<Vec4> {x: 1.000000, y: 0.950000, z: 0.850000, w: 0.220000}
+      wallHeightM: !<float> 3.000000
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @ui {"widget":"label", "label":"<span style=\"color: #60A5FA;\">Stand-in building – box model generated from the map</span>"}'
+    - '// @ui {"widget":"separator"}'
+    - '// @ui {"widget":"group_start", "label":"References"}'
+    - '// @input Asset.Material material {"hint":"Unlit material to clone for every part (blend/depth set in code)"}'
+    - '// @ui {"widget":"group_end"}'
+    - '// @ui {"widget":"separator"}'
+    - '// @ui {"widget":"group_start", "label":"Settings"}'
+    - '// @input vec4 floorColor = "{0.92,0.95,1,0.10}" {"hint":"Floor slab colour (light, translucent so the blue line stands out)", "widget":"color"}'
+    - '// @input vec4 wallColor = "{0.85,0.9,1,0.07}" {"hint":"Wall colour", "widget":"color"}'
+    - '// @input vec4 connectorColor = "{0.8,0.88,1,0.32}" {"hint":"Escalator / stairs / ramp colour", "widget":"color"}'
+    - '// @input vec4 liftColor = "{0.9,0.94,1,0.22}" {"hint":"Lift shaft colour", "widget":"color"}'
+    - '// @input vec4 groundColor = "{0.75,1,0.82,0.08}" {"hint":"Outdoor ground colour (maps with buildings, e.g. a campus)", "widget":"color"}'
+    - '// @input vec4 pathColor = "{1,0.95,0.85,0.22}" {"hint":"Outdoor path colour", "widget":"color"}'
+    - '// @input float wallHeightM = 3 {"hint":"Wall height, m", "widget":"slider", "min":1, "max":6, "step":0.5}'
+    - '// @ui {"widget":"group_end"}'

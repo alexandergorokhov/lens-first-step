@@ -1,0 +1,59 @@
+- !<AssetImportMetadata/b86e045c-2d4f-4a29-99aa-b6db48b0e211>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> 1c808812-8022-4137-91bc-6e33a237a6a7
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> 1c808812-8022-4137-91bc-6e33a237a6a7
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> c68f99bf-39db-4dfe-a21e-a21fbaedb7cc
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/c68f99bf-39db-4dfe-a21e-a21fbaedb7cc>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  VersionPrerelease: ""
+  UpdateOrder: 0
+  ComponentUid: 5f2be9fb-c31b-4934-9bb7-26b2825d1919
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    badgePosition: false
+    cardPosition: false
+    cardSeconds: false
+    textColor: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - cardPosition: !<Vec3> {x: 11.000000, y: 6.500000, z: -70.000000}
+      badgePosition: !<Vec3> {x: -12.000000, y: 7.500000, z: -70.000000}
+      cardSeconds: !<float> 5.000000
+      textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @ui {"widget":"label", "label":"<span style=\"color: #60A5FA;\">HUD – notice card (top-right) and map badge</span>"}'
+    - '// @ui {"widget":"separator"}'
+    - '// @ui {"widget":"group_start", "label":"Settings"}'
+    - '// @input vec3 cardPosition = "{7,7,-70}" {"hint":"Notice card position relative to the camera, cm (top-right, inside the ~32° view)"}'
+    - '// @input vec3 badgePosition = "{-8,8,-70}" {"hint":"Map badge position relative to the camera, cm"}'
+    - '// @input float cardSeconds = 5 {"hint":"Seconds the notice card stays up", "widget":"slider", "min":1, "max":15, "step":0.5}'
+    - '// @input vec4 textColor = "{1,1,1,1}" {"hint":"Card text colour", "widget":"color"}'
+    - '// @ui {"widget":"group_end"}'

@@ -1,0 +1,68 @@
+- !<AssetImportMetadata/7159476f-82f1-447a-96f9-c7b553e6cebb>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> 87439cd4-55b7-4645-88af-d1c3a12c9e84
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> 87439cd4-55b7-4645-88af-d1c3a12c9e84
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> ae139c6d-c72a-4722-a15c-a964386f82a1
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/ae139c6d-c72a-4722-a15c-a964386f82a1>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  VersionPrerelease: ""
+  UpdateOrder: 0
+  ComponentUid: 4d99b047-45ec-4689-8a00-55b24d60ff0d
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    buttonHeightCm: false
+    buttonWidthCm: false
+    stepFreeLabel: false
+    subtitle: false
+    textColor: false
+    title: false
+    walkLabel: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - title: "How are you getting there?"
+      subtitle: Choose once for the whole trip
+      walkLabel: Walk
+      stepFreeLabel: Step-Free (wheelchair)
+      buttonWidthCm: !<float> 28.000000
+      buttonHeightCm: !<float> 7.000000
+      textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @ui {"widget":"label", "label":"<span style=\"color: #60A5FA;\">Mode panel – Walk or Step-Free, chosen once</span>"}'
+    - '// @ui {"widget":"separator"}'
+    - '// @ui {"widget":"group_start", "label":"Settings"}'
+    - '// @input string title = "How are you getting there?" {"hint":"Panel title"}'
+    - '// @input string subtitle = "Choose once for the whole trip" {"hint":"Line under the title"}'
+    - '// @input string walkLabel = "Walk" {"hint":"Label of the walking button"}'
+    - '// @input string stepFreeLabel = "Step-Free (wheelchair)" {"hint":"Label of the wheelchair / step-free button"}'
+    - '// @input float buttonWidthCm = 30 {"hint":"Width of each mode button, cm", "widget":"slider", "min":16, "max":40, "step":1}'
+    - '// @input float buttonHeightCm = 7.5 {"hint":"Height of each mode button, cm (big targets)", "widget":"slider", "min":4, "max":10, "step":0.5}'
+    - '// @input vec4 textColor = "{1,1,1,1}" {"hint":"Text and icon colour (keep light — the display is additive)", "widget":"color"}'
+    - '// @ui {"widget":"group_end"}'

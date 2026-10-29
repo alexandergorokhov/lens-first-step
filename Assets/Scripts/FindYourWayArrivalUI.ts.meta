@@ -1,0 +1,53 @@
+- !<AssetImportMetadata/8ff9516f-1c63-4b32-aa7b-0ca3bdc51fa3>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> d7432ea3-43b9-4852-8246-6dc8b0c530e9
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> d7432ea3-43b9-4852-8246-6dc8b0c530e9
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> 694b936d-e6e2-4e24-b313-1d5372131c6a
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/694b936d-e6e2-4e24-b313-1d5372131c6a>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  VersionPrerelease: ""
+  UpdateOrder: 0
+  ComponentUid: 5b340769-f5a3-46c1-9156-202f0eb8c744
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    cardScale: false
+    textColor: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - cardScale: 2.400000
+      textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @ui {"widget":"label", "label":"<span style=\"color: #60A5FA;\">Arrival card – shown within 3 m of the destination</span>"}'
+    - '// @ui {"widget":"separator"}'
+    - '// @ui {"widget":"group_start", "label":"Settings"}'
+    - '// @input float cardScale = 2.4 {"hint":"Card scale (1 = sized for ~1.1 m reading distance; the card is read from ~3 m)", "widget":"slider", "min":1, "max":5, "step":0.1}'
+    - '// @input vec4 textColor = "{1,1,1,1}" {"hint":"Text colour", "widget":"color"}'
+    - '// @ui {"widget":"group_end"}'

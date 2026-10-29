@@ -16,3 +16,7 @@ PluginsUserPreferences/
 
 # Node
 node_modules/
+
+# Lens Studio / agent leftovers
+Plugins/
+.virtual-scene*.json

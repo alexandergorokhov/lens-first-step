@@ -1,0 +1,82 @@
+// Pure guidance and coordinate maths shared by the Lens and the Node tests. No imports and no
+// Lens globals, so the same file runs in both. The Lens keeps a byte-identical copy at
+// Assets/Scripts/FindYourWayGeometry.ts.
+//
+// Map metres: x east, y up, z north. Headings: degrees clockwise from north.
+// Building-local centimetres: the start sign at the origin, north along -Z, y up.
+
+export interface XYZ {
+  x: number;
+  y: number;
+  z: number;
+}
+
+export function headingOf(a: XYZ, b: XYZ): number | null {
+  const dx = b.x - a.x;
+  const dz = b.z - a.z;
+  if (Math.abs(dx) < 1e-3 && Math.abs(dz) < 1e-3) return null;
+  return (Math.atan2(dx, dz) * 180) / Math.PI;
+}
+
+export function wrap(deg: number): number {
+  let d = deg;
+  while (d > 180) d -= 360;
+  while (d < -180) d += 360;
+  return d;
+}
+
+// Signed yaw from the viewer's heading to the target (+ = to the right).
+export function yawTo(user: XYZ, headingDeg: number, target: XYZ): number | null {
+  const h = headingOf(user, target);
+  if (h === null) return null;
+  return wrap(h - headingDeg);
+}
+
+export function flatDistance(a: XYZ, b: XYZ): number {
+  const dx = a.x - b.x;
+  const dz = a.z - b.z;
+  return Math.sqrt(dx * dx + dz * dz);
+}
+
+// Given the route from the traveller onward ([closest point, next node, ...], e.g. from
+// lineAhead with a long look-ahead), the next point where it bends by at least minTurnDeg,
+// or its end.
+export function nextTurnAlong(ahead: XYZ[], minTurnDeg: number = 25): XYZ | null {
+  if (ahead.length < 2) return null;
+  for (let i = 1; i < ahead.length - 1; i++) {
+    const h1 = headingOf(ahead[i - 1], ahead[i]);
+    const h2 = headingOf(ahead[i], ahead[i + 1]);
+    if (h1 === null || h2 === null) continue;
+    if (Math.abs(wrap(h2 - h1)) >= minTurnDeg) return ahead[i];
+  }
+  return ahead[ahead.length - 1];
+}
+
+// True when the turn arrow should show: the next turn is more than halfViewDeg off the
+// viewer's heading and at least minDistance away.
+export function turnOutOfView(user: XYZ, headingDeg: number, turn: XYZ | null, halfViewDeg: number,
+    minDistance: number = 1.5): boolean {
+  if (!turn || flatDistance(user, turn) < minDistance) return false;
+  const yaw = yawTo(user, headingDeg, turn);
+  return yaw !== null && Math.abs(yaw) > halfViewDeg;
+}
+
+// Map metres -> building-local cm (origin = start node's x/z).
+export function mapToLocalCm(p: XYZ, originX: number, originZ: number, liftCm: number = 0): XYZ {
+  return { x: (p.x - originX) * 100, y: p.y * 100 + liftCm, z: -(p.z - originZ) * 100 };
+}
+
+// Building-local cm of the eyes -> map metres of the feet.
+export function localCmToMap(local: XYZ, originX: number, originZ: number, eyeHeightCm: number): XYZ {
+  return { x: local.x / 100 + originX, y: (local.y - eyeHeightCm) / 100, z: originZ - local.z / 100 };
+}
+
+// The drawn line ends at the foot of a vertical lift segment (ridden with the floor button).
+export function stopAtLift<T extends XYZ>(pts: T[]): T[] {
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1];
+    const b = pts[i];
+    if (Math.abs(b.y - a.y) > 1 && flatDistance(a, b) < 0.5) return pts.slice(0, i);
+  }
+  return pts;
+}

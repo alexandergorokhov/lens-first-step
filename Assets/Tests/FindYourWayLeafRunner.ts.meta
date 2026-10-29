@@ -1,0 +1,53 @@
+- !<AssetImportMetadata/ac6016b9-831b-480e-aba1-ae90a338524a>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> ebea0cbb-3329-49b4-9a1a-b3e10d249619
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> ebea0cbb-3329-49b4-9a1a-b3e10d249619
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> be509271-ed56-4fca-b303-5b9d4b4fb870
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/be509271-ed56-4fca-b303-5b9d4b4fb870>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  VersionPrerelease: ""
+  UpdateOrder: 0
+  ComponentUid: 8949cc1f-e9d7-4dd5-be25-33c8ad5296e3
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    autoRun: false
+    only: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - autoRun: false
+      only: ""
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @ui {"widget":"label", "label":"<span style=\"color: #60A5FA;\">LEAF runner – runs the Find Your Way scenarios on start</span>"}'
+    - '// @ui {"widget":"separator"}'
+    - '// @ui {"widget":"group_start", "label":"Settings"}'
+    - '// @input bool autoRun {"hint":"Run all registered scenarios when the Lens starts"}'
+    - '// @input string only {"hint":"Comma-separated scenario ids to run (empty = all)"}'
+    - '// @ui {"widget":"group_end"}'
