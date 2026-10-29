@@ -11,17 +11,16 @@ import {
   findRoute,
   parseMap,
   setEdgeOpen,
+  validateMap,
   type MapData,
   type MapEdge,
   type Profile,
 } from "../router.ts";
 
-const MAPS = [
-  { key: "airport", file: "map.json", lens: "airport.json" },
-  { key: "hospital", file: "hospital.json", lens: "hospital.json" },
-  { key: "campus", file: "campus.json", lens: "campus.json" },
-  { key: "room", file: "room.json", lens: "room.json" },
-];
+// The one list of bundled maps (also used by the sync tool, the map server and the Lens picker test).
+const MAPS: { key: string; file: string; lens: string }[] = JSON.parse(
+  readFileSync(new URL("../data/index.json", import.meta.url), "utf8"),
+).maps;
 
 function text(file: string): string {
   return readFileSync(new URL("../data/" + file, import.meta.url), "utf8");
@@ -83,28 +82,24 @@ for (const m of MAPS) {
       // lengths are given to 0.1 m, so allow the same 0.1 m rounding as the airport test
       assert.ok(e.length >= d - 0.1, `${e.from} -> ${e.to}: length ${e.length} < straight line ${d.toFixed(2)}`);
       assert.ok(EDGE_KINDS.includes(e.kind));
-      if (e.kind === "lift") assert.ok(e.id, `lift ${e.from} -> ${e.to} needs an id (it can be closed)`);
     }
-    const place = (map as any).place;
+    // Cross-references (lift ids, place start/destination, events) are the router's own check,
+    // the same one the Lens runs on every map it loads.
+    assert.equal(validateMap(map), null);
+    const place = map.place!;
     assert.ok(place, "place block");
-    assert.equal(findNode(map, place.start)?.kind, "sign", "start is a sign");
-    assert.equal(findNode(map, place.destination)?.kind, "destination", "destination node");
-    for (const ev of place.events) {
-      if (ev.type === "destinationChanged") assert.equal(findNode(map, ev.to)?.kind, "destination", ev.id);
-      if (ev.type === "connectionClosed") {
-        assert.ok(map.edges.some((e) => e.id === ev.edge), ev.id + " edge");
-        assert.ok(findNode(map, ev.at), ev.id + " sign node");
-      }
+    assert.equal(findNode(map, place.destination!)?.kind, "destination", "destination node");
+    for (const ev of place.events || []) {
+      if (ev.type === "destinationChanged") assert.equal(findNode(map, ev.to!)?.kind, "destination", ev.id);
     }
     for (const n of map.nodes) {
       if (n.kind !== "destination") continue;
-      const any = n as any;
-      assert.ok(any.label && any.arrivalCard, n.id + " needs a label and an arrival card");
+      assert.ok(n.label && n.arrivalCard, n.id + " needs a label and an arrival card");
     }
     const ys = new Set(map.nodes.map((n) => n.y));
     for (const y of ys) {
       // every floor used by a node has a level name, except small in-between landings (C pier style)
-      if (!place.levels.some((l: any) => l.y === y)) assert.fail(`${m.key}: no level name for y=${y}`);
+      if (!(place.levels || []).some((l) => l.y === y)) assert.fail(`${m.key}: no level name for y=${y}`);
     }
   });
 
@@ -136,7 +131,7 @@ for (const m of MAPS) {
     for (const e of map.edges) {
       if (!e.id) continue;
       const closed = setEdgeOpen(map, e.id, false);
-      const place = (map as any).place;
+      const place = map.place!;
       const r = findRoute(closed, place.start, place.destination, "stepFree");
       const edges = r.status === "route" ? r.edges : r.status === "askStaff" && r.assistance ? r.assistance.edges : [];
       for (const k of kinds(edges)) assert.ok(k !== "stairs" && k !== "escalator", `${e.id} closed: used ${k}`);
@@ -163,10 +158,10 @@ test("hospital: Lift A out of service re-routes Step-Free to Lift B", () => {
 
 test("hospital: room change Ward 4 -> X-ray re-routes on the ground floor", () => {
   const map = load("hospital.json");
-  const ev = (map as any).place.events.find((e: any) => e.type === "destinationChanged");
+  const ev = map.place!.events.find((e) => e.type === "destinationChanged");
   assert.equal(ev.button, "Room change Ward 4 → X-ray");
   const nav = new Navigator(map, "sign", "ward4", "walk");
-  assert.equal(nav.setGate(ev.to), true);
+  assert.equal(nav.setDestination(ev.to), true);
   assert.deepEqual(nav.route.status === "route" ? nav.route.nodes : [], ["sign", "lobby", "xray"]);
 });
 
@@ -184,9 +179,9 @@ test("room: short route on the room floor to the window, and the change to the d
   assert.deepEqual(route(map, "sign", "window", "walk").nodes, ["sign", "mid", "window"]);
   assert.deepEqual(route(map, "sign", "window", "stepFree").nodes, ["sign", "mid", "window"]);
   const nav = new Navigator(map, "sign", "window", "walk");
-  assert.equal(nav.setGate("door"), true);
+  assert.equal(nav.setDestination("door"), true);
   assert.deepEqual(nav.route.status === "route" ? nav.route.nodes : [], ["sign", "mid", "door"]);
-  assert.equal((map as any).place.standInModel, false, "no stand-in model: the line is drawn on the real floor");
+  assert.equal(map.place!.standInModel, false, "no stand-in model: the line is drawn on the real floor");
 });
 
 // ── Campus ──────────────────────────────────────────────────────────────────
@@ -195,7 +190,7 @@ test("campus: Walk to Lecture Hall 1 crosses the quad outdoors and takes the Sci
   const map = load("campus.json");
   const r = route(map, "sign", "lectureHall1", "walk");
   assert.deepEqual(r.nodes, ["sign", "quad", "sciDoor", "sciStairsFoot", "sciStairsTop", "sciFirst", "lectureHall1"]);
-  assert.ok(r.edges.slice(0, 2).every((e) => (e as any).outdoor === true), "sign -> quad -> Science entrance is outdoors");
+  assert.ok(r.edges.slice(0, 2).every((e) => e.outdoor === true), "sign -> quad -> Science entrance is outdoors");
 });
 
 test("campus: Step-Free to Lecture Hall 1 takes the Science lift; with the lift out it takes the ramp", () => {
@@ -210,11 +205,11 @@ test("campus: Step-Free to Lecture Hall 1 takes the Science lift; with the lift 
 
 test("campus: room change Lecture Hall 1 -> Lab 2 re-routes to the Science ground floor", () => {
   const map = load("campus.json");
-  const ev = (map as any).place.events.find((e: any) => e.type === "destinationChanged");
+  const ev = map.place!.events.find((e) => e.type === "destinationChanged");
   assert.equal(ev.card, "Room change Lecture Hall 1 → Lab 2");
   for (const profile of ["walk", "stepFree"] as Profile[]) {
     const nav = new Navigator(map, "sign", "lectureHall1", profile);
-    assert.equal(nav.setGate(ev.to), true);
+    assert.equal(nav.setDestination(ev.to), true);
     assert.deepEqual(nav.route.status === "route" ? nav.route.nodes : [], ["sign", "quad", "sciDoor", "lab2"]);
   }
 });
@@ -228,8 +223,8 @@ test("campus: the Library Reading Room is reached by stairs (Walk) or the Librar
 
 test("campus: buildings cover their indoor nodes and the destinations have campus icons", () => {
   const map = load("campus.json");
-  const place = (map as any).place;
-  const inside = (n: any, b: any) => n.x >= b.minX && n.x <= b.maxX && n.z >= b.minZ && n.z <= b.maxZ;
+  const place = map.place!;
+  const inside = (n: { x: number; z: number }, b: { minX: number; maxX: number; minZ: number; maxZ: number }) => n.x >= b.minX && n.x <= b.maxX && n.z >= b.minZ && n.z <= b.maxZ;
   for (const id of ["libStairsFoot", "libLiftG", "libFirst", "readingRoom"]) {
     assert.ok(inside(findNode(map, id), place.buildings[0]), id + " in the Library");
   }
@@ -237,7 +232,7 @@ test("campus: buildings cover their indoor nodes and the destinations have campu
     assert.ok(inside(findNode(map, id), place.buildings[1]), id + " in the Science building");
   }
   for (const id of ["sign", "quad"]) {
-    assert.ok(!place.buildings.some((b: any) => inside(findNode(map, id), b)), id + " is outdoors");
+    assert.ok(!(place.buildings || []).some((b) => inside(findNode(map, id)!, b)), id + " is outdoors");
   }
-  assert.deepEqual(["readingRoom", "lab2", "lectureHall1"].map((id) => (findNode(map, id) as any).icon), ["menu_book", "science", "school"]);
+  assert.deepEqual(["readingRoom", "lab2", "lectureHall1"].map((id) => findNode(map, id)!.icon), ["menu_book", "science", "school"]);
 });

@@ -78,13 +78,13 @@ test("S8 on the airport: at the escalator top facing back, the concourse turn is
 });
 
 test("map metres <-> building cm: the sign is the origin, north is -Z, round trip is exact", () => {
-  const origin = { x: 30, z: 2 };
-  assert.deepEqual(mapToLocalCm(P(30, 0, 2), origin.x, origin.z), P(0, 0, -0));
-  assert.deepEqual(mapToLocalCm(P(31, 6, 5), origin.x, origin.z, 1), P(100, 601, -300));
+  const origin = { x: 30, y: 0, z: 2 };
+  assert.deepEqual(mapToLocalCm(P(30, 0, 2), origin), P(0, 0, -0));
+  assert.deepEqual(mapToLocalCm(P(31, 6, 5), origin, 1), P(100, 601, -300));
   const eyes = { x: 250, y: 780, z: -1200 };
-  const feet = localCmToMap(eyes, origin.x, origin.z, 180);
+  const feet = localCmToMap(eyes, origin, 180);
   assert.deepEqual(feet, P(32.5, 6, 14));
-  const back = mapToLocalCm(P(feet.x, feet.y, feet.z), origin.x, origin.z, 180);
+  const back = mapToLocalCm(P(feet.x, feet.y, feet.z), origin, 180);
   assert.deepEqual(back, eyes);
 });
 

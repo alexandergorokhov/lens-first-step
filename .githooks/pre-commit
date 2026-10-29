@@ -1,0 +1,6 @@
+#!/bin/sh
+# Runs the core tests (sync check first) before every commit. Enable with: npm run hooks
+npm test || {
+  echo "pre-commit: npm test failed (run npm run sync if only the Lens copies differ)." >&2
+  exit 1
+}

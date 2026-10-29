@@ -52,8 +52,9 @@ Tip: the building is laid out from where you stand and face when you pick a mode
 1. On Demo controls, click **Restart trip**. Hold **Q** to drop to seated height.
 2. Click **Step-Free (wheelchair)**, then **Scan sign**.
 3. The line goes through the hall and right to **Lift 1** (about 18 m). No escalator, no stairs.
-4. Click the red **Lift 1 out of service** sign by the lift. Card: "Lift 1 out of service. Re-routing.", a chime, and the line swings to **Lift 2** (back through the hall, left and forward).
-5. Walk into Lift 2 and click **Ride to Departures**. It only works when you're inside or next to the lift.
+4. Click the red **Lift 1 out of service** sign by the lift (about 1.2 m up). Card: "Lift 1 out of service. Re-routing.", a chime, and the line swings to **Lift 2** (back through the hall, left and forward).
+5. Walk into Lift 2 and click **Ride to Departures** (works seated too). It only works within 2.5 m of the lift on its floor. Card: **"Lift up to Departures"**.
+   - Lift 2 has its own red sign too: pinch both lifts to see **"No step-free route. Ask staff at the assistance point."** and a line to the assistance point (arriving there shows "Assistance point"). Pinching a lift your route doesn't use only says it's out of service.
 6. Follow the line to Gate B12.
 7. Click **Gate change B12 → C3**: the route goes to the top of the C pier, then **Take ramp down** to Gate C3.
 
@@ -61,14 +62,16 @@ Tip: the building is laid out from where you stand and face when you pick a mode
 
 Click **Map: … (switch)** on Demo controls. It cycles **Airport → Hospital → Campus → Preview room** and restarts at the mode panel.
 
-- **Hospital:** Ward 4 on Level 1. Walk uses the stairs, Step-Free uses Lift A. The red sign is on Lift A (re-routes to Lift B). Demo controls has **Room change Ward 4 → X-ray**.
+- **Hospital:** Ward 4 on Level 1. Walk uses the stairs, Step-Free uses Lift A. Red signs on Lift A (re-routes to Lift B) and Lift B. Demo controls has **Room change Ward 4 → X-ray**.
 - **Campus** (outdoor paths + two buildings, first floors 4 m up):
   - Main gate sign → the **Quad** 14 m ahead. Info desk (assistance point) just left of the quad. **Science building** to the right, **Library** to the left.
   - **Walk to Lecture Hall 1 (53 m):** quad → Science entrance → **Take stairs up** (stairs foot, 4 m right and 5 m ahead of the entrance) → Lecture Hall 1.
   - **Step-Free (59 m):** quad → Science entrance → lift (8 m right, 5 m ahead of the entrance) → **Ride to First floor** → Lecture Hall 1.
-  - Red sign on the Science lift: Step-Free re-routes to **Take ramp up** (4 m left, 4 m ahead of the entrance).
+  - Red sign on the Science lift: Step-Free re-routes to **Take ramp up** (4 m left, 4 m ahead of the entrance). The Library lift has its own red sign.
   - **Room change Lecture Hall 1 → Lab 2** on Demo controls: both modes re-route to Lab 2 on the ground floor.
-- **Preview room:** a short blue line on the room's real floor to the Window, no stand-in building. **Change to the door** on Demo controls re-routes.
+- **Preview room:** a short blue line on the room's real floor to the Window, no stand-in building. Arrival is within 0.6 m, off-route at 1.5 m (set in the map). **Change to the door** on Demo controls re-routes.
+
+The **mapKey** setting on `FindYourWay` (Inspector) picks the start map: Airport, Hospital, Campus or Preview room.
 
 ## 8. Check these yourself (not yet confirmed by eye)
 
@@ -90,13 +93,15 @@ cd C:\Sasha\Projects\Lens\first-step\first-step
 npm test
 ```
 
-Expect `pass 69`, `fail 0`, `todo 1` (the todo is the real online download, which needs a public https map URL). Covers: Walk and Step-Free routes on all four maps, Step-Free never uses stairs or escalators, Walk is always shortest, closures and re-routes, destination changes, broken maps, unknown signs, the turn arrow maths, the map download URL, the local map server, the demo's beats and walking speed, and that the Lens copies of the code and maps match `src/core`.
+It first checks the Lens copies (`npm run sync:check`). Expect `pass 94`, `fail 0`, `todo 1` (the todo is the real online download, which needs a public https map URL). Covers: Walk and Step-Free routes on all four maps, Step-Free never uses stairs or escalators, Walk is always shortest, closures and re-routes, destination changes, broken maps, unknown signs, the turn arrow maths, the map download URL, the local map server, the demo's beats and walking speed, and that the Lens copies of the code and maps match `src/core`.
+
+After editing anything in `src/core`, run `npm run sync` to copy it into `Assets/`. `npm run hooks` (once) makes git run `npm test` before every commit.
 
 ### b. LEAF tests (the running Lens, about 2 minutes)
 
 1. In Lens Studio's Scene Hierarchy select **LeafIndex**, tick **autoRun** in the Inspector. (To run just one, type its id in **only**, e.g. `dc4-gate-change-stairs-and-ramp`.)
 2. Reset the preview.
-3. In the **Logger** panel look for `[FYW-LEAF] RESULT` lines and `SUMMARY 14/14 passed`.
+3. In the **Logger** panel look for `[FYW-LEAF] RESULT` lines and `SUMMARY 19/19 passed`.
 4. Untick **autoRun** afterwards so the preview opens straight into the demo.
 
 The 14 scenarios: your 5 done criteria (dc1–dc5), the two route rules, broken map (e2), no step-free route (e3), already at the destination (e4), unknown sign (e5), map switch, restart, and the whole autoplay demo at 10× speed (`demo-autoplay-completes`). `devpost/SCENARIOS.md` lists which test covers each scenario.

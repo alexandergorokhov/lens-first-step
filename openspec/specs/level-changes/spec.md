@@ -34,6 +34,9 @@ facing the way in (1.15 m up).
 - Verified by: Escalators are one-way: going down uses the stairs on Walk | none for the missing top button (gap)
 
 ### Requirement: Proximity rule
+Reach is horizontal distance on the same level (feet within 1 m of a level count as on it), so a
+seated or crouching traveller can ride; 2.5 m for lifts and 3.5 m for the others are defaults a map
+can change with `place.rideReach`.
 A ride SHALL only work from the end the traveller is standing at: within 2.5 m (`levelDistance`)
 of a lift node, or within 3.5 m of the foot of an escalator, stairs or ramp. Otherwise the Lens
 SHALL refuse, leave the traveller where they are and show "Walk to <node label> first" for 3 s
@@ -51,7 +54,7 @@ SHALL refuse, leave the traveller where they are and show "Walk to <node label> 
 - **THEN** the ride is refused
 - **WHEN** they move inside the lift and pinch again
 - **THEN** they are carried up 6 m
-- Verified by: dc3-stepfree-seated-lift-reroute (successful ride from inside Lift 2); the 2.5 m / 3.5 m thresholds: none (gap)
+- Verified by: C1 ride reach: seated traveller (feet −0.45 m) 0.5 m from lift2G can ride (also: 3 m away and another level refuse) | dc3b-seated-lift-ride, dc3-stepfree-seated-lift-reroute
 
 ### Requirement: Closed connections cannot be ridden
 If the ride's edge is closed, pinching its button SHALL do nothing but show "<node label> is out of
@@ -85,14 +88,14 @@ the new level.
 #### Scenario: X30 Ride confirmation card
 - **WHEN** a ride succeeds
 - **THEN** a card shows for 2.5 s naming the connection and level, e.g. "escalator up — Departures"
-- Verified by: none (gap)
+- Verified by: Spec gap: the ride card names the level once ("Lift up to Departures", "Stairs down to C pier") | dc3-stepfree-seated-lift-reroute, dc3b-seated-lift-ride
 
 ## Known gaps
 
-- Ride confirmation text is built by stripping "Ride to " from the label, so a lift ride reads
-  "Departures — Departures" (level name twice). Brief does not specify the text.
+- **Fixed (review round):** the ride card names the level once ("Lift up to Departures", was
+  "Departures — Departures"), built by `rideCard` in the shared place module (X30).
+- **Fixed (review round):** reach thresholds are tested (X26) and use horizontal distance on the
+  same level (a seated traveller could not ride before).
 - Brief mentions "E" (move up) as an alternative way up in the preview; the Lens and its tests
   only support the ride buttons (E is used for seated/standing height). Untested.
-- Proximity thresholds (2.5 m lift, 3.5 m others) have no direct test; only "far away refuses"
-  (escalator) and "inside the lift works" are tested.
 - Real riding feel is unproven (brief risk).

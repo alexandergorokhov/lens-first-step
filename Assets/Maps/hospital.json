@@ -17,7 +17,8 @@
     "scanSign": { "title": "You are here", "button": "Scan sign", "hint": "on real Specs: look at the sign" },
     "events": [
       { "id": "roomChange", "type": "destinationChanged", "to": "xray", "button": "Room change Ward 4 → X-ray", "card": "Room change Ward 4 → X-ray" },
-      { "id": "liftAOut", "type": "connectionClosed", "edge": "liftA", "at": "liftAG", "sign": "Lift A out of service", "card": "Lift A out of service. Re-routing." }
+      { "id": "liftAOut", "type": "connectionClosed", "edge": "liftA", "at": "liftAG", "sign": "Lift A out of service", "card": "Lift A out of service. Re-routing." },
+      { "id": "liftBOut", "type": "connectionClosed", "edge": "liftB", "at": "liftBG", "sign": "Lift B out of service", "card": "Lift B out of service. Re-routing." }
     ]
   },
   "nodes": [

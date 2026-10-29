@@ -78,6 +78,12 @@ If the scanned sign id is not a node of kind `sign` in the loaded map, the Lens 
   and the route status is "none"
 - Verified by: E5 Unknown sign id: 'This sign isn't in the map', nothing drawn | e5-unknown-sign
 
+#### Scenario: X60 Looking straight down keeps the heading
+- **GIVEN** the head looking (almost) straight down or up
+- **WHEN** the world is anchored or the yaw is read
+- **THEN** the last valid yaw is kept instead of a jump
+- Verified by: C13 yaw: looking straight down keeps the last valid yaw
+
 ## Known gaps
 
 - Mode panel position: the brief says "about 1 m in front, a little below eye level"; the code also

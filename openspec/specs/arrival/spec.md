@@ -8,6 +8,8 @@ over it.
 ## Requirements
 
 ### Requirement: Arrival within 3 m
+The arrival radius is measured horizontally on the destination's own level; 3 m is the default and a
+map's `place.arrivalRadius` can change it (the preview room uses 0.6 m).
 When the traveller's position is within `ARRIVAL_RADIUS = 3` m (3-D distance) of the destination
 node, the Navigator SHALL report "arrived"; the Lens SHALL enter the `arrived` phase, clear the line,
 hide the turn arrow, and show the arrival card 2 m above the destination, billboarded, with the
@@ -45,7 +47,7 @@ and resume navigation.
 - **GIVEN** the traveller has arrived
 - **WHEN** they walk more than 5 m away
 - **THEN** the arrival card hides and the line reappears from their position
-- Verified by: none (gap)
+- Verified by: S6b after arriving, 5.5 m from B12 does not report rerouted on consecutive frames and is not stuck
 
 ### Requirement: Already at the destination
 If the start is the destination, the trip SHALL arrive immediately: no line, arrival card shown.
@@ -67,8 +69,29 @@ study until 10 pm."; room "Window. You made it." / "Door. You made it."
 - **THEN** the card reads "Ward 4. Visiting hours until 8 pm."
 - Verified by: manual (preview)
 
+#### Scenario: X52 Arrival needs the same level
+- **GIVEN** a destination on a mezzanine 2.8 m up
+- **WHEN** the traveller stands right under it on the floor below
+- **THEN** that is not arrival; standing 0.5 m from it on the mezzanine is
+- Verified by: C9 arrival needs the same level: standing under a mezzanine destination is not arrival
+
+#### Scenario: X48 A small space sets its own distances
+- **GIVEN** the preview room map (`arrivalRadius 0.6`, `offRouteDistance 1.5`)
+- **WHEN** the traveller is 1 m past the sign, or changes to the door from mid-room
+- **THEN** the trip is still on route (not "arrived" at a window 2.9 m away), and the door change
+  gives the route `mid>door`
+- Verified by: C2 tripSettings: defaults 3 m arrival / 5 m off-route…; C2 room: one metre past the sign is still onRoute; C2 room: change to the door from mid-room gives a route
+
+#### Scenario: X54b Reaching the assistance point is an arrival there
+- **GIVEN** a Step-Free trip with no step-free route (both airport lifts out)
+- **WHEN** the traveller reaches the assistance point
+- **THEN** the trip arrives there and the arrival card reads "Assistance point"
+- Verified by: C11 askStaff: reaching the assistance point counts as arrival | e3-no-step-free-ask-staff
+
 ## Known gaps
 
-- The brief's "Boarding in 6 min." is a fixed text in the map, not a live time
-  (`arrivalMessage(map, gate, minutes)` exists in the router but the Lens uses the map text).
-- Arrival uses 3-D distance; at the airport C pier (5 m) vs departures (6 m) this has no effect.
+- The brief's "Boarding in 6 min." is a fixed text in the map (the node's `arrivalCard`), not a
+  live time. The airport-only router helper `arrivalMessage` was removed (review A4).
+- **Fixed (review round):** arrival is horizontal and on the destination's level (X52), not 3-D.
+- **Fixed (review round):** walking 5–5.4 m away after arriving no longer re-reports "rerouted"
+  every frame while staying stuck in "arrived" (X38).

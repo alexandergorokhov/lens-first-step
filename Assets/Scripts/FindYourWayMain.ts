@@ -10,9 +10,8 @@
 // The route logic is FindYourWayRouter.ts — a verbatim copy of src/core/router.ts.
 
 import {
-  ASK_STAFF_MESSAGE,
   findNode,
-  levelDistance,
+  levelsOf,
   lineAhead,
   loadMapWithTimeout,
   locateSign,
@@ -20,15 +19,19 @@ import {
   MapEdge,
   MapNode,
   Navigator,
+  noticeFor,
   parseMap,
   Profile,
   routePoints,
   setEdgeOpen,
+  tripSettings,
   Vec3,
+  withinReach,
 } from "./FindYourWayRouter"
 import {
   approachDir,
   arrivalText,
+  closureNotice,
   levelName,
   MAP_SOURCES,
   MapFrame,
@@ -37,8 +40,9 @@ import {
   PlaceEvent,
   PlaceInfo,
   placeOf,
+  rideCard,
 } from "./FindYourWayMapLibrary"
-import {nextTurnAlong, stopAtLift, turnOutOfView, yawTo} from "./FindYourWayGeometry"
+import {nextTurnAlong, stopAtLift, turnOutOfView, yawFromForward, yawTo} from "./FindYourWayGeometry"
 import {FindYourWayRouteLine} from "./FindYourWayRouteLine"
 import {FindYourWayStandIn} from "./FindYourWayStandIn"
 import {FindYourWayTurnArrow} from "./FindYourWayTurnArrow"
@@ -50,6 +54,21 @@ import {FindYourWayArrivalUI} from "./FindYourWayArrivalUI"
 
 export type Phase = "mode" | "scan" | "loading" | "nav" | "arrived" | "error"
 
+// Heights (cm above a node's floor) of the signs placed in the building.
+const SCAN_SIGN_CM = 125
+const DEST_SIGN_CM = 330 // overhead destination signs
+const ASSIST_SIGN_CM = 280
+const LIFT_SIGN_CM = 290
+const CONNECTION_SIGN_CM = 260 // escalator / stairs / ramp signs
+const PLACE_SIGN_CM = 300 // the "stand-in building" title sign
+const CLOSURE_SIGN_CM = 120 // the red out-of-service sign: ~1.2 m, readable seated or standing
+const RIDE_BUTTON_CM = 115
+const ARRIVAL_CARD_CM = 200
+const LINE_LIFT_CM = 1 // the floor line sits 1 cm above the floor
+const CLOSED_SIGN_TEXT = "Closed — re-routing"
+const RIDE_CARD_S = 2.5
+// Frames after a restart during which the world keeps re-anchoring to the settling camera.
+const ANCHOR_SETTLE_FRAMES = 30
 
 
 // A ride: from one end of a lift / escalator / stairs / ramp edge to the other.
@@ -60,7 +79,7 @@ interface Ride {
   to: string
   label: string
   icon: string
-  reach: number // metres from `at` within which the button works
+  reach: number // metres (horizontal, same level) from `at` within which the button works
 }
 
 @component
@@ -85,10 +104,11 @@ export class FindYourWayMain extends BaseScriptComponent {
   @ui.separator
   @ui.group_start("Settings")
   @input
-  @hint("Which bundled map to start with")
+  @hint("Which bundled map to start with (same list as src/core/data/index.json)")
   @widget(new ComboBoxWidget([
     new ComboBoxItem("Airport (demo)", "airport"),
     new ComboBoxItem("Hospital wing", "hospital"),
+    new ComboBoxItem("Campus (two buildings)", "campus"),
     new ComboBoxItem("Preview room floor", "room"),
   ]))
   mapKey: string = "airport"
@@ -161,6 +181,17 @@ export class FindYourWayMain extends BaseScriptComponent {
   private downloadOverride: string | null = null
   private startOverride: string | null = null
   private destinationOverride: string | null = null
+  // Trip state that survives the map (re)load at scan time: a destination change made before
+  // the scan (closures are in `closed`). Cleared by restart.
+  private tripDestination: string | null = null
+  // Bumped by every restart, so a slow map download from an earlier trip is ignored.
+  private tripGeneration = 0
+  // World y of the head while standing, taken while the anchor settles after a restart; the
+  // world is anchored at this height so sitting down or crouching later does not lower the floor.
+  private standingEyeY: number | null = null
+  private lastYaw = 0
+  private downloadDelayMs = 0
+  private cameraDropCm = 0
 
   onAwake() {
     const idx = MAP_SOURCES.map((m) => m.key).indexOf(this.mapKey)
@@ -226,14 +257,19 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.mapSource = null
     this.debugPose = null
     this.viewFollowsPose = false
+    this.tripGeneration++
+    this.tripDestination = null
+    this.standingEyeY = null
     this.downloadOverride = null
+    this.downloadDelayMs = 0
+    this.cameraDropCm = 0
     this.startOverride = null
     this.destinationOverride = null
     this.lastLineKey = ""
     this.lineMapPoints = []
-    this.anchorFrames = 30
+    this.anchorFrames = ANCHOR_SETTLE_FRAMES
     this.floorProbeFrames = 120
-    this.anchorWorld()
+    this.anchorWorld(true)
     this.buildPlace()
     this.hud.hideCard()
     this.hud.setBadge(null)
@@ -253,7 +289,8 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.profile = profile
     this.modePanel.hide()
     // The sign (and so the building) is placed in front of where the user stands now, so they
-    // can first step into clear floor and then choose.
+    // can first step into clear floor and then choose. The choice ends the settling.
+    this.anchorFrames = 0
     this.anchorWorld()
     this.buildingUI.setScanSignVisible(true)
     this.phase = "scan"
@@ -269,8 +306,16 @@ export class FindYourWayMain extends BaseScriptComponent {
     const url = this.tryOnlineMap ? mapUrl(this.mapBaseUrl, MAP_SOURCES[this.mapIndex]) : ""
     print("[FYW] map download: " + (url || "(none, built-in map)"))
     const override = this.downloadOverride
+    const delay = this.downloadDelayMs
     const fetchText = (u: string): Promise<string> => {
-      if (override !== null) return Promise.resolve(override)
+      if (override !== null) {
+        if (delay <= 0) return Promise.resolve(override)
+        return new Promise<string>((resolve) => {
+          const ev = this.createEvent("DelayedCallbackEvent")
+          ev.bind(() => resolve(override))
+          ev.reset(delay / 1000)
+        })
+      }
       if (!u || !this.internetModule) return Promise.reject(new Error("no download"))
       let pending: Promise<Response>
       try {
@@ -290,9 +335,9 @@ export class FindYourWayMain extends BaseScriptComponent {
         return Promise.reject(err)
       })
     }
-    const token = this.mapIndex
+    const generation = this.tripGeneration
     loadMapWithTimeout(fetchText, url, this.builtInText).then((res) => {
-      if (this.phase !== "loading" || token !== this.mapIndex) return
+      if (this.phase !== "loading" || generation !== this.tripGeneration) return
       this.startTrip(res.map, res.source, res.notice)
     })
   }
@@ -302,7 +347,10 @@ export class FindYourWayMain extends BaseScriptComponent {
     for (const id in this.closed) m = setEdgeOpen(m, id, false)
     const changed = JSON.stringify(m) !== JSON.stringify(this.map)
     this.setMap(m)
-    if (changed) this.buildPlace()
+    if (changed) {
+      this.buildPlace()
+      this.showClosures()
+    }
     this.mapSource = source
     this.hud.setBadge(source === "online" ? "online map" : "offline map")
     this.demoControls.setStatus((this.profile === "walk" ? "Walk" : "Step-Free") + " · " +
@@ -317,23 +365,24 @@ export class FindYourWayMain extends BaseScriptComponent {
       print("[FYW] scan failed: " + (located as {ok: false; message: string}).message)
       return
     }
-    this.nav = new Navigator(this.map, startId, this.destinationOverride || this.place.destination, this.profile as Profile)
+    const dest = this.destinationOverride || this.tripDestination || this.place.destination
+    this.nav = new Navigator(this.map, startId, dest, this.profile as Profile)
     this.phase = "nav"
     this.pendingSwing = true
     this.lastLineKey = ""
+    this.announce(null, null)
     this.reportRoute("scan")
   }
 
   private changeDestination(): void {
     const ev = this.firstEvent("destinationChanged")
     if (!ev || !ev.to) return
-    this.notify(ev.card || ev.button || "Destination changed", this.iconOfNode(ev.to))
+    this.tripDestination = ev.to
     if (this.nav) {
-      if (this.nav.to !== ev.to) this.nav.setGate(ev.to)
+      if (this.nav.to !== ev.to) this.nav.setDestination(ev.to)
       this.afterRouteChange()
-    } else {
-      this.place.destination = ev.to
     }
+    this.announce(ev.card || ev.button || "Destination changed", this.iconOfNode(ev.to))
     this.reportRoute("destination changed")
   }
 
@@ -341,8 +390,8 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (this.closed[edgeId]) return
     this.closed[edgeId] = true
     const ev = this.place.events.filter((e) => e.type === "connectionClosed" && e.edge === edgeId)[0]
-    this.buildingUI.setClosureClosed(edgeId, "Closed — re-routing")
-    this.standIn.setConnectionClosed(edgeId)
+    const r0 = this.nav ? this.nav.route : null
+    const usedIt = !!r0 && r0.status === "route" && r0.edges.some((e) => e.id === edgeId)
     if (this.nav) {
       this.nav.setEdgeOpen(edgeId, false)
       this.map = this.nav.map
@@ -350,12 +399,30 @@ export class FindYourWayMain extends BaseScriptComponent {
     } else {
       this.setMap(setEdgeOpen(this.map, edgeId, false))
     }
-    for (const id in this.rides) {
-      if (this.rides[id].edge.id === edgeId) this.buildingUI.setRideButtonText(id, "Out of service")
-    }
-    const askStaff = this.nav && this.nav.route.status === "askStaff"
-    this.notify(askStaff ? ASK_STAFF_MESSAGE : (ev && ev.card) || "Connection closed. Re-routing.", "block")
+    this.showClosures()
+    const text = ev ? closureNotice(ev, usedIt) : usedIt ? "Connection closed. Re-routing." : "Connection closed"
+    this.announce(text, "block")
     this.reportRoute("closed " + edgeId)
+  }
+
+  // Shows every closed connection: closed sign text, red plate, "Out of service" ride buttons.
+  // Also called after the place is rebuilt for a downloaded map.
+  private showClosures(): void {
+    for (const edgeId in this.closed) {
+      this.buildingUI.setClosureClosed(edgeId, CLOSED_SIGN_TEXT)
+      this.standIn.setConnectionClosed(edgeId)
+      for (const id in this.rides) {
+        if (this.rides[id].edge.id === edgeId) this.buildingUI.setRideButtonText(id, "Out of service")
+      }
+    }
+  }
+
+  // The one notice after a route change: the route's own notice (no route / ask staff / error)
+  // wins over the change's card; with neither, nothing is shown.
+  private announce(changeText: string | null, iconName: string | null): void {
+    const notice = this.nav ? noticeFor(this.nav.route) : null
+    if (notice) this.notify(notice, "info")
+    else if (changeText) this.notify(changeText, iconName)
   }
 
   // Lift / escalator / stairs / ramp ride: only from the end the user is standing at.
@@ -373,16 +440,17 @@ export class FindYourWayMain extends BaseScriptComponent {
       return
     }
     const user = this.userPos()
-    if (levelDistance(user, here) > r.reach) {
+    if (!withinReach(user, here, r.reach, levelsOf(map))) {
       this.hud.showCard("Walk to " + nodeLabel(map, r.at) + " first", "info", 3)
-      print("[FYW] ride " + id + " refused: " + levelDistance(user, here).toFixed(1) + " m away")
+      const dx = user.x - here.x, dz = user.z - here.z
+      print("[FYW] ride " + id + " refused: " + Math.sqrt(dx * dx + dz * dz).toFixed(1) + " m away, feet y " + user.y.toFixed(2))
       return
     }
     const delta = this.local(there).sub(this.local(here))
     this.rideOffset = this.rideOffset.add(delta)
     this.placeBuilding()
     if (this.debugPose) this.debugPose.pos = {x: there.x, y: there.y, z: there.z}
-    this.hud.showCard(r.label.replace(/^Ride to |^Ride /, "") + " — " + levelName(this.place, there.y), r.icon, 2.5)
+    this.hud.showCard(rideCard(r.edge.kind, there.y > here.y, levelName(this.place, there.y)), r.icon, RIDE_CARD_S)
     print("[FYW] ride " + id + " -> " + r.to)
   }
 
@@ -406,24 +474,34 @@ export class FindYourWayMain extends BaseScriptComponent {
   }
 
   private iconOfNode(id: string): string | null {
-    const n: any = findNode(this.nav ? this.nav.map : this.map, id)
+    const n = findNode(this.nav ? this.nav.map : this.map, id)
     return n && n.icon ? n.icon : null
   }
 
   // ── Scene placement ──────────────────────────────────────────────────────
 
+  // Head yaw about +Y; looking straight down or up keeps the last valid yaw.
   private yawAngle(): number {
     const d = this.camera.getTransform().getWorldRotation().multiplyVec3(new vec3(0, 0, -1))
-    return Math.atan2(-d.x, -d.z)
+    this.lastYaw = yawFromForward(d.x, d.z, this.lastYaw)
+    return this.lastYaw
+  }
+
+  // The head position (world), lowered by the test crouch hook.
+  private cameraPos(): vec3 {
+    return this.camera.getTransform().getWorldPosition().sub(new vec3(0, this.cameraDropCm, 0))
   }
 
   private headYaw(): quat {
     return quat.angleAxis(this.yawAngle(), vec3.up())
   }
 
-  private anchorWorld(): void {
-    const t = this.camera.getTransform()
-    this.world.getTransform().setWorldPosition(t.getWorldPosition())
+  // settling = during the frames after a restart, while the head is still the standing head;
+  // later re-anchors (choosing the mode) keep that height.
+  private anchorWorld(settling: boolean = false): void {
+    const cam = this.cameraPos()
+    if (settling || this.standingEyeY === null) this.standingEyeY = cam.y
+    this.world.getTransform().setWorldPosition(new vec3(cam.x, this.standingEyeY, cam.z))
     this.world.getTransform().setWorldRotation(this.headYaw())
     this.placeBuilding()
   }
@@ -485,6 +563,7 @@ export class FindYourWayMain extends BaseScriptComponent {
 
   private buildRides(map: MapData): void {
     this.rides = {}
+    const reach = tripSettings(map).rideReach
     let i = 0
     for (const e of map.edges) {
       const f = findNode(map, e.from), t = findNode(map, e.to)
@@ -496,13 +575,13 @@ export class FindYourWayMain extends BaseScriptComponent {
       for (const [a, b] of ends) {
         const up = b.y > a.y
         const lvl = levelName(this.place, b.y)
-        let label = "", ic = "elevator", reach = 3.5
-        if (e.kind === "lift") { label = "Ride to " + lvl; ic = "elevator"; reach = 2.5 }
+        let label = "", ic = "elevator"
+        if (e.kind === "lift") { label = "Ride to " + lvl; ic = "elevator" }
         else if (e.kind === "escalator") { label = "Ride escalator " + (up ? "up" : "down"); ic = "escalator" }
         else if (e.kind === "stairs") { label = "Take stairs " + (up ? "up" : "down"); ic = "stairs" }
         else { label = "Take ramp " + (up ? "up" : "down"); ic = "accessible" }
         const id = "r" + i++ + "_" + a.id
-        this.rides[id] = {id, edge: e, at: a.id, to: b.id, label, icon: ic, reach}
+        this.rides[id] = {id, edge: e, at: a.id, to: b.id, label, icon: ic, reach: e.kind === "lift" ? reach.lift : reach.other}
       }
     }
   }
@@ -515,19 +594,18 @@ export class FindYourWayMain extends BaseScriptComponent {
     ui.clear()
     const start = findNode(map, place.start)
     if (start) {
-      ui.setScanSign(this.local(start, 125), place.scanSign.title, place.scanSign.button,
+      ui.setScanSign(this.local(start, SCAN_SIGN_CM), place.scanSign.title, place.scanSign.button,
         place.scanSign.hint, place.standInLabel)
-      ui.addPlaceSign("StandIn", this.local(start, 300).add(new vec3(-260, 0, -150)),
+      ui.addPlaceSign("StandIn", this.local(start, PLACE_SIGN_CM).add(new vec3(-260, 0, -150)),
         place.standInLabel, place.title, "map")
     }
     for (const n of map.nodes) {
-      const any = n as any
       if (n.kind === "destination" || n.kind === "gate") {
-        ui.addPlaceSign(n.id, this.local(n, 330), n.label || n.id, any.type || null, any.icon || null)
+        ui.addPlaceSign(n.id, this.local(n, DEST_SIGN_CM), n.label || n.id, n.type || null, n.icon || null)
       } else if (n.kind === "assistance") {
-        ui.addPlaceSign(n.id, this.local(n, 280), n.label || n.id, null, "info")
+        ui.addPlaceSign(n.id, this.local(n, ASSIST_SIGN_CM), n.label || n.id, null, "info")
       } else if (n.kind === "lift") {
-        ui.addPlaceSign(n.id, this.local(n, 290).add(new vec3(0, 0, -60)), n.label || n.id, null, "elevator")
+        ui.addPlaceSign(n.id, this.local(n, LIFT_SIGN_CM).add(new vec3(0, 0, -60)), n.label || n.id, null, "elevator")
       }
     }
     for (const e of map.edges) {
@@ -538,7 +616,7 @@ export class FindYourWayMain extends BaseScriptComponent {
       const dir = t.y > f.y ? " ↑" : t.y < f.y ? " ↓" : ""
       const label = e.kind === "escalator" ? "Escalator" + dir : e.kind === "stairs" ? "Stairs" : "Ramp"
       const ic = e.kind === "escalator" ? "escalator" : e.kind === "stairs" ? "stairs" : "accessible"
-      ui.addPlaceSign("conn_" + e.from + "_" + e.to + "_" + e.kind, this.local(mid, 260), label, null, ic)
+      ui.addPlaceSign("conn_" + e.from + "_" + e.to + "_" + e.kind, this.local(mid, CONNECTION_SIGN_CM), label, null, ic)
     }
     this.buildRides(map)
     for (const id in this.rides) {
@@ -550,14 +628,14 @@ export class FindYourWayMain extends BaseScriptComponent {
         const ad = approachDir(map, a.id)
         const fwd = new vec3(ad.x, 0, -ad.z)
         const side = new vec3(-fwd.z, 0, fwd.x)
-        pos = this.local(a, 115).add(side.uniformScale(70)).sub(fwd.uniformScale(30))
+        pos = this.local(a, RIDE_BUTTON_CM).add(side.uniformScale(70)).sub(fwd.uniformScale(30))
       } else {
         // beside the foot of the escalator / stairs / ramp, facing the way in
         const pa = this.local(a), pb = this.local(b)
         let dir = new vec3(pb.x - pa.x, 0, pb.z - pa.z)
         dir = dir.length > 1 ? dir.normalize() : new vec3(0, 0, -1)
         const side = new vec3(-dir.z, 0, dir.x)
-        pos = pa.add(side.uniformScale(80)).add(dir.uniformScale(30)).add(new vec3(0, 115, 0))
+        pos = pa.add(side.uniformScale(80)).add(dir.uniformScale(30)).add(new vec3(0, RIDE_BUTTON_CM, 0))
       }
       ui.addRideButton(id, pos, r.label, r.icon)
     }
@@ -569,7 +647,7 @@ export class FindYourWayMain extends BaseScriptComponent {
       const ad = approachDir(map, n.id)
       const fwd = new vec3(ad.x, 0, -ad.z)
       const side = new vec3(-fwd.z, 0, fwd.x)
-      ui.addClosureSign(ev.edge, this.local(n, 150).sub(side.uniformScale(70)).add(fwd.uniformScale(60)), ev.sign || "Out of service")
+      ui.addClosureSign(ev.edge, this.local(n, CLOSURE_SIGN_CM).sub(side.uniformScale(70)).add(fwd.uniformScale(60)), ev.sign || "Out of service")
     }
     const dc = this.firstEvent("destinationChanged")
     this.demoControls.setEventLabel(dc ? dc.button || dc.card || "Change destination" : null,
@@ -586,7 +664,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (!this.camera || !this.demoControls) return
     if (this.anchorFrames > 0) {
       this.anchorFrames--
-      this.anchorWorld()
+      this.anchorWorld(true)
       if (this.phase === "mode") this.placeModePanel()
     }
     this.probeFloor()
@@ -607,9 +685,10 @@ export class FindYourWayMain extends BaseScriptComponent {
         this.routeLine.clear()
         this.turnArrow.hide()
         this.lineMapPoints = []
-        const d = findNode(this.nav.map, this.nav.to)
-        if (d) this.arrivalCard.show(arrivalText(this.nav.map, this.nav.to), this.local(d, 200), this.iconOfNode(this.nav.to))
-        print("[FYW] arrived at " + this.nav.to)
+        const at = this.nav.route.nodes[0]
+        const d = findNode(this.nav.map, at)
+        if (d) this.arrivalCard.show(arrivalText(this.nav.map, at), this.local(d, ARRIVAL_CARD_CM), this.iconOfNode(at))
+        print("[FYW] arrived at " + at)
       }
       return
     }
@@ -640,7 +719,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (key === this.lastLineKey && !this.pendingSwing) return
     this.lastLineKey = key
     this.lineMapPoints = pts
-    const local = pts.map((p) => this.local(p, 1))
+    const local = pts.map((p) => this.local(p, LINE_LIFT_CM))
     this.routeLine.setPath(local.length > 1 ? local : [], this.lineAheadM * 100, this.pendingSwing)
     this.pendingSwing = false
   }
@@ -672,7 +751,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   private userPos(): Vec3 {
     if (this.debugPose) return this.debugPose.pos
     const inv = this.building.getTransform().getInvertedWorldTransform()
-    const local = inv.multiplyPoint(this.camera.getTransform().getWorldPosition())
+    const local = inv.multiplyPoint(this.cameraPos())
     return this.frame.toMap(local, this.eye())
   }
 
@@ -702,7 +781,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   getMapKey(): string { return MAP_SOURCES[this.mapIndex].key }
   getMapData(): MapData { return this.nav ? this.nav.map : this.map }
   getMapSource(): string | null { return this.mapSource }
-  getDestinationId(): string { return this.nav ? this.nav.to : this.place.destination }
+  getDestinationId(): string { return this.nav ? this.nav.to : this.tripDestination || this.place.destination }
   getStartId(): string { return this.place.start }
   getRouteStatus(): string { return this.nav ? this.nav.route.status : "none" }
   getRouteNodes(): string[] { return this.nav && this.nav.route.status === "route" ? this.nav.route.nodes.slice() : [] }
@@ -745,9 +824,32 @@ export class FindYourWayMain extends BaseScriptComponent {
     return false
   }
   isArrivalCardShown(): boolean { return this.arrivalCard.getShownText() !== null }
+  getClosureSignText(edgeId: string): string | null { return this.buildingUI.getClosureSignText(edgeId) }
+  getRideButtonText(rideId: string): string | null { return this.buildingUI.getRideButtonText(rideId) }
+  isConnectionShownClosed(edgeId: string): boolean { return this.standIn.isConnectionShownClosed(edgeId) }
+  // Height (cm) of a connection's red sign above its node's floor.
+  getClosureSignHeightCm(edgeId: string): number {
+    const ev = this.place.events.filter((e) => e.type === "connectionClosed" && e.edge === edgeId)[0]
+    const n = ev && ev.at ? findNode(this.map, ev.at) : undefined
+    const p = this.buildingUI.getClosureSignLocalPos(edgeId)
+    return n && p ? p.y - this.local(n).y : -1
+  }
+  // World y of the floor the building stands on, and the drawn line in world space.
+  // True while the world still re-anchors to the settling camera after a restart.
+  isAnchorSettling(): boolean { return this.anchorFrames > 0 }
+  getFloorWorldY(): number { return this.building.getTransform().getWorldPosition().y }
+  getLineWorldPoints(): vec3[] {
+    const m = this.building.getTransform().getWorldTransform()
+    return this.routeLine.getPoints().map((p) => m.multiplyPoint(p))
+  }
 
   // Test hooks: set before the sign is scanned (cleared by Restart).
-  debugSetDownloadOverride(text: string | null): void { this.downloadOverride = text }
+  debugSetDownloadOverride(text: string | null, delayMs: number = 0): void {
+    this.downloadOverride = text
+    this.downloadDelayMs = delayMs
+  }
+  // Simulates sitting down / crouching: the camera reads this many cm lower than it is.
+  debugSetCameraDropCm(cm: number): void { this.cameraDropCm = cm }
   debugSetStartOverride(signId: string | null): void { this.startOverride = signId }
   debugSetDestinationOverride(nodeId: string | null): void { this.destinationOverride = nodeId }
   // Closes any connection by edge id, exactly as pinching its red sign would.

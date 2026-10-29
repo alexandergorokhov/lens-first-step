@@ -21,8 +21,8 @@ Capabilities of "Find Your Way Inside" (see `../project.md` for context and conv
 
 ## Traceability
 
-Status: **Pass (auto)** = covered by a passing Node test and/or LEAF scenario (Node 62 pass / 1 todo;
-LEAF 13/13 as of the last recorded run in `devpost/SCENARIOS.md`); **Partial** = logic tested but
+Status: **Pass (auto)** = covered by a passing Node test and/or LEAF scenario (Node 94 pass / 1 todo;
+LEAF 19/19 as of the last recorded run in `devpost/SCENARIOS.md`); **Partial** = logic tested but
 part of the behaviour only manual or untested; **Manual** = checked by hand in the preview only;
 **Gap** = no test.
 
@@ -41,13 +41,13 @@ part of the behaviour only manual or untested; **Manual** = checked by hand in t
 | S9 | Map download works, "online map" | map-loading | S9/E1 logic ×2; TODO S9 Lens: a real map.json download… | — | Partial (logic only; real download todo) |
 | E1 | Download fails / > 5 s → offline map | map-loading | E1 logic ×2; S9/E1 logic: a valid download… | dc1-scan-sign-line-appears | Pass (auto) |
 | E2 | Invalid map.json → "Map couldn't load" | map-loading, map-format | E2 Invalid map.json…; E2 logic…; E2 parseMap names… | e2-broken-map-fallback | Pass (auto) |
-| E3 | No step-free route → assistance point | connection-closure, accessibility | E3 No step-free route…; E3 Both lifts closed…; hospital: both lifts out… | e3-no-step-free-ask-staff | Pass (auto) |
+| E3 | No step-free route → assistance point | connection-closure, accessibility | E3 No step-free route…; E3 Both lifts closed…; hospital: both lifts out…; C5 noticeFor… | e3-no-step-free-ask-staff, e3b-no-step-free-at-scan | Pass (auto) |
 | E4 | Destination = current position | arrival | E4 Destination = current position… | e4-already-at-destination | Pass (auto) |
 | E5 | Unknown sign id | trip-flow, routing | E5 Unknown sign id… | e5-unknown-sign | Pass (auto) |
-| E6 | Seated height readable | accessibility | — | dc3-stepfree-seated-lift-reroute | Partial (geometry auto; readability manual, feel unproven) |
+| E6 | Seated height readable | accessibility | C1 ride reach…; C1 level snap… | dc3-stepfree-seated-lift-reroute, dc3b-seated-lift-ride | Partial (geometry auto; readability manual, feel unproven) |
 | DC1 | Scanning the start | trip-flow | S1… | dc1-scan-sign-line-appears | Pass (auto) |
 | DC2 | Walking through the building | route-line | S1… | dc2-walk-escalator-corners-arrow | Pass (auto) |
-| DC3 | Wheelchair at seated height, Lift 1 → Lift 2 | accessibility | S2…; S5… | dc3-stepfree-seated-lift-reroute | Pass (auto) |
+| DC3 | Wheelchair at seated height, Lift 1 → Lift 2 | accessibility | S2…; S5…; C1… | dc3-stepfree-seated-lift-reroute, dc3b-seated-lift-ride | Pass (auto) |
 | DC4 | Gate change: stairs (Walk) / ramp (Step-Free) | destination-change | S4… | dc4-gate-change-stairs-and-ramp | Pass (auto) |
 | DC5 | Arrival card within 3 m | arrival | S6… | dc5-arrival-card | Pass (auto) |
 | R1 | Step-Free rule on all maps and closures | accessibility | <map>: Walk is the shortest route and Step-Free never uses…; <map>: closing each closable connection… | rule-stepfree-no-stairs-escalator | Pass (auto) |
@@ -64,9 +64,9 @@ part of the behaviour only manual or untested; **Manual** = checked by hand in t
 | X3 | Escalators one-way | map-format | Escalators are one-way… | rule-walk-is-shortest | Pass (auto) |
 | X4 | New map = new building, no code change | map-format | hospital: edges are at least…; place… | map-switch-cycle | Partial (look manual) |
 | X5 | Built-in maps always parse | map-loading | <map>: map file is valid… | rule-stepfree-no-stairs-escalator | Pass (auto) |
-| X6 | Late load after switch/restart ignored | map-loading | — | — | Gap |
+| X6 | Late load after switch/restart ignored | map-loading | — | c12-stale-load-and-closures-kept | Pass (auto) |
 | X7 | Unknown start is an error | routing | E5 Unknown sign id… | e5-unknown-sign | Pass (auto) |
-| X8 | Walk no-route message | routing | (status only) S1 Walk route is the shortest possible… | — | Gap (message untested; Lens shows Step-Free text) |
+| X8 | Walk no-route message | routing | C5 noticeFor… | e3-no-step-free-ask-staff (Step-Free text) | Pass (auto) |
 | X9 | Router Lens copy identical | routing | router.ts and its Lens copy are identical | — | Pass (auto) |
 | X10 | Phases advance in order | trip-flow | — | dc1-scan-sign-line-appears | Pass (auto) |
 | X11 | Mode choice hides panel, shows sign | trip-flow | — | dc1-scan-sign-line-appears, map-switch-cycle | Pass (auto) |
@@ -84,28 +84,43 @@ part of the behaviour only manual or untested; **Manual** = checked by hand in t
 | X23 | Ride buttons from the map | level-changes | — | dc2, dc3 (escalator, lifts) | Partial (others manual) |
 | X24 | No escalator button at the top | level-changes | Escalators are one-way… | — | Partial (missing top button untested) |
 | X25 | Ride refused away from escalator | level-changes | — | dc2-walk-escalator-corners-arrow | Pass (auto; card text not asserted) |
-| X26 | Lift button 2.5 m reach | level-changes | — | dc3-stepfree-seated-lift-reroute (inside works) | Partial (thresholds untested) |
+| X26 | Lift button 2.5 m reach (horizontal, same level) | level-changes | C1 ride reach… | dc3b-seated-lift-ride, dc3-stepfree-seated-lift-reroute | Pass (auto) |
 | X27 | Closed lift's button refuses | level-changes | — | dc3-stepfree-seated-lift-reroute | Pass (auto) |
 | X28 | Escalator ride carries up 6 m, no re-plan | level-changes | — | dc2-walk-escalator-corners-arrow | Pass (auto) |
 | X29 | Lift ride continues route from top | level-changes | — | dc3-stepfree-seated-lift-reroute | Pass (auto) |
-| X30 | Ride confirmation card | level-changes | — | — | Gap |
-| X31 | Gate change before scan | destination-change | — | — | Gap |
+| X30 | Ride confirmation card | level-changes | Spec gap: the ride card names the level once | dc3-stepfree-seated-lift-reroute, dc3b-seated-lift-ride | Pass (auto) |
+| X31 | Gate change before scan | destination-change | — | dest-change-before-scan-sticks | Pass (auto) |
 | X32 | Destination change after arrival resumes nav | destination-change | — | — | Gap |
 | X33 | Room change in hospital/campus/room | destination-change | hospital: room change…; campus: room change…; room: short route… | — | Pass (auto, Node); Lens manual |
 | X34 | Red sign on Lift 1 | connection-closure | — | dc3-stepfree-seated-lift-reroute | Pass (auto; look manual) |
 | X35 | Reopening restores route | connection-closure | S5 Lift out in Step-Free… | restart-resets-trip | Pass (auto) |
-| X36 | Closure before scan kept | connection-closure | — | — | Gap |
+| X36 | Closure before scan kept | connection-closure | — | c12-stale-load-and-closures-kept | Pass (auto) |
 | X37 | Stays arrived within 5 m | arrival | S6 Arrival… | — | Pass (auto, Node) |
-| X38 | Walking away resumes navigation | arrival | — | — | Gap |
+| X38 | Walking away resumes navigation | arrival | S6b after arriving, 5.5 m from B12… | — | Pass (auto, Node) |
 | X39 | Hospital arrival text | arrival | — | — | Manual |
 | X40 | Gate-change card top-right | notices-and-hud | — | dc4-gate-change-stairs-and-ramp (text) | Partial (position manual) |
-| X41 | Card hides after ~5 s | notices-and-hud | — | — | Gap |
+| X41 | Card hides after ~5 s | notices-and-hud | — | closure-card-signs-and-5s-hide | Pass (auto) |
 | X42 | Chime with gate-change card | notices-and-hud | — | — | Manual |
 | X43 | Badge after scan | notices-and-hud | — | dc1, e2-broken-map-fallback, restart-resets-trip | Pass (auto) |
 | X44 | Demo controls follow the user | demo-controls | — | — | Manual |
 | X45 | Gate change from Demo controls | demo-controls | — | dc4-gate-change-stairs-and-ramp, restart-resets-trip | Pass (auto) |
 | X46 | Stand-in labelled and generated | sample-maps | — | — | Manual |
 | X47 | Readable light UI, hover highlight | accessibility | — | — | Manual |
+| X48 | Small space sets its own distances (room) | arrival | C2 tripSettings…; C2 room ×2 | — | Pass (auto, Node) |
+| X49 | Start node is the local origin at any height | route-line | C6 map frame… | — | Pass (auto) |
+| E2b | Place block and events validated on parse | map-format | E2b parseMap rejects…; <map>: edges are at least… (validateMap) | e2-broken-map-fallback | Pass (auto) |
+| X51 | Ids are plain strings; findRoute never throws | map-format | C8 ×3 | — | Pass (auto) |
+| X52 | Arrival needs the same level | arrival | C9 arrival needs the same level… | — | Pass (auto, Node) |
+| X53 | Connection-only change is a change | routing | C10 setProfile reports a change… | — | Pass (auto, Node) |
+| X54 | Ask-staff guidance tracked; arrival at assistance | routing, arrival | C11 ×2 | e3-no-step-free-ask-staff | Pass (auto) |
+| X55 | Sitting down keeps the floor; seated ride | accessibility | C1 ×2 | dc3b-seated-lift-ride, dc3-stepfree-seated-lift-reroute | Pass (auto) |
+| X56 | Closure card "Re-routing" only if used | connection-closure | C13 closure card… | closure-card-signs-and-5s-hide | Pass (auto) |
+| X57 | Every lift has a red sign at ~1.2 m | connection-closure | Spec gap: every closable lift… | closure-card-signs-and-5s-hide | Pass (auto) |
+| X58 | Rebuild for a downloaded map keeps closures | map-loading | — | c12-stale-load-and-closures-kept, dest-change-before-scan-sticks | Pass (auto) |
+| X59 | One notice after every route change | notices-and-hud | C5 noticeFor… | e3b-no-step-free-at-scan | Pass (auto) |
+| X60 | Looking straight down keeps the heading | trip-flow | C13 yaw… | — | Pass (auto, Node) |
+| X61 | Optional map fields typed | map-format | (compile) | (compile) | Pass (review) |
+| X62 | Lens copies kept identical by tooling | routing | A1 ×3; A4 no dead helpers… | — | Pass (auto) |
 
 `<map>` = airport, hospital, campus, room (one Node test each). The LEAF `visual-*` ids are
 screenshot set-ups, not tests.

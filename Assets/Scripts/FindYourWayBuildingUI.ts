@@ -10,6 +10,9 @@ import {Billboard} from "SpectaclesInteractionKit.lspkg/Components/Interaction/B
 import {ALERT_TINT, addButton, addIcon, addRow, addText, LabeledButton, makePanel, obj} from "./FindYourWayWidgetsUI"
 import {icon} from "./FindYourWayIconsUI"
 
+// Seconds before removed signs are destroyed (longer than a pinch).
+const DESTROY_DELAY_S = 1
+
 @component
 export class FindYourWayBuildingUI extends BaseScriptComponent {
   @ui.label('<span style="color: #60A5FA;">Building UI – signs and pinch targets inside the stand-in</span>')
@@ -43,8 +46,17 @@ export class FindYourWayBuildingUI extends BaseScriptComponent {
   private closures: {[id: string]: LabeledButton} = {}
   private rides: {[id: string]: LabeledButton} = {}
 
+  // Removes every sign and button. They are hidden now and destroyed a moment later, because
+  // clear() can run inside one of their own pinch handlers (scanning loads a different map and
+  // rebuilds the place) and the interactor still holds the pinched button for a few frames.
   clear(): void {
-    for (const so of this.items) so.destroy()
+    const old = this.items
+    for (const so of old) so.enabled = false
+    if (old.length > 0) {
+      const ev = this.createEvent("DelayedCallbackEvent")
+      ev.bind(() => { for (const so of old) if (!isNull(so)) so.destroy() })
+      ev.reset(DESTROY_DELAY_S)
+    }
     this.items = []
     this.scanSign = null
     this.closures = {}
@@ -125,5 +137,19 @@ export class FindYourWayBuildingUI extends BaseScriptComponent {
   setRideButtonText(id: string, text: string): void {
     const b = this.rides[id]
     if (b) b.label.text = text
+  }
+
+  // Read-only state for the LEAF scenarios.
+  getClosureSignText(id: string): string | null {
+    const b = this.closures[id]
+    return b ? b.label.text : null
+  }
+  getRideButtonText(id: string): string | null {
+    const b = this.rides[id]
+    return b ? b.label.text : null
+  }
+  getClosureSignLocalPos(id: string): vec3 | null {
+    for (const so of this.items) if (so.name === "ClosureSign_" + id) return so.getTransform().getLocalPosition()
+    return null
   }
 }

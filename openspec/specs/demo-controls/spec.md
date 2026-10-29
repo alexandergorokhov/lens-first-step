@@ -60,5 +60,5 @@ destination-change).
 - Placement: the brief says "waist height, to the user's left"; the code places it 15 cm left,
   16 cm below the eyes, 80 cm ahead of the head (low-left but inside the ~32° view, per the code
   comment), not at waist height. PREVIEW-GUIDE describes it as "low on your left".
-- The Inspector `mapKey` start-map choice lists Airport, Hospital and Preview room but not Campus
-  (Campus is reachable via the switch button).
+- **Fixed (review round):** the Inspector `mapKey` picker lists all four maps, including Campus
+  (checked against `src/core/data/index.json` by "A1/C13 the maps index is the one list…").

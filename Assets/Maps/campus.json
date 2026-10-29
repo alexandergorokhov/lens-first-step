@@ -69,6 +69,14 @@
         "at": "sciLiftG",
         "sign": "Science lift out of service",
         "card": "Science lift out of service. Re-routing."
+      },
+      {
+        "id": "libLiftOut",
+        "type": "connectionClosed",
+        "edge": "libLift",
+        "at": "libLiftG",
+        "sign": "Library lift out of service",
+        "card": "Library lift out of service. Re-routing."
       }
     ]
   },

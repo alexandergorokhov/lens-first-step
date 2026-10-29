@@ -31,9 +31,12 @@ done criteria are in `devpost/SCENARIOS.md`; how to try it by hand is in `devpos
 - Spectacles Interaction Kit (SIK) and Spectacles UI Kit for all pinchable controls (so they work
   with the mouse in Interactive Preview and with LEAF).
 - `InternetModule.fetch` for the map download; `WorldQueryModule` hit test for floor detection.
-- Pure route engine in plain TypeScript (no Lens APIs): `src/core/router.ts`,
-  `src/core/geometry.ts`, maps in `src/core/data/*.json`.
-- Node (>= 22.18) built-in test runner: `npm test` runs `src/core/tests/*.test.ts`.
+- Pure shared core in plain TypeScript (no Lens APIs, no imports): `src/core/router.ts`,
+  `src/core/geometry.ts`, `src/core/demo.ts`, `src/core/place.ts`; maps in `src/core/data/*.json`,
+  listed in `src/core/data/index.json`. `npm run sync` copies them byte-identical into `Assets/`;
+  `npm run sync:check` fails on drift.
+- Node (>= 22.18) built-in test runner: `npm test` runs `npm run sync:check`, then
+  `src/core/tests/*.test.ts`. `npm run hooks` enables `.githooks/pre-commit` (runs `npm test`).
 - LEAF (Lens Studio in-Lens test framework): scenarios in `Assets/Tests/`, registered in
   `Assets/Tests/FindYourWayLeafIndex.ts`.
 
@@ -90,7 +93,7 @@ done criteria are in `devpost/SCENARIOS.md`; how to try it by hand is in `devpos
 - **LEAF scenarios** (`Assets/Tests/Fyw*.ts`) run in the live Lens in the Preview: they pinch the
   real SIK/UIKit buttons by SceneObject name and simulate walking, seated height and the scanned
   sign through test hooks on `FindYourWayMain` (`debugSetPose`, `debugSetDownloadOverride`,
-  `debugSetStartOverride`, `debugSetDestinationOverride`, `debugCloseEdge`). Each prints
+  `debugSetStartOverride`, `debugSetDestinationOverride`, `debugCloseEdge`, `debugSetCameraDropCm`). Each prints
   `[FYW-LEAF] RESULT <id> PASSED|FAILED`. The `visual-*` ids are screenshot set-ups, not tests.
 - The full traceability table is in `openspec/specs/README.md`.
 
@@ -101,7 +104,6 @@ Future behaviour changes follow the OpenSpec flow: propose under `openspec/chang
 
 ## Working-tree note
 
-At the time of writing, uncommitted work in progress existed in the repo (not specified here):
-a configurable map server base URL (`mapBaseUrl`, default `http://localhost:8787/`, `npm run maps`)
-replacing the per-map `url`, and an autoplay demo (`src/core/demo.ts`,
-`Assets/Scripts/FindYourWayDemo.ts`). See the Known gaps of `map-loading`.
+The map server base URL (`mapBaseUrl`) and the autoplay demo are committed and specified in
+`map-loading` and `demo-controls`. The review round (findings C1–C13, A1–A4) is listed in
+`devpost/SCENARIOS.md` ("Review fixes") and traced in `openspec/specs/README.md`.

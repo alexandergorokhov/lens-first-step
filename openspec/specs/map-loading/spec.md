@@ -61,16 +61,24 @@ that completes after the user restarted or switched map SHALL be ignored.
 - **GIVEN** a map load is in progress
 - **WHEN** the user presses Restart trip or switches map before it completes
 - **THEN** the late result does not start a trip
-- Verified by: none (gap)
+- Verified by: c12-stale-load-and-closures-kept (part a: a 2.5 s download from a restarted trip is ignored; trip generation counter)
+
+#### Scenario: X58 A downloaded map that differs keeps what the traveller already did
+- **GIVEN** Lift 1 closed before the scan and a downloaded map that differs from the built-in one
+- **WHEN** the place is rebuilt for the downloaded map
+- **THEN** Lift 1 stays closed and still shows it: sign "Closed — re-routing", red plate, ride
+  button "Out of service"; a destination change made before the scan is kept too; and the scan
+  button that started the load is not destroyed under the pinch (removed signs are hidden, then
+  destroyed a second later)
+- Verified by: c12-stale-load-and-closures-kept, dest-change-before-scan-sticks
 
 ## Known gaps
 
-- **S9 real download unproven.** At HEAD the airport URL
-  (`https://raw.githubusercontent.com/alexandergorokhov/find-your-way-inside/main/src/core/data/map.json`)
-  returns 404 and the other maps have no URL, so the preview always shows "offline map". The Node
-  test for a real download is a TODO.
-- **In-progress (uncommitted) change:** the working tree replaces per-map URLs with a
-  `mapBaseUrl` input (default `http://localhost:8787/`, served by `npm run maps`) + each map's file
-  name. Not yet covered by this spec; update via an OpenSpec change when committed.
+- **S9 real download unproven.** The Lens downloads `mapBaseUrl` + the map's file name. The default
+  `http://localhost:8787/` (`npm run maps`) is refused by the Lens ("URL is not secure") and the
+  GitHub raw folder returns 404 while the repo is private, so the preview shows "offline map". The
+  Node test for a real download is a TODO.
+- **Fixed (review round):** a slow load from an earlier trip is ignored (X6) and a rebuild for a
+  downloaded map keeps closures and the destination change (X58).
 - The brief says "Map couldn't load" is shown; the Lens shows it as a notice card (5 s) with no
   chime. The brief does not say whether a chime should play.

@@ -4,7 +4,7 @@
 // Serves only the *.json files in src/core/data, with CORS headers so a Lens (or a browser)
 // can download them. Set the Lens's `mapBaseUrl` to http://localhost:8787/ to use it.
 import { createServer } from "node:http";
-import { readFile, readdir } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
@@ -57,8 +57,9 @@ function notFound(res, req, log) {
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const port = Number(process.env.PORT || 8787);
   const { port: p } = await startMapServer({ port, log: true });
-  const files = (await readdir(DEFAULT_DIR)).filter((f) => f.endsWith(".json"));
+  // The bundled maps, from the one maps index (src/core/data/index.json).
+  const { maps } = JSON.parse(await readFile(path.join(DEFAULT_DIR, "index.json"), "utf8"));
   console.log(`Find Your Way map server: http://localhost:${p}/`);
-  for (const f of files) console.log(`  http://localhost:${p}/${f}`);
+  for (const m of maps) console.log(`  ${m.key.padEnd(9)} http://localhost:${p}/${m.file}`);
   console.log("Set mapBaseUrl on the FindYourWay object to http://localhost:" + p + "/  (Ctrl+C to stop)");
 }

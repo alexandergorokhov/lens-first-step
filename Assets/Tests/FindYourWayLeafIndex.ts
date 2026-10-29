@@ -16,6 +16,11 @@ import {FywE5UnknownSignScenario} from "./FywE5UnknownSignScenario"
 import {FywMapSwitchScenario} from "./FywMapSwitchScenario"
 import {FywRestartScenario} from "./FywRestartScenario"
 import {FywDemoAutoplayScenario} from "./FywDemoAutoplayScenario"
+import {FywDc3bSeatedLiftScenario} from "./FywDc3bSeatedLiftScenario"
+import {FywDestBeforeScanScenario} from "./FywDestBeforeScanScenario"
+import {FywE3bNoStepFreeAtScanScenario} from "./FywE3bNoStepFreeAtScanScenario"
+import {FywStaleLoadScenario} from "./FywStaleLoadScenario"
+import {FywClosureCardScenario} from "./FywClosureCardScenario"
 
 @component
 export class FindYourWayLeafIndex extends BaseScriptComponent {
@@ -35,6 +40,11 @@ export class FindYourWayLeafIndex extends BaseScriptComponent {
     {id: "map-switch-cycle", typename: FywMapSwitchScenario.getTypeName()},
     {id: "restart-resets-trip", typename: FywRestartScenario.getTypeName()},
     {id: "demo-autoplay-completes", typename: FywDemoAutoplayScenario.getTypeName()},
+    {id: "dc3b-seated-lift-ride", typename: FywDc3bSeatedLiftScenario.getTypeName()},
+    {id: "dest-change-before-scan-sticks", typename: FywDestBeforeScanScenario.getTypeName()},
+    {id: "e3b-no-step-free-at-scan", typename: FywE3bNoStepFreeAtScanScenario.getTypeName()},
+    {id: "c12-stale-load-and-closures-kept", typename: FywStaleLoadScenario.getTypeName()},
+    {id: "closure-card-signs-and-5s-hide", typename: FywClosureCardScenario.getTypeName()},
     // Screenshot set-ups — skipped by the runner unless named in `only`.
     {id: "visual-start", typename: FywVisualScenario.getTypeName(), parameters: {shot: "start"}},
     {id: "visual-card", typename: FywVisualScenario.getTypeName(), parameters: {shot: "card"}},

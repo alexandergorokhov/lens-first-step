@@ -39,7 +39,7 @@ is running yet, it SHALL set the destination used when the trip starts.
 - **GIVEN** a mode is chosen but the sign is not yet scanned
 - **WHEN** the user pinches "Gate change B12 → C3"
 - **THEN** the card shows and the trip, once scanned, routes to C3
-- Verified by: none (gap)
+- Verified by: dest-change-before-scan-sticks (the change is kept in trip state and survives the map load at scan)
 
 #### Scenario: X32 Destination change after arrival resumes navigation
 - **GIVEN** the traveller has arrived at B12
@@ -60,7 +60,8 @@ campus "Room change Lecture Hall 1 → Lab 2", room "Change to the door" (card
 
 ## Known gaps
 
-- `gateChangeMessage` in `router.ts` returns "Gate change: B12 → C3" (with a colon), while the brief
-  and the Lens card say "Gate change B12 → C3". The Lens takes the text from the map, so the router
-  helper is unused by the Lens and disagrees with the brief; the S4 Node test asserts the colon form.
+- **Fixed (review round):** the airport-only router helper `gateChangeMessage` (with a colon) was
+  removed; the S4 test now checks the map event's card "Gate change B12 → C3".
+- **Fixed (review round):** a change made before the scan is no longer lost when the map loads (X31).
 - Pressing the button again after the change re-shows the card and chime with no route change.
+- X32 (change after arrival resumes navigation) still has no test.

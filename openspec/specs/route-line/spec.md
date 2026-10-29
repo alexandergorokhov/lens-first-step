@@ -90,6 +90,12 @@ map north along −Z (`mapToLocalCm`), and the camera position back to map metre
   specified and `geometry.ts`/`router.ts` equal their Lens copies
 - Verified by: map metres <-> building cm: the sign is the origin, north is -Z, round trip is exact; geometry.ts and its Lens copy are identical; router.ts and its Lens copy are identical; headings are clockwise from north; wrap keeps angles in -180..180; yawTo is + to the right of the viewer and - to the left; next turn: the first bend of 25 degrees or more, else the end of the route; turn arrow: shows only when the next turn is outside the view and not right under you; the drawn line stops at the foot of a lift (vertical segment) but follows an escalator | none
 
+#### Scenario: X49 The start node is the local origin at any height
+- **GIVEN** a start sign at y = 4 m (an upper floor)
+- **WHEN** map metres are converted to building-local cm and back
+- **THEN** the sign is at local (0, 0, 0) and the round trip is exact (the origin's y is used)
+- Verified by: C6 map frame: start node is the local origin even at y=4; round trip exact; map metres <-> building cm…
+
 ## Known gaps
 
 - Floor height in the preview depends on `eyeHeightCm = 180` (the preview room returns no floor

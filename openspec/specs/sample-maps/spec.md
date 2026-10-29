@@ -78,3 +78,6 @@ assistance, lifts, "Escalator ↑", "Stairs", "Ramp"), and a sign with the stand
   campus, room) — more than asked, not a conflict.
 - Non-airport maps are verified in the Lens only for loading (map-switch-cycle); their trips are
   checked by Node tests and by hand.
+- The preview room sets its own trip distances (`arrivalRadius 0.6`, `offRouteDistance 1.5`, X48).
+- The one list of maps is `src/core/data/index.json` (tests, sync tool, map server); the Lens
+  needs literal `requireAsset` paths, so `MAP_SOURCES` and the picker are checked against it.

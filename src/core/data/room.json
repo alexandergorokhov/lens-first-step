@@ -7,6 +7,8 @@
     "title": "Preview room",
     "standInLabel": "Line on the room's real floor",
     "standInModel": false,
+    "arrivalRadius": 0.6,
+    "offRouteDistance": 1.5,
     "start": "sign",
     "destination": "window",
     "levels": [ { "y": 0, "name": "Room floor" } ],

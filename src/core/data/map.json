@@ -18,7 +18,8 @@
     "scanSign": { "title": "You are here", "button": "Scan sign", "hint": "on real Specs: look at the sign" },
     "events": [
       { "id": "gateChange", "type": "destinationChanged", "to": "gateC3", "button": "Gate change B12 → C3", "card": "Gate change B12 → C3" },
-      { "id": "lift1Out", "type": "connectionClosed", "edge": "lift1", "at": "lift1G", "sign": "Lift 1 out of service", "card": "Lift 1 out of service. Re-routing." }
+      { "id": "lift1Out", "type": "connectionClosed", "edge": "lift1", "at": "lift1G", "sign": "Lift 1 out of service", "card": "Lift 1 out of service. Re-routing." },
+      { "id": "lift2Out", "type": "connectionClosed", "edge": "lift2", "at": "lift2G", "sign": "Lift 2 out of service", "card": "Lift 2 out of service. Re-routing." }
     ]
   },
   "nodes": [

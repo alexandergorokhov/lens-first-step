@@ -6,7 +6,8 @@ import {sleep} from "Leaf.lspkg/Utils/common/Utils"
 import {findNode} from "../Scripts/FindYourWayRouter"
 import {getMain, log, startTrip, tap, waitFor} from "./FindYourWayLeafSupport"
 
-// E3 — no step-free route (both lifts out): ask-staff message and a line to the assistance point.
+// E3 — no step-free route (both lifts out): ask-staff message, a line to the assistance point,
+// and arriving there shows its arrival card.
 @component
 export class FywE3NoStepFreeScenario extends Scenario {
   async run(): Promise<void> {
@@ -27,6 +28,10 @@ export class FywE3NoStepFreeScenario extends Scenario {
     const assist = findNode(main.getMapData(), "assist")!
     const end = pts[pts.length - 1]
     expect(Math.abs(end.x - assist.x) < 0.1 && Math.abs(end.z - assist.z) < 0.1, "line ends at the assistance point").toBe(true)
+    // Reaching the assistance point is an arrival there (review C11).
+    main.debugSetPose(assist.x + 1, 0, assist.z, 270)
+    await waitFor(() => main.getPhase() === "arrived", 2000, "arrived at the assistance point")
+    expect(main.getArrivalText(), "arrival card at the assistance point").toBe("Assistance point")
     log("E3 pass")
   }
 }

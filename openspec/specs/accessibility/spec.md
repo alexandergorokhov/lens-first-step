@@ -73,10 +73,20 @@ or very dark content to be seen. Pinch targets SHALL be big and highlight when a
 - **THEN** its text is light and readable and targets highlight on hover
 - Verified by: manual (preview)
 
+#### Scenario: X55 Sitting down does not lower the building; a seated traveller can ride
+- **GIVEN** the world was anchored while the traveller stood (the settle frames after Restart)
+- **WHEN** they sit down (head 45 cm lower) before choosing Step-Free, scan, and stop 0.5 m from
+  Lift 2 with the feet estimate 0.45 m below the floor
+- **THEN** the building floor stays at the standing-height floor and the line lies 1 cm above it
+- **AND** feet within 1 m of a level count as on that level, so the Lift 2 button rides (same
+  level, 0.5 m ≤ 2.5 m horizontal reach) and the card reads "Lift up to Departures"
+- Verified by: C1 ride reach: seated traveller (feet −0.45 m) 0.5 m from lift2G can ride; C1 level snap: feet within 1 m of a level snap to it… | dc3b-seated-lift-ride, dc3-stepfree-seated-lift-reroute
+
 ## Known gaps
 
-- Out-of-service sign height: the brief asks for about 1.2 m (seated eye level); the code places
-  the red sign 1.5 m above the lift floor (`local(n, 150)`).
-- Seated height is not detected or adapted to; the Lens works from the camera height (or the
-  measured floor). E6 readability on real glasses is "feel unproven".
+- **Fixed (review round):** the red out-of-service sign hangs at about 1.2 m (`CLOSURE_SIGN_CM = 120`,
+  was 1.5 m). Verified by closure-card-signs-and-5s-hide.
+- **Fixed (review round):** seated traveller — anchoring keeps the standing head height, feet snap
+  to the nearest level within 1 m, and rides use same level + horizontal reach (X55).
+- E6 readability on real glasses is "feel unproven".
 - Hover highlight relies on UI Kit defaults; not tested.

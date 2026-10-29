@@ -10,11 +10,9 @@ import {
   MAP_LOAD_FAILED,
   Navigator,
   SIGN_NOT_IN_MAP,
-  arrivalMessage,
   chooseMap,
   findNode,
   findRoute,
-  gateChangeMessage,
   lineAhead,
   loadMapWithTimeout,
   locateSign,
@@ -141,18 +139,21 @@ test("S3 logic: switching mode mid-route re-routes from the current position wit
 
 test("S4 Gate change B12 -> C3 while walking: card text and re-route from current position", () => {
   const map = loadMap();
-  assert.equal(gateChangeMessage(map, "gateB12", "gateC3"), "Gate change: B12 → C3");
+  // The card text comes from the map's destinationChanged event (no airport wording in code).
+  const ev = (map.place?.events || []).find((e) => e.type === "destinationChanged")!;
+  assert.equal(ev.to, "gateC3");
+  assert.equal(ev.card, "Gate change B12 → C3");
 
   const walker = new Navigator(map, "sign", "gateB12", "walk");
   const concourse = findNode(map, "concourse")!;
   walker.updatePosition({ x: concourse.x + 1, y: concourse.y, z: concourse.z });
-  assert.equal(walker.setGate("gateC3"), true);
+  assert.equal(walker.setDestination("gateC3"), true);
   assert.equal(nodesOf(walker)[0], "concourse");
   assert.equal(nodesOf(walker).at(-1), "gateC3");
 
   // Hero moment: the Step-Free traveller's line swings from Lift 1 to Lift 2 and the ramp.
   const stepFree = new Navigator(map, "sign", "gateB12", "stepFree");
-  assert.equal(stepFree.setGate("gateC3"), true);
+  assert.equal(stepFree.setDestination("gateC3"), true);
   assert.ok(nodesOf(stepFree).includes("lift2G"));
   assert.ok(stepFree.route.status === "route" && kinds(stepFree.route.edges).includes("ramp"));
 });
@@ -176,7 +177,7 @@ test("S6 Arrival: within 3 m of the gate the line stops and the card reads 'Gate
   assert.equal(nav.updatePosition({ x: gate.x + 2.9, y: gate.y, z: gate.z }), "arrived");
   assert.equal(nav.route.status, "arrived");
   assert.equal(lineAhead(routePoints(map, nav.route), gate).length, 1, "no line to draw");
-  assert.equal(arrivalMessage(map, "gateC3", 6), "Gate C3. Boarding in 6 min.");
+  assert.equal(gate.arrivalCard, "Gate C3. Boarding in 6 min.", "arrival card comes from the map");
   // Lingering at the gate stays arrived.
   assert.equal(nav.updatePosition({ x: gate.x + 4, y: gate.y, z: gate.z }), "arrived");
 });

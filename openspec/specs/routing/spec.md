@@ -47,7 +47,7 @@ path to the nearest reachable node of kind `assistance` when one exists.
 - **GIVEN** a Walk trip whose destination is unreachable
 - **WHEN** the route is planned
 - **THEN** the status is "askStaff" with "No route right now. Ask staff at the assistance point."
-- Verified by: S1 Walk route is the shortest possible, for every pair of nodes (asserts status "askStaff" for unreachable pairs; message not asserted) | none (gap)
+- Verified by: C5 noticeFor: askStaff on Walk says NO_ROUTE_MESSAGE… | e3-no-step-free-ask-staff (Step-Free text)
 
 ### Requirement: Re-plan from the traveller's current position
 `Navigator` SHALL hold the map, start, destination and profile. Once a position is known, every
@@ -92,6 +92,9 @@ standing off the line does not re-trigger a re-route every frame. Within 5 m it 
 - Verified by: S7c Off route: the nearest node is on the traveller's own level, not the one overhead | dc2-walk-escalator-corners-arrow ("re-planned from the ground floor")
 
 ### Requirement: Lens router copy identical
+The shared core (router, geometry, demo, place) and the bundled maps are copied to the Lens by
+`npm run sync`; `npm run sync:check` (first step of `npm test`, and of the pre-commit hook enabled by
+`npm run hooks`) fails when a copy differs.
 `Assets/Scripts/FindYourWayRouter.ts` SHALL be byte-identical to `src/core/router.ts`.
 
 #### Scenario: X9 Router Lens copy identical
@@ -99,10 +102,33 @@ standing off the line does not re-trigger a re-route every frame. Within 5 m it 
 - **THEN** the two files are identical
 - Verified by: router.ts and its Lens copy are identical | none
 
+#### Scenario: X53 A change of connection alone is a route change
+- **GIVEN** a Walk trip from the C pier top to C3 by the stairs
+- **WHEN** the profile switches to Step-Free (same nodes, ramp instead of stairs)
+- **THEN** `setProfile` reports a change (change detection compares nodes and connections)
+- Verified by: C10 setProfile reports a change when only the connection kind changes
+
+#### Scenario: X54 Ask-staff guidance follows the traveller
+- **GIVEN** a Step-Free trip with no step-free route, guided to the assistance point
+- **WHEN** the traveller walks more than the off-route distance from that line
+- **THEN** the assistance path is re-planned from their nearest node ("rerouted" only when it changes)
+- Verified by: C11 askStaff: walking off the assistance line re-plans from the nearest node
+
+#### Scenario: X38b Leaving the destination re-plans from the nearest other node
+- **GIVEN** an arrived trip
+- **WHEN** the traveller walks beyond the off-route distance, still nearest to the destination node
+- **THEN** a route back is planned from the nearest other node, reported once, not every frame
+- Verified by: S6b after arriving, 5.5 m from B12 does not report rerouted on consecutive frames and is not stuck
+
+#### Scenario: X62 Lens copies stay identical by tooling
+- **GIVEN** a Lens copy that drifted from `src/core`
+- **WHEN** `npm run sync:check` runs
+- **THEN** it lists the copy and fails; `npm run sync` fixes it
+- Verified by: A1 sync:check passes on the repo, reports a drifted copy, and sync fixes it; A1 npm test runs sync:check first…
+
 ## Known gaps
 
-- The Walk "no route" message (`NO_ROUTE_MESSAGE`) is returned by the router, but the Lens shows
-  the Step-Free text "No step-free route. Ask staff at the assistance point." whenever a closure
-  produces `askStaff`, regardless of profile (`FindYourWayMain.closeConnection`). Not reachable
-  with the bundled airport closures in Walk mode, but wrong in general. No test checks the message.
+- **Fixed (review round):** the Walk "no route" message is shown in Walk mode (X8, via `noticeFor`).
+- **Fixed (review round):** change detection includes connections (X53); ask-staff guidance is
+  tracked (X54); leaving the destination is no longer stuck (X38b).
 - Off-route re-routes are silent (no card or chime); the brief does not ask for one.

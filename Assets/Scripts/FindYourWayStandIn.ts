@@ -108,7 +108,7 @@ export class FindYourWayStandIn extends BaseScriptComponent {
     }
     // Outdoor paths (edges marked "outdoor": true) as paving strips.
     for (const e of map.edges) {
-      if (!(e as any).outdoor) continue
+      if (!e.outdoor) continue
       const f = findNode(map, e.from), t = findNode(map, e.to)
       if (!f || !t) continue
       paths.slab(toLocal(f.x, f.y, f.z).add(new vec3(0, -3, 0)), toLocal(t.x, t.y, t.z).add(new vec3(0, -3, 0)), 250, 2)
@@ -190,10 +190,16 @@ export class FindYourWayStandIn extends BaseScriptComponent {
     }
   }
 
-  // Dims the red plate to show the connection is now closed.
+  // Turns the red plate fully opaque, bright red to show the connection is now closed.
   setConnectionClosed(edgeId: string): void {
     const r = this.closedPlates[edgeId]
     if (r) r.mainMaterial.mainPass.baseColor = new vec4(1, 0.15, 0.15, 1)
+  }
+
+  // Read-only state for the LEAF scenarios: is this connection's plate showing "closed"?
+  isConnectionShownClosed(edgeId: string): boolean {
+    const r = this.closedPlates[edgeId]
+    return !!r && r.mainMaterial.mainPass.baseColor.w > 0.99
   }
 
   private addMesh(name: string, boxes: Boxes, color: vec4): RenderMeshVisual {
@@ -223,6 +229,8 @@ export function whiteTexture(): Texture {
   WHITE = tex
   return tex
 }
+
+const FLOATS_PER_VERTEX = 8
 
 // Accumulates oriented boxes into one mesh.
 class Boxes {
@@ -262,7 +270,8 @@ class Boxes {
     // corner index = (sx>0)*4 + (sy>0)*2 + (sz>0)
     const faces = [[0, 1, 3, 2], [4, 6, 7, 5], [0, 4, 5, 1], [2, 3, 7, 6], [0, 2, 6, 4], [1, 5, 7, 3]]
     for (const f of faces) {
-      const base = this.n * 0 + this.v.length / 8
+      // index of this face's first vertex (8 floats per vertex: position, normal, uv)
+      const base = this.v.length / FLOATS_PER_VERTEX
       for (const k of f) {
         const p = corners[k]
         this.v.push(p.x, p.y, p.z, 0, 1, 0, 0, 0)

@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "maps": [
+    { "key": "airport", "file": "map.json", "lens": "airport.json" },
+    { "key": "hospital", "file": "hospital.json", "lens": "hospital.json" },
+    { "key": "campus", "file": "campus.json", "lens": "campus.json" },
+    { "key": "room", "file": "room.json", "lens": "room.json" }
+  ]
+}

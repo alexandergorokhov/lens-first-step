@@ -14,14 +14,22 @@ export class FywDc3StepFreeScenario extends Scenario {
     const it = new DefaultLeafInteractor()
     await sleep(1000)
     // Seated: eyes ~45 cm lower than standing, so the feet estimate sits ~0.45 m below the floor.
-    const main = await startTrip(it, "stepFree", -0.45)
+    // The traveller sits down before choosing the mode; the floor must stay where it was.
+    let floorStanding = 0
+    const main = await startTrip(it, "stepFree", -0.45, undefined, ["nav"], "airport", (m) => {
+      floorStanding = m.getFloorWorldY()
+      m.debugSetCameraDropCm(45)
+    })
     const kinds = main.getRouteEdgeKinds()
     expect(kinds.indexOf("stairs") < 0 && kinds.indexOf("escalator") < 0, "no stairs/escalator: " + kinds.join(",")).toBe(true)
     expect(main.getRouteNodes().indexOf("lift1G") >= 0, "goes to Lift 1").toBe(true)
     await waitFor(() => main.isLineVisible(), 3000, "line visible")
     // Seated view: the line stays on the floor, and some of it is within 25° below eye level.
     const local = main.getLineLocalPoints()
-    expect(local[0].y, "line still on the floor when seated").toBeCloseTo(1, 1)
+    // The line lies on the real floor (1 cm above it), which did not drop when the user sat down.
+    expect(main.getFloorWorldY(), "floor not lowered by sitting down").toBeCloseTo(floorStanding, 0)
+    const world = main.getLineWorldPoints()
+    expect(world[0].y - floorStanding, "line 1 cm above the standing-height floor").toBeCloseTo(1, 1)
     const eye = main.mapToLocal(findNode(main.getMapData(), "sign")!.x, 0, findNode(main.getMapData(), "sign")!.z - 1.5)
     const seatedEyeY = main.getEyeHeightCm() - 45
     let inView = false
@@ -59,6 +67,7 @@ export class FywDc3StepFreeScenario extends Scenario {
     const lift2Ride = main.getRideIdsAt("lift2G")[0]
     await tap(it, "RideButton_" + lift2Ride)
     expect(main.getRideOffsetCm().y, "lift carried the traveller up 6 m").toBeCloseTo(600, 0)
+    expect(main.getHudCardTextOrEmpty(), "ride card names the level once").toBe("Lift up to Departures")
     const rest = main.getRouteNodes()
     const iu = rest.indexOf("lift2U")
     expect(iu >= 0, "route continues from the top of Lift 2: " + rest.join(">")).toBe(true)

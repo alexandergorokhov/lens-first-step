@@ -26,7 +26,7 @@ point.", "Map couldn't load", "This sign isn't in the map", "Walk to <place> fir
 - **GIVEN** the gate-change card is showing
 - **WHEN** 5 s pass
 - **THEN** the card hides
-- Verified by: none (gap)
+- Verified by: closure-card-signs-and-5s-hide (card up at ~4 s, gone after 5 s)
 
 ### Requirement: Chime with attention notices
 A short chime SHALL play with the destination-change card and the connection-closed card
@@ -47,8 +47,17 @@ switch. Demo controls status SHALL echo it, e.g. "Walk · offline map".
 - **THEN** the badge reads "offline map"
 - Verified by: dc1-scan-sign-line-appears; e2-broken-map-fallback; restart-resets-trip (badge cleared)
 
+#### Scenario: X59 One notice after every route change
+- **GIVEN** any route change (scan, destination change, closure)
+- **WHEN** the new route has a notice (`noticeFor`: no route, ask staff, error)
+- **THEN** that notice is shown (with the chime) instead of the change's own card; otherwise the
+  change's card is shown; a plain scan with a route shows nothing
+- **AND** a downloaded map with both airport lifts closed shows the ask-staff card right after the
+  Step-Free scan
+- Verified by: C5 noticeFor: askStaff on Walk says NO_ROUTE_MESSAGE, on Step-Free ASK_STAFF_MESSAGE… | e3b-no-step-free-at-scan, e3-no-step-free-ask-staff
+
 ## Known gaps
 
 - Risk noted in the brief: a top-right card may be missed while looking down at the line on SPECS'
   narrow view; the chime mitigates it. "Feel unproven".
-- The card's 5 s hide has no automated test.
+- **Fixed (review round):** the card's 5 s hide is tested (X41).

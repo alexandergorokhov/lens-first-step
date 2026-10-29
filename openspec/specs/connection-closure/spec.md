@@ -12,6 +12,8 @@ For each `connectionClosed` event in the map (`edge`, `at`, `sign`, `card`) the 
 red sign on the connection at the `at` node (on the lift door plate, facing the approach), titled
 "Out of service?" with a button labelled with the event's `sign` text (airport: "Lift 1 out of
 service" on `lift1G`; hospital: "Lift A out of service"; campus: "Science lift out of service").
+Every lift in a bundled map has its own event (airport Lift 1 and Lift 2, hospital Lift A and B,
+campus Science and Library lifts); the sign hangs about 1.2 m above the floor.
 
 #### Scenario: X34 Red sign on Lift 1
 - **GIVEN** the airport map
@@ -48,7 +50,7 @@ A connection closed before the map finishes loading SHALL stay closed in the tri
 - **GIVEN** Step-Free chosen, sign not yet scanned
 - **WHEN** the user pinches the Lift 1 red sign and then scans
 - **THEN** the trip routes via Lift 2
-- Verified by: none (gap)
+- Verified by: c12-stale-load-and-closures-kept (part b: closed before the scan, downloaded map differs, sign/plate/ride button still show closed)
 
 ### Requirement: No step-free route → assistance point
 If after a closure no step-free route remains, the card SHALL read "No step-free route. Ask staff at
@@ -63,12 +65,25 @@ the assistance point." and the line SHALL lead to the nearest reachable assistan
   `sign>hall>assist`)
 - Verified by: E3 No step-free route (lift + ramp closed): ask-staff message and a line to the nearest assistance point; E3 Both lifts closed: Step-Free to B12 also asks staff and points to the assistance point; hospital: both lifts out -> Step-Free to Ward 4 asks staff and points to Reception | e3-no-step-free-ask-staff
 
+#### Scenario: X56 The card says "Re-routing" only when the route used the connection
+- **GIVEN** a Step-Free trip whose route uses Lift 1
+- **WHEN** the traveller pinches Lift 2's red sign
+- **THEN** the card reads "Lift 2 out of service" (no "Re-routing") and the route is unchanged
+- **AND** a closure that leaves no route shows the route's own notice instead (ask staff)
+- Verified by: C13 closure card only says 'Re-routing' when the route used that connection | closure-card-signs-and-5s-hide
+
+#### Scenario: X57 Every lift has its own red sign at about 1.2 m
+- **GIVEN** any bundled map
+- **WHEN** the place is built
+- **THEN** each lift edge has a `connectionClosed` event whose sign hangs at one of its nodes, about
+  120 cm above the floor
+- Verified by: Spec gap: every closable lift has its own red out-of-service sign in the map | closure-card-signs-and-5s-hide
+
 ## Known gaps
 
-- Only connections with a `connectionClosed` event get a red sign: on the airport only Lift 1
-  (hospital: Lift A; campus: Science lift). E3 therefore cannot be reached by hand in the airport
-  preview — the LEAF test closes Lift 2 through the `debugCloseEdge` test hook.
-- The Lens always shows the Step-Free ask-staff text after a closure that leaves no route, even in
-  Walk mode (router has "No route right now. Ask staff at the assistance point." for Walk).
-- When the traveller reaches the assistance point nothing further happens (no arrival card); the
-  brief does not define this.
+- **Fixed (review round):** every lift has a red sign (X57), so E3 can now be reached by hand in
+  the airport preview (pinch Lift 1 and Lift 2).
+- **Fixed (review round):** the notice after a closure comes from `noticeFor(route)`: Walk with no
+  route says "No route right now. Ask staff at the assistance point."; Step-Free says the step-free
+  text (X8, X59).
+- **Fixed (review round):** reaching the assistance point is an arrival there (X54b).

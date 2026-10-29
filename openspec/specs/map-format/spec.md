@@ -95,10 +95,31 @@ Events SHALL be generic: `destinationChanged` (`to`, `button`, `card`) and `conn
   ("Lift A out of service") come from the map
 - Verified by: hospital: edges are at least the straight-line distance (to 0.1 m); place, events and destinations point at real nodes | map-switch-cycle; manual (preview)
 
+#### Scenario: E2b Place block and events are checked when a map is parsed
+- **GIVEN** a map whose `place.start` is not a sign, whose destination or an event points at an
+  unknown node or edge, whose lift has no id, or whose `version` is not 1
+- **WHEN** it is parsed (bundled or downloaded)
+- **THEN** `parseMap` rejects it with a message naming the problem (`validateMap`), so a
+  downloaded map with a bad place block falls back to the built-in map
+- Verified by: E2b parseMap rejects place/event refs to unknown nodes/edges and unsupported version; <map>: edges are at least the straight-line distance… (calls validateMap on every bundled map)
+
+#### Scenario: X51 Ids are plain strings
+- **GIVEN** a map with a node called "constructor", or an edge pointing at "toString"
+- **WHEN** it is parsed and routed
+- **THEN** "constructor" is an ordinary node with a route; the edge to the missing "toString" is
+  rejected; and `findRoute` never throws for any map `parseMap` accepts
+- Verified by: C8 parseMap rejects an edge to 'toString'; C8 parseMap accepts a node called 'constructor'; C8 findRoute never throws for any map parseMap accepts
+
+#### Scenario: X61 Optional fields are typed
+- **GIVEN** `MapNode` (type, code, icon, arrivalCard), `MapEdge` (outdoor) and `MapData.place`
+  (`MapPlace`: levels, events, footprint, buildings, arrivalRadius, offRouteDistance, rideReach)
+- **THEN** the router, the place module and the Lens read them without `any` casts
+- Verified by: review (code); all Node tests and LEAF scenarios compile against the types
+
 ## Known gaps
 
 - The brief lists node kinds `sign, junction, lift, gate, assistance`; the bundled maps use the
   generic `destination` kind with `type: "gate"` (as the brief's "Any building" section asks).
   The Lens accepts both `destination` and `gate`.
-- `parseMap` does not validate the `place` block; a malformed `place` is only caught by the Node
-  map tests for bundled maps, not for a downloaded map.
+- **Fixed (review round):** `parseMap` validates the `place` block and the version (E2b) and uses
+  prototype-free id tables (X51).

@@ -35,9 +35,11 @@ export async function waitFor(cond: () => boolean, ms: number, what: string): Pr
 }
 
 // Restart on the airport map, choose a mode, stand 1.5 m in front of the sign, pinch it.
+// beforeMode runs once the world anchor has settled, just before the mode button.
 export async function startTrip(interactor: DefaultLeafInteractor, profile: Profile,
     footY: number = 0, beforeScan?: (m: FindYourWayMain) => void,
-    until: string[] = ["nav"], mapKey: string = "airport"): Promise<FindYourWayMain> {
+    until: string[] = ["nav"], mapKey: string = "airport",
+    beforeMode?: (m: FindYourWayMain) => void): Promise<FindYourWayMain> {
   const main = getMain()
   for (let i = 0; i < 5 && main.getMapKey() !== mapKey; i++) {
     await tap(interactor, "NextMapButton")
@@ -46,6 +48,8 @@ export async function startTrip(interactor: DefaultLeafInteractor, profile: Prof
   await tap(interactor, "RestartButton")
   await waitFor(() => main.getPhase() === "mode" && main.isModePanelShown(), 3000, "mode panel")
   await sleep(800) // world anchor settles
+  await waitFor(() => !main.isAnchorSettling(), 3000, "world anchor settled")
+  if (beforeMode) beforeMode(main)
   await tap(interactor, profile === "walk" ? "WalkButton" : "StepFreeButton")
   await waitFor(() => main.getPhase() === "scan" && main.isScanSignVisible(), 3000, "scan sign")
   const sign = findNode(main.getMapData(), main.getStartId())!

@@ -61,14 +61,27 @@ export function turnOutOfView(user: XYZ, headingDeg: number, turn: XYZ | null, h
   return yaw !== null && Math.abs(yaw) > halfViewDeg;
 }
 
-// Map metres -> building-local cm (origin = start node's x/z).
-export function mapToLocalCm(p: XYZ, originX: number, originZ: number, liftCm: number = 0): XYZ {
-  return { x: (p.x - originX) * 100, y: p.y * 100 + liftCm, z: -(p.z - originZ) * 100 };
+// Map metres -> building-local cm. The origin is the start node (x, y and z), so a start sign
+// on an upper floor is still at local height 0; liftCm raises the result (e.g. sign height).
+export function mapToLocalCm(p: XYZ, origin: XYZ, liftCm: number = 0): XYZ {
+  return { x: (p.x - origin.x) * 100, y: (p.y - origin.y) * 100 + liftCm, z: -(p.z - origin.z) * 100 };
 }
 
-// Building-local cm of the eyes -> map metres of the feet.
-export function localCmToMap(local: XYZ, originX: number, originZ: number, eyeHeightCm: number): XYZ {
-  return { x: local.x / 100 + originX, y: (local.y - eyeHeightCm) / 100, z: originZ - local.z / 100 };
+// Building-local cm of the eyes -> map metres of the feet (the inverse of mapToLocalCm with
+// liftCm = eyeHeightCm).
+export function localCmToMap(local: XYZ, origin: XYZ, eyeHeightCm: number): XYZ {
+  return { x: local.x / 100 + origin.x, y: (local.y - eyeHeightCm) / 100 + origin.y, z: origin.z - local.z / 100 };
+}
+
+// Below this horizontal length the view direction is (almost) straight up or down and has no
+// usable heading.
+export const MIN_FORWARD_XZ = 0.05;
+
+// Yaw (radians, about +Y) that turns -Z toward the view direction projected on the floor:
+// facing -Z is 0, facing -X is +PI/2. Looking straight down or up keeps lastYaw.
+export function yawFromForward(fx: number, fz: number, lastYaw: number): number {
+  if (Math.sqrt(fx * fx + fz * fz) < MIN_FORWARD_XZ) return lastYaw;
+  return Math.atan2(-fx, -fz) + 0;
 }
 
 // The drawn line ends at the foot of a vertical lift segment (ridden with the floor button).
