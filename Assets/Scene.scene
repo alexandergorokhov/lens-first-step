@@ -2498,6 +2498,7 @@
     - !<own> 57b932a0-8e3b-4dee-b16b-cf8c437c47a5
     - !<own> f7932dd0-befa-4905-a37f-9f9d1dc7bc65
     - !<own> c40b343e-dde6-445f-8cae-07bfdadb7e4d
+    - !<own> 9502f312-063b-45e4-b85f-cf8050a527c6
   Components:
     - !<own> e9c3f69a-bd88-461d-ade2-27d16c927262
 - !<SceneObject/49603135-9b47-46e9-9d10-8b76f7de786d>
@@ -5268,6 +5269,21 @@
   RotationAngle: 0
   Pivot: {x: 0.000000, y: 0.000000}
   ExtentsTarget: !<reference> 00000000-0000-0000-0000-000000000000
+- !<SceneObject/9502f312-063b-45e4-b85f-cf8050a527c6>
+  PrefabRemaps:
+    []
+  Name: DemoRunner
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> a300e694-3e93-4b9c-85a8-b04effaa04a2
 - !<ScriptComponent/959ac26e-4cab-4998-818b-b14cf109ea6f>
   PrefabRemaps:
     []
@@ -5753,6 +5769,29 @@
       _triggerStartAudioTrack: !<reference.AudioTrackAsset> edad7d53-55da-40b1-9025-fad0e7207862
       _playAudioOnTriggerEnd: true
       _triggerEndAudioTrack: !<reference.AudioTrackAsset> 82028831-1631-4d7b-b548-ff6be4e0a2ba
+  ScriptTypes:
+    "":
+      {}
+- !<ScriptComponent/a300e694-3e93-4b9c-85a8-b04effaa04a2>
+  PrefabRemaps:
+    []
+  Name: FindYourWayDemoRunner
+  Enabled: true
+  ScriptAsset: !<reference> ee6cdb89-7d88-43d8-901a-0ba015a5ed06
+  ScriptInputsDefault:
+    autoplayDemo: true
+    speed: true
+    holdSeconds: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      main: !<MappingBased.AssignableType_1> e9c3f69a-bd88-461d-ade2-27d16c927262
+      hud: !<MappingBased.AssignableType_2> bc3ed2f0-9cd6-4e6f-bd29-b0130523290d
+      demoControls: !<MappingBased.AssignableType_3> 0765650c-0d53-4ab6-aa34-92f150efc8ff
+      autoplayDemo: false
+      speed: !<float> 1.000000
+      holdSeconds: 2.200000
   ScriptTypes:
     "":
       {}
@@ -6660,6 +6699,7 @@
   Enabled: true
   ScriptAsset: !<reference> 1c808812-8022-4137-91bc-6e33a237a6a7
   ScriptInputsDefault:
+    captionPosition: true
     cardSeconds: true
     textColor: true
   ScriptTypesDefault:
@@ -6668,6 +6708,7 @@
     "":
       cardPosition: !<Vec3> {x: 7.000000, y: 7.000000, z: -70.000000}
       badgePosition: !<Vec3> {x: -8.000000, y: 8.000000, z: -70.000000}
+      captionPosition: !<Vec3> {x: 0.000000, y: 11.500000, z: -70.000000}
       cardSeconds: !<float> 5.000000
       textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
   ScriptTypes:
@@ -8427,6 +8468,7 @@
   ScriptInputsDefault:
     mapKey: true
     tryOnlineMap: true
+    mapBaseUrl: true
     lineAheadM: true
     halfViewDeg: true
   ScriptTypesDefault:
@@ -8448,12 +8490,13 @@
       chime: !<reference.AudioTrackAsset> fed4446f-8a97-484e-8dd6-713dc07e2d7c
       mapKey: airport
       tryOnlineMap: true
+      mapBaseUrl: "http://localhost:8787/"
       eyeHeightCm: !<float> 180.000000
       signOffset: !<Vec3> {x: 0.000000, y: 0.000000, z: -250.000000}
       lineAheadM: !<float> 10.000000
       halfViewDeg: !<float> 16.000000
       modePanelOffset: !<Vec3> {x: 8.000000, y: -4.000000, z: -100.000000}
-      demoOffset: !<Vec3> {x: -15.000000, y: -16.000000, z: -80.000000}
+      demoOffset: !<Vec3> {x: -15.000000, y: -14.000000, z: -80.000000}
   ScriptTypes:
     "":
       {}

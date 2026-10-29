@@ -382,3 +382,13 @@ test("S7c Off route: the nearest node is on the traveller's own level, not the o
   assert.equal(nodesOf(nav)[0], "escFoot");
   assert.ok(nav.route.status === "route" && nav.route.edges.some((e) => e.kind === "escalator"));
 });
+
+test("S9 map URL: the map server base folder + the map's file name; no base -> no download", async () => {
+  const { mapDownloadUrl } = await import("../router.ts");
+  assert.equal(mapDownloadUrl("http://localhost:8787/", "map.json"), "http://localhost:8787/map.json");
+  assert.equal(mapDownloadUrl("http://localhost:8787", "campus.json"), "http://localhost:8787/campus.json");
+  assert.equal(mapDownloadUrl("  https://raw.githubusercontent.com/alexandergorokhov/lens-first-step/master/src/core/data/ ", "hospital.json"),
+    "https://raw.githubusercontent.com/alexandergorokhov/lens-first-step/master/src/core/data/hospital.json");
+  assert.equal(mapDownloadUrl("", "map.json"), "");
+  assert.equal(mapDownloadUrl("   ", "map.json"), "");
+});

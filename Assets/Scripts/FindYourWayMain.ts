@@ -32,6 +32,7 @@ import {
   levelName,
   MAP_SOURCES,
   MapFrame,
+  mapUrl,
   nodeLabel,
   PlaceEvent,
   PlaceInfo,
@@ -97,6 +98,10 @@ export class FindYourWayMain extends BaseScriptComponent {
   tryOnlineMap: boolean = true
 
   @input
+  @hint("Map server folder; each map downloads from here + its file name (map.json, hospital.json…). Local: http://localhost:8787/ (npm run maps). Once the repo is public: https://raw.githubusercontent.com/alexandergorokhov/lens-first-step/master/src/core/data/")
+  mapBaseUrl: string = "http://localhost:8787/"
+
+  @input
   @hint("Standing eye height above the floor, cm — used when the floor can't be detected")
   @widget(new SliderWidget(100, 200, 1))
   eyeHeightCm: number = 180
@@ -119,9 +124,9 @@ export class FindYourWayMain extends BaseScriptComponent {
   @hint("Mode panel offset from the head at start (right, up, forward), cm")
   modePanelOffset: vec3 = new vec3(8, -4, -100)
 
-  @input("vec3", "{-15,-16,-80}")
+  @input("vec3", "{-15,-14,-80}")
   @hint("Demo controls offset from the head (right, up, forward), cm — low-left, inside the ~32° view")
-  demoOffset: vec3 = new vec3(-15, -16, -80)
+  demoOffset: vec3 = new vec3(-15, -14, -80)
   @ui.group_end
 
   private phase: Phase = "mode"
@@ -261,13 +266,29 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.phase = "loading"
     this.buildingUI.setScanSignVisible(false)
     this.hud.setBadge("loading map…")
-    const url = this.tryOnlineMap ? MAP_SOURCES[this.mapIndex].url : ""
+    const url = this.tryOnlineMap ? mapUrl(this.mapBaseUrl, MAP_SOURCES[this.mapIndex]) : ""
+    print("[FYW] map download: " + (url || "(none, built-in map)"))
     const override = this.downloadOverride
     const fetchText = (u: string): Promise<string> => {
       if (override !== null) return Promise.resolve(override)
       if (!u || !this.internetModule) return Promise.reject(new Error("no download"))
-      return this.internetModule.fetch(u).then((r) =>
-        r.ok ? r.text() : Promise.reject(new Error("HTTP " + r.status)))
+      let pending: Promise<Response>
+      try {
+        pending = this.internetModule.fetch(u)
+      } catch (e) {
+        print("[FYW] map download failed: " + e)
+        return Promise.reject(e)
+      }
+      return pending.then((r) => {
+        print("[FYW] map download response: HTTP " + r.status)
+        return r.ok ? r.text() : Promise.reject(new Error("HTTP " + r.status))
+      }).then((body) => {
+        print("[FYW] map download body: " + (body ? body.length : 0) + " chars")
+        return body
+      }, (err) => {
+        print("[FYW] map download failed: " + err)
+        return Promise.reject(err)
+      })
     }
     const token = this.mapIndex
     loadMapWithTimeout(fetchText, url, this.builtInText).then((res) => {
@@ -702,6 +723,12 @@ export class FindYourWayMain extends BaseScriptComponent {
   getEyeHeightCm(): number { return this.eye() }
   getRideOffsetCm(): vec3 { return this.rideOffset }
   // Ride button ids ("r<n>_<node>") for a given start node, e.g. "escFoot".
+  // The ride button id at a node for a given connection kind ("lift", "escalator", "stairs", "ramp").
+  getRideIdFor(nodeId: string, kind: string): string | null {
+    for (const id in this.rides) if (this.rides[id].at === nodeId && this.rides[id].edge.kind === kind) return id
+    return null
+  }
+  getDebugPose(): {pos: Vec3; heading: number} | null { return this.debugPose }
   getRideIdsAt(nodeId: string): string[] {
     return Object.keys(this.rides).filter((id) => this.rides[id].at === nodeId)
   }

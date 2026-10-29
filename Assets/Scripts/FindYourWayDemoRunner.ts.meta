@@ -1,0 +1,68 @@
+- !<AssetImportMetadata/4b340705-3221-4347-8d9e-f3c15a043d6b>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> ee6cdb89-7d88-43d8-901a-0ba015a5ed06
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> ee6cdb89-7d88-43d8-901a-0ba015a5ed06
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> 7b0cab0f-d62c-40d5-b192-356a5cbf3400
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/7b0cab0f-d62c-40d5-b192-356a5cbf3400>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  VersionPrerelease: ""
+  UpdateOrder: 0
+  ComponentUid: 586d58c9-527f-4066-9d0d-ac4d89d63fba
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    autoplayDemo: false
+    demoControls: false
+    holdSeconds: false
+    hud: false
+    main: false
+    speed: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - main: !<MappingBased.AssignableType_1> 00000000-0000-0000-0000-000000000000
+      hud: !<MappingBased.AssignableType_2> 00000000-0000-0000-0000-000000000000
+      demoControls: !<MappingBased.AssignableType_3> 00000000-0000-0000-0000-000000000000
+      autoplayDemo: false
+      speed: !<float> 1.000000
+      holdSeconds: 2.200000
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - "// @ui {\"widget\":\"label\", \"label\":\"<span style=\\\"color: #60A5FA;\\\">Demo runner – autoplay walkthrough of the brief's video beats</span>\"}"
+    - '// @ui {"widget":"separator"}'
+    - '// @ui {"widget":"group_start", "label":"References"}'
+    - '// @input AssignableType_1 main {"hint":"Trip orchestrator"}'
+    - '// @input AssignableType_2 hud {"hint":"HUD (shows the captions)"}'
+    - '// @input AssignableType_3 demoControls {"hint":"Demo controls (Play demo / Stop demo button)"}'
+    - '// @ui {"widget":"group_end"}'
+    - '// @ui {"widget":"separator"}'
+    - '// @ui {"widget":"group_start", "label":"Settings"}'
+    - '// @input bool autoplayDemo {"hint":"Start the demo automatically when the preview resets"}'
+    - '// @input float speed = 1 {"hint":"Playback speed (1 = walking pace, 1.4 m/s)", "widget":"slider", "min":0.5, "max":10, "step":0.5}'
+    - '// @input float holdSeconds = 2.2 {"hint":"Seconds each caption is held before the action", "widget":"slider", "min":0.5, "max":5, "step":0.25}'
+    - '// @ui {"widget":"group_end"}'

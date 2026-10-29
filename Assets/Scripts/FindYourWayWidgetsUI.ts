@@ -145,6 +145,19 @@ export interface LabeledButton {
 
 // UIKit Button (size set before init) with an optional icon + label row on its face.
 // The SceneObject carries `name`, so LEAF finds its Interactable with findInteractableByName(name).
+// Every button by SceneObject name -> the same click handler its pinch runs. The autoplay demo
+// "presses" buttons through this, so it follows exactly the code path of a real pinch.
+const PRESSABLE: {[name: string]: {so: SceneObject; onClick: () => void}} = {}
+
+// Runs a button's click handler as a pinch would. Returns false when the button doesn't exist
+// or isn't visible (enabled in the hierarchy), just as a hidden button can't be pinched.
+export function pressButton(name: string): boolean {
+  const b = PRESSABLE[name]
+  if (!b || isNull(b.so) || !b.so.isEnabledInHierarchy) return false
+  b.onClick()
+  return true
+}
+
 export function addButton(parent: SceneObject, name: string, label: string, widthCm: number,
     heightCm: number, icon: Texture | null, onClick: () => void, labelColor: vec4,
     distanceCm: number = 110, role: TextRole = "Button", style: string = "PrimaryNeutral"): LabeledButton {
@@ -184,6 +197,7 @@ export function addButton(parent: SceneObject, name: string, label: string, widt
   const item = so.createComponent(FlexItem.getTypeName()) as FlexItem
   registerItem(parent, item)
   button.onTriggerUp.add(() => onClick())
+  PRESSABLE[name] = {so, onClick}
   return {so, button, label: t, icon: iconImg}
 }
 

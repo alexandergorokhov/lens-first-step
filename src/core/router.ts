@@ -223,6 +223,14 @@ export function chooseMap(downloaded: string | null, builtIn: string): { map: Ma
 
 export const DOWNLOAD_TIMEOUT_MS = 5000;
 
+// Where a map is downloaded from: the map server base folder + the map file name, e.g.
+// http://localhost:8787/ + map.json (npm run maps). An empty base means no download.
+export function mapDownloadUrl(baseUrl: string, file: string): string {
+  const base = (baseUrl || "").trim();
+  if (!base) return "";
+  return (base.endsWith("/") ? base : base + "/") + file;
+}
+
 // `fetchText` is whatever the platform provides (the Lens wraps InternetModule;
 // tests pass a fake). It should resolve with the body text or reject. Anything
 // slower than `timeoutMs`, a rejection, or an invalid body falls back to the

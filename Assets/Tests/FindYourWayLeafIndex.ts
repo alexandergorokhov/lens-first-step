@@ -15,6 +15,7 @@ import {FywE4AtDestinationScenario} from "./FywE4AtDestinationScenario"
 import {FywE5UnknownSignScenario} from "./FywE5UnknownSignScenario"
 import {FywMapSwitchScenario} from "./FywMapSwitchScenario"
 import {FywRestartScenario} from "./FywRestartScenario"
+import {FywDemoAutoplayScenario} from "./FywDemoAutoplayScenario"
 
 @component
 export class FindYourWayLeafIndex extends BaseScriptComponent {
@@ -33,6 +34,7 @@ export class FindYourWayLeafIndex extends BaseScriptComponent {
     {id: "e5-unknown-sign", typename: FywE5UnknownSignScenario.getTypeName()},
     {id: "map-switch-cycle", typename: FywMapSwitchScenario.getTypeName()},
     {id: "restart-resets-trip", typename: FywRestartScenario.getTypeName()},
+    {id: "demo-autoplay-completes", typename: FywDemoAutoplayScenario.getTypeName()},
     // Screenshot set-ups — skipped by the runner unless named in `only`.
     {id: "visual-start", typename: FywVisualScenario.getTypeName(), parameters: {shot: "start"}},
     {id: "visual-card", typename: FywVisualScenario.getTypeName(), parameters: {shot: "card"}},

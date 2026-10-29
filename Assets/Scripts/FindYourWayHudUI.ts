@@ -18,6 +18,10 @@ export class FindYourWayHudUI extends BaseScriptComponent {
   @hint("Map badge position relative to the camera, cm")
   badgePosition: vec3 = new vec3(-8, 8, -70)
 
+  @input("vec3", "{0,11.5,-70}")
+  @hint("Demo caption position relative to the camera, cm (top centre)")
+  captionPosition: vec3 = new vec3(0, 11.5, -70)
+
   @input
   @hint("Seconds the notice card stays up")
   @widget(new SliderWidget(1, 15, 0.5))
@@ -33,6 +37,8 @@ export class FindYourWayHudUI extends BaseScriptComponent {
   private cardText: Text
   private cardIcon: Image
   private badge: SceneObject
+  private caption: SceneObject
+  private captionText: Text
   private badgeText: Text
   private cardTime = -1
   private cardDuration = 5
@@ -54,6 +60,13 @@ export class FindYourWayHudUI extends BaseScriptComponent {
       this.textColor, 70, HorizontalAlignment.Left)
     this.badge.enabled = false
 
+    // Demo caption: one short line, top centre, only while the autoplay demo runs.
+    this.caption = obj(this.sceneObject, "DemoCaption", this.captionPosition)
+    const c = makePanel(this.caption, 24, 0.5, 0.2)
+    this.captionText = addText(c.content, "CaptionText", "Find Your Way Inside", "Headline2", 23, 2.4,
+      this.textColor, 70)
+    this.caption.enabled = false
+
     this.createEvent("UpdateEvent").bind(() => this.tick())
   }
 
@@ -73,6 +86,19 @@ export class FindYourWayHudUI extends BaseScriptComponent {
 
   getCardText(): string | null {
     return this.card.root.enabled ? this.cardText.text : null
+  }
+
+  setCaption(text: string | null): void {
+    if (text === null) {
+      this.caption.enabled = false
+      return
+    }
+    this.captionText.text = text
+    this.caption.enabled = true
+  }
+
+  getCaption(): string | null {
+    return this.caption.enabled ? this.captionText.text : null
   }
 
   setBadge(text: string | null): void {

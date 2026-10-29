@@ -39,12 +39,16 @@ export class FindYourWayDemoControlsUI extends BaseScriptComponent {
   private _onEvent = new Event<void>()
   private _onRestart = new Event<void>()
   private _onNextMap = new Event<void>()
+  private _onPlayDemo = new Event<void>()
   get onEvent(): PublicApi<void> { return this._onEvent.publicApi() }
   get onRestart(): PublicApi<void> { return this._onRestart.publicApi() }
   get onNextMap(): PublicApi<void> { return this._onNextMap.publicApi() }
+  // Play / Stop the autoplay demo (one button; its label shows which).
+  get onPlayDemo(): PublicApi<void> { return this._onPlayDemo.publicApi() }
 
   private eventButton: LabeledButton
   private mapButton: LabeledButton
+  private playButton: LabeledButton
   private status: Text
 
   onAwake() {
@@ -60,6 +64,8 @@ export class FindYourWayDemoControlsUI extends BaseScriptComponent {
       () => this._onRestart.invoke(), this.textColor, d, "Callout")
     this.mapButton = addButton(panel.content, "NextMapButton", "Map: Airport", w - 1.5, 3.4, icon("map"),
       () => this._onNextMap.invoke(), this.textColor, d, "Callout")
+    this.playButton = addButton(panel.content, "PlayDemoButton", "Play demo", w - 1.5, 3.4, icon("directions_walk"),
+      () => this._onPlayDemo.invoke(), this.textColor, d, "Callout", "Primary")
     this.status = addText(panel.content, "Status", "offline map", "Body", w - 2, 1.4,
       new vec4(this.textColor.x, this.textColor.y, this.textColor.z, 0.85), d)
   }
@@ -78,6 +84,10 @@ export class FindYourWayDemoControlsUI extends BaseScriptComponent {
 
   setMapName(name: string): void {
     this.mapButton.label.text = "Map: " + name + " (switch)"
+  }
+
+  setPlayDemoLabel(text: string): void {
+    this.playButton.label.text = text
   }
 
   setStatus(text: string): void {

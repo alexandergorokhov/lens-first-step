@@ -3,7 +3,8 @@
 Approved test scenarios and where each is tested.
 
 - **Node** tests (pure logic, run `npm test`): `src/core/tests/router.test.ts`,
-  `src/core/tests/maps.test.ts`, `src/core/tests/geometry.test.ts`. Node test names start
+  `src/core/tests/maps.test.ts`, `src/core/tests/geometry.test.ts`, `src/core/tests/demo.test.ts`,
+  `src/core/tests/serve-maps.test.ts`. Node test names start
   with the scenario ID where there is one.
 - **LEAF** scenarios run inside the Lens in Lens Studio's Interactive Preview
   (`Assets/Tests`, registered in `FindYourWayLeafIndex.ts`). To run them, tick **autoRun** on
@@ -12,8 +13,8 @@ Approved test scenarios and where each is tested.
   seated height and the scanned sign are simulated with test hooks on `FindYourWayMain`
   (LEAF cannot drive WASD/Q/E).
 
-Status as of the last run: Node 62 passed, 0 failed, 1 todo (S9 real download).
-LEAF 13 of 13 passed.
+Status as of the last run: Node 69 passed, 0 failed, 1 todo (S9 real download).
+LEAF 14 of 14 passed.
 
 ## Approved scenarios
 
@@ -27,7 +28,7 @@ LEAF 13 of 13 passed.
 | S6 | Arrival | Within 3 m the line stops; card "Gate C3. Boarding in 6 min." | Node: "S6 Arrival…". LEAF: `dc5-arrival-card`; arrival after riding the escalator / a lift in `dc2-…` and `dc3-…` | Passing |
 | S7 | Off route | > 5 m from the line re-routes from the nearest node, on the traveller's own level, without re-triggering every frame | Node: "S7 Off route…", "S7b Off route: staying off the line…", "S7c Off route: the nearest node is on the traveller's own level…". LEAF: `dc2-walk-escalator-corners-arrow` (ground floor under the landing re-plans from escFoot) | Passing |
 | S8 | Next turn out of view | Edge arrow toward the next turn | Node (geometry.test.ts): "turn arrow: shows only when the next turn is outside the view…", "S8 on the airport: at the escalator top facing back…". LEAF: `dc2-walk-escalator-corners-arrow` | Passing |
-| S9 | Map download works | Downloads map.json from a URL; "online map" badge | Node: "S9/E1 logic: a valid download is used online…", "S9/E1 logic: loadMapWithTimeout uses the download when it arrives in time". Node todo: "S9 Lens: a real map.json download from a public URL…" | Logic passing. Real download: todo until the repo (and its map.json URL) is public; today the URL returns 404 and the Lens shows "offline map" |
+| S9 | Map download works | Downloads map.json from a URL; "online map" badge | Node: "S9/E1 logic: a valid download is used online…", "S9/E1 logic: loadMapWithTimeout uses the download when it arrives in time". Node: "S9 map URL: the map server base folder + the map's file name…" (mapDownloadUrl). Node (serve-maps.test.ts): "map server: serves src/core/data/map.json as JSON with CORS, 404 for anything else". Node todo: "S9 Lens: a real map.json download from a public URL…" | Logic passing. Real download: todo. The Lens downloads mapBaseUrl + file name (default http://localhost:8787/, from `npm run maps`), but the Lens Studio preview refuses plain http ("URL is not secure (Experimental API must be enabled…)"), and the GitHub raw URL returns 404 while the repo is private, so the Lens shows "offline map" |
 | E1 | Download fails or > 5 s | Built-in map; "offline map" badge; route works | Node: "E1 logic: a download slower than the timeout…", "E1 logic: a failed or throwing download…". LEAF: `dc1-scan-sign-line-appears` (real request returns 404 → "offline map", route works) | Passing |
 | E2 | Invalid map.json | "Map couldn't load"; falls back to built-in map; no crash | Node: "E2 Invalid map.json…", "E2 logic: an invalid download in time…", "E2 parseMap names what is wrong…". LEAF: `e2-broken-map-fallback` | Passing |
 | E3 | No step-free route | "No step-free route. Ask staff at the assistance point."; line to the nearest assistance point | Node: "E3 No step-free route (lift + ramp closed)…", "E3 Both lifts closed…", "hospital: both lifts out…". LEAF: `e3-no-step-free-ask-staff` (red sign on Lift 1 + Lift 2 closed) | Passing |
@@ -57,6 +58,8 @@ LEAF 13 of 13 passed.
 | Preview room map: short line on the real floor | Node: "room: short route on the room floor…" | Passing |
 | Map switch cycles Airport → Hospital → Campus → Room, each restarting at the mode panel | LEAF: `map-switch-cycle` | Passing |
 | Restart trip resets cleanly (mode panel, no line, no stale cards, closures reopened) | LEAF: `restart-resets-trip` | Passing |
+| Autoplay demo: every beat reached in order, every button press found its button, the three arrival cards showed | Node (demo.test.ts): beat order, polyline walking at 1.4 m/s with 3× on long straights. LEAF: `demo-autoplay-completes` (whole demo at 10× speed) | Passing |
+| Local map server (`npm run maps`) | Node (serve-maps.test.ts) | Passing |
 | Lens maths (headings, next turn, metres ↔ cm, line stops at a lift) and router/geometry Lens copies identical | Node: geometry.test.ts | Passing |
 
 ## Notes on the logic

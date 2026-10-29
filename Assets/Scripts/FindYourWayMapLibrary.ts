@@ -4,27 +4,30 @@
 // Plain module: no scene access. The router itself is FindYourWayRouter.ts (a verbatim copy
 // of src/core/router.ts). Must not: contain any building-specific literal.
 
-import {findNode, MapData, MapEdge, MapNode, Vec3} from "./FindYourWayRouter"
+import {findNode, mapDownloadUrl, MapData, MapEdge, MapNode, Vec3} from "./FindYourWayRouter"
 import {localCmToMap, mapToLocalCm} from "./FindYourWayGeometry"
 
 export interface MapSource {
   key: string
+  // Built-in copy shipped in the Lens (used when the download fails or is slow).
   asset: JsonAsset
-  // Where the real Lens would download this building's map from (empty = built-in only).
-  url: string
+  // File name of this map on the map server: the download URL is FindYourWay's mapBaseUrl + file
+  // (e.g. http://localhost:8787/map.json from `npm run maps`, or the GitHub raw folder once public).
+  file: string
 }
 
 // Bundled maps. Swapping buildings = adding a JSON file here; no code change elsewhere.
 export const MAP_SOURCES: MapSource[] = [
-  {
-    key: "airport",
-    asset: requireAsset("../Maps/airport.json") as JsonAsset,
-    url: "https://raw.githubusercontent.com/alexandergorokhov/find-your-way-inside/main/src/core/data/map.json",
-  },
-  {key: "hospital", asset: requireAsset("../Maps/hospital.json") as JsonAsset, url: ""},
-  {key: "campus", asset: requireAsset("../Maps/campus.json") as JsonAsset, url: ""},
-  {key: "room", asset: requireAsset("../Maps/room.json") as JsonAsset, url: ""},
+  {key: "airport", asset: requireAsset("../Maps/airport.json") as JsonAsset, file: "map.json"},
+  {key: "hospital", asset: requireAsset("../Maps/hospital.json") as JsonAsset, file: "hospital.json"},
+  {key: "campus", asset: requireAsset("../Maps/campus.json") as JsonAsset, file: "campus.json"},
+  {key: "room", asset: requireAsset("../Maps/room.json") as JsonAsset, file: "room.json"},
 ]
+
+// The map download URL for a source, or "" when there is no base URL.
+export function mapUrl(baseUrl: string, source: MapSource): string {
+  return mapDownloadUrl(baseUrl, source.file)
+}
 
 export interface PlaceLevel { y: number; name: string }
 // Optional building footprints (campus-style maps with outdoor ground between buildings).

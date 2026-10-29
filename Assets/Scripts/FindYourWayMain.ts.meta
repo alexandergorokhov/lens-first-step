@@ -40,6 +40,7 @@
     hud: false
     internetModule: false
     lineAheadM: false
+    mapBaseUrl: false
     mapKey: false
     modePanel: false
     modePanelOffset: false
@@ -73,6 +74,7 @@
       chime: !<reference.AudioTrackAsset> 00000000-0000-0000-0000-000000000000
       mapKey: airport
       tryOnlineMap: true
+      mapBaseUrl: "http://localhost:8787/"
       eyeHeightCm: !<float> 160.000000
       signOffset: !<Vec3> {x: 0.000000, y: 0.000000, z: -150.000000}
       lineAheadM: !<float> 10.000000
@@ -104,10 +106,11 @@
     - '// @ui {"widget":"group_start", "label":"Settings"}'
     - '// @input string mapKey = "airport" {"hint":"Which bundled map to start with", "widget":"combobox", "values":[{"label":"Airport (demo)", "value":"airport"}, {"label":"Hospital wing", "value":"hospital"}, {"label":"Preview room floor", "value":"room"}]}'
     - '// @input bool tryOnlineMap = true {"hint":"Try downloading the map (5 s timeout) before falling back to the built-in copy"}'
+    - '// @input string mapBaseUrl = "http://localhost:8787/" {"hint":"Map server folder; each map downloads from here + its file name (map.json, hospital.json…). Local: http://localhost:8787/ (npm run maps). Once the repo is public: https://raw.githubusercontent.com/alexandergorokhov/lens-first-step/master/src/core/data/"}'
     - "// @input float eyeHeightCm = 180 {\"hint\":\"Standing eye height above the floor, cm — used when the floor can't be detected\", \"widget\":\"slider\", \"min\":100, \"max\":200, \"step\":1}"
     - "// @input vec3 signOffset = \"{0,0,-250}\" {\"hint\":\"Where the 'you are here' sign stands relative to the user when a mode is chosen (right, -, forward), cm\"}"
     - '// @input float lineAheadM = 10 {"hint":"How much of the route the line shows ahead of the user, m", "widget":"slider", "min":3, "max":30, "step":0.5}'
     - '// @input float halfViewDeg = 16 {"hint":"Half the horizontal field of view, degrees — outside it the turn arrow shows", "widget":"slider", "min":8, "max":40, "step":1}'
     - '// @input vec3 modePanelOffset = "{8,-4,-100}" {"hint":"Mode panel offset from the head at start (right, up, forward), cm"}'
-    - '// @input vec3 demoOffset = "{-15,-16,-80}" {"hint":"Demo controls offset from the head (right, up, forward), cm — low-left, inside the ~32° view"}'
+    - '// @input vec3 demoOffset = "{-15,-14,-80}" {"hint":"Demo controls offset from the head (right, up, forward), cm — low-left, inside the ~32° view"}'
     - '// @ui {"widget":"group_end"}'
