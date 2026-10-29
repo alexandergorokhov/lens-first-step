@@ -1,0 +1,121 @@
+{
+  "version": 1,
+  "name": "Stand-in campus",
+  "units": "m",
+  "axes": "x east, y up, z north; campus 70 x 45 m; ground y=0, first floors y=4; outdoor paths marked outdoor: true",
+  "place": {
+    "title": "Campus",
+    "standInLabel": "Stand-in campus",
+    "standInModel": true,
+    "start": "sign",
+    "destination": "lectureHall1",
+    "levels": [
+      {
+        "y": 0,
+        "name": "Ground floor"
+      },
+      {
+        "y": 4,
+        "name": "First floor"
+      }
+    ],
+    "footprint": {
+      "minX": 0,
+      "maxX": 70,
+      "minZ": 0,
+      "maxZ": 45
+    },
+    "buildings": [
+      {
+        "name": "Library",
+        "minX": 4,
+        "maxX": 24,
+        "minZ": 19,
+        "maxZ": 41,
+        "levels": [
+          0,
+          4
+        ]
+      },
+      {
+        "name": "Science building",
+        "minX": 42,
+        "maxX": 66,
+        "minZ": 19,
+        "maxZ": 41,
+        "levels": [
+          0,
+          4
+        ]
+      }
+    ],
+    "scanSign": {
+      "title": "You are here",
+      "button": "Scan sign",
+      "hint": "on real Specs: look at the sign"
+    },
+    "events": [
+      {
+        "id": "roomChange",
+        "type": "destinationChanged",
+        "to": "lab2",
+        "button": "Room change Lecture Hall 1 → Lab 2",
+        "card": "Room change Lecture Hall 1 → Lab 2"
+      },
+      {
+        "id": "sciLiftOut",
+        "type": "connectionClosed",
+        "edge": "sciLift",
+        "at": "sciLiftG",
+        "sign": "Science lift out of service",
+        "card": "Science lift out of service. Re-routing."
+      }
+    ]
+  },
+  "nodes": [
+    {"id": "sign", "x": 35, "y": 0, "z": 1, "kind": "sign", "label": "You are here (main gate)"},
+    {"id": "quad", "x": 35, "y": 0, "z": 15, "kind": "junction", "label": "Quad"},
+    {"id": "infoDesk", "x": 30, "y": 0, "z": 12, "kind": "assistance", "label": "Campus info desk"},
+    {"id": "libDoor", "x": 20, "y": 0, "z": 20, "kind": "junction", "label": "Library entrance"},
+    {"id": "libStairsFoot", "x": 14, "y": 0, "z": 24, "kind": "junction", "label": "Library stairs (bottom)"},
+    {"id": "libStairsTop", "x": 14, "y": 4, "z": 28, "kind": "junction", "label": "Library stairs (top)"},
+    {"id": "libLiftG", "x": 20, "y": 0, "z": 27, "kind": "lift", "label": "Library lift (ground)"},
+    {"id": "libLiftU", "x": 20, "y": 4, "z": 27, "kind": "lift", "label": "Library lift (first floor)"},
+    {"id": "libFirst", "x": 14, "y": 4, "z": 33, "kind": "junction", "label": "Library first floor"},
+    {"id": "sciDoor", "x": 50, "y": 0, "z": 20, "kind": "junction", "label": "Science building entrance"},
+    {"id": "lab2", "x": 60, "y": 0, "z": 22, "kind": "destination", "label": "Lab 2", "type": "lab", "code": "Lab 2", "icon": "science", "arrivalCard": "Lab 2. Practical starts in 10 min."},
+    {"id": "sciStairsFoot", "x": 54, "y": 0, "z": 25, "kind": "junction", "label": "Science stairs (bottom)"},
+    {"id": "sciStairsTop", "x": 54, "y": 4, "z": 29, "kind": "junction", "label": "Science stairs (top)"},
+    {"id": "sciLiftG", "x": 58, "y": 0, "z": 25, "kind": "lift", "label": "Science lift (ground)"},
+    {"id": "sciLiftU", "x": 58, "y": 4, "z": 25, "kind": "lift", "label": "Science lift (first floor)"},
+    {"id": "sciRampFoot", "x": 46, "y": 0, "z": 24, "kind": "junction", "label": "Science ramp (bottom)"},
+    {"id": "sciRampTop", "x": 46, "y": 4, "z": 34, "kind": "junction", "label": "Science ramp (top)"},
+    {"id": "sciFirst", "x": 54, "y": 4, "z": 33, "kind": "junction", "label": "Science first floor"},
+    {"id": "readingRoom", "x": 8, "y": 4, "z": 37, "kind": "destination", "type": "room", "code": "Reading Room", "icon": "menu_book", "label": "Reading Room", "arrivalCard": "Reading Room. Quiet study until 10 pm."},
+    {"id": "lectureHall1", "x": 52, "y": 4, "z": 38, "kind": "destination", "type": "lecture hall", "code": "Lecture Hall 1", "icon": "school", "label": "Lecture Hall 1", "arrivalCard": "Lecture Hall 1. Lecture starts in 10 min."}
+  ],
+  "edges": [
+    {"from": "sign", "to": "quad", "length": 14.7, "kind": "walk", "open": true, "outdoor": true},
+    {"from": "quad", "to": "infoDesk", "length": 6.2, "kind": "walk", "open": true, "outdoor": true},
+    {"from": "quad", "to": "libDoor", "length": 16.7, "kind": "walk", "open": true, "outdoor": true},
+    {"from": "quad", "to": "sciDoor", "length": 16.7, "kind": "walk", "open": true, "outdoor": true},
+    {"from": "libDoor", "to": "libStairsFoot", "length": 7.3, "kind": "walk", "open": true},
+    {"from": "libStairsFoot", "to": "libStairsTop", "length": 5.7, "kind": "stairs", "open": true},
+    {"from": "libStairsTop", "to": "libFirst", "length": 5, "kind": "walk", "open": true},
+    {"from": "libDoor", "to": "libLiftG", "length": 7, "kind": "walk", "open": true},
+    {"id": "libLift", "from": "libLiftG", "to": "libLiftU", "length": 4, "kind": "lift", "open": true},
+    {"from": "libLiftU", "to": "libFirst", "length": 8.5, "kind": "walk", "open": true},
+    {"from": "libFirst", "to": "readingRoom", "length": 7.3, "kind": "walk", "open": true},
+    {"from": "sciDoor", "to": "lab2", "length": 10.2, "kind": "walk", "open": true},
+    {"from": "sciDoor", "to": "sciStairsFoot", "length": 6.5, "kind": "walk", "open": true},
+    {"from": "sciStairsFoot", "to": "sciStairsTop", "length": 5.7, "kind": "stairs", "open": true},
+    {"from": "sciStairsTop", "to": "sciFirst", "length": 4, "kind": "walk", "open": true},
+    {"from": "sciDoor", "to": "sciLiftG", "length": 9.5, "kind": "walk", "open": true},
+    {"id": "sciLift", "from": "sciLiftG", "to": "sciLiftU", "length": 4, "kind": "lift", "open": true},
+    {"from": "sciLiftU", "to": "sciFirst", "length": 9, "kind": "walk", "open": true},
+    {"from": "sciDoor", "to": "sciRampFoot", "length": 5.7, "kind": "walk", "open": true},
+    {"id": "sciRamp", "from": "sciRampFoot", "to": "sciRampTop", "length": 10.8, "kind": "ramp", "open": true},
+    {"from": "sciRampTop", "to": "sciFirst", "length": 8.1, "kind": "walk", "open": true},
+    {"from": "sciFirst", "to": "lectureHall1", "length": 5.4, "kind": "walk", "open": true}
+  ]
+}

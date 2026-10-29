@@ -4,7 +4,7 @@
   "type": "module",
   "description": "Indoor navigation Lens for Snap Specs (Learn AR with SPECS)",
   "scripts": {
-    "test": "node --test src/core/tests/router.test.ts"
+    "test": "node --test src/core/tests/router.test.ts src/core/tests/maps.test.ts src/core/tests/geometry.test.ts"
   },
   "engines": {
     "node": ">=22.18"

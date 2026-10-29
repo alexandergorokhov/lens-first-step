@@ -216,7 +216,8 @@ export function chooseMap(downloaded: string | null, builtIn: string): { map: Ma
     if (parsed.ok) return { map: parsed.map, source: "online", notice: null };
   }
   const fallback = parseMap(builtIn);
-  if (!fallback.ok) throw new Error("built-in map is broken: " + fallback.error);
+  // Explicit cast: Lens Studio's compiler (no strictNullChecks) can't narrow this union.
+  if (!fallback.ok) throw new Error("built-in map is broken: " + (fallback as { ok: false; error: string }).error);
   return { map: fallback.map, source: "offline", notice: downloaded === null ? null : MAP_LOAD_FAILED };
 }
 
@@ -336,11 +337,22 @@ export function lineAhead(points: Vec3[], user: Vec3, ahead: number = 10): Vec3[
   return out;
 }
 
+// Each metre of height difference counts as this many metres of floor distance, so the
+// nearest node is on the traveller's own level (standing under a mezzanine never snaps
+// to the node overhead).
+export const LEVEL_PENALTY = 5;
+
+export function levelDistance(a: Vec3, b: Vec3): number {
+  const dx = a.x - b.x;
+  const dz = a.z - b.z;
+  return Math.sqrt(dx * dx + dz * dz) + LEVEL_PENALTY * Math.abs(a.y - b.y);
+}
+
 export function nearestNode(map: MapData, pos: Vec3): MapNode {
   let best = map.nodes[0];
   let bestD = Infinity;
   for (const n of map.nodes) {
-    const d = dist3(n, pos);
+    const d = levelDistance(n, pos);
     if (d < bestD) {
       bestD = d;
       best = n;
@@ -417,9 +429,10 @@ export class Navigator {
       this.recompute();
       return "rerouted";
     }
+    // Off the line: re-plan from the nearest node. Only report "rerouted" when the planned
+    // nodes actually change, so a traveller standing off the line doesn't re-trigger it every frame.
     if (this.route.status === "route" && distanceToLine(routePoints(this.map, this.route), pos) > OFF_ROUTE_DISTANCE) {
-      this.recompute();
-      return "rerouted";
+      return this.recompute() ? "rerouted" : "onRoute";
     }
     return "onRoute";
   }

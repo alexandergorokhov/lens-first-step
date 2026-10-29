@@ -1,6 +1,6 @@
 // Pure-logic tests for the route engine. Test names start with the scenario ID
-// from devpost/SCENARIOS.md; scenarios that only the Lens can show are listed
-// as todo until Prototypes B and C.
+// from devpost/SCENARIOS.md. What only the running Lens can show is covered by
+// the LEAF scenarios in Assets/Tests (ids noted next to each scenario below).
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -136,7 +136,8 @@ test("S3 logic: switching mode mid-route re-routes from the current position wit
   assert.ok(nav.route.status === "route" && !kinds(nav.route.edges).includes("escalator"));
 });
 
-test.todo("S3 Lens: line redraws within 1 s of switching mode (Prototype B)");
+// S3 Lens part removed: the Lens chooses the mode once per trip (brief: switching mode
+// mid-trip is out of scope). The routing logic test above is kept.
 
 test("S4 Gate change B12 -> C3 while walking: card text and re-route from current position", () => {
   const map = loadMap();
@@ -156,7 +157,7 @@ test("S4 Gate change B12 -> C3 while walking: card text and re-route from curren
   assert.ok(stepFree.route.status === "route" && kinds(stepFree.route.edges).includes("ramp"));
 });
 
-test.todo("S4 Lens: gate-change card shows and the line redraws within 1 s (Prototype B)");
+// S4 Lens part: LEAF dc4-gate-change-stairs-and-ramp (card text, line swing, new route).
 
 test("S5 Lift out in Step-Free: pinching the red sign closes the lift and the new route avoids stairs/escalators", () => {
   const nav = new Navigator(loadMap(), "sign", "gateB12", "stepFree");
@@ -192,9 +193,10 @@ test("S7 Off route: more than 5 m from the line re-routes from the nearest node"
   assert.equal(nodesOf(nav).at(-1), "gateB12");
 });
 
-test.todo("S8 Lens: edge arrow points toward the next turn when it is out of view (Prototype B)");
+// S8 Lens part: LEAF dc2-walk-escalator-corners-arrow (arrow shown/hidden); the maths is
+// tested in geometry.test.ts.
 
-test.todo("S9 Lens: map.json downloads from a URL and the 'online map' badge shows (Prototype C)");
+test.todo("S9 Lens: a real map.json download from a public URL shows the 'online map' badge (needs the repo to be public)");
 
 test("S9/E1 logic: a valid download is used online; a failed or timed-out download uses the built-in map offline", () => {
   const online = chooseMap(MAP_TEXT, MAP_TEXT);
@@ -238,7 +240,8 @@ test("E2 logic: an invalid download in time still falls back with 'Map couldn't 
   assert.equal(r.notice, MAP_LOAD_FAILED);
 });
 
-test.todo("E1 Lens: download fails or takes over 5 s -> built-in map, 'offline map' badge, route works (Prototype C)");
+// E1 Lens part: LEAF dc1-scan-sign-line-appears (the download returns 404 -> 'offline map'
+// badge and the route works).
 
 test("E2 Invalid map.json: 'Map couldn't load', falls back to the built-in map, no crash", () => {
   const r = chooseMap("{ this is not json", MAP_TEXT);
@@ -307,7 +310,8 @@ test("E5 Unknown sign id: 'This sign isn't in the map', nothing drawn", () => {
   assert.equal(findRoute(map, "sign-T9-404", "gateB12", "walk").status, "error");
 });
 
-test.todo("E6 Lens: line and cards readable and in view at seated eye height, Q key (Prototype B)");
+// E6 Lens part: LEAF dc3-stepfree-seated-lift-reroute (seated eye height: line on the floor
+// and within 25 degrees below the eyes).
 
 // ---- Supporting checks (not scenarios) -------------------------------------
 
@@ -356,4 +360,25 @@ test("Floor line follows a turn and stops at the gate", () => {
   const line = lineAhead(pts, { x: 0, y: 0, z: 2 }, 10);
   assert.equal(line.length, 3);
   assert.deepEqual(line.at(-1), { x: 3, y: 0, z: 4 });
+});
+
+test("S7b Off route: staying off the line with an unchanged plan reports onRoute, not rerouted every frame", () => {
+  const map = loadMap();
+  const nav = new Navigator(map, "sign", "gateB12", "walk");
+  const lift2 = findNode(map, "lift2G")!;
+  const off = { x: lift2.x + 1, y: 0, z: lift2.z };
+  assert.equal(nav.updatePosition(off), "rerouted");
+  const before = nodesOf(nav).join(">");
+  // Same spot again (next frame): the plan is unchanged, so it is not a new re-route.
+  assert.equal(nav.updatePosition(off), "onRoute");
+  assert.equal(nodesOf(nav).join(">"), before);
+});
+
+test("S7c Off route: the nearest node is on the traveller's own level, not the one overhead", () => {
+  const map = loadMap();
+  const nav = new Navigator(map, "sign", "gateB12", "walk");
+  // On the ground floor, just past the escalator, under the top landing (escTop is 6 m up).
+  assert.equal(nav.updatePosition({ x: 30, y: 0, z: 30 }), "rerouted");
+  assert.equal(nodesOf(nav)[0], "escFoot");
+  assert.ok(nav.route.status === "route" && nav.route.edges.some((e) => e.kind === "escalator"));
 });

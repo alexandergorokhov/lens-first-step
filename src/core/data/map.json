@@ -3,6 +3,24 @@
   "name": "Stand-in airport floor",
   "units": "m",
   "axes": "x east, y up, z north; floor 60 x 40 m; ground level y=0, upper level y=6, C pier y=5",
+  "place": {
+    "title": "Airport",
+    "standInLabel": "Stand-in building",
+    "standInModel": true,
+    "start": "sign",
+    "destination": "gateB12",
+    "levels": [
+      { "y": 0, "name": "Ground floor" },
+      { "y": 5, "name": "C pier" },
+      { "y": 6, "name": "Departures" }
+    ],
+    "footprint": { "minX": 0, "maxX": 60, "minZ": 0, "maxZ": 40 },
+    "scanSign": { "title": "You are here", "button": "Scan sign", "hint": "on real Specs: look at the sign" },
+    "events": [
+      { "id": "gateChange", "type": "destinationChanged", "to": "gateC3", "button": "Gate change B12 → C3", "card": "Gate change B12 → C3" },
+      { "id": "lift1Out", "type": "connectionClosed", "edge": "lift1", "at": "lift1G", "sign": "Lift 1 out of service", "card": "Lift 1 out of service. Re-routing." }
+    ]
+  },
   "nodes": [
     { "id": "sign",        "x": 30, "y": 0, "z": 2,  "kind": "sign",     "label": "You are here (entrance)" },
     { "id": "hall",        "x": 30, "y": 0, "z": 8,  "kind": "junction", "label": "Check-in hall" },
@@ -17,10 +35,10 @@
     { "id": "lift2U",      "x": 8,  "y": 6, "z": 20, "kind": "lift",     "label": "Lift 2 (departures)" },
     { "id": "concourse",   "x": 30, "y": 6, "z": 32, "kind": "junction", "label": "Departures concourse" },
     { "id": "bJunction",   "x": 45, "y": 6, "z": 32, "kind": "junction", "label": "B gates" },
-    { "id": "gateB12",     "x": 55, "y": 6, "z": 36, "kind": "gate",     "label": "Gate B12" },
+    { "id": "gateB12",     "x": 55, "y": 6, "z": 36, "kind": "destination", "icon": "flight", "type": "gate", "code": "B12", "label": "Gate B12", "arrivalCard": "Gate B12. Boarding in 6 min." },
     { "id": "cTop",        "x": 15, "y": 6, "z": 32, "kind": "junction", "label": "C pier (top)" },
     { "id": "cJunction",   "x": 8,  "y": 5, "z": 34, "kind": "junction", "label": "C gates" },
-    { "id": "gateC3",      "x": 5,  "y": 5, "z": 38, "kind": "gate",     "label": "Gate C3" }
+    { "id": "gateC3",      "x": 5,  "y": 5, "z": 38, "kind": "destination", "icon": "flight", "type": "gate", "code": "C3", "label": "Gate C3", "arrivalCard": "Gate C3. Boarding in 6 min." }
   ],
   "edges": [
     { "from": "sign",       "to": "hall",       "length": 6,    "kind": "walk",      "open": true },
