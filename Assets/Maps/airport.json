@@ -10,9 +10,9 @@
     "start": "sign",
     "destination": "gateB12",
     "levels": [
-      { "y": 0, "name": "Ground floor" },
-      { "y": 5, "name": "C pier" },
-      { "y": 6, "name": "Departures" }
+      { "y": 0, "name": "Ground floor", "floor": 0 },
+      { "y": 5, "name": "C pier", "floor": 1 },
+      { "y": 6, "name": "Departures", "floor": 1 }
     ],
     "footprint": { "minX": 0, "maxX": 60, "minZ": 0, "maxZ": 40 },
     "scanSign": { "title": "You are here", "button": "Scan sign", "hint": "on real Specs: look at the sign" },
@@ -31,6 +31,8 @@
     { "id": "lift1G",      "x": 48, "y": 0, "z": 10, "kind": "lift",     "label": "Lift 1 (ground)" },
     { "id": "lift2G",      "x": 8,  "y": 0, "z": 20, "kind": "lift",     "label": "Lift 2 (ground)" },
     { "id": "escTop",      "x": 30, "y": 6, "z": 28, "kind": "junction", "label": "Escalator (top)" },
+    { "id": "escDownTop",  "x": 27.5, "y": 6, "z": 28, "kind": "junction", "label": "Down escalator (top)" },
+    { "id": "escDownFoot", "x": 27.5, "y": 0, "z": 18, "kind": "junction", "label": "Down escalator (bottom)" },
     { "id": "stairsTop",   "x": 34, "y": 6, "z": 24, "kind": "junction", "label": "Stairs (top)" },
     { "id": "lift1U",      "x": 48, "y": 6, "z": 10, "kind": "lift",     "label": "Lift 1 (departures)" },
     { "id": "lift2U",      "x": 8,  "y": 6, "z": 20, "kind": "lift",     "label": "Lift 2 (departures)" },
@@ -39,7 +41,15 @@
     { "id": "gateB12",     "x": 55, "y": 6, "z": 36, "kind": "destination", "icon": "flight", "type": "gate", "code": "B12", "label": "Gate B12", "arrivalCard": "Gate B12. Boarding in 6 min." },
     { "id": "cTop",        "x": 15, "y": 6, "z": 32, "kind": "junction", "label": "C pier (top)" },
     { "id": "cJunction",   "x": 8,  "y": 5, "z": 34, "kind": "junction", "label": "C gates" },
-    { "id": "gateC3",      "x": 5,  "y": 5, "z": 38, "kind": "destination", "icon": "flight", "type": "gate", "code": "C3", "label": "Gate C3", "arrivalCard": "Gate C3. Boarding in 6 min." }
+    { "id": "gateC3",      "x": 5,  "y": 5, "z": 38, "kind": "destination", "icon": "flight", "type": "gate", "code": "C3", "label": "Gate C3", "arrivalCard": "Gate C3. Boarding in 6 min." },
+    { "id": "juiceG", "x": 27.3, "y": 0, "z": 12.5, "kind": "place", "category": "food", "label": "Juice bar", "sponsored": true, "sponsorTag": "Sponsored · demo" },
+    { "id": "cafeG", "x": 3.5, "y": 0, "z": 6, "kind": "place", "category": "coffee", "label": "Café" },
+    { "id": "newsG", "x": 3.5, "y": 0, "z": 12.7, "kind": "place", "category": "shopping", "label": "News & Books" },
+    { "id": "dutyFree", "x": 19.5, "y": 6, "z": 37.5, "kind": "place", "category": "shopping", "label": "Duty Free" },
+    { "id": "cafeD", "x": 43, "y": 6, "z": 37.5, "kind": "place", "category": "coffee", "label": "Café" },
+    { "id": "toiletsD", "x": 40, "y": 6, "z": 25.5, "kind": "place", "category": "toilet", "label": "Toilets" },
+    { "id": "accToiletD", "x": 42.5, "y": 6, "z": 25.5, "kind": "place", "category": "accessibleToilet", "label": "Accessible toilet" },
+    { "id": "pharmacyD", "x": 27, "y": 6, "z": 37.5, "kind": "place", "category": "pharmacy", "label": "Pharmacy" }
   ],
   "edges": [
     { "from": "sign",       "to": "hall",       "length": 6,    "kind": "walk",      "open": true },
@@ -47,6 +57,11 @@
     { "from": "hall",       "to": "escFoot",    "length": 10,   "kind": "walk",      "open": true },
     { "from": "escFoot",    "to": "escTop",     "length": 11.7, "kind": "escalator", "open": true },
     { "from": "escTop",     "to": "concourse",  "length": 4,    "kind": "walk",      "open": true },
+    { "from": "concourse",  "to": "escDownTop", "length": 4.8,  "kind": "walk",      "open": true },
+    { "from": "escDownTop", "to": "escDownFoot", "length": 11.7, "kind": "escalator", "open": true },
+    { "from": "escDownFoot", "to": "hall",      "length": 10.4, "kind": "walk",      "open": true },
+    { "from": "escFoot",    "to": "escDownFoot", "length": 2.5, "kind": "walk",      "open": true },
+    { "from": "escTop",     "to": "escDownTop", "length": 2.5,  "kind": "walk",      "open": true },
     { "from": "hall",       "to": "stairsFoot", "length": 10.8, "kind": "walk",      "open": true },
     { "from": "stairsFoot", "to": "stairsTop",  "length": 8.5,  "kind": "stairs",    "open": true },
     { "from": "stairsTop",  "to": "concourse",  "length": 8.9,  "kind": "walk",      "open": true },
@@ -61,6 +76,14 @@
     { "from": "concourse",  "to": "cTop",       "length": 15,   "kind": "walk",      "open": true },
     { "from": "cTop",       "to": "cJunction",  "length": 7.4,  "kind": "stairs",    "open": true },
     { "id": "rampC", "from": "cTop", "to": "cJunction", "length": 12, "kind": "ramp", "open": true },
-    { "from": "cJunction",  "to": "gateC3",     "length": 5,    "kind": "walk",      "open": true }
+    { "from": "cJunction",  "to": "gateC3",     "length": 5,    "kind": "walk",      "open": true },
+    { "from": "hall", "to": "juiceG", "length": 5.3, "kind": "walk", "open": true },
+    { "from": "assist", "to": "cafeG", "length": 20.7, "kind": "walk", "open": true },
+    { "from": "assist", "to": "newsG", "length": 21.1, "kind": "walk", "open": true },
+    { "from": "concourse", "to": "dutyFree", "length": 12.0, "kind": "walk", "open": true },
+    { "from": "bJunction", "to": "cafeD", "length": 6.0, "kind": "walk", "open": true },
+    { "from": "bJunction", "to": "toiletsD", "length": 8.3, "kind": "walk", "open": true },
+    { "from": "bJunction", "to": "accToiletD", "length": 7.1, "kind": "walk", "open": true },
+    { "from": "concourse", "to": "pharmacyD", "length": 6.4, "kind": "walk", "open": true }
   ]
 }

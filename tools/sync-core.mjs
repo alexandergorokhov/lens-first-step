@@ -1,5 +1,5 @@
 // Keeps the Lens copies of the shared core byte-identical to src/core.
-//   npm run sync         -> copy src/core/{router,geometry,demo,place}.ts to Assets/Scripts/FindYourWay*.ts
+//   npm run sync         -> copy src/core/{router,geometry,demo,place,pet,places}.ts to Assets/Scripts/FindYourWay*.ts
 //                           and every map in src/core/data/index.json to Assets/Maps/<lens>
 //   npm run sync:check   -> exit 1 listing any copy that differs (run first by `npm test`
 //                           and by the pre-commit hook; `npm run hooks` turns the hook on)
@@ -15,6 +15,8 @@ export const CORE_MODULES = [
   { src: "src/core/geometry.ts", lens: "Assets/Scripts/FindYourWayGeometry.ts" },
   { src: "src/core/demo.ts", lens: "Assets/Scripts/FindYourWayDemo.ts" },
   { src: "src/core/place.ts", lens: "Assets/Scripts/FindYourWayPlace.ts" },
+  { src: "src/core/pet.ts", lens: "Assets/Scripts/FindYourWayPet.ts" },
+  { src: "src/core/places.ts", lens: "Assets/Scripts/FindYourWayPlaces.ts" },
 ];
 
 // The one list of bundled maps (key, file served/downloaded, Lens copy name).

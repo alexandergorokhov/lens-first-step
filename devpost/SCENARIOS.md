@@ -14,8 +14,9 @@ Approved test scenarios and where each is tested.
   seated height and the scanned sign are simulated with test hooks on `FindYourWayMain`
   (LEAF cannot drive WASD/Q/E).
 
-Status as of the last run: Node 96 passed, 0 failed, 0 todo.
-LEAF 19 of 19 passed.
+Status as of the last run: Node 144 passed, 0 failed, 1 skipped (the live gist download, run
+offline; it needs the gist updated with the new map.json). LEAF 19 of 19 passed (before the floors work; the proposed S10–S17 LEAF tests are not
+written yet).
 
 ## Approved scenarios
 
@@ -36,6 +37,48 @@ LEAF 19 of 19 passed.
 | E4 | Destination = current position | Arrival card right away; no line | Node: "E4 Destination = current position…". LEAF: `e4-already-at-destination` | Passing |
 | E5 | Unknown sign id | "This sign isn't in the map"; nothing drawn | Node: "E5 Unknown sign id…". LEAF: `e5-unknown-sign` | Passing |
 | E6 | Seated height (Q) | Line and cards readable and in view at seated eye height; a seated traveller can ride | Node: "C1 ride reach…", "C1 level snap…". LEAF: `dc3-stepfree-seated-lift-reroute` (sits down before choosing: the floor stays at standing height, line 1 cm above it and within 25° below the eyes), `dc3b-seated-lift-ride` (0.5 m from Lift 2, feet −0.45 m: rides; card "Lift up to Departures") | Logic passing. Real readability on glasses: feel unproven |
+
+## Proposed: floors and distance (brief 2, features a–d, g and 1)
+
+Status "proposed": the route-engine logic is built and passes in Node
+(`src/core/tests/floors.test.ts`) and shows in the demo video; the Lens UI and its LEAF tests
+come next, once Lens Studio is connected.
+
+| # | Scenario | Expected result | Tests | Status |
+|---|---|---|---|---|
+| S10 | Distance pill | "Gate C3 · 140 m · 1 floor down · 3 min" at the bottom centre after the scan; equals the route length at the start, drops as you walk, updates after a re-route, hides at arrival | Node: "S10 Distance: at the start…", "S10 Distance drops as you walk…", "S10 Distance updates after a re-route…", "S10 Pill text…". LEAF (to write): `fl1-pill-shows-and-counts-down` | Proposed: logic passing |
+| S11 | Floors and time | Floors counted in storeys (a level's `floor` in the map, else height order; the airport's C pier shares storey 1 with Departures); Walk 1.3 m/s, Step-Free 1.0 m/s; +20 s escalator, +45 s lift, +15 s per floor of stairs; a map can override; mid-escalator still counts from the floor you left | Node: "S11 Floors…", "S11 Time…", "S11 A map can override…", "S11 Halfway up the escalator…" | Proposed: logic passing |
+| S12 | Floor badge | First chip of the pill names your floor; changes when a ride ends (from the route, not feet height: C pier and Departures are 1 m apart) | Node: "S12 Floor badge…". LEAF (to write): `fl2-badge-changes-after-lift` | Proposed: logic passing |
+| S13 | Floor-change cue | Within 15 m of a lift/escalator/stairs/ramp: "In 15 m: lift up to Departures" ("Now:" within 2 m), above the pill; after the scan or a gate change: "Gate C3 is on C pier, 1 floor down"; Step-Free cues are only lifts or ramps | Node: "S13 Floor-change cue…", "S13 Cue texts…", "S13 Step-Free cues…". LEAF (to write): `fl3-cue-before-escalator` | Proposed: logic passing |
+| S14 | Line on your floor | The line ends at the foot of the next floor change with an up/down marker; drawn up an escalator/stairs/ramp once you are on it; in a lift only the marker | Node: "S14 Line on your floor…" (`lineOnLevel`) | Proposed: logic passing |
+| S15 | Down escalator | Airport has a down escalator beside the up one (`escDownTop` → `escDownFoot`); Walk going down rides it, with it closed takes the stairs; the up one is never ridden down | Node: "S15 Going down on Walk…", "S15 The up escalator is never ridden down…", "Escalators are one-way…" | Proposed: logic passing |
+| S16 | Going down by lift and stairs | Step-Free from Departures to the entrance takes a lift down; Departures → C pier: Walk stairs down, Step-Free ramp down | Node: "S16 Riding a lift down…", "S16 Stairs down on Walk…" | Proposed: logic passing |
+| S15b | Escalator feet and tops joined | A re-route at the foot of the up escalator never sends you back through the hall | Node: "S15 Re-routing at the foot of the up escalator…" | Proposed: logic passing |
+| S17 | Three levels, both directions | Ground → Departures → C pier is cued up then down; a trip from upstairs to the entrance arrives | Node: "S17 Three levels…", "S17 A trip that starts upstairs…" | Proposed: logic passing |
+
+## Proposed: the companion and places (brief 2, features 2 and 6, addendum B and C)
+
+Status "proposed": logic built test-first and passing in Node (`src/core/tests/pet.test.ts`,
+`src/core/tests/places.test.ts`), shown in the demo videos (`npm run demo:pet`,
+`-- --companion robot|rover`); Lens UI and LEAF tests next.
+
+| # | Scenario | Expected result | Tests | Status |
+|---|---|---|---|---|
+| P1 | Companion on/off | A toggle on the app panel; the line shows either way (at 50%); toggling never changes the route | Node: "P1 Pet on/off…" | Proposed: logic passing |
+| P2 | It leads | ~2.5 m ahead along the route, on the route | Node: "P2 The pet trots ~2.5 m ahead…" | Proposed: logic passing |
+| P3 | It waits at floor changes | Sits at the foot of the escalator/lift; never on another floor before you; trots up, never jumps | Node: "P3 The pet waits at the foot…" | Proposed: logic passing |
+| P4 | It waits for you | More than 6 m behind: it stops and looks back | Node: "P4 The pet stops and looks back…" | Proposed: logic passing |
+| P5 | Step-Free companion | Only ever on the step-free route | Node: "P5 Step-Free with the pet…" | Proposed: logic passing |
+| P6 | Collectibles | At turns, floor changes, the gate and every ~7 m; each collected once; arrival never re-lays or double-counts (real Navigator, airport and room) | Node: "P6 Treats…", "P6 Arrival through a real Navigator…" | Proposed: logic passing |
+| P7 | Score kept | Off/on and a re-route keep the score | Node: "P7 Turning the pet off keeps the score…" | Proposed: logic passing |
+| Q1 | Places from the map | `kind: "place"` + `category`; nothing shop-specific in code; adding places changes no route | Node: "Q1 …" (2 tests) | Proposed: logic passing |
+| Q2 | Icons + mute | ≤3, my floor, ≤15 m and near the route; Step-Free: accessible toilets and lifts first; mute hides all and never changes the route | Node: "Q2 …" (3 tests) | Proposed: logic passing |
+| Q3 | Interests | coffee, food, shopping, toilets, pharmacy (+ accessible toilets on Step-Free); none by default | Node: "Q3 …" | Proposed: logic passing |
+| Q4 | Pointing rules | Only interests or sponsored; "Sponsored" always shown; muted: none; ≤1 per 30 s and 20 m; never within 10 m of a turn/floor change or while a card shows; never behind you; never changes route, distance or destination | Node: "Q4 …" (7 tests) | Proposed: logic passing |
+| Q5 | Point, then carry on | Steps ~1.2 m off the line toward the place, stays ahead in view, faces it ~3 s, then back on the line 2–3 m ahead | Node: "Q5 …" | Proposed: logic passing |
+| Q6 | Go here? | The place becomes the destination; Step-Free rules kept | Node: "Q6 …" | Proposed: logic passing |
+| Q7 | Line at 50% | In every guide mode; Lens default alpha 0.5; video line 0.5 | Node: "Q7 …" | Proposed: logic passing |
+| Q8 | Any companion | dog / robot / rover: same logic, own name, model and collectible | Node: "Q8 …" | Proposed: logic passing |
 
 ## Done criteria (design brief)
 

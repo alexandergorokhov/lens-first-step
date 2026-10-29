@@ -48,7 +48,10 @@ test("C1 level snap: feet within 1 m of a level snap to it; in between they don'
 
 test("C2 tripSettings: defaults 3 m arrival / 5 m off-route / rides 2.5 m lift, 3.5 m others; a map can override", async () => {
   const { tripSettings } = (await import("../router.ts")) as any;
-  assert.deepEqual(tripSettings(load("map.json")), { arrivalRadius: 3, offRouteDistance: 5, rideReach: { lift: 2.5, other: 3.5 } });
+  assert.deepEqual(tripSettings(load("map.json")), {
+    arrivalRadius: 3, offRouteDistance: 5, rideReach: { lift: 2.5, other: 3.5 },
+    speeds: { walk: 1.3, stepFree: 1 }, rideTimes: { lift: 45, escalator: 20, stairs: 15, ramp: 0 },
+  });
   const room = tripSettings(load("room.json"));
   assert.ok(room.arrivalRadius < 1 && room.offRouteDistance < 2, JSON.stringify(room));
 });

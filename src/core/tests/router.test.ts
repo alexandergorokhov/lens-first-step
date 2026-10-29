@@ -352,10 +352,11 @@ test("map.json: every edge is at least as long as the straight line; key nodes e
   for (const id of ["sign", "gateB12", "gateC3", "assist"]) assert.ok(findNode(map, id), id);
 });
 
-test("Escalators are one-way: going down uses the stairs on Walk", () => {
-  const r = routeOf(loadMap(), "concourse", "sign", "walk");
-  assert.ok(!kinds(r.edges).includes("escalator"));
-  assert.ok(kinds(r.edges).includes("stairs"));
+test("Escalators are one-way: going down never rides the up escalator (it takes the down one)", () => {
+  const map = loadMap();
+  const r = routeOf(map, "concourse", "sign", "walk");
+  assert.ok(!r.edges.some((e) => e.from === "escFoot" && e.to === "escTop"));
+  assert.ok(r.edges.some((e) => e.from === "escDownTop" && e.to === "escDownFoot"));
 });
 
 test("A closed edge in map.json is respected", () => {

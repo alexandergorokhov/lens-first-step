@@ -93,3 +93,22 @@ export function stopAtLift<T extends XYZ>(pts: T[]): T[] {
   }
   return pts;
 }
+
+// The drawn line stays on the traveller's floor: it ends at the foot of the next level change
+// (lift, escalator, stairs or ramp: any segment that climbs or drops at least 0.5 m), where a
+// short up/down marker shows instead of a line through the ceiling or floor. Standing on a
+// sloped connection already (its first segment climbs and, when the traveller's floor height is
+// given, the closest point is at least 0.25 m off it), the line is drawn up it and on; before
+// that, or standing in a lift, only the marker shows. floorY: router.ts's TripAhead.floorY.
+export function lineOnLevel<T extends XYZ>(pts: T[], floorY?: number): { line: T[]; marker: { at: T; up: boolean } | null } {
+  // Still at the foot: the closest point is (nearly) on the traveller's floor.
+  const atFoot = typeof floorY === "number" && pts.length > 1 && Math.abs(pts[0].y - floorY) < 0.25 && Math.abs(pts[1].y - floorY) >= 0.25;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i];
+    const b = pts[i + 1];
+    if (Math.abs(b.y - a.y) < 0.5) continue;
+    if (i === 0 && flatDistance(a, b) >= 0.5 && !atFoot) continue;
+    return { line: pts.slice(0, i + 1), marker: { at: a, up: b.y > a.y } };
+  }
+  return { line: pts, marker: null };
+}

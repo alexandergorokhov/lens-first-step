@@ -188,3 +188,61 @@ export function rideCard(kind: string, up: boolean, toLevel: string): string {
   const name = RIDE_NAMES[kind] || "Connection";
   return name + (up ? " up to " : " down to ") + toLevel;
 }
+
+// "1 floor up", "2 floors down", or "" on the same floor.
+export function floorsText(floors: number): string {
+  if (floors === 0) return "";
+  const n = Math.abs(floors);
+  return n + (n === 1 ? " floor " : " floors ") + (floors > 0 ? "up" : "down");
+}
+
+// Whole minutes, rounded up, never below 1: "3 min".
+export function minutesText(seconds: number): string {
+  return Math.max(1, Math.ceil(seconds / 60)) + " min";
+}
+
+// The distance pill: "Gate C3 · 140 m · 1 floor down · 3 min" (no floors part on the same floor).
+export function distancePill(destination: string, metres: number, floors: number, seconds: number): string {
+  const parts = [destination, Math.round(metres) + " m"];
+  const f = floorsText(floors);
+  if (f) parts.push(f);
+  parts.push(minutesText(seconds));
+  return parts.join(" · ");
+}
+
+// The cue before a floor change: "In 15 m: lift down to Ground floor", or "Now: ..." within 2 m.
+export function floorCue(kind: string, up: boolean, toLevel: string, metres: number): string {
+  const ride = rideCard(kind, up, toLevel);
+  const what = ride.charAt(0).toLowerCase() + ride.slice(1);
+  return (metres < 2 ? "Now: " : "In " + Math.round(metres) + " m: ") + what;
+}
+
+// Where the destination is: "Gate C3 is on C pier, 1 floor down" / "Gate B12 is on this floor".
+export function destinationFloorText(destination: string, level: string, floors: number): string {
+  if (floors === 0) return destination + " is on this floor";
+  return destination + " is on " + level + ", " + floorsText(floors);
+}
+
+// What place.ts needs of router.ts's TripAhead (structural, so it can be passed straight in).
+export interface TripLike {
+  metres: number;
+  seconds: number;
+  floors: number;
+  next: { change: { edge: { kind: string }; to: string; up: boolean }; metres: number } | null;
+}
+
+// How far ahead (m) of a floor change its cue shows (router.ts's FLOOR_CUE_DISTANCE).
+export const FLOOR_CUE_M = 15;
+
+// The cue above the pill: the next floor change once it is within FLOOR_CUE_M, else null.
+export function floorCueFor(place: PlaceInfo, map: PlaceMapLike, trip: TripLike | null, within: number = FLOOR_CUE_M): string | null {
+  if (!trip || !trip.next || trip.next.metres > within) return null;
+  const to = nodeById(map, trip.next.change.to);
+  return floorCue(trip.next.change.edge.kind, trip.next.change.up, levelName(place, to ? to.y : 0), trip.next.metres);
+}
+
+// The pill text, or null when there is nothing left to walk (arrived) or no route.
+export function tripPill(destination: string, trip: TripLike | null): string | null {
+  if (!trip || trip.metres <= 0) return null;
+  return distancePill(destination, trip.metres, trip.floors, trip.seconds);
+}

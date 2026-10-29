@@ -174,6 +174,19 @@ If you change a map in `src/core/data`, update the gist too: `gh gist edit ac59c
 
 **Local server:** `http://localhost:8787/` is refused by the preview (*"URL is not secure (Experimental API must be enabled to access insecure URLs)"*), so the Lens falls back to its built-in map ("offline map"). Turning on the Experimental API would allow it, but Lenses that use experimental APIs can't be published.
 
+## 12. Demo video (no Lens Studio needed)
+
+A first-person video of the trip through a 3D stand-in airport: walking (with the gate change B12 → C3), then in a wheelchair at seated height (Lift 1 out, re-routed to Lift 2). The route, every re-route and both arrivals come from the Lens's own route engine (`src/core/router.ts`); a small inset shows the traveller from behind.
+
+- `npm run demo:watch` plays it live in your browser.
+- `npm run demo:video` renders `devpost/video/find-your-way-demo.mp4` (about 3 minutes, 1280×720, needs Google Chrome).
+- `npm run demo:video -- --stills 12,30,88.9` saves single frames at those seconds.
+- The main video also shows the distance pill with the floor badge, the cue before each floor change and the up/down post where the line leaves the floor.
+- `npm run demo:pet` renders `devpost/video/find-your-way-pet.mp4` (about 1 minute): the companion turned on from the app panel (line stays at 50%), coffee picked as an interest, the sponsored juice bar and the café pointed out, the wait at the escalator, off/on, the treats game. `npm run demo:pet:watch` plays it live.
+- The companion is any model: `node tools/demo-video/record.mjs --companion robot` (or `rover`) renders `find-your-way-robot.mp4` / `find-your-way-rover.mp4`, the same clip with another model and collectible.
+
+The code is in `tools/demo-video/`: `timeline.mjs` (what happens each frame), `airport.js` (the 3D building), `pet.js` (the companions and collectibles), `index.html` (drawing and the on-screen panels).
+
 ## Tips for the video
 
 Real distances are long (B12 is about 57 m of route). Record each run, then cut the walking between the key moments: scan, ride, gate change, red sign, arrival.

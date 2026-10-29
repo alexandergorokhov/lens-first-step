@@ -22,6 +22,11 @@ export interface MapNode {
   code?: string;
   icon?: string;
   arrivalCard?: string;
+  // Places along the way (kind "place"): what it is ("coffee", "toilet", ...), whether it pays
+  // to be pointed out, and the honest tag shown on it (default "Sponsored").
+  category?: string;
+  sponsored?: boolean;
+  sponsorTag?: string;
 }
 
 export interface MapEdge {
@@ -39,6 +44,9 @@ export interface MapEdge {
 export interface PlaceLevel {
   y: number;
   name: string;
+  // Storey number for counting floors ("1 floor up"); default: the level's order by height.
+  // Two levels can share a storey (a pier 1 m below the departures floor).
+  floor?: number;
 }
 
 export interface PlaceBuilding {
@@ -77,6 +85,9 @@ export interface MapPlace {
   arrivalRadius?: number;
   offRouteDistance?: number;
   rideReach?: number | { lift?: number; other?: number };
+  // Trip time: walking speed per profile (m/s) and the seconds a floor change costs.
+  speeds?: { walk?: number; stepFree?: number };
+  rideTimes?: { lift?: number; escalator?: number; stairs?: number; ramp?: number };
 }
 
 export interface MapData {
@@ -121,14 +132,29 @@ export const LEVEL_SNAP = 1;
 export const SAME_LEVEL = 0.5;
 export const MAP_VERSION = 1;
 
+// Trip time defaults: walking speed (m/s) per profile, and the seconds each floor change adds.
+// Lifts and escalators are ridden, so their time replaces walking their length; stairs add
+// their seconds per floor on top of walking them; ramps are just walked.
+export const WALK_SPEED = 1.3;
+export const STEP_FREE_SPEED = 1.0;
+export const RIDE_SECONDS = { lift: 45, escalator: 20, stairs: 15, ramp: 0 };
+// How far ahead (metres) of a floor change its cue shows.
+export const FLOOR_CUE_DISTANCE = 15;
+
 export interface TripSettings {
   arrivalRadius: number;
   offRouteDistance: number;
   rideReach: { lift: number; other: number };
+  speeds: { walk: number; stepFree: number };
+  rideTimes: { lift: number; escalator: number; stairs: number; ramp: number };
 }
 
 function positive(v: unknown, fallback: number): number {
   return typeof v === "number" && v > 0 && isFinite(v) ? v : fallback;
+}
+
+function atLeastZero(v: unknown, fallback: number): number {
+  return typeof v === "number" && v >= 0 && isFinite(v) ? v : fallback;
 }
 
 export function tripSettings(map: MapData): TripSettings {
@@ -136,10 +162,19 @@ export function tripSettings(map: MapData): TripSettings {
   const r = p.rideReach;
   const lift = typeof r === "number" ? r : r ? r.lift : undefined;
   const other = typeof r === "number" ? r : r ? r.other : undefined;
+  const sp = p.speeds || {};
+  const rt = p.rideTimes || {};
   return {
     arrivalRadius: positive(p.arrivalRadius, ARRIVAL_RADIUS),
     offRouteDistance: positive(p.offRouteDistance, OFF_ROUTE_DISTANCE),
     rideReach: { lift: positive(lift, RIDE_REACH_LIFT), other: positive(other, RIDE_REACH_OTHER) },
+    speeds: { walk: positive(sp.walk, WALK_SPEED), stepFree: positive(sp.stepFree, STEP_FREE_SPEED) },
+    rideTimes: {
+      lift: atLeastZero(rt.lift, RIDE_SECONDS.lift),
+      escalator: atLeastZero(rt.escalator, RIDE_SECONDS.escalator),
+      stairs: atLeastZero(rt.stairs, RIDE_SECONDS.stairs),
+      ramp: atLeastZero(rt.ramp, RIDE_SECONDS.ramp),
+    },
   };
 }
 
@@ -541,6 +576,99 @@ function routeSignature(r: RouteResult): string {
     return "askStaff:" + r.message + (a ? ":" + a.nodes.join(">") + "|" + a.edges.map((e) => e.kind).join(",") : "");
   }
   return "error:" + r.message;
+}
+
+// One floor change on a route, in the direction it is travelled.
+export interface LevelChange {
+  edge: MapEdge;
+  from: string;
+  to: string;
+  up: boolean;
+  floors: number; // levels crossed (1 for a single floor)
+}
+
+export interface TripAhead {
+  metres: number; // left to walk or ride, along the route
+  seconds: number; // at the profile's speed plus the floor-change times
+  floorY: number; // height of the floor the traveller is on (for the floor badge)
+  floors: number; // destination's floor minus the traveller's, counting levels (+ = up)
+  changes: LevelChange[]; // floor changes still ahead, in order
+  next: { change: LevelChange; metres: number } | null; // the next one and the distance to its start
+}
+
+// Storey number of the level closest to height y: the map level's "floor", else its order by
+// height (levels holds the heights in order, from levelsOf).
+function storeyOf(map: MapData, levels: number[], y: number): number {
+  let best = 0;
+  for (let i = 1; i < levels.length; i++) if (Math.abs(levels[i] - y) < Math.abs(levels[best] - y)) best = i;
+  const named = map.place && Array.isArray(map.place.levels) ? map.place.levels : [];
+  for (const l of named) {
+    if (Math.abs(l.y - levels[best]) < SAME_LEVEL && typeof l.floor === "number" && isFinite(l.floor)) return l.floor;
+  }
+  return best;
+}
+
+// What is left of a route from where the traveller stands: distance, time and the floor
+// changes still ahead (for the distance pill, the floor badge and the cue before a change).
+// The traveller is placed on the closest route segment, measured on their own level first.
+// A level change counts as ahead until they are past its middle. Null when there is no route.
+export function tripAhead(map: MapData, route: RouteResult, user: Vec3): TripAhead | null {
+  if (route.status !== "route" && route.status !== "arrived") return null;
+  const settings = tripSettings(map);
+  const levels = levelsOf(map);
+  const pts = routePoints(map, route);
+  const here = { x: user.x, y: snapToLevel(user.y, levels), z: user.z };
+  const dest = pts[pts.length - 1];
+  if (route.edges.length === 0) {
+    return { metres: 0, seconds: 0, floorY: dest.y, floors: 0, changes: [], next: null };
+  }
+
+  let seg = 0;
+  let segT = 0;
+  let bestD = Infinity;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i];
+    const b = pts[i + 1];
+    const len2 = (b.x - a.x) ** 2 + (b.y - a.y) ** 2 + (b.z - a.z) ** 2;
+    let t = len2 === 0 ? 0 : ((here.x - a.x) * (b.x - a.x) + (here.y - a.y) * (b.y - a.y) + (here.z - a.z) * (b.z - a.z)) / len2;
+    t = Math.max(0, Math.min(1, t));
+    const d = levelDistance(here, lerp(a, b, t));
+    if (d < bestD - 1e-9) {
+      bestD = d;
+      seg = i;
+      segT = t;
+    }
+  }
+
+  // The floor comes from the route, not the feet height (levels can be 1 m apart): on a level
+  // change the traveller is still on the floor they left until past its middle.
+  const floorY = segT < 0.5 ? pts[seg].y : pts[seg + 1].y;
+  const floors = storeyOf(map, levels, dest.y) - storeyOf(map, levels, floorY);
+  const speed = route.profile === "stepFree" ? settings.speeds.stepFree : settings.speeds.walk;
+  let metres = 0;
+  let seconds = 0;
+  let next: { change: LevelChange; metres: number } | null = null;
+  const changes: LevelChange[] = [];
+  for (let i = seg; i < route.edges.length; i++) {
+    const e = route.edges[i];
+    const part = i === seg ? 1 - segT : 1;
+    const a = pts[i];
+    const b = pts[i + 1];
+    const crossed = Math.abs(storeyOf(map, levels, b.y) - storeyOf(map, levels, a.y));
+    const ridden = e.kind === "lift" || e.kind === "escalator";
+    if (Math.abs(b.y - a.y) >= SAME_LEVEL && (i > seg || segT < 0.5)) {
+      const change: LevelChange = { edge: e, from: route.nodes[i], to: route.nodes[i + 1], up: b.y > a.y, floors: Math.max(1, crossed) };
+      changes.push(change);
+      if (!next) next = { change, metres: i === seg ? 0 : metres };
+    }
+    if (e.kind !== "walk") {
+      const extra = settings.rideTimes[e.kind as "lift" | "escalator" | "stairs" | "ramp"];
+      seconds += part * extra * (e.kind === "stairs" ? Math.max(1, crossed) : 1);
+    }
+    if (!ridden) seconds += (part * e.length) / speed;
+    metres += part * e.length;
+  }
+  return { metres, seconds, floorY, floors, changes, next };
 }
 
 // Holds the traveller's current choices and re-routes whenever one changes: a destination

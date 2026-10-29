@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Find Your Way Inside: demo</title>
+<style>
+  :root { --glass: rgba(22, 30, 44, 0.62); --glass-line: rgba(255, 255, 255, 0.22); --blue: #3b8cff; }
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; font-family: "Segoe UI", Arial, sans-serif; }
+  #stage { position: relative; width: 1280px; height: 720px; overflow: hidden; }
+  canvas { display: block; }
+  .hud { position: absolute; inset: 0; pointer-events: none; color: #fff; }
+  .pill { position: absolute; background: var(--glass); border: 1px solid var(--glass-line); border-radius: 999px;
+          backdrop-filter: blur(6px); box-shadow: 0 6px 24px rgba(0,0,0,.25); }
+  #caption { top: 22px; left: 50%; transform: translateX(-50%); padding: 10px 26px; font-size: 22px; font-weight: 600;
+             white-space: nowrap; transition: none; }
+  #badge { top: 78px; left: 28px; padding: 7px 16px 7px 12px; font-size: 16px; display: flex; gap: 8px; align-items: center; }
+  #badge i { width: 10px; height: 10px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 8px #4ade80; }
+  #mode { bottom: 26px; left: 28px; padding: 8px 18px 8px 12px; font-size: 17px; display: flex; gap: 10px; align-items: center; }
+  #mode svg { width: 22px; height: 22px; }
+  #trip { position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%); display: flex; align-items: center;
+          gap: 12px; padding: 7px 20px 7px 7px; font-size: 18px; font-weight: 600; white-space: nowrap; }
+  #trip b { padding: 5px 13px; border-radius: 999px; background: rgba(255,255,255,.9); color: #13304f; font-size: 15px; }
+  #cue { position: absolute; left: 50%; bottom: 78px; transform: translateX(-50%); display: flex; align-items: center; gap: 10px;
+         padding: 9px 20px 9px 12px; font-size: 19px; font-weight: 600; white-space: nowrap; border-color: rgba(140,190,255,.6); }
+  #cue svg { width: 24px; height: 24px; }
+  #score { top: 124px; left: 28px; padding: 6px 16px 6px 8px; font-size: 16px; font-weight: 600; display: flex; gap: 8px; align-items: center;
+           transition: transform .15s; border-color: rgba(255,211,77,.6); }
+  #score svg { width: 22px; height: 22px; }
+  #score.pop { transform: scale(1.12); }
+  #app { bottom: 76px; left: 28px; padding: 10px 14px; border-radius: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 15px; }
+  #app .t { display: flex; align-items: center; gap: 10px; }
+  #app .sw { width: 46px; height: 26px; border-radius: 13px; background: rgba(255,255,255,.25); position: relative; }
+  #app .sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: left .2s; }
+  #app .sw.on { background: #3b8cff; }
+  #app .sw.on::after { left: 23px; }
+  #app .t.press { outline: 3px solid rgba(255,255,255,.8); outline-offset: 4px; border-radius: 10px; }
+  #app small { opacity: .7; font-size: 12px; }
+  #tag { position: absolute; bottom: 254px; right: 26px; width: 336px; text-align: right; font-size: 12px; opacity: .75; text-shadow: 0 1px 3px #000; }
+  .panel { position: absolute; left: 50%; top: 56%; transform: translate(-50%, -50%); background: var(--glass);
+           border: 1px solid var(--glass-line); border-radius: 26px; padding: 22px 26px; backdrop-filter: blur(8px);
+           box-shadow: 0 10px 40px rgba(0,0,0,.3); text-align: center; }
+  .panel h3 { margin: 0 0 16px; font-size: 22px; font-weight: 600; }
+  .row { display: flex; gap: 16px; justify-content: center; }
+  .btn { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 150px; padding: 16px 0 14px;
+         border-radius: 18px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); font-size: 18px; }
+  .btn svg { width: 38px; height: 38px; }
+  .btn.on { background: var(--blue); border-color: #9cc4ff; transform: scale(.95); box-shadow: 0 0 0 4px rgba(59,140,255,.35); }
+  .wide { width: 240px; flex-direction: row; justify-content: center; padding: 14px 0; }
+  .chips { gap: 10px; }
+  .chip { padding: 10px 16px; border-radius: 999px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.3); font-size: 17px; }
+  .chip.on { background: var(--blue); border-color: #9cc4ff; box-shadow: 0 0 0 4px rgba(59,140,255,.35); }
+  .hint { margin-top: 12px; font-size: 14px; opacity: .75; }
+  #card { position: absolute; top: 22px; right: 26px; width: 330px; padding: 16px 18px; border-radius: 20px;
+          background: rgba(30, 38, 54, .78); border: 1px solid var(--glass-line); display: flex; gap: 14px; align-items: center;
+          font-size: 18px; font-weight: 600; box-shadow: 0 8px 30px rgba(0,0,0,.35); }
+  #card .ic { flex: none; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: #f59f00; }
+  #card .ic.block { background: #e03131; }
+  #card svg { width: 26px; height: 26px; }
+  #arrival { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%); padding: 22px 30px; border-radius: 24px;
+             background: rgba(20, 60, 40, .8); border: 1px solid rgba(160,255,200,.4); display: flex; gap: 16px; align-items: center;
+             font-size: 26px; font-weight: 600; box-shadow: 0 10px 40px rgba(0,0,0,.35); }
+  #arrival .ic { width: 50px; height: 50px; border-radius: 50%; background: #2f9e44; display: grid; place-items: center; }
+  #pinch { position: absolute; width: 0; height: 0; }
+  #pinch .ring { position: absolute; left: -30px; top: -30px; width: 56px; height: 56px; border-radius: 50%; border: 3px solid #fff;
+                 box-shadow: 0 0 12px rgba(255,255,255,.7); }
+  #pinch .dot { position: absolute; left: -7px; top: -7px; width: 14px; height: 14px; border-radius: 50%; background: #fff; }
+  #fade { position: absolute; inset: 0; background: #000; }
+  #insetFrame { position: absolute; right: 24px; bottom: 56px; width: 336px; height: 189px; border-radius: 16px;
+                border: 2px solid rgba(255,255,255,.75); box-shadow: 0 6px 24px rgba(0,0,0,.4); }
+  #insetFrame span { position: absolute; left: 10px; top: 8px; font-size: 13px; font-weight: 600; padding: 3px 9px;
+                     border-radius: 999px; background: rgba(20,28,40,.7); }
+  #end { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; background: linear-gradient(160deg, #0d1b2e, #10243f); }
+  #end h1 { margin: 0 0 22px; font-size: 56px; letter-spacing: .5px; }
+  #end p { margin: 6px 0; font-size: 24px; opacity: .85; }
+  #end .line { width: 160px; height: 6px; border-radius: 3px; background: var(--blue); margin: 0 auto 26px; }
+  .vignette { position: absolute; inset: 0; box-shadow: inset 0 0 140px rgba(0,0,0,.45); border-radius: 0; }
+  [hidden] { display: none !important; }
+</style>
+<script type="importmap">{ "imports": { "three": "/node_modules/three/build/three.module.js" } }</script>
+</head>
+<body>
+<div id="stage">
+  <div class="hud">
+    <div class="vignette"></div>
+    <div id="caption" class="pill" hidden></div>
+    <div id="badge" class="pill" hidden><i></i><span></span></div>
+    <div id="mode" class="pill" hidden></div>
+    <div id="score" class="pill" hidden></div>
+    <div id="app" class="pill" hidden></div>
+    <div id="cue" class="pill" hidden></div>
+    <div id="trip" class="pill" hidden><b></b><span></span></div>
+    <div id="tag">Simulated view through Specs · route, re-routes and arrival from the Lens's own route engine</div>
+    <div id="panel" class="panel" hidden></div>
+    <div id="card" hidden><div class="ic"></div><div class="tx"></div></div>
+    <div id="arrival" hidden><div class="ic"></div><div class="tx"></div></div>
+    <div id="pinch" hidden><div class="ring"></div><div class="dot"></div></div>
+    <div id="insetFrame" hidden><span></span></div>
+    <div id="end" hidden></div>
+    <div id="fade"></div>
+  </div>
+</div>
+<script type="module">
+import * as THREE from "three";
+import { buildAirport, V, person } from "./airport.js";
+import { buildPet } from "./pet.js";
+
+const ICONS = {
+  walk: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="13" cy="4" r="2"/><path d="M9.8 8.9 7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3A7.3 7.3 0 0 0 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l1.8-.7"/></svg>',
+  wheel: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="10" cy="4" r="2"/><path d="M19 13v-2c-1.5 0-3-.7-4-1.8l-1.3-1.5c-.2-.2-.4-.4-.7-.5-.3-.2-.7-.2-1-.2-.7 0-1.4.6-1.5 1.3l-.6 3.4A2.9 2.9 0 0 0 12.8 15H17v5h2v-5.5c0-1.1-.9-2-2-2h-3l.7-3.4A7.5 7.5 0 0 0 19 13zm-6.2 5A3 3 0 1 1 9 14.2v-2.1A5 5 0 1 0 14.9 18z"/></svg>',
+  scan: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"/></svg>',
+  flight: '<svg viewBox="0 0 24 24" fill="#fff"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>',
+  block: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>',
+  bone: '<svg viewBox="0 0 24 24" fill="#ffd34d"><path d="M7.5 5a2.5 2.5 0 0 0-2.4 3.2A2.5 2.5 0 1 0 8 12l4-4a2.5 2.5 0 1 0-3.8-2.8A2.5 2.5 0 0 0 7.5 5zm9 14a2.5 2.5 0 0 0 2.4-3.2A2.5 2.5 0 1 0 16 12l-4 4a2.5 2.5 0 1 0 3.8 2.8 2.5 2.5 0 0 0 .7.2z"/><path d="M8.6 11.4l4-4 4 4-4 4z"/></svg>',
+  floors: '<svg viewBox="0 0 24 24" fill="none" stroke="#9cc4ff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+};
+
+const timeline = await (await fetch("/timeline.json")).json();
+const { frames, fps, map } = timeline;
+
+const W = 1280, H = 720;
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1);
+renderer.setSize(W, H);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.getElementById("stage").prepend(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(64, W / H, 0.05, 400);
+camera.rotation.order = "YXZ";
+scene.add(camera);
+const airport = buildAirport(scene, map);
+const pet = buildPet(scene);
+
+// ── AR route line: a glowing ribbon with moving chevrons, fading at the far end ──
+const chevron = (() => {
+  const c = document.createElement("canvas");
+  c.width = 64; c.height = 128;
+  const g = c.getContext("2d");
+  g.fillStyle = "#4d97ff"; g.fillRect(0, 0, 64, 128);
+  g.strokeStyle = "rgba(255,255,255,.95)"; g.lineWidth = 9; g.lineCap = "round"; g.lineJoin = "round";
+  g.beginPath(); g.moveTo(14, 80); g.lineTo(32, 52); g.lineTo(50, 80); g.stroke();
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+})();
+const LINE_OPACITY = 0.5; // src/core/pet.ts: the line is 50% transparent in every guide mode
+const lineMat = new THREE.MeshBasicMaterial({ map: chevron, transparent: true, opacity: LINE_OPACITY, vertexColors: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide });
+const glowMat = new THREE.MeshBasicMaterial({ color: 0x3b8cff, transparent: true, opacity: 0.28, vertexColors: true, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+const lineMesh = new THREE.Mesh(new THREE.BufferGeometry(), lineMat);
+const glowMesh = new THREE.Mesh(new THREE.BufferGeometry(), glowMat);
+lineMesh.renderOrder = 10; glowMesh.renderOrder = 9;
+lineMesh.frustumCulled = glowMesh.frustumCulled = false;
+scene.add(glowMesh, lineMesh);
+
+// Floor-change marker: a short glowing post with chevrons rising (or sinking) where the line
+// leaves this floor, instead of a line through the ceiling or floor.
+const markerTex = (() => {
+  const c = document.createElement("canvas");
+  c.width = 64; c.height = 256;
+  const g = c.getContext("2d");
+  g.strokeStyle = "rgba(255,255,255,.95)"; g.lineWidth = 9; g.lineCap = "round"; g.lineJoin = "round";
+  for (let y = 40; y < 256; y += 64) { g.beginPath(); g.moveTo(12, y + 14); g.lineTo(32, y - 6); g.lineTo(52, y + 14); g.stroke(); }
+  const t = new THREE.CanvasTexture(c);
+  t.wrapT = THREE.RepeatWrapping;
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+})();
+const marker = new THREE.Group();
+const markerPost = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 1.7),
+  new THREE.MeshBasicMaterial({ map: markerTex, color: 0x6fb0ff, transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide }));
+markerPost.position.y = 0.95;
+const markerGlow = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 1.8, 24, 1, true),
+  new THREE.MeshBasicMaterial({ color: 0x3b8cff, transparent: true, opacity: 0.22, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }));
+markerGlow.position.y = 0.9;
+const markerRing = new THREE.Mesh(new THREE.RingGeometry(0.34, 0.5, 40),
+  new THREE.MeshBasicMaterial({ color: 0x4d97ff, transparent: true, opacity: 0.7, depthTest: false, depthWrite: false, side: THREE.DoubleSide }));
+markerRing.rotation.x = -Math.PI / 2;
+markerRing.position.y = 0.05;
+marker.add(markerGlow, markerPost, markerRing);
+marker.renderOrder = 11;
+marker.traverse((o) => (o.renderOrder = 11));
+scene.add(marker);
+
+// Place icons: small round, ~40% see-through, on the shop front at eye height; the one being
+// pointed at brightens and shows its name and "Go here?". Sponsored ones always carry their tag.
+const GLYPHS = { coffee: "\u2615", food: "\u{1F374}", shopping: "\u{1F6CD}", toilet: "\u{1F6BB}", accessibleToilet: "\u267F", pharmacy: "\u2695", lift: "\u21C5" };
+const iconTex = new Map();
+function iconTexture(p) {
+  const key = p.id + (p.bright ? "*" : "");
+  if (iconTex.has(key)) return iconTex.get(key);
+  const c = document.createElement("canvas");
+  c.width = 768; c.height = 360;
+  const g = c.getContext("2d");
+  g.textAlign = "center"; g.textBaseline = "middle";
+  g.fillStyle = p.bright ? "rgba(59,140,255,.95)" : "rgba(235,242,255,.9)";
+  g.beginPath(); g.arc(384, 100, 84, 0, Math.PI * 2); g.fill();
+  g.font = "92px 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif";
+  g.fillStyle = p.bright ? "#fff" : "#1d3a63";
+  g.fillText(GLYPHS[p.category] || "\u2022", 384, 106);
+  const label = (text, y, size, bg) => {
+    g.font = `600 ${size}px 'Segoe UI', sans-serif`;
+    const w = g.measureText(text).width + 34;
+    g.fillStyle = bg; g.beginPath(); g.roundRect(384 - w / 2, y - size * 0.75, w, size * 1.5, size * 0.75); g.fill();
+    g.fillStyle = "#fff"; g.fillText(text, 384, y + 2);
+  };
+  const [name, ...tag] = p.label.split(" \u00b7 ");
+  if (p.bright) {
+    label(name, 222, 36, "rgba(20,32,52,.85)");
+    if (tag.length) label(tag.join(" \u00b7 "), 274, 24, "rgba(20,32,52,.7)");
+    label("Go here?", tag.length ? 326 : 286, 28, "rgba(59,140,255,.9)");
+  } else if (p.sponsored) label(tag.join(" \u00b7 "), 222, 26, "rgba(20,32,52,.7)");
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  iconTex.set(key, t);
+  return t;
+}
+const iconSprites = new Map();
+function placeIcons(list) {
+  const seen = new Set();
+  for (const p of list || []) {
+    seen.add(p.id);
+    let s = iconSprites.get(p.id);
+    if (!s) {
+      s = new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true, depthWrite: false, depthTest: false }));
+      iconSprites.set(p.id, s);
+      scene.add(s);
+    }
+    s.material.map = iconTexture(p);
+    s.material.opacity = p.bright ? 1 : 0.42;
+    s.material.needsUpdate = true;
+    const k = p.bright ? 2.4 : 1.05;
+    s.scale.set(k * 1.5, k * 1.5 * 360 / 768, 1);
+    const [x, y, z] = p.at;
+    s.position.copy(V(x, y + 1.75 + (p.bright ? 0.25 : 0), z));
+    s.renderOrder = 12;
+    s.visible = true;
+  }
+  for (const [id, s] of iconSprites) if (!seen.has(id)) s.visible = false;
+}
+
+function ribbon(geo, pts, width, t) {
+  // Resample the polyline every 0.25 m so the fade and slopes are smooth.
+  const P = pts.map(([x, y, z]) => V(x, y + 0.04, z));
+  const S = [P[0]];
+  for (let i = 1; i < P.length; i++) {
+    const a = P[i - 1], b = P[i], n = Math.max(1, Math.ceil(a.distanceTo(b) / 0.25));
+    for (let k = 1; k <= n; k++) S.push(a.clone().lerp(b, k / n));
+  }
+  const total = S.reduce((s, p, i) => s + (i ? p.distanceTo(S[i - 1]) : 0), 0);
+  const pos = [], uv = [], col = [], idx = [];
+  let along = 0;
+  for (let i = 0; i < S.length; i++) {
+    if (i) along += S[i].distanceTo(S[i - 1]);
+    const a = S[Math.max(0, i - 1)], b = S[Math.min(S.length - 1, i + 1)];
+    const d = b.clone().sub(a); d.y = 0; d.normalize();
+    const side = new THREE.Vector3(-d.z, 0, d.x).multiplyScalar(width / 2);
+    const l = S[i].clone().add(side), r = S[i].clone().sub(side);
+    pos.push(l.x, l.y, l.z, r.x, r.y, r.z);
+    const v = along / 0.7 - t * 1.6;
+    uv.push(0, v, 1, v);
+    const fade = Math.min(1, along / 0.6) * Math.min(1, (total - along) / 3);
+    col.push(1, 1, 1, fade, 1, 1, 1, fade);
+    if (i) { const k = 2 * i; idx.push(k - 2, k - 1, k, k - 1, k + 1, k); }
+  }
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
+  geo.setAttribute("color", new THREE.Float32BufferAttribute(col, 4));
+  geo.setIndex(idx);
+  geo.computeBoundingSphere();
+}
+
+// ── wheelchair, seen from the seat: knees, footrest and the push rims ──
+const chair = new THREE.Group();
+{
+  const trousers = new THREE.MeshLambertMaterial({ color: 0x4a6a96 });
+  const shoe = new THREE.MeshLambertMaterial({ color: 0x1a1a1a });
+  const metal = new THREE.MeshLambertMaterial({ color: 0x9aa3ad });
+  const tyre = new THREE.MeshLambertMaterial({ color: 0x15171a });
+  for (const sx of [-0.12, 0.12]) {
+    const thigh = new THREE.Mesh(new THREE.CapsuleGeometry(0.08, 0.4, 4, 10), trousers);
+    thigh.rotation.x = Math.PI / 2; thigh.position.set(sx, -0.42, -0.42); chair.add(thigh);
+    const shin = new THREE.Mesh(new THREE.CapsuleGeometry(0.065, 0.32, 4, 10), trousers);
+    shin.rotation.x = 0.35; shin.position.set(sx, -0.6, -0.7); chair.add(shin);
+    const foot = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.07, 0.24), shoe);
+    foot.position.set(sx, -0.8, -0.82); chair.add(foot);
+  }
+  const rest = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.02, 0.16), metal);
+  rest.position.set(0, -0.85, -0.82); chair.add(rest);
+  for (const sx of [-0.34, 0.34]) {
+    const wheel = new THREE.Group();
+    wheel.add(new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.025, 8, 40), tyre));
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.27, 0.01, 6, 40), metal);
+    rim.position.x = sx > 0 ? 0.04 : -0.04; wheel.add(rim);
+    for (let k = 0; k < 6; k++) {
+      const spoke = new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.54, 0.006), metal);
+      spoke.rotation.x = (k * Math.PI) / 6; wheel.add(spoke);
+    }
+    wheel.rotation.y = Math.PI / 2;
+    wheel.position.set(sx * 1.18, -0.56, -0.28);
+    wheel.userData.spin = true;
+    chair.add(wheel);
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.04, 0.42), new THREE.MeshLambertMaterial({ color: 0x22262c }));
+    arm.position.set(sx * 0.95, -0.36, -0.3); chair.add(arm);
+  }
+}
+camera.add(chair);
+
+// ── third-person inset: the traveller, walking or in a wheelchair ──
+const walker = person(4, {});
+const roller = new THREE.Group();
+{
+  const rider = person(6, { seated: true });
+  rider.position.y = 0.05;
+  roller.add(rider);
+  const metal = new THREE.MeshLambertMaterial({ color: 0x9aa3ad });
+  const tyre = new THREE.MeshLambertMaterial({ color: 0x15171a });
+  for (const sx of [-0.33, 0.33]) {
+    const w = new THREE.Group();
+    w.add(new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.03, 8, 32), tyre));
+    for (let k = 0; k < 6; k++) { const sp = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.56, 0.008), metal); sp.rotation.z = (k * Math.PI) / 6; w.add(sp); }
+    w.rotation.y = Math.PI / 2;
+    w.position.set(sx, 0.31, -0.02);
+    w.userData.spin = true;
+    roller.add(w);
+    const caster = new THREE.Mesh(new THREE.TorusGeometry(0.07, 0.02, 6, 16), tyre);
+    caster.rotation.y = Math.PI / 2; caster.position.set(sx * 0.8, 0.08, 0.42); roller.add(caster);
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.03, 0.5), metal); rail.position.set(sx * 0.8, 0.5, 0.1); roller.add(rail);
+    const push = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.55, 0.03), metal); push.position.set(sx * 0.7, 0.72, -0.22); roller.add(push);
+  }
+  const seat = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.05, 0.44), new THREE.MeshLambertMaterial({ color: 0x22262c }));
+  seat.position.set(0, 0.48, 0.02); roller.add(seat);
+  const back = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.45, 0.04), new THREE.MeshLambertMaterial({ color: 0x22262c }));
+  back.position.set(0, 0.75, -0.22); roller.add(back);
+}
+scene.add(walker, roller);
+const insetCam = new THREE.PerspectiveCamera(50, 16 / 9, 0.1, 300);
+const IW = 336, IH = 189, IX = W - 24 - IW, IY = 56; // inset viewport, from the bottom-left in GL
+
+// ── HUD ──
+const $ = (id) => document.getElementById(id);
+const show = (el, on) => (el.hidden = !on);
+let lastPanel = "";
+function hud(f) {
+  show($("caption"), !!f.caption); $("caption").textContent = f.caption;
+  show($("badge"), !!f.badge); $("badge").querySelector("span").textContent = f.badge || "";
+  show($("mode"), !!f.mode);
+  if (f.mode) $("mode").innerHTML = (f.mode === "Walk" ? ICONS.walk : ICONS.wheel) + `<span>${f.mode}${f.seated ? " · seated view" : ""}</span>`;
+  const pk = JSON.stringify(f.panel);
+  if (pk !== lastPanel) {
+    lastPanel = pk;
+    const p = f.panel;
+    show($("panel"), !!p);
+    if (p && p.type === "mode") $("panel").innerHTML = `<h3>How are you getting around?</h3><div class="row">
+      <div class="btn ${p.pressed === "walk" ? "on" : ""}">${ICONS.walk}Walk</div>
+      <div class="btn ${p.pressed === "stepFree" ? "on" : ""}">${ICONS.wheel}Step-Free</div></div>`;
+    if (p && p.type === "interests") $("panel").innerHTML = `<h3>What do you care about?</h3><div class="row chips">
+      ${["coffee", "food", "shopping", "toilets", "pharmacy"].map((c) => `<div class="chip ${p.picked.includes(c) ? "on" : ""}">${c}</div>`).join("")}</div>
+      <div class="hint">None picked: only sponsored places, clearly tagged</div>`;
+    if (p && p.type === "scan") $("panel").innerHTML = `<h3>You are here</h3><div class="row">
+      <div class="btn wide ${p.pressed ? "on" : ""}">${ICONS.scan}&nbsp; Scan sign</div></div><div class="hint">on real Specs: look at the sign</div>`;
+  }
+  const c = f.card;
+  show($("card"), !!c);
+  if (c) {
+    $("card").querySelector(".ic").className = "ic " + c.icon;
+    $("card").querySelector(".ic").innerHTML = ICONS[c.icon] || "";
+    $("card").querySelector(".tx").textContent = c.text;
+    const inT = Math.min(1, c.age / 0.35);
+    $("card").style.transform = `translateX(${(1 - inT) * 380}px)`;
+  }
+  show($("arrival"), !!f.arrival);
+  if (f.arrival) { $("arrival").querySelector(".ic").innerHTML = ICONS.check; $("arrival").querySelector(".tx").textContent = f.arrival; }
+  show($("end"), !!f.end);
+  if (f.end) $("end").innerHTML = `<div class="line"></div><h1>${f.end.title}</h1>${f.end.lines.map((l) => `<p>${l}</p>`).join("")}`;
+  // Pet feature: the treats score and the small app panel with the Pet on/off toggle.
+  show($("score"), !!f.score);
+  if (f.score) { $("score").innerHTML = ICONS.bone + `<span>${f.score.text}</span>`; $("score").classList.toggle("pop", !!f.score.pop); }
+  show($("app"), !!f.app && !f.end);
+  if (f.app) $("app").innerHTML = `<small>App panel</small><div class="t ${f.app.pressing ? "press" : ""}"><div class="sw ${f.app.pet ? "on" : ""}"></div>${f.app.label || "Pet"}</div>`;
+  $("mode").style.bottom = "26px";
+  // Distance pill with the floor badge first; the floor-change cue just above it.
+  show($("trip"), !!f.pill && !f.arrival);
+  if (f.pill) { $("trip").querySelector("b").textContent = f.pill.floor; $("trip").querySelector("span").textContent = f.pill.text; }
+  show($("cue"), !!f.cue && !f.card && !f.arrival);
+  if (f.cue) $("cue").innerHTML = ICONS.floors + `<span>${f.cue}</span>`;
+  $("fade").style.opacity = f.fade;
+}
+
+function renderFrame(i) {
+  const f = frames[Math.max(0, Math.min(frames.length - 1, i))];
+  const t = i / fps;
+  const [x, y, z, yaw, pitch] = f.cam;
+  camera.position.copy(V(x, y, z));
+  camera.rotation.set(pitch * Math.PI / 180, -yaw * Math.PI / 180, 0);
+  chair.visible = f.seated && !f.end;
+  chair.traverse((o) => { if (o.userData.spin) o.rotation.x = -f.wheel / 0.3; });
+  airport.update(t, f);
+  lineMesh.visible = glowMesh.visible = !!f.line;
+  if (f.line) { ribbon(lineMesh.geometry, f.line, 0.34, t); ribbon(glowMesh.geometry, f.line, 0.8, t); }
+  pet.update(f, t, camera);
+  placeIcons(f.places);
+  marker.visible = !!f.marker;
+  if (f.marker) {
+    const [mx, my, mz] = f.marker.at;
+    marker.position.copy(V(mx, my, mz));
+    marker.lookAt(camera.position.x, marker.position.y, camera.position.z); // the post faces the viewer
+    markerPost.rotation.z = f.marker.up ? 0 : Math.PI;
+    markerTex.offset.y = (f.marker.up ? -1 : 1) * ((t * 0.6) % 1);
+  }
+  hud(f);
+  // Pinch cursor on the out-of-service sign.
+  show($("pinch"), !!f.pinch);
+  if (f.pinch) {
+    camera.updateMatrixWorld();
+    const p = airport.oosPosition.clone().project(camera);
+    const el = $("pinch");
+    el.style.left = ((p.x + 1) / 2) * W + "px";
+    el.style.top = ((1 - p.y) / 2) * H + "px";
+    const s = 1 - 0.55 * Math.min(1, f.pinch.phase * 1.4);
+    el.querySelector(".ring").style.transform = `scale(${s})`;
+  }
+  // Main (first-person) view: the traveller's own body model is hidden.
+  walker.visible = roller.visible = false;
+  renderer.setScissorTest(false);
+  renderer.setViewport(0, 0, W, H);
+  renderer.render(scene, camera);
+  // Inset: follow the traveller from behind and above.
+  const inset = !!f.feet && !f.end && f.fade < 0.99 && !f.panel;
+  show($("insetFrame"), inset);
+  if (inset) {
+    $("insetFrame").querySelector("span").textContent = f.seated ? "Traveller in a wheelchair" : "Traveller walking";
+    const body = f.seated ? roller : walker;
+    body.visible = true;
+    const yawR = (yaw * Math.PI) / 180;
+    const feet = V(f.feet[0], f.feet[1], f.feet[2]);
+    body.position.copy(feet);
+    body.rotation.y = Math.PI - yawR;
+    const sw = Math.sin(f.stride * Math.PI) * 0.5;
+    if (!f.seated) { walker.userData.legs[0].rotation.x = sw; walker.userData.legs[1].rotation.x = -sw; }
+    roller.traverse((o) => { if (o.userData.spin) o.rotation.x = f.wheel / 0.3; });
+    const fwd = new THREE.Vector3(Math.sin(yawR), 0, -Math.cos(yawR));
+    insetCam.position.copy(feet).addScaledVector(fwd, -4.2).add(new THREE.Vector3(0, 2.9, 0));
+    insetCam.lookAt(feet.clone().addScaledVector(fwd, 2.2).add(new THREE.Vector3(0, 0.6, 0)));
+    const chairWas = chair.visible;
+    chair.visible = false;
+    renderer.autoClear = false;
+    renderer.setScissorTest(true);
+    renderer.setScissor(IX, IY, IW, IH);
+    renderer.setViewport(IX, IY, IW, IH);
+    renderer.clear();
+    renderer.render(scene, insetCam);
+    renderer.setScissorTest(false);
+    renderer.autoClear = true;
+    chair.visible = chairWas;
+  }
+}
+
+window.frameCount = frames.length;
+window.fps = fps;
+window.renderFrame = renderFrame;
+window.ready = true;
+
+if (new URLSearchParams(location.search).has("play")) {
+  const start = performance.now();
+  const from = +(new URLSearchParams(location.search).get("from") || 0) * fps;
+  const loop = () => {
+    const i = Math.floor(from + ((performance.now() - start) / 1000) * fps);
+    renderFrame(i % frames.length);
+    requestAnimationFrame(loop);
+  };
+  loop();
+} else {
+  renderFrame(+(new URLSearchParams(location.search).get("frame") || 0));
+}
+</script>
+</body>
+</html>
