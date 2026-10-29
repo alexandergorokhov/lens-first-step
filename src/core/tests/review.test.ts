@@ -139,21 +139,23 @@ test("E2b parseMap rejects place/event refs to unknown nodes/edges and unsupport
 // ── C8 prototype-safe lookups ───────────────────────────────────────────────
 
 const tiny = (ids: string[], edges: [string, string][]) =>
-  JSON.stringify({ version: 1, nodes: ids.map((id, i) => ({ id, x: i, y: 0, z: 0, kind: i === 0 ? "sign" : "junction" })), edges: edges.map(([from, to]) => ({ from, to, length: 5, kind: "walk", open: true })) });
+  JSON.stringify({ version: 1, nodes: ids.map((id, i) => ({ id, x: i, y: 0, z: 0, kind: i === 0 ? "sign" : "junction" })), edges: edges.map(([from, to]) => ({ from, to, length: 20, kind: "walk", open: true })) });
 
 test("C8 parseMap rejects an edge to 'toString'", () => {
   const r = parseMap(tiny(["a", "b"], [["a", "toString"]]));
   assert.equal(r.ok, false);
 });
 
-test("C8 parseMap accepts a node called 'constructor'", () => {
-  const r = parseMap(tiny(["a", "constructor"], [["a", "constructor"]]));
+test("C8 parseMap rejects the reserved id 'constructor' but routes a node called 'toString'", () => {
+  assert.equal(parseMap(tiny(["a", "constructor"], [["a", "constructor"]])).ok, false);
+  const r = parseMap(tiny(["a", "toString"], [["a", "toString"]]));
   assert.equal(r.ok, true, r.ok ? "" : r.error);
-  if (r.ok) assert.equal(findRoute(r.map, "a", "constructor", "walk").status, "route");
+  if (r.ok) assert.equal(findRoute(r.map, "a", "toString", "walk").status, "route");
 });
 
 test("C8 findRoute never throws for any map parseMap accepts", () => {
-  const names = ["a", "b", "toString", "constructor", "__proto__", "hasOwnProperty", "valueOf", "0", ""];
+  // Reserved ids (constructor, __proto__, prototype) are always rejected: see security.test.ts R2.
+  const names = ["a", "b", "toString", "hasOwnProperty", "valueOf", "isPrototypeOf", "0", ""];
   let checked = 0;
   for (let s = 0; s < 200; s++) {
     const ids = names.filter((_, i) => (s >> i) % 2 === 1 || i < 2);

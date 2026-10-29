@@ -4,34 +4,19 @@
 //   npm run demo:video -- --stills 10,50,110   -> devpost/video/still-<s>.png only
 //   npm run demo:watch                -> plays it live in your browser (no recording)
 // Needs Google Chrome (or set CHROME=path) and the dev dependencies (npm install).
-import { createServer } from "node:http";
-import { readFileSync, mkdirSync, existsSync } from "node:fs";
+import { mkdirSync, existsSync } from "node:fs";
+import { createDemoServer } from "./server.mjs";
 import { spawn, exec } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildPetTimeline, buildTimeline } from "./timeline.mjs";
+import { buildCampusTimeline, buildHospitalTimeline } from "./scenarios.mjs";
 
 const args = process.argv.slice(2);
 const ROOT = fileURLToPath(new URL("../../", import.meta.url));
-const HERE = fileURLToPath(new URL("./", import.meta.url));
 const OUT = path.join(ROOT, "devpost/video");
-const TYPES = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".json": "application/json" };
 
-function serve(timelineJson) {
-  return new Promise((resolve) => {
-    const server = createServer((req, res) => {
-      const url = decodeURIComponent(req.url.split("?")[0]);
-      let file;
-      if (url === "/" || url === "/index.html") file = path.join(HERE, "index.html");
-      else if (url === "/timeline.json") return res.writeHead(200, { "content-type": TYPES[".json"] }).end(timelineJson);
-      else if (url.startsWith("/node_modules/three/")) file = path.join(ROOT, url);
-      else file = path.join(HERE, url);
-      if (!file.startsWith(ROOT) || !existsSync(file)) return res.writeHead(404).end();
-      res.writeHead(200, { "content-type": TYPES[path.extname(file)] || "application/octet-stream" }).end(readFileSync(file));
-    });
-    server.listen(0, "127.0.0.1", () => resolve(server));
-  });
-}
+const serve = (timelineJson) => createDemoServer(ROOT, timelineJson);
 
 function chromePath() {
   if (process.env.CHROME) return process.env.CHROME;
@@ -48,8 +33,13 @@ const t0 = Date.now();
 const ci = args.indexOf("--companion");
 const COMPANION = ci >= 0 ? args[ci + 1] : "dog";
 const PET = args.includes("--pet") || ci >= 0;
-const NAME = PET ? (COMPANION === "dog" ? "pet" : COMPANION) : "demo";
-const timeline = PET ? buildPetTimeline(undefined, COMPANION) : buildTimeline();
+// --map hospital|campus renders that place's scenarios (find-your-way-hospital.mp4, ...).
+const mi = args.indexOf("--map");
+const MAP = mi >= 0 ? args[mi + 1] : null;
+const SCENES = { hospital: buildHospitalTimeline, campus: buildCampusTimeline };
+if (MAP && !SCENES[MAP]) throw new Error("--map must be one of " + Object.keys(SCENES).join(", "));
+const NAME = MAP || (PET ? (COMPANION === "dog" ? "pet" : COMPANION) : "demo");
+const timeline = MAP ? SCENES[MAP]() : PET ? buildPetTimeline(undefined, COMPANION) : buildTimeline();
 const server = await serve(JSON.stringify(timeline));
 const base = `http://127.0.0.1:${server.address().port}/`;
 console.log(`timeline: ${timeline.frames.length} frames (${(timeline.frames.length / timeline.fps).toFixed(1)} s)`);
@@ -78,7 +68,7 @@ if (args.includes("--watch")) {
   if (si >= 0) {
     for (const s of args[si + 1].split(",").map(Number)) {
       await page.evaluate((i) => window.renderFrame(i), Math.round(s * timeline.fps));
-      const file = path.join(OUT, `${PET ? NAME + "-" : ""}still-${String(s).padStart(5, "0")}.png`);
+      const file = path.join(OUT, `${NAME !== "demo" ? NAME + "-" : ""}still-${String(s).padStart(5, "0")}.png`);
       await stage.screenshot({ path: file });
       console.log("wrote", path.relative(ROOT, file));
     }

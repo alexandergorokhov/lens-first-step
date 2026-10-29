@@ -11,17 +11,17 @@ import { PointingCoach, placeTag, placesOf, visiblePlaces } from "../../src/core
 import { DEMO_BEATS } from "../../src/core/demo.ts";
 
 export const FPS = 30;
-const DT = 1 / FPS;
+export const DT = 1 / FPS;
 export const STAND_EYE = 1.65;
 export const SEAT_EYE = STAND_EYE - 0.45; // the Lens's seated offset
 const LINE_AHEAD = 12;
 
 const caption = (id) => DEMO_BEATS.find((b) => b.id === id)?.caption ?? id;
-const hdist = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
+export const hdist = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 const d3 = (a, b) => Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
-const headingOf = (a, b) => (Math.atan2(b.x - a.x, b.z - a.z) * 180) / Math.PI;
+export const headingOf = (a, b) => (Math.atan2(b.x - a.x, b.z - a.z) * 180) / Math.PI;
 const wrap = (d) => ((((d + 180) % 360) + 360) % 360) - 180;
-const ease = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
+export const ease = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
 
 export function loadAirport() {
   const r = parseMap(readFileSync(new URL("../../src/core/data/map.json", import.meta.url), "utf8"));
@@ -29,7 +29,7 @@ export function loadAirport() {
   return r.map;
 }
 
-class Builder {
+export class Builder {
   constructor(map) {
     this.map = map;
     this.place = placeOf(map);
@@ -41,7 +41,13 @@ class Builder {
     this.nav = null;
     this.state = { caption: "", badge: null, panel: null, card: null, arrival: null, fade: 0, mode: null, end: null, note: null };
     this.closed = {};
-    this.lifts = { lift1: { cab: 0, door: [0, 0] }, lift2: { cab: 0, door: [0, 0] } };
+    // Every lift in the map: cab height and its two landing doors (0 shut .. 1 open).
+    this.lifts = {};
+    for (const e of map.edges) {
+      if (e.kind !== "lift") continue;
+      const lo = Math.min(findNode(map, e.from).y, findNode(map, e.to).y);
+      this.lifts[e.id] = { cab: lo, door: [0, 0] };
+    }
     this.wheel = 0;
     this.stride = 0;
     this.showLine = false;
@@ -56,13 +62,27 @@ class Builder {
     return this.feet.y + (this.seated ? SEAT_EYE : STAND_EYE);
   }
 
+  // What the traveller follows: the route, or with no way through ("ask staff") the line to the
+  // assistance point. Null when there is nothing to follow.
+  path() {
+    const r = this.nav && this.nav.route;
+    if (!r) return null;
+    if (r.status === "route") return { nodes: r.nodes, edges: r.edges, pts: routePoints(this.nav.map, r) };
+    if (r.status === "askStaff" && r.assistance) {
+      const a = r.assistance;
+      return { nodes: a.nodes, edges: a.edges, pts: a.nodes.map((id) => { const n = findNode(this.nav.map, id); return { x: n.x, y: n.y, z: n.z }; }) };
+    }
+    return null;
+  }
+
   // The line on the traveller's floor (as the Lens draws it; at 50% with or without the
   // companion) and the up/down marker where it changes floor.
   line() {
-    if (!this.showLine || !this.nav || this.nav.route.status !== "route") return { line: null, marker: null };
+    const path = this.path();
+    if (!this.showLine || !path) return { line: null, marker: null };
     if (!guideVisuals(!!(this.guide && this.guide.on)).showLine) return { line: null, marker: null };
     const t = tripAhead(this.nav.map, this.nav.route, this.feet);
-    const { line, marker } = lineOnLevel(lineAhead(routePoints(this.nav.map, this.nav.route), this.feet, LINE_AHEAD), t ? t.floorY : undefined);
+    const { line, marker } = lineOnLevel(lineAhead(path.pts, this.feet, LINE_AHEAD), t ? t.floorY : this.feet.y);
     return {
       line: line.length > 1 ? line.map((p) => [p.x, p.y, p.z]) : null,
       marker: marker ? { at: [marker.at.x, marker.at.y, marker.at.z], up: marker.up } : null,
@@ -203,10 +223,10 @@ class Builder {
   follow({ stop = () => false, captions = {}, onNode = {} } = {}) {
     let progress = "onRoute";
     for (let guard = 0; guard < 20000; guard++) {
-      const r = this.nav.route;
-      if (r.status !== "route") return progress;
+      const r = this.path();
+      if (!r) return progress;
       // Next node along the route ahead of us.
-      const pts = routePoints(this.nav.map, r);
+      const pts = r.pts;
       const ahead = lineAhead(pts, this.feet, 1e9);
       const target = ahead.find((p) => d3(p, this.feet) > 1e-3);
       if (!target) return progress;
@@ -225,7 +245,7 @@ class Builder {
       const segLen = d3(segStart, target);
       let along = 0;
       while (along < segLen) {
-        const base = kind === "escalator" ? 1.3 : kind === "stairs" ? 0.75 : this.seated ? 1.25 : 1.4;
+        const base = kind === "escalator" ? 1.3 : kind === "stairs" ? 0.75 : kind === "ramp" ? 0.9 : this.seated ? 1.25 : 1.4;
         // Long straights speed up after the first few metres (the Lens demo does the same).
         const fast = kind === "walk" && segLen > 8 ? 1 + 2.0 * ease((along - 4) / 4) * ease((segLen - along - 3) / 3) : 1;
         along = Math.min(segLen, along + base * fast * DT);
@@ -251,11 +271,32 @@ class Builder {
     throw new Error("follow: no progress");
   }
 
+  // Walks straight to a point off the line (the traveller wanders off), letting the Navigator
+  // notice and re-route. Returns the last progress.
+  walkTo(target, speed = 1.3) {
+    const start = { ...this.feet };
+    const len = hdist(start, target);
+    let progress = "onRoute";
+    for (let along = 0; along < len; ) {
+      along = Math.min(len, along + speed * DT);
+      const t = along / len;
+      this.feet = { x: start.x + (target.x - start.x) * t, y: start.y, z: start.z + (target.z - start.z) * t };
+      this.stride += (speed * DT) / 0.75;
+      this.wheel += speed * DT;
+      const diff = wrap(headingOf(this.feet, target) - this.yaw);
+      this.yaw += Math.max(-75 * DT, Math.min(75 * DT, diff * 0.15));
+      const p = this.nav.updatePosition(this.feet);
+      if (p !== "onRoute") progress = p;
+      this.emit();
+    }
+    return progress;
+  }
+
   // Turn smoothly toward a point ~3 m ahead on the line, like a person looking where they go.
   steer() {
-    const r = this.nav.route;
-    if (r.status !== "route") return;
-    const look = lineAhead(routePoints(this.nav.map, r), this.feet, 3.2);
+    const path = this.path();
+    if (!path) return;
+    const look = lineAhead(path.pts, this.feet, 3.2);
     const end = look[look.length - 1];
     if (!end || hdist(end, this.feet) < 0.4) return;
     let want = headingOf(this.feet, end);
@@ -411,7 +452,7 @@ export function buildTimeline(map = loadAirport()) {
   S.caption = caption("lift1-out");
   b.turnTo(headingOf(b.feet, lift1), 0.8);
   b.hold(0.4);
-  S.pinch = { x: lift1.x - 1.25, y: 1.5, z: lift1.z, phase: 0 };
+  S.pinch = { event: out.id, phase: 0 };
   b.hold(1.0, (k, n) => (S.pinch.phase = (k + 1) / n));
   S.pinch = null;
   b.closed[out.edge] = true;
@@ -432,7 +473,7 @@ export function buildTimeline(map = loadAirport()) {
   S.end = { title: "Find Your Way Inside", lines: ["Walk or Step-Free, chosen once.", "Re-routes on the fly: gate changes, lifts out of service.", "Any building from one JSON map."] };
   b.hold(4.5);
 
-  return { fps: FPS, frames: b.frames, map };
+  return { fps: FPS, frames: b.frames, map, scene: "airport" };
 }
 
 // The companion clip: Walk to B12 with the companion (a dog by default; --companion robot|rover
@@ -507,7 +548,7 @@ export function buildPetTimeline(map = loadAirport(), companionId = "dog") {
   S.app = null;
   S.end = { title: "Walk with a " + it, lines: ["A feature you turn on or off at any time; the line stays at 50%.", "Points out what you care about. Sponsored places say so.", "It never changes your route."] };
   b.hold(3.5);
-  return { fps: FPS, frames: b.frames, map };
+  return { fps: FPS, frames: b.frames, map, scene: "airport" };
 }
 
 if (process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/\\/g, "/").split("/").pop())) {

@@ -75,3 +75,29 @@ test("PolylineWalker advances at the walking speed, keeps the heading and finish
   const fast = new PolylineWalker([P(0, 0, 0), P(0, 0, 10)], 5);
   assert.ok(Math.abs(fast.step(1).z - 7) < 1e-9, "speed multiplier 5 -> 7 m/s");
 });
+
+test("demo edge cases: empty and one-point paths, zero-length and vertical segments, unknown beat ids", () => {
+  // pointAt: empty path, a distance past the end, and a zero-length segment keep a sane pose.
+  assert.deepEqual(pointAt([], 5), { x: 0, y: 0, z: 0, heading: 0 });
+  const dup = [P(0, 0, 0), P(0, 0, 0), P(0, 0, 4)];
+  assert.deepEqual(pointAt(dup, 99), { x: 0, y: 0, z: 4, heading: 0 });
+  assert.deepEqual(pointAt([P(0, 0, 0), P(0, 0, 0)], 1), { x: 0, y: 0, z: 0, heading: 0 });
+  assert.equal(polylineLength([P(1, 2, 3)]), 0);
+  assert.equal(walkSeconds([]), 0);
+  // A walker on fewer than two points is done at once and stays where it is.
+  for (const pts of [[], [P(2, 0, 3)]]) {
+    const w = new PolylineWalker(pts);
+    assert.equal(w.isDone(), true);
+    const pose = w.step(1);
+    assert.equal(pose.done, true);
+    assert.deepEqual([pose.x, pose.y, pose.z], pts.length ? [2, 0, 3] : [0, 0, 0]);
+  }
+  // A vertical (lift) segment keeps the last heading; the walker finishes and reports done.
+  const lift = new PolylineWalker([P(0, 0, 0), P(4, 0, 0), P(4, 6, 0)], 50);
+  let pose = lift.step(0.01);
+  for (let i = 0; i < 1000 && !pose.done; i++) pose = lift.step(0.1);
+  assert.equal(lift.isDone(), true);
+  assert.equal(pose.heading, 90);
+  assert.deepEqual([pose.x, pose.y, pose.z], [4, 6, 0]);
+  assert.equal(beatIndex("no-such-beat"), -1);
+});

@@ -185,7 +185,11 @@ A first-person video of the trip through a 3D stand-in airport: walking (with th
 - `npm run demo:pet` renders `devpost/video/find-your-way-pet.mp4` (about 1 minute): the companion turned on from the app panel (line stays at 50%), coffee picked as an interest, the sponsored juice bar and the café pointed out, the wait at the escalator, off/on, the treats game. `npm run demo:pet:watch` plays it live.
 - The companion is any model: `node tools/demo-video/record.mjs --companion robot` (or `rover`) renders `find-your-way-robot.mp4` / `find-your-way-rover.mp4`, the same clip with another model and collectible.
 
-The code is in `tools/demo-video/`: `timeline.mjs` (what happens each frame), `airport.js` (the 3D building), `pet.js` (the companions and collectibles), `index.html` (drawing and the on-screen panels).
+- `npm run demo:hospital` renders `find-your-way-hospital.mp4` (~1:45): walking up the stairs to Ward 4, a room change back down to X-ray; then in a wheelchair: Lift A out (re-routed to Lift B), Lift B out too, so no step-free route and the line leads to Reception.
+- `npm run demo:campus` renders `find-your-way-campus.mp4` (~2:20): outdoors across the quad with the rover companion (it points at the coffee cart), walking off the line and being re-routed, a room change down to Lab 2; then in a wheelchair: the science lift is out, so up the ramp.
+- Hospital and campus use a stand-in building made from their map files (`place-layout.mjs` works out floors, doorways, rooms, desks, lifts and railings; `building.js` draws them), so any new map gets a video the same way. Tests check that no video walks through a wall, room, desk, shop, railing or a lift's glass.
+
+The code is in `tools/demo-video/`: `timeline.mjs` (what happens each frame), `scenarios.mjs` (hospital and campus), `airport.js` (the airport model), `place-layout.mjs` + `building.js` (stand-in buildings from any map), `pet.js` (the companions and collectibles), `server.mjs` (local page server), `index.html` (drawing and the on-screen panels).
 
 ## Tips for the video
 

@@ -100,7 +100,9 @@
     {"id": "sciRampTop", "x": 46, "y": 4, "z": 34, "kind": "junction", "label": "Science ramp (top)"},
     {"id": "sciFirst", "x": 54, "y": 4, "z": 33, "kind": "junction", "label": "Science first floor"},
     {"id": "readingRoom", "x": 8, "y": 4, "z": 37, "kind": "destination", "type": "room", "code": "Reading Room", "icon": "menu_book", "label": "Reading Room", "arrivalCard": "Reading Room. Quiet study until 10 pm."},
-    {"id": "lectureHall1", "x": 52, "y": 4, "z": 38, "kind": "destination", "type": "lecture hall", "code": "Lecture Hall 1", "icon": "school", "label": "Lecture Hall 1", "arrivalCard": "Lecture Hall 1. Lecture starts in 10 min."}
+    {"id": "lectureHall1", "x": 52, "y": 4, "z": 38, "kind": "destination", "type": "lecture hall", "code": "Lecture Hall 1", "icon": "school", "label": "Lecture Hall 1", "arrivalCard": "Lecture Hall 1. Lecture starts in 10 min."},
+    { "id": "coffeeCart", "x": 39, "y": 0, "z": 9, "kind": "place", "category": "coffee", "label": "Coffee cart" },
+    { "id": "accToiletSci", "x": 48, "y": 0, "z": 22.5, "kind": "place", "category": "accessibleToilet", "label": "Accessible toilet" }
   ],
   "edges": [
     {"from": "sign", "to": "quad", "length": 14.7, "kind": "walk", "open": true, "outdoor": true},
@@ -124,6 +126,8 @@
     {"from": "sciDoor", "to": "sciRampFoot", "length": 5.7, "kind": "walk", "open": true},
     {"id": "sciRamp", "from": "sciRampFoot", "to": "sciRampTop", "length": 10.8, "kind": "ramp", "open": true},
     {"from": "sciRampTop", "to": "sciFirst", "length": 8.1, "kind": "walk", "open": true},
-    {"from": "sciFirst", "to": "lectureHall1", "length": 5.4, "kind": "walk", "open": true}
+    {"from": "sciFirst", "to": "lectureHall1", "length": 5.4, "kind": "walk", "open": true},
+    {"from": "quad", "to": "coffeeCart", "length": 7.3, "kind": "walk", "open": true, "outdoor": true},
+    {"from": "sciDoor", "to": "accToiletSci", "length": 3.3, "kind": "walk", "open": true}
   ]
 }

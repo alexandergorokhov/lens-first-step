@@ -48,7 +48,8 @@ export const POINT_SECONDS = 3;
 export const TURN_DEG = 25;
 // A place more than this far behind the traveller (along their direction of travel) is skipped.
 export const POINT_BEHIND = 2;
-export const DEFAULT_SPONSOR_TAG = "Sponsored";
+// Always shown on a sponsored place; a map's sponsorTag can only add to it ("Sponsored · demo").
+export const SPONSOR_TAG = "Sponsored";
 
 const INTERESTS = ["coffee", "food", "shopping", "toilet", "pharmacy"];
 const STEP_FREE_FIRST = ["accessibleToilet", "lift"];
@@ -67,15 +68,17 @@ export function placesOf(map: PlacesMapLike): Place[] {
       label: n.label || n.id,
       category: n.category,
       sponsored: n.sponsored === true,
-      sponsorTag: n.sponsorTag || DEFAULT_SPONSOR_TAG,
+      sponsorTag: typeof n.sponsorTag === "string" ? n.sponsorTag : "",
     });
   }
   return out;
 }
 
-// The name shown on a place's icon; a sponsored one adds its tag: "<label> · Sponsored".
+// The name shown on a place's icon; a sponsored one always adds "Sponsored", then the map's
+// suffix if any: "<label> · Sponsored · <suffix>".
 export function placeTag(p: Place): string {
-  return p.sponsored ? p.label + " · " + p.sponsorTag : p.label;
+  if (!p.sponsored) return p.label;
+  return p.label + " · " + SPONSOR_TAG + (p.sponsorTag && p.sponsorTag !== SPONSOR_TAG ? " · " + p.sponsorTag : "");
 }
 
 function flat(a: PlaceXYZ, b: PlaceXYZ): number {
@@ -157,7 +160,7 @@ export function visiblePlaces(map: PlacesMapLike, route: PlaceXYZ[], user: Place
   const all = placesOf(map);
   if (opts.profile === "stepFree") {
     for (const n of map.nodes) {
-      if (n.kind === "lift") all.push({ id: n.id, x: n.x, y: n.y, z: n.z, label: n.label || n.id, category: "lift", sponsored: false, sponsorTag: DEFAULT_SPONSOR_TAG });
+      if (n.kind === "lift") all.push({ id: n.id, x: n.x, y: n.y, z: n.z, label: n.label || n.id, category: "lift", sponsored: false, sponsorTag: "" });
     }
   }
   const near = all.filter((p) => sameFloor(p, user) && flat(p, user) <= ICON_RADIUS && distanceToRouteOnFloor(route, p) <= NEAR_ROUTE);
@@ -174,7 +177,7 @@ export class PointingCoach {
   private places: Place[];
   private lastAt = -Infinity;
   private lastTravelled = -Infinity;
-  private done: { [id: string]: boolean } = {};
+  private done: { [id: string]: boolean } = Object.create(null);
 
   constructor(map: PlacesMapLike) {
     this.places = placesOf(map);

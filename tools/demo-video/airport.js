@@ -3,12 +3,13 @@
 // shops, gates, signs and people. Positions come from the map's nodes, so the router's route
 // runs exactly through it. Map metres: x east, y up, z north -> three.js (x, y, -z).
 import * as THREE from "three";
+import { LIFTS, LIFT_HALF, SHOPS, doorFace as faceOf } from "./layout.mjs";
 
 export const V = (x, y, z) => new THREE.Vector3(x, y, -z);
 const DEG = Math.PI / 180;
 
 // ── textures ────────────────────────────────────────────────────────────────
-function canvasTex(w, h, draw, repeat = true) {
+export function canvasTex(w, h, draw, repeat = true) {
   const c = document.createElement("canvas");
   c.width = w;
   c.height = h;
@@ -20,7 +21,7 @@ function canvasTex(w, h, draw, repeat = true) {
   return t;
 }
 
-function tileTex(base, grout, speck, tile = 1.2) {
+export function tileTex(base, grout, speck, tile = 1.2) {
   const t = canvasTex(256, 256, (g, w, h) => {
     g.fillStyle = base;
     g.fillRect(0, 0, w, h);
@@ -40,7 +41,7 @@ function tileTex(base, grout, speck, tile = 1.2) {
   return t;
 }
 
-function signTex(lines, { w = 1024, h = 256, bg = "#1b2330", fg = "#ffd23f", size = 110, align = "center" } = {}) {
+export function signTex(lines, { w = 1024, h = 256, bg = "#1b2330", fg = "#ffd23f", size = 110, align = "center" } = {}) {
   return canvasTex(w, h, (g) => {
     g.fillStyle = bg;
     g.fillRect(0, 0, w, h);
@@ -88,12 +89,12 @@ function fidsTex() {
 
 // ── geometry helpers ───────────────────────────────────────────────────────
 const mats = {};
-function lambert(color, extra = {}) {
+export function lambert(color, extra = {}) {
   const key = color + JSON.stringify(extra);
   return (mats[key] ??= new THREE.MeshLambertMaterial({ color, ...extra }));
 }
 
-function box(parent, x0, x1, y0, y1, z0, z1, mat) {
+export function box(parent, x0, x1, y0, y1, z0, z1, mat) {
   const m = new THREE.Mesh(new THREE.BoxGeometry(Math.abs(x1 - x0), Math.abs(y1 - y0), Math.abs(z1 - z0)), mat);
   m.position.copy(V((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2));
   parent.add(m);
@@ -101,7 +102,7 @@ function box(parent, x0, x1, y0, y1, z0, z1, mat) {
 }
 
 // A box from a to b (map coords, centre line) with width and height, oriented along a->b.
-function beam(parent, a, b, width, height, mat) {
+export function beam(parent, a, b, width, height, mat) {
   const A = V(a.x, a.y, a.z), B = V(b.x, b.y, b.z);
   const len = A.distanceTo(B);
   const m = new THREE.Mesh(new THREE.BoxGeometry(width, height, len), mat);
@@ -112,7 +113,7 @@ function beam(parent, a, b, width, height, mat) {
 }
 
 // Floor slab from a polygon of map (x, z) points: tiled top at y, underside white.
-function slab(parent, pts, y, topMat, thick = 0.45, holes = []) {
+export function slab(parent, pts, y, topMat, thick = 0.45, holes = []) {
   const shape = new THREE.Shape(pts.map(([x, z]) => new THREE.Vector2(x, z)));
   for (const h of holes) shape.holes.push(new THREE.Path(h.map(([x, z]) => new THREE.Vector2(x, z))));
   const geo = new THREE.ExtrudeGeometry(shape, { depth: thick, bevelEnabled: false });
@@ -134,7 +135,7 @@ function plane(parent, w, h, mat, pos, headingDeg) {
 }
 
 // Hanging or standing sign board facing `heading` (direction the readable face points to).
-function signBoard(parent, x, y, z, heading, w, h, tex, hang = true) {
+export function signBoard(parent, x, y, z, heading, w, h, tex, hang = true) {
   const g = new THREE.Group();
   const face = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex }));
   face.position.z = 0.06;
@@ -398,24 +399,29 @@ export function buildAirport(scene, map) {
 
   // Glass lifts: shaft over all floors, steel landing doors facing where you come from.
   const lifts = {};
-  const doorFace = (liftNode, otherId) => {
-    const o = node(otherId);
-    const dx = o.x - liftNode.x, dz = o.z - liftNode.z;
-    return Math.abs(dx) > Math.abs(dz) ? (dx > 0 ? "E" : "W") : dz > 0 ? "N" : "S";
-  };
-  for (const [id, gId, uId, gFrom, uTo] of [["lift1", "lift1G", "lift1U", "hall", "bJunction"], ["lift2", "lift2G", "lift2U", "hall", "cTop"]]) {
+  const doorFace = (liftNode, otherId) => faceOf(liftNode, node(otherId));
+  for (const [id, gId, uId, gFrom, uTo] of LIFTS) {
     const g = node(gId), u = node(uId);
-    const half = 1.25;
+    const half = LIFT_HALF;
     const grp = new THREE.Group();
     root.add(grp);
     // corner posts + glass walls
     for (const [sx, sz] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) box(grp, g.x + sx * half - 0.06, g.x + sx * half + 0.06, 0, H, g.z + sz * half - 0.06, g.z + sz * half + 0.06, frame);
+    // Glass on every side, with a door-high opening where a landing door is (you go through it).
+    const doorAt = { N: [], S: [], E: [], W: [] };
+    doorAt[doorFace(g, gFrom)].push(g.y);
+    doorAt[doorFace(u, uTo)].push(u.y);
     for (const f of ["N", "S", "E", "W"]) {
       const horiz = f === "N" || f === "S";
       const c = { x: g.x + (f === "E" ? half : f === "W" ? -half : 0), z: g.z + (f === "N" ? half : f === "S" ? -half : 0) };
       const a = horiz ? { x: c.x - half, z: c.z } : { x: c.x, z: c.z - half };
       const b = horiz ? { x: c.x + half, z: c.z } : { x: c.x, z: c.z + half };
-      beam(grp, { ...a, y: H / 2 }, { ...b, y: H / 2 }, 0.03, H, glass);
+      let from = 0;
+      for (const lvl of doorAt[f].sort((p, q) => p - q)) {
+        if (lvl > from) beam(grp, { ...a, y: (from + lvl) / 2 }, { ...b, y: (from + lvl) / 2 }, 0.03, lvl - from, glass);
+        from = lvl + 2.5;
+      }
+      if (H > from) beam(grp, { ...a, y: (from + H) / 2 }, { ...b, y: (from + H) / 2 }, 0.03, H - from, glass);
     }
     // landing doors (two leaves per landing)
     const doors = [];
@@ -507,13 +513,7 @@ export function buildAirport(scene, map) {
       : beam(root, { x: x0 + 0.3, y: y + 1.4, z: z0 - 0.05 }, { x: x1 - 0.3, y: y + 1.4, z: z0 - 0.05 }, 0.04, 2.6, glass);
     return glassFront;
   };
-  shop(0, 3, 3, 9, 0, "Café", "#7a4b2a", 90);
-  shop(0, 3, 10, 15.5, 0, "News & Books", "#2d5d8a", 90);
-  shop(16, 23, 37.5, 40, 6, "Duty Free", "#6a2d73", 180);
-  shop(24, 30, 37.5, 40, 6, "Pharmacy", "#2f7d4f", 180);
-  shop(39, 47, 37.5, 40, 6, "Café", "#7a4b2a", 180);
-  shop(24, 27, 11, 14, 0, "Juice bar", "#c2571a", 90);
-  shop(38.5, 44, 22.3, 25, 6, "Toilets", "#36577a", 0);
+  for (const s of SHOPS) shop(...s);
 
   // Gates: desks, seating, gate boards.
   const b12 = node("gateB12"), c3 = node("gateC3");
@@ -633,5 +633,6 @@ export function buildAirport(scene, map) {
       }
     },
     oosPosition: oos.position,
+    oosAt: () => oos.position,
   };
 }

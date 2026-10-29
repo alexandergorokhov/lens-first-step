@@ -131,6 +131,16 @@ export const LEVEL_SNAP = 1;
 // Two heights closer than this are the same level.
 export const SAME_LEVEL = 0.5;
 export const MAP_VERSION = 1;
+// Limits for a map file (a downloaded map is untrusted): coordinates within +-MAX_MAP_COORD
+// metres, labels up to MAX_LABEL_LENGTH characters (they go on cards), and at most
+// MAX_MAP_NODES nodes and MAX_MAP_EDGES edges (route work runs every frame on the glasses).
+export const MAX_MAP_COORD = 100000;
+export const MAX_LABEL_LENGTH = 80;
+export const MAX_MAP_NODES = 2000;
+export const MAX_MAP_EDGES = 5000;
+export const MAX_MAP_BYTES = 256 * 1024;
+// How much shorter than the straight line an edge may be (rounding in hand-made maps), metres.
+export const EDGE_SLACK = 0.5;
 
 // Trip time defaults: walking speed (m/s) per profile, and the seconds each floor change adds.
 // Lifts and escalators are ridden, so their time replaces walking their length; stairs add
@@ -226,7 +236,16 @@ export function edgeAllowed(edge: MapEdge, profile: Profile): boolean {
 }
 
 // Validates untrusted JSON text (downloaded or bundled) and returns a map or a readable error.
+// Ids that would clash with object internals in plain lookups (the Lens's own tables).
+const RESERVED_IDS = ["__proto__", "constructor", "prototype"];
+
+// A short text the Lens shows: absent, or a string of at most MAX_LABEL_LENGTH characters.
+function badText(v: unknown): boolean {
+  return v !== undefined && (typeof v !== "string" || v.length > MAX_LABEL_LENGTH);
+}
+
 export function parseMap(text: string): ParseResult {
+  if (typeof text === "string" && text.length > MAX_MAP_BYTES) return { ok: false, error: "map.json is too big (over " + MAX_MAP_BYTES + " bytes)" };
   let raw: any;
   try {
     raw = JSON.parse(text);
@@ -236,18 +255,27 @@ export function parseMap(text: string): ParseResult {
   if (!raw || typeof raw !== "object") return { ok: false, error: "map.json must be an object" };
   if (!Array.isArray(raw.nodes) || raw.nodes.length === 0) return { ok: false, error: "map.json has no nodes" };
   if (!Array.isArray(raw.edges)) return { ok: false, error: "map.json has no edges" };
+  if (raw.nodes.length > MAX_MAP_NODES) return { ok: false, error: "map.json has more than " + MAX_MAP_NODES + " nodes" };
+  if (raw.edges.length > MAX_MAP_EDGES) return { ok: false, error: "map.json has more than " + MAX_MAP_EDGES + " edges" };
 
   // Null-prototype table, so ids like "toString" or "constructor" are just ids.
   const ids: { [id: string]: boolean } = Object.create(null);
   for (const n of raw.nodes) {
     if (!n || typeof n.id !== "string" || n.id === "") return { ok: false, error: "a node is missing its id" };
     if (ids[n.id] === true) return { ok: false, error: "duplicate node id " + n.id };
+    if (RESERVED_IDS.indexOf(n.id) >= 0) return { ok: false, error: "node id " + n.id + " is reserved" };
     for (const axis of ["x", "y", "z"]) {
-      if (typeof n[axis] !== "number" || !isFinite(n[axis])) {
+      if (typeof n[axis] !== "number" || !isFinite(n[axis]) || Math.abs(n[axis]) > MAX_MAP_COORD) {
         return { ok: false, error: "node " + n.id + " has a bad " + axis };
       }
     }
     if (typeof n.kind !== "string") return { ok: false, error: "node " + n.id + " has no kind" };
+    for (const key of ["id", "label", "arrivalCard", "sponsorTag", "category", "type", "code", "icon"]) {
+      if (badText(n[key])) {
+        return { ok: false, error: "node " + n.id.slice(0, MAX_LABEL_LENGTH) + " has a bad " + key + " (text up to " + MAX_LABEL_LENGTH + " characters)" };
+      }
+    }
+    if (n.sponsored !== undefined && typeof n.sponsored !== "boolean") return { ok: false, error: "node " + n.id + " has a bad sponsored (true/false)" };
     ids[n.id] = true;
   }
   for (const e of raw.edges) {
@@ -255,10 +283,11 @@ export function parseMap(text: string): ParseResult {
       return { ok: false, error: "edge " + (e && e.from) + " -> " + (e && e.to) + " points at an unknown node" };
     }
     if (EDGE_KINDS.indexOf(e.kind) < 0) return { ok: false, error: "edge " + e.from + " -> " + e.to + " has unknown kind " + e.kind };
-    if (typeof e.length !== "number" || !(e.length > 0)) {
+    if (typeof e.length !== "number" || !(e.length > 0) || !isFinite(e.length)) {
       return { ok: false, error: "edge " + e.from + " -> " + e.to + " needs a positive length" };
     }
     if (typeof e.open !== "boolean") return { ok: false, error: "edge " + e.from + " -> " + e.to + " needs open true/false" };
+    if (e.id !== undefined && (typeof e.id !== "string" || RESERVED_IDS.indexOf(e.id) >= 0)) return { ok: false, error: "edge id " + e.id + " is reserved or not text" };
   }
   // Checked after the shape, so a broken file says what is broken first.
   if (raw.version !== MAP_VERSION) return { ok: false, error: "unsupported map version " + raw.version + " (expected " + MAP_VERSION + ")" };
@@ -272,7 +301,17 @@ export function parseMap(text: string): ParseResult {
 // Returns the first problem, or null.
 export function validateMap(map: MapData): string | null {
   const nodeKind: { [id: string]: string } = Object.create(null);
-  for (const n of map.nodes) nodeKind[n.id] = n.kind;
+  const nodeAt: { [id: string]: MapNode } = Object.create(null);
+  for (const n of map.nodes) {
+    nodeKind[n.id] = n.kind;
+    nodeAt[n.id] = n;
+  }
+  // No shortcuts: an edge is at least as long as the straight line between its nodes.
+  for (const e of map.edges) {
+    const a = nodeAt[e.from];
+    const b = nodeAt[e.to];
+    if (a && b && e.length < dist3(a, b) - EDGE_SLACK) return "edge " + e.from + " -> " + e.to + " is shorter than the straight line";
+  }
   const edgeIds: { [id: string]: boolean } = Object.create(null);
   for (const e of map.edges) {
     if (e.kind === "lift" && (typeof e.id !== "string" || e.id === "")) return "lift edge " + e.from + " -> " + e.to + " needs an id";
@@ -288,10 +327,20 @@ export function validateMap(map: MapData): string | null {
     const v = (p as any)[key];
     if (v !== undefined && !(typeof v === "number" && v > 0)) return "place " + key + " must be a positive number";
   }
+  if (badText(p.title)) return "place title must be text up to " + MAX_LABEL_LENGTH + " characters";
+  if (p.levels !== undefined && !Array.isArray(p.levels)) return "place levels must be a list";
+  for (const l of p.levels || []) {
+    if (!l || typeof l.y !== "number" || !isFinite(l.y) || typeof l.name !== "string" || badText(l.name)) return "a place level needs a height and a name (text)";
+  }
+  if (p.scanSign !== undefined) {
+    if (!p.scanSign || typeof p.scanSign !== "object") return "place scanSign must be an object";
+    for (const k of ["title", "button", "hint"]) if (badText((p.scanSign as any)[k])) return "place scanSign " + k + " must be short text";
+  }
   if (p.events !== undefined && !Array.isArray(p.events)) return "place events must be a list";
   for (const ev of p.events || []) {
     const name = "event " + (ev && ev.id);
     if (!ev || typeof ev.id !== "string") return "an event is missing its id";
+    for (const k of ["button", "sign", "card"]) if (badText((ev as any)[k])) return name + " " + k + " must be short text";
     if (ev.type === "destinationChanged") {
       if (!isNode(ev.to)) return name + " changes to unknown node " + ev.to;
     } else if (ev.type === "connectionClosed") {
@@ -411,15 +460,18 @@ export type MapSource = "online" | "offline";
 // Picks the map to use: the downloaded copy if it arrived and is valid,
 // otherwise the copy shipped in the Lens. `downloaded` is null when the
 // download failed or timed out.
-export function chooseMap(downloaded: string | null, builtIn: string): { map: MapData; source: MapSource; notice: string | null } {
+// error: why a download was rejected (for the log), or null.
+export function chooseMap(downloaded: string | null, builtIn: string): { map: MapData; source: MapSource; notice: string | null; error: string | null } {
+  let error: string | null = null;
   if (downloaded !== null) {
     const parsed = parseMap(downloaded);
-    if (parsed.ok) return { map: parsed.map, source: "online", notice: null };
+    if (parsed.ok) return { map: parsed.map, source: "online", notice: null, error: null };
+    error = (parsed as { ok: false; error: string }).error;
   }
   const fallback = parseMap(builtIn);
   // Explicit cast: Lens Studio's compiler (no strictNullChecks) can't narrow this union.
   if (!fallback.ok) throw new Error("built-in map is broken: " + (fallback as { ok: false; error: string }).error);
-  return { map: fallback.map, source: "offline", notice: downloaded === null ? null : MAP_LOAD_FAILED };
+  return { map: fallback.map, source: "offline", notice: downloaded === null ? null : MAP_LOAD_FAILED, error };
 }
 
 export const DOWNLOAD_TIMEOUT_MS = 5000;
@@ -441,7 +493,7 @@ export function loadMapWithTimeout(
   url: string,
   builtIn: string,
   timeoutMs: number = DOWNLOAD_TIMEOUT_MS,
-): Promise<{ map: MapData; source: MapSource; notice: string | null }> {
+): Promise<{ map: MapData; source: MapSource; notice: string | null; error: string | null }> {
   return new Promise((resolve) => {
     let settled = false;
     const finish = (downloaded: string | null) => {
