@@ -8,7 +8,8 @@
     "sync": "node tools/sync-core.mjs",
     "sync:check": "node tools/sync-core.mjs --check",
     "hooks": "git config core.hooksPath .githooks",
-    "maps": "node tools/serve-maps.mjs"
+    "maps": "node tools/serve-maps.mjs",
+    "maps:draw": "node tools/draw-maps.mjs"
   },
   "engines": {
     "node": ">=22.18"

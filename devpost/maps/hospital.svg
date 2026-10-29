@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 553.3333333333334" width="1280" height="553.3333333333334" font-family="Segoe UI, Arial, sans-serif">
+<rect width="1280" height="553.3333333333334" fill="#fff"/>
+<rect x="8" y="8" width="624" height="475.33333333333337" rx="10" fill="#f8f9fa" stroke="#dee2e6"/>
+<text x="22" y="32" font-size="16" font-weight="600">Ground floor (y 0 m)</text>
+<line x1="320" y1="424.6666666666667" x2="320" y2="331.33333333333337" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="320" y1="331.33333333333337" x2="226.66666666666669" y2="331.33333333333337" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="320" y1="331.33333333333337" x2="413.33333333333337" y2="256.6666666666667" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="320" y1="331.33333333333337" x2="133.33333333333334" y2="256.6666666666667" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="320" y1="331.33333333333337" x2="506.6666666666667" y2="368.6666666666667" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="320" y1="331.33333333333337" x2="525.3333333333334" y2="144.66666666666669" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="317.5" y1="422.1666666666667" x2="317.5" y2="328.83333333333337" stroke="#1c7ed6" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<line x1="317.5" y1="328.83333333333337" x2="410.83333333333337" y2="254.16666666666669" stroke="#1c7ed6" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<line x1="322.5" y1="427.1666666666667" x2="322.5" y2="333.83333333333337" stroke="#2f9e44" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<line x1="322.5" y1="333.83333333333337" x2="135.83333333333334" y2="259.1666666666667" stroke="#2f9e44" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<circle cx="320" cy="424.6666666666667" r="7" fill="#d9480f"/>
+<text x="329" y="416.6666666666667" font-size="12" fill="#212529">You are here (main entrance)</text>
+<circle cx="320" cy="331.33333333333337" r="4" fill="#868e96"/>
+<circle cx="226.66666666666669" cy="331.33333333333337" r="7" fill="#e67700"/>
+<text x="235.66666666666669" y="323.33333333333337" font-size="12" fill="#212529">Reception</text>
+<circle cx="413.33333333333337" cy="256.6666666666667" r="4" fill="#868e96"/>
+<text x="422.33333333333337" y="248.66666666666669" font-size="12" fill="#212529">Stairs (bottom) ↕ stairs</text>
+<circle cx="133.33333333333334" cy="256.6666666666667" r="7" fill="#5f3dc4"/>
+<text x="142.33333333333334" y="248.66666666666669" font-size="12" fill="#212529">Lift A (ground) ↕ lift</text>
+<circle cx="506.6666666666667" cy="368.6666666666667" r="7" fill="#5f3dc4"/>
+<text x="515.6666666666667" y="360.6666666666667" font-size="12" fill="#212529">Lift B (ground) ↕ lift</text>
+<circle cx="525.3333333333334" cy="144.66666666666669" r="7" fill="#c2255c"/>
+<text x="534.3333333333334" y="136.66666666666669" font-size="12" fill="#212529">X-ray</text>
+<rect x="648" y="8" width="624" height="475.33333333333337" rx="10" fill="#f8f9fa" stroke="#dee2e6"/>
+<text x="662" y="32" font-size="16" font-weight="600">Level 1 (y 4 m)</text>
+<line x1="1053.3333333333335" y1="182" x2="904" y2="144.66666666666669" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="773.3333333333334" y1="256.6666666666667" x2="904" y2="144.66666666666669" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="1146.6666666666667" y1="368.6666666666667" x2="904" y2="144.66666666666669" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="904" y1="144.66666666666669" x2="754.6666666666666" y2="107.33333333333334" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="1050.8333333333335" y1="179.5" x2="901.5" y2="142.16666666666669" stroke="#1c7ed6" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<line x1="901.5" y1="142.16666666666669" x2="752.1666666666666" y2="104.83333333333334" stroke="#1c7ed6" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<line x1="775.8333333333334" y1="259.1666666666667" x2="906.5" y2="147.16666666666669" stroke="#2f9e44" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<line x1="906.5" y1="147.16666666666669" x2="757.1666666666666" y2="109.83333333333334" stroke="#2f9e44" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<circle cx="1053.3333333333335" cy="182" r="4" fill="#868e96"/>
+<text x="1062.3333333333335" y="174" font-size="12" fill="#212529">Stairs (top) ↕ stairs</text>
+<circle cx="773.3333333333334" cy="256.6666666666667" r="7" fill="#5f3dc4"/>
+<text x="782.3333333333334" y="248.66666666666669" font-size="12" fill="#212529">Lift A (level 1) ↕ lift</text>
+<circle cx="1146.6666666666667" cy="368.6666666666667" r="7" fill="#5f3dc4"/>
+<text x="1155.6666666666667" y="360.6666666666667" font-size="12" fill="#212529">Lift B (level 1) ↕ lift</text>
+<circle cx="904" cy="144.66666666666669" r="4" fill="#868e96"/>
+<circle cx="754.6666666666666" cy="107.33333333333334" r="7" fill="#c2255c"/>
+<text x="763.6666666666666" y="99.33333333333334" font-size="12" fill="#212529">Ward 4</text>
+<text x="20" y="505.33333333333337" font-size="13"><tspan fill="#1c7ed6" font-weight="600">Walk</tspan>: You are here (main entrance) → Lobby → Stairs (bottom) → Stairs (top) → Level 1 corridor → Ward 4 (34 m)</text>
+<text x="20" y="525.3333333333334" font-size="13"><tspan fill="#2f9e44" font-weight="600">Step-Free</tspan>: You are here (main entrance) → Lobby → Lift A (ground) → Lift A (level 1) → Level 1 corridor → Ward 4 (37 m)</text>
+<text x="20" y="545.3333333333334" font-size="11" fill="#868e96">Edges: solid walk · dashed ramp · dotted stairs · dash-dot escalator · fine dots lift · red = closed. ↕ = connects to another level.</text>
+</svg>

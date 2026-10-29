@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 553.3333333333334" width="1920" height="553.3333333333334" font-family="Segoe UI, Arial, sans-serif">
+<rect width="1920" height="553.3333333333334" fill="#fff"/>
+<rect x="8" y="8" width="624" height="475.33333333333337" rx="10" fill="#f8f9fa" stroke="#dee2e6"/>
+<text x="22" y="32" font-size="16" font-weight="600">Ground floor (y 0 m)</text>
+<line x1="320" y1="424.6666666666667" x2="320" y2="368.6666666666667" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="320" y1="368.6666666666667" x2="264" y2="368.6666666666667" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="320" y1="368.6666666666667" x2="320" y2="275.33333333333337" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="320" y1="368.6666666666667" x2="357.33333333333337" y2="275.33333333333337" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="320" y1="368.6666666666667" x2="488" y2="350" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="320" y1="368.6666666666667" x2="114.66666666666667" y2="256.6666666666667" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="317.5" y1="422.1666666666667" x2="317.5" y2="366.1666666666667" stroke="#1c7ed6" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<line x1="317.5" y1="366.1666666666667" x2="317.5" y2="272.83333333333337" stroke="#1c7ed6" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<line x1="322.5" y1="427.1666666666667" x2="322.5" y2="371.1666666666667" stroke="#2f9e44" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<line x1="322.5" y1="371.1666666666667" x2="490.5" y2="352.5" stroke="#2f9e44" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<circle cx="320" cy="424.6666666666667" r="7" fill="#d9480f"/>
+<text x="329" y="416.6666666666667" font-size="12" fill="#212529">You are here (entrance)</text>
+<circle cx="320" cy="368.6666666666667" r="4" fill="#868e96"/>
+<circle cx="264" cy="368.6666666666667" r="7" fill="#e67700"/>
+<text x="273" y="360.6666666666667" font-size="12" fill="#212529">Assistance point</text>
+<circle cx="320" cy="275.33333333333337" r="4" fill="#868e96"/>
+<text x="329" y="267.33333333333337" font-size="12" fill="#212529">Escalator (bottom) ↕ escalator</text>
+<circle cx="357.33333333333337" cy="275.33333333333337" r="4" fill="#868e96"/>
+<text x="366.33333333333337" y="267.33333333333337" font-size="12" fill="#212529">Stairs (bottom) ↕ stairs</text>
+<circle cx="488" cy="350" r="7" fill="#5f3dc4"/>
+<text x="497" y="342" font-size="12" fill="#212529">Lift 1 (ground) ↕ lift</text>
+<circle cx="114.66666666666667" cy="256.6666666666667" r="7" fill="#5f3dc4"/>
+<text x="123.66666666666667" y="248.66666666666669" font-size="12" fill="#212529">Lift 2 (ground) ↕ lift</text>
+<rect x="648" y="8" width="624" height="475.33333333333337" rx="10" fill="#f8f9fa" stroke="#dee2e6"/>
+<text x="662" y="32" font-size="16" font-weight="600">C pier (y 5 m)</text>
+<line x1="754.6666666666666" y1="126" x2="726.6666666666666" y2="88.66666666666667" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<circle cx="754.6666666666666" cy="126" r="4" fill="#868e96"/>
+<text x="763.6666666666666" y="118" font-size="12" fill="#212529">C gates ↕ stairs/ramp</text>
+<circle cx="726.6666666666666" cy="88.66666666666667" r="7" fill="#c2255c"/>
+<text x="735.6666666666666" y="80.66666666666667" font-size="12" fill="#212529">C3</text>
+<rect x="1288" y="8" width="624" height="475.33333333333337" rx="10" fill="#f8f9fa" stroke="#dee2e6"/>
+<text x="1302" y="32" font-size="16" font-weight="600">Departures (y 6 m)</text>
+<line x1="1600" y1="182" x2="1600" y2="144.66666666666669" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="1637.3333333333335" y1="219.33333333333334" x2="1600" y2="144.66666666666669" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="1768" y1="350" x2="1740" y2="144.66666666666669" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="1600" y1="144.66666666666669" x2="1740" y2="144.66666666666669" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="1740" y1="144.66666666666669" x2="1833.3333333333335" y2="107.33333333333334" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="1394.6666666666667" y1="256.6666666666667" x2="1460" y2="144.66666666666669" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="1600" y1="144.66666666666669" x2="1460" y2="144.66666666666669" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="1597.5" y1="179.5" x2="1597.5" y2="142.16666666666669" stroke="#1c7ed6" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<line x1="1597.5" y1="142.16666666666669" x2="1737.5" y2="142.16666666666669" stroke="#1c7ed6" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<line x1="1737.5" y1="142.16666666666669" x2="1830.8333333333335" y2="104.83333333333334" stroke="#1c7ed6" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<line x1="1770.5" y1="352.5" x2="1742.5" y2="147.16666666666669" stroke="#2f9e44" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<line x1="1742.5" y1="147.16666666666669" x2="1835.8333333333335" y2="109.83333333333334" stroke="#2f9e44" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<circle cx="1600" cy="182" r="4" fill="#868e96"/>
+<text x="1609" y="174" font-size="12" fill="#212529">Escalator (top) ↕ escalator</text>
+<circle cx="1637.3333333333335" cy="219.33333333333334" r="4" fill="#868e96"/>
+<text x="1646.3333333333335" y="211.33333333333334" font-size="12" fill="#212529">Stairs (top) ↕ stairs</text>
+<circle cx="1768" cy="350" r="7" fill="#5f3dc4"/>
+<text x="1777" y="342" font-size="12" fill="#212529">Lift 1 (departures) ↕ lift</text>
+<circle cx="1394.6666666666667" cy="256.6666666666667" r="7" fill="#5f3dc4"/>
+<text x="1403.6666666666667" y="248.66666666666669" font-size="12" fill="#212529">Lift 2 (departures) ↕ lift</text>
+<circle cx="1600" cy="144.66666666666669" r="4" fill="#868e96"/>
+<circle cx="1740" cy="144.66666666666669" r="4" fill="#868e96"/>
+<circle cx="1833.3333333333335" cy="107.33333333333334" r="7" fill="#c2255c"/>
+<text x="1842.3333333333335" y="99.33333333333334" font-size="12" fill="#212529">B12</text>
+<circle cx="1460" cy="144.66666666666669" r="4" fill="#868e96"/>
+<text x="1469" y="136.66666666666669" font-size="12" fill="#212529">C pier (top) ↕ stairs/ramp</text>
+<text x="20" y="505.33333333333337" font-size="13"><tspan fill="#1c7ed6" font-weight="600">Walk</tspan>: You are here (entrance) → Check-in hall → Escalator (bottom) → Escalator (top) → Departures concourse → B gates → B12 (58 m)</text>
+<text x="20" y="525.3333333333334" font-size="13"><tspan fill="#2f9e44" font-weight="600">Step-Free</tspan>: You are here (entrance) → Check-in hall → Lift 1 (ground) → Lift 1 (departures) → B gates → B12 (63 m)</text>
+<text x="20" y="545.3333333333334" font-size="11" fill="#868e96">Edges: solid walk · dashed ramp · dotted stairs · dash-dot escalator · fine dots lift · red = closed. ↕ = connects to another level.</text>
+</svg>

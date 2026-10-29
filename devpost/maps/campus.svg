@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 540" width="1280" height="540" font-family="Segoe UI, Arial, sans-serif">
+<rect width="1280" height="540" fill="#fff"/>
+<rect x="8" y="8" width="624" height="462" rx="10" fill="#f8f9fa" stroke="#dee2e6"/>
+<text x="22" y="32" font-size="16" font-weight="600">Ground floor (y 0 m)</text>
+<line x1="320" y1="422" x2="320" y2="310" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="320" y1="310" x2="280" y2="334" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="320" y1="310" x2="200" y2="270" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="320" y1="310" x2="440" y2="270" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="200" y1="270" x2="152" y2="238" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="200" y1="270" x2="200" y2="214" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="440" y1="270" x2="520" y2="254" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="440" y1="270" x2="472" y2="230" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="440" y1="270" x2="504" y2="230" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="440" y1="270" x2="408" y2="238" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="317.5" y1="419.5" x2="317.5" y2="307.5" stroke="#1c7ed6" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<line x1="317.5" y1="307.5" x2="437.5" y2="267.5" stroke="#1c7ed6" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<line x1="437.5" y1="267.5" x2="469.5" y2="227.5" stroke="#1c7ed6" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<line x1="322.5" y1="424.5" x2="322.5" y2="312.5" stroke="#2f9e44" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<line x1="322.5" y1="312.5" x2="442.5" y2="272.5" stroke="#2f9e44" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<line x1="442.5" y1="272.5" x2="506.5" y2="232.5" stroke="#2f9e44" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<circle cx="320" cy="422" r="7" fill="#d9480f"/>
+<text x="329" y="414" font-size="12" fill="#212529">You are here (main gate)</text>
+<circle cx="320" cy="310" r="4" fill="#868e96"/>
+<circle cx="280" cy="334" r="7" fill="#e67700"/>
+<text x="289" y="326" font-size="12" fill="#212529">Campus info desk</text>
+<circle cx="200" cy="270" r="4" fill="#868e96"/>
+<circle cx="152" cy="238" r="4" fill="#868e96"/>
+<text x="161" y="230" font-size="12" fill="#212529">Library stairs (bottom) ↕ stairs</text>
+<circle cx="200" cy="214" r="7" fill="#5f3dc4"/>
+<text x="209" y="206" font-size="12" fill="#212529">Library lift (ground) ↕ lift</text>
+<circle cx="440" cy="270" r="4" fill="#868e96"/>
+<circle cx="520" cy="254" r="7" fill="#c2255c"/>
+<text x="529" y="246" font-size="12" fill="#212529">Lab 2</text>
+<circle cx="472" cy="230" r="4" fill="#868e96"/>
+<text x="481" y="222" font-size="12" fill="#212529">Science stairs (bottom) ↕ stairs</text>
+<circle cx="504" cy="230" r="7" fill="#5f3dc4"/>
+<text x="513" y="222" font-size="12" fill="#212529">Science lift (ground) ↕ lift</text>
+<circle cx="408" cy="238" r="4" fill="#868e96"/>
+<text x="417" y="230" font-size="12" fill="#212529">Science ramp (bottom) ↕ ramp</text>
+<rect x="648" y="8" width="624" height="462" rx="10" fill="#f8f9fa" stroke="#dee2e6"/>
+<text x="662" y="32" font-size="16" font-weight="600">First floor (y 4 m)</text>
+<line x1="792" y1="206" x2="792" y2="166" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="840" y1="214" x2="792" y2="166" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="792" y1="166" x2="744" y2="134" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="1112" y1="198" x2="1112" y2="166" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="1144" y1="230" x2="1112" y2="166" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="1048" y1="158" x2="1112" y2="166" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="1112" y1="166" x2="1096" y2="126" stroke="#adb5bd" stroke-width="3" stroke-dasharray=""/>
+<line x1="1109.5" y1="195.5" x2="1109.5" y2="163.5" stroke="#1c7ed6" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<line x1="1109.5" y1="163.5" x2="1093.5" y2="123.5" stroke="#1c7ed6" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<line x1="1146.5" y1="232.5" x2="1114.5" y2="168.5" stroke="#2f9e44" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<line x1="1114.5" y1="168.5" x2="1098.5" y2="128.5" stroke="#2f9e44" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+<circle cx="792" cy="206" r="4" fill="#868e96"/>
+<text x="801" y="198" font-size="12" fill="#212529">Library stairs (top) ↕ stairs</text>
+<circle cx="840" cy="214" r="7" fill="#5f3dc4"/>
+<text x="849" y="206" font-size="12" fill="#212529">Library lift (first floor) ↕ lift</text>
+<circle cx="792" cy="166" r="4" fill="#868e96"/>
+<circle cx="1112" cy="198" r="4" fill="#868e96"/>
+<text x="1121" y="190" font-size="12" fill="#212529">Science stairs (top) ↕ stairs</text>
+<circle cx="1144" cy="230" r="7" fill="#5f3dc4"/>
+<text x="1153" y="222" font-size="12" fill="#212529">Science lift (first floor) ↕ lift</text>
+<circle cx="1048" cy="158" r="4" fill="#868e96"/>
+<text x="1057" y="150" font-size="12" fill="#212529">Science ramp (top) ↕ ramp</text>
+<circle cx="1112" cy="166" r="4" fill="#868e96"/>
+<circle cx="744" cy="134" r="7" fill="#c2255c"/>
+<text x="753" y="126" font-size="12" fill="#212529">Reading Room</text>
+<circle cx="1096" cy="126" r="7" fill="#c2255c"/>
+<text x="1105" y="118" font-size="12" fill="#212529">Lecture Hall 1</text>
+<text x="20" y="492" font-size="13"><tspan fill="#1c7ed6" font-weight="600">Walk</tspan>: You are here (main gate) → Quad → Science building entrance → Science stairs (bottom) → Science stairs (top) → Science first floor → Lecture Hall 1 (53 m)</text>
+<text x="20" y="512" font-size="13"><tspan fill="#2f9e44" font-weight="600">Step-Free</tspan>: You are here (main gate) → Quad → Science building entrance → Science lift (ground) → Science lift (first floor) → Science first floor → Lecture Hall 1 (59 m)</text>
+<text x="20" y="532" font-size="11" fill="#868e96">Edges: solid walk · dashed ramp · dotted stairs · dash-dot escalator · fine dots lift · red = closed. ↕ = connects to another level.</text>
+</svg>
