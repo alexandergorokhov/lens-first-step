@@ -6,7 +6,7 @@ import {sleep} from "Leaf.lspkg/Utils/common/Utils"
 import {findNode} from "../Scripts/FindYourWayRouter"
 import {getMain, log, startTrip, tap, waitFor, shot, SHOT} from "./FindYourWayLeafSupport"
 
-// Restart trip resets cleanly: mode panel back, no line, no stale cards, closures reopened.
+// Restart trip resets cleanly: the scan sign back, no line, no stale cards, closures reopened.
 @component
 export class FywRestartScenario extends Scenario {
   async run(): Promise<void> {
@@ -21,9 +21,9 @@ export class FywRestartScenario extends Scenario {
     await shot(main, "restart-resets-trip-1")
     await tap(it, "RestartButton")
     await sleep(500)
-    expect(main.getPhase(), "phase").toBe("mode")
-    expect(main.isModePanelShown(), "mode panel").toBe(true)
-    expect(main.isScanSignVisible(), "scan sign hidden").toBe(false)
+    expect(main.getPhase(), "phase").toBe("scan")
+    expect(main.isModePanelShown(), "no mode panel").toBe(false)
+    expect(main.isScanSignVisible(), "scan sign").toBe(true)
     expect(main.isLineVisible(), "no line").toBe(false)
     expect(main.getHudCardText(), "no stale card").toBe(null)
     expect(main.isArrivalCardShown(), "no arrival card").toBe(false)

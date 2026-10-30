@@ -88,3 +88,39 @@ export function peekModel(points: PeekPoint[], user: PeekPoint, opts?: { size?: 
   }
   return { scale, centre, route: points.map(toModel), you: toModel(user), done: Math.min(done, points.length) };
 }
+
+// The whole walked map as a small model ("See my map"), for the Map builder's review: every
+// stretch as a segment, a dot per shop and one for you, in the same box as peekModel.
+export interface PeekMapModel {
+  scale: number;
+  segments: { a: PeekPoint; b: PeekPoint }[];
+  shops: PeekPoint[];
+  you: PeekPoint;
+}
+
+export function peekMap(
+  map: { nodes: (PeekPoint & { id: string; kind: string })[]; edges: { from: string; to: string }[] },
+  user: PeekPoint,
+  opts?: { size?: number },
+): PeekMapModel {
+  const size = opts && typeof opts.size === "number" && opts.size > 0 ? opts.size : PEEK_SIZE;
+  const lo = { x: Infinity, y: Infinity, z: Infinity };
+  const hi = { x: -Infinity, y: -Infinity, z: -Infinity };
+  for (const p of (map.nodes as PeekPoint[]).concat([user])) {
+    lo.x = Math.min(lo.x, p.x);
+    lo.y = Math.min(lo.y, p.y);
+    lo.z = Math.min(lo.z, p.z);
+    hi.x = Math.max(hi.x, p.x);
+    hi.y = Math.max(hi.y, p.y);
+    hi.z = Math.max(hi.z, p.z);
+  }
+  const extent = Math.max(hi.x - lo.x, hi.y - lo.y, hi.z - lo.z);
+  const scale = extent > 1e-9 ? size / extent : 1;
+  const c = { x: (lo.x + hi.x) / 2, y: (lo.y + hi.y) / 2, z: (lo.z + hi.z) / 2 };
+  const toModel = (p: PeekPoint): PeekPoint => ({ x: (p.x - c.x) * scale, y: (p.y - c.y) * scale, z: (p.z - c.z) * scale });
+  const at: { [id: string]: PeekPoint } = Object.create(null);
+  for (const n of map.nodes) at[n.id] = n;
+  const segments: { a: PeekPoint; b: PeekPoint }[] = [];
+  for (const e of map.edges) if (at[e.from] && at[e.to]) segments.push({ a: toModel(at[e.from]), b: toModel(at[e.to]) });
+  return { scale, segments, shops: map.nodes.filter((n) => n.kind === "place").map(toModel), you: toModel(user) };
+}

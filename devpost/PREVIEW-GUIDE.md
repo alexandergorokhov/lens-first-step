@@ -95,7 +95,7 @@ cd C:\Sasha\Projects\Lens\first-step\first-step
 npm test
 ```
 
-It first checks the Lens copies (`npm run sync:check`). Expect `pass 235`, `fail 0` (one test downloads the maps from the public gist; with no internet set `OFFLINE=1` to skip it: `pass 234`, `skipped 1`). `docs.test.ts` keeps this number up to date: it fails if the docs quote a different count. Covers: Walk and Step-Free routes on all four maps, Step-Free never uses stairs or escalators, Walk is always shortest, closures and re-routes, destination changes, broken maps, unknown signs, the turn arrow maths, the map download URL, the local map server, the demo's beats and walking speed, and that the Lens copies of the code and maps match `src/core`.
+It first checks the Lens copies (`npm run sync:check`). Expect `pass 291`, `fail 0` (one test downloads the maps from the public gist; with no internet set `OFFLINE=1` to skip it: `pass 289`, `skipped 1`). `docs.test.ts` keeps this number up to date: it fails if the docs quote a different count. Covers: Walk and Step-Free routes on all four maps, Step-Free never uses stairs or escalators, Walk is always shortest, closures and re-routes, destination changes, broken maps, unknown signs, the turn arrow maths, the map download URL, the local map server, the demo's beats and walking speed, and that the Lens copies of the code and maps match `src/core`.
 
 After editing anything in `src/core`, run `npm run sync` to copy it into `Assets/`. `npm run hooks` (once) makes git run `npm test` before every commit.
 

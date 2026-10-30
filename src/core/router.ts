@@ -7,6 +7,22 @@
 export type EdgeKind = "walk" | "stairs" | "escalator" | "lift" | "ramp";
 export type Profile = "walk" | "stepFree";
 
+// The line of a shop's front (or a stairs / lift entrance), on its node's floor: looking across it
+// from outside counts as looking at it. The outside is the side the node's walk edge arrives from.
+export interface FrontLine {
+  x1: number;
+  z1: number;
+  x2: number;
+  z2: number;
+}
+
+// One thing a shop wants to show. "image" picks from the pictures bundled in the Lens.
+export interface OfferItem {
+  text: string;
+  price: string;
+  image?: string;
+}
+
 export interface MapNode {
   id: string;
   x: number;
@@ -27,6 +43,9 @@ export interface MapNode {
   category?: string;
   sponsored?: boolean;
   sponsorTag?: string;
+  // Any node may have a front (no front: no dot); places may have an offer of at most 3 items.
+  front?: FrontLine;
+  offer?: OfferItem[];
 }
 
 export interface MapEdge {
@@ -81,6 +100,10 @@ export interface MapPlace {
   footprint?: { minX: number; maxX: number; minZ: number; maxZ: number };
   buildings?: PlaceBuilding[];
   scanSign?: { title?: string; button?: string; hint?: string };
+  // The preference checkboxes (ids are node categories); maps without it keep the Lens's list.
+  interests?: { id: string; label: string }[];
+  // The preset phrase of the "Say it" stand-in for speech.
+  sayIt?: string;
   events?: PlaceEvent[];
   arrivalRadius?: number;
   offRouteDistance?: number;
@@ -92,6 +115,8 @@ export interface MapPlace {
 
 export interface MapData {
   version: number;
+  // Bumped when the bundled copy changes shape: an online copy with a lower number is stale.
+  revision?: number;
   name?: string;
   units?: string;
   nodes: MapNode[];
@@ -139,6 +164,8 @@ export const MAX_LABEL_LENGTH = 80;
 export const MAX_MAP_NODES = 2000;
 export const MAX_MAP_EDGES = 5000;
 export const MAX_MAP_BYTES = 256 * 1024;
+export const MAX_OFFER_ITEMS = 3;
+export const MAX_INTERESTS = 12;
 // How much shorter than the straight line an edge may be (rounding in hand-made maps), metres.
 export const EDGE_SLACK = 0.5;
 
@@ -244,6 +271,27 @@ function badText(v: unknown): boolean {
   return v !== undefined && (typeof v !== "string" || v.length > MAX_LABEL_LENGTH);
 }
 
+// The reason a node's front or offer can't be used, or null.
+function badFront(f: any): string | null {
+  if (!f || typeof f !== "object" || Array.isArray(f)) return "a bad front (x1, z1, x2, z2)";
+  for (const k of ["x1", "z1", "x2", "z2"]) {
+    if (typeof f[k] !== "number" || !isFinite(f[k]) || Math.abs(f[k]) > MAX_MAP_COORD) return "a bad front " + k;
+  }
+  return f.x1 === f.x2 && f.z1 === f.z2 ? "a front of no length" : null;
+}
+
+function badOffer(o: any): string | null {
+  if (!Array.isArray(o)) return "a bad offer (a list)";
+  if (o.length > MAX_OFFER_ITEMS) return "an offer of more than " + MAX_OFFER_ITEMS + " items";
+  for (const it of o) {
+    if (!it || typeof it !== "object") return "a bad offer item";
+    if (typeof it.text !== "string" || it.text === "" || badText(it.text)) return "an offer item with bad text";
+    if (typeof it.price !== "string" || it.price === "" || badText(it.price)) return "an offer item with a bad price";
+    if (badText(it.image)) return "an offer item with a bad image";
+  }
+  return null;
+}
+
 export function parseMap(text: string): ParseResult {
   if (typeof text === "string" && text.length > MAX_MAP_BYTES) return { ok: false, error: "map.json is too big (over " + MAX_MAP_BYTES + " bytes)" };
   let raw: any;
@@ -276,6 +324,8 @@ export function parseMap(text: string): ParseResult {
       }
     }
     if (n.sponsored !== undefined && typeof n.sponsored !== "boolean") return { ok: false, error: "node " + n.id + " has a bad sponsored (true/false)" };
+    const extra = (n.front !== undefined ? badFront(n.front) : null) || (n.offer !== undefined ? badOffer(n.offer) : null);
+    if (extra) return { ok: false, error: "node " + n.id + " has " + extra };
     ids[n.id] = true;
   }
   for (const e of raw.edges) {
@@ -291,6 +341,7 @@ export function parseMap(text: string): ParseResult {
   }
   // Checked after the shape, so a broken file says what is broken first.
   if (raw.version !== MAP_VERSION) return { ok: false, error: "unsupported map version " + raw.version + " (expected " + MAP_VERSION + ")" };
+  if (raw.revision !== undefined && !(typeof raw.revision === "number" && Math.floor(raw.revision) === raw.revision)) return { ok: false, error: "map revision must be a whole number" };
   const problem = validateMap(raw as MapData);
   if (problem) return { ok: false, error: problem };
   return { ok: true, map: raw as MapData };
@@ -328,6 +379,13 @@ export function validateMap(map: MapData): string | null {
     if (v !== undefined && !(typeof v === "number" && v > 0)) return "place " + key + " must be a positive number";
   }
   if (badText(p.title)) return "place title must be text up to " + MAX_LABEL_LENGTH + " characters";
+  if (badText(p.sayIt)) return "place sayIt must be text up to " + MAX_LABEL_LENGTH + " characters";
+  if (p.interests !== undefined) {
+    if (!Array.isArray(p.interests) || p.interests.length > MAX_INTERESTS) return "place interests must be a list of up to " + MAX_INTERESTS;
+    for (const i of p.interests) {
+      if (!i || typeof i.id !== "string" || i.id === "" || typeof i.label !== "string" || i.label === "" || badText(i.id) || badText(i.label)) return "place interests need an id and a label";
+    }
+  }
   if (p.levels !== undefined && !Array.isArray(p.levels)) return "place levels must be a list";
   for (const l of p.levels || []) {
     if (!l || typeof l.y !== "number" || !isFinite(l.y) || typeof l.name !== "string" || badText(l.name)) return "a place level needs a height and a name (text)";
@@ -465,7 +523,12 @@ export function chooseMap(downloaded: string | null, builtIn: string): { map: Ma
   let error: string | null = null;
   if (downloaded !== null) {
     const parsed = parseMap(downloaded);
-    if (parsed.ok) return { map: parsed.map, source: "online", notice: null, error: null };
+    if (parsed.ok) {
+      const shipped = parseMap(builtIn);
+      // A stale online copy (older revision) never replaces a newer map shipped in the Lens.
+      if (!shipped.ok || (parsed.map.revision || 0) >= (shipped.map.revision || 0)) return { map: parsed.map, source: "online", notice: null, error: null };
+      return { map: shipped.map, source: "offline", notice: null, error: "online map is older than the built-in one" };
+    }
     error = (parsed as { ok: false; error: string }).error;
   }
   const fallback = parseMap(builtIn);

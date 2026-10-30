@@ -20,7 +20,6 @@ export class FywVisualScenario extends Scenario {
     } else if (shot === "scan") {
       await tap(it, "RestartButton")
       await sleep(800)
-      await tap(it, "WalkButton")
     } else {
       const sf = shot === "lift" || shot === "liftbutton" || shot === "stepfree"
       const campus = shot.indexOf("campus") === 0

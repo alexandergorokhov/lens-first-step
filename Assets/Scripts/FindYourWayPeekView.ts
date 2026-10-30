@@ -4,7 +4,7 @@
 // it in front of the head. Must not: change the route.
 
 import {Boxes, whiteTexture} from "./FindYourWayStandIn"
-import {PeekModel} from "./FindYourWayPeek"
+import {PeekMapModel, PeekModel} from "./FindYourWayPeek"
 
 const LINE_CM = 0.8
 const DOT_CM = 2.2
@@ -40,6 +40,27 @@ export class FindYourWayPeekView extends BaseScriptComponent {
     this.add("PeekPlate", plate, new vec4(0.85, 0.9, 1, 0.12))
     this.add("PeekDone", done, new vec4(0.6, 0.75, 1, 0.3))
     this.add("PeekAhead", ahead, new vec4(0.3, 0.6, 1, 0.95))
+    this.add("PeekYou", you, new vec4(1, 1, 1, 1))
+  }
+
+  // "See my map": the whole walked map, every stretch, a dot per shop and one for you (null hides).
+  showMap(model: PeekMapModel | null): void {
+    for (const p of this.parts) p.destroy()
+    this.parts = []
+    this.sceneObject.enabled = model !== null
+    if (!model) return
+    const cm = (p: {x: number; y: number; z: number}) => new vec3(p.x * 100, p.y * 100, -p.z * 100)
+    const paths = new Boxes()
+    for (const s of model.segments) paths.slab(cm(s.a), cm(s.b), LINE_CM, LINE_CM)
+    const shops = new Boxes()
+    for (const s of model.shops) shops.box(cm(s), new vec3(DOT_CM, DOT_CM, DOT_CM))
+    const you = new Boxes()
+    you.box(cm(model.you), new vec3(DOT_CM, DOT_CM, DOT_CM))
+    const plate = new Boxes()
+    plate.box(new vec3(0, -21, 0), new vec3(44, 0.4, 44))
+    this.add("PeekPlate", plate, new vec4(0.85, 0.9, 1, 0.12))
+    this.add("PeekPaths", paths, new vec4(0.3, 0.6, 1, 0.95))
+    this.add("PeekShops", shops, new vec4(1, 0.8, 0.4, 1))
     this.add("PeekYou", you, new vec4(1, 1, 1, 1))
   }
 

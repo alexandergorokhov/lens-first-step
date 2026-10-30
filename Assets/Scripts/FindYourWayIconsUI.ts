@@ -19,10 +19,29 @@ const ICONS: {[name: string]: Texture} = {
   school: requireAsset("../Icons/school.png") as Texture,
   science: requireAsset("../Icons/science.png") as Texture,
   menu_book: requireAsset("../Icons/menu_book.png") as Texture,
+  construction: requireAsset("../Icons/construction.png") as Texture,
+  checkroom: requireAsset("../Icons/checkroom.png") as Texture,
+  local_cafe: requireAsset("../Icons/local_cafe.png") as Texture,
+  sports_soccer: requireAsset("../Icons/sports_soccer.png") as Texture,
+}
+
+// The small set of pictures an offer's "image" can pick (the map file is text; remote images are
+// out of scope). Unknown names show no picture.
+const PICTURES: {[image: string]: string} = {
+  drill: "construction",
+  coat: "checkroom",
+  coffee: "local_cafe",
+  sport: "sports_soccer",
+  book: "menu_book",
+  health: "local_hospital",
 }
 
 export const DEFAULT_ICON = "location_on"
 
 export function icon(name: string | null | undefined): Texture {
   return (name && ICONS[name]) || ICONS[DEFAULT_ICON]
+}
+
+export function pictureFor(image: string): Texture | null {
+  return PICTURES[image] ? ICONS[PICTURES[image]] : null
 }

@@ -17,6 +17,7 @@ export interface AppPanelHandlers {
   onJump: () => void
   onThrow: () => void
   onNextStop: () => void
+  onEndWalk: () => void
 }
 
 const WIDTH = 22
@@ -32,6 +33,8 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
   private jump: LabeledButton
   private throwBtn: LabeledButton
   private nextStop: LabeledButton
+  private endWalk: LabeledButton
+  private placesOn = true
   private panel: Panel
   // Every row in order; hidden rows are taken out of the layout so they leave no gap.
   private rows: SceneObject[] = []
@@ -55,11 +58,20 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
     this.throwBtn = addButton(panel.content, "ThrowButton", "Throw a treat", WIDTH, BUTTON_H, null, h.onThrow, TEXT, 70)
     this.nextStop = addButton(panel.content, "NextStopButton", "Next stop", WIDTH, BUTTON_H, icon("location_on"),
       h.onNextStop, TEXT, 70)
+    this.endWalk = addButton(panel.content, "EndWalkButton", "End walk", WIDTH, BUTTON_H, null, h.onEndWalk, TEXT, 70)
     this.rows = [title.getSceneObject(), this.companion.so, model.so, this.places.so, this.play.so, this.jump.so,
-      this.throwBtn.so, this.nextStop.so]
+      this.throwBtn.so, this.nextStop.so, this.endWalk.so]
     this.optionRows = [title.getSceneObject(), this.companion.so, model.so, this.places.so]
     this.setPlay(false, false, false)
     this.setNextStop(null)
+    this.setFreeWalk(false)
+  }
+
+  // Free walk: no place icons to mute, and a way back to the three modes.
+  setFreeWalk(on: boolean): void {
+    this.places.so.enabled = !on
+    this.endWalk.so.enabled = on
+    this.relayout()
   }
 
   // Re-lays out the column with only the shown rows (FlexLayout keeps disabled items' space).

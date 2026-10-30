@@ -33,11 +33,22 @@ import {FywM5LearnThisPlaceScenario} from "./FywM5LearnThisPlaceScenario"
 import {FywPk1PeekScenario} from "./FywPk1PeekScenario"
 import {FywS1StartAtSignScenario} from "./FywS1StartAtSignScenario"
 import {FywBg1BackdropScenario} from "./FywBg1BackdropScenario"
+import {FywB3ModesScenario} from "./FywB3ModesScenario"
+import {FywB3Dc1BuilderScenario} from "./FywB3Dc1BuilderScenario"
+import {FywB3Dc2CompanionScenario} from "./FywB3Dc2CompanionScenario"
+import {FywB3Dc3TurnScenario} from "./FywB3Dc3TurnScenario"
+import {FywB3Dc4FloorScenario} from "./FywB3Dc4FloorScenario"
+import {FywB3Dc5LookScenario} from "./FywB3Dc5LookScenario"
+import {FywB3Dc6GoToScenario} from "./FywB3Dc6GoToScenario"
+
+// The LEAF plugin's stall after loading the list grows steeply with its length (44: ~30 s, 51: ~4 min
+// of a frozen editor), so the 13 screenshot set-ups are only listed when they are needed.
+const INCLUDE_SHOTS = false
 
 @component
 export class FindYourWayLeafIndex extends BaseScriptComponent {
   @scenariosIndex
-  static scenariosIndex: ScenarioMetadata[] = [
+  static scenariosIndex: ScenarioMetadata[] = ([
     {id: "dc1-scan-sign-line-appears", typename: FywDc1ScanScenario.getTypeName()},
     {id: "dc2-walk-escalator-corners-arrow", typename: FywDc2WalkScenario.getTypeName()},
     {id: "dc3-stepfree-seated-lift-reroute", typename: FywDc3StepFreeScenario.getTypeName()},
@@ -70,6 +81,15 @@ export class FindYourWayLeafIndex extends BaseScriptComponent {
     {id: "m5-learn-this-place-save-route", typename: FywM5LearnThisPlaceScenario.getTypeName()},
     {id: "pk1-peek-ahead-shows-and-hides", typename: FywPk1PeekScenario.getTypeName()},
     {id: "bg1-backdrop-solid-in-preview", typename: FywBg1BackdropScenario.getTypeName()},
+    // Brief 3: the three modes and its done criteria.
+    {id: "b3-modes-scan-first-preset", typename: FywB3ModesScenario.getTypeName()},
+    {id: "b3-dc1-map-builder-two-floors", typename: FywB3Dc1BuilderScenario.getTypeName()},
+    {id: "b3-dc2-companion-stops-at-matches", typename: FywB3Dc2CompanionScenario.getTypeName()},
+    {id: "b3-dc3-turn-around", typename: FywB3Dc3TurnScenario.getTypeName()},
+    {id: "b3-dc4-another-floor", typename: FywB3Dc4FloorScenario.getTypeName()},
+    {id: "b3-dc5-companion-off-dots", typename: FywB3Dc5LookScenario.getTypeName()},
+    {id: "b3-dc6-go-to-a-place", typename: FywB3Dc6GoToScenario.getTypeName()},
+  ] as ScenarioMetadata[]).concat(!INCLUDE_SHOTS ? [] : [
     // Screenshot set-ups — skipped by the runner unless named in `only`.
     {id: "visual-start", typename: FywVisualScenario.getTypeName(), parameters: {shot: "start"}},
     {id: "visual-card", typename: FywVisualScenario.getTypeName(), parameters: {shot: "card"}},
@@ -84,5 +104,5 @@ export class FindYourWayLeafIndex extends BaseScriptComponent {
     {id: "visual-liftbutton", typename: FywVisualScenario.getTypeName(), parameters: {shot: "liftbutton"}},
     {id: "visual-escalator", typename: FywVisualScenario.getTypeName(), parameters: {shot: "escalator"}},
     {id: "visual-arrival", typename: FywVisualScenario.getTypeName(), parameters: {shot: "arrival"}},
-  ]
+  ])
 }

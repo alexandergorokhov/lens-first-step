@@ -65,6 +65,9 @@ const POST_HEIGHT_CM = 160
 const LANE_WIDTH_CM = 60
 const OBSTACLE_DEPTH_CM = 30
 const SHAKE_CM = 4
+// While it points: a thin bar from its chest, forward.
+const POINTER_HEIGHT_CM = 55
+const POINTER_LENGTH_CM = 110
 
 @component
 export class FindYourWayCompanionView extends BaseScriptComponent {
@@ -77,6 +80,7 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
   private lane: SceneObject | null = null
   private obstacles: SceneObject[] = []
   private treat: SceneObject | null = null
+  private pointer: SceneObject | null = null
   private spin = 0
   private shown = false
 
@@ -96,6 +100,11 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
     this.lane.enabled = false
     this.treat = this.makeObject("Treat", [{color: COLLECTIBLE_COLOR.dog, boxes: [[0, 0, 0, 8, 8, 8]]}])
     this.treat.enabled = false
+    this.pointer = this.makeObject("Pointer", [{color: CYAN, boxes: [
+      [0, POINTER_HEIGHT_CM, -POINTER_LENGTH_CM / 2, 3, 3, POINTER_LENGTH_CM],
+      [0, POINTER_HEIGHT_CM, -POINTER_LENGTH_CM, 9, 9, 9],
+    ]}])
+    this.pointer.enabled = false
     this.setModel("dog")
     this.createEvent("UpdateEvent").bind(() => this.tick())
   }
@@ -117,8 +126,18 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
   setVisible(on: boolean): void {
     this.shown = on
     if (this.model) this.model.enabled = on
-    if (!on) for (const c of this.collectibles) c.enabled = false
+    if (!on) {
+      for (const c of this.collectibles) c.enabled = false
+      this.setPointing(false)
+    }
   }
+
+  // The pointer bar: it follows the model's pose while on.
+  setPointing(on: boolean): void {
+    if (this.pointer) this.pointer.enabled = on && this.shown
+  }
+
+  isPointing(): boolean { return !!this.pointer && this.pointer.enabled }
 
   isVisible(): boolean { return this.shown && !!this.model && this.model.enabled }
 
@@ -132,6 +151,10 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
     t.setLocalPosition(pos.add(new vec3(0, liftCm, 0)).add(side))
     t.setLocalRotation(rot)
     t.setLocalScale(new vec3(1, sit ? 0.82 : 1, 1))
+    if (this.pointer && this.pointer.enabled) {
+      this.pointer.getTransform().setLocalPosition(pos)
+      this.pointer.getTransform().setLocalRotation(rot)
+    }
   }
 
   getPose(): vec3 | null { return this.model ? this.model.getTransform().getLocalPosition() : null }

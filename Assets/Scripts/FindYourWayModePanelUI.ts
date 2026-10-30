@@ -1,6 +1,7 @@
-// FindYourWayModePanelUI — the first panel: pick Walk or Step-Free once for the whole trip.
-// Owns: the panel's UIKit surface, its two big buttons and the interests row (what the companion
-// may point out: none picked by default). Emits onWalk / onStepFree.
+// FindYourWayModePanelUI — the Go to a place panel: say where to (the labelled "Say it" stand-in for
+// speech, or the "Where to?" list), then pick Walk or Step-Free once for the whole trip.
+// Owns: the panel's UIKit surface, its buttons and the interests row (what the companion may point
+// out: none picked by default). Emits onWalk / onStepFree / onSayIt / onWhereTo.
 // Must not: decide routing or remember the choice (FindYourWayMain owns the profile).
 
 import Event, {PublicApi} from "SpectaclesInteractionKit.lspkg/Utils/Event"
@@ -53,8 +54,12 @@ export class FindYourWayModePanelUI extends BaseScriptComponent {
   private interestButtons: {[interest: string]: LabeledButton} = {}
   private _onWalk = new Event<void>()
   private _onStepFree = new Event<void>()
-  private _onMapping = new Event<void>()
-  get onMapping(): PublicApi<void> { return this._onMapping.publicApi() }
+  private _onSayIt = new Event<void>()
+  private _onWhereTo = new Event<void>()
+  private destText: Text
+  private sayIt: LabeledButton
+  get onSayIt(): PublicApi<void> { return this._onSayIt.publicApi() }
+  get onWhereTo(): PublicApi<void> { return this._onWhereTo.publicApi() }
   get onWalk(): PublicApi<void> { return this._onWalk.publicApi() }
   get onStepFree(): PublicApi<void> { return this._onStepFree.publicApi() }
 
@@ -62,16 +67,20 @@ export class FindYourWayModePanelUI extends BaseScriptComponent {
     const width = this.buttonWidthCm + 4
     const panel = makePanel(this.sceneObject, width, 2.2, 1.4)
     addText(panel.content, "Title", this.title, "Title2", width - 3, 4, this.textColor, 100)
-    addText(panel.content, "Subtitle", this.subtitle, "Headline2", width - 3, 2.8,
+    this.destText = addText(panel.content, "Subtitle", this.subtitle, "Headline2", width - 3, 2.8,
       new vec4(this.textColor.x, this.textColor.y, this.textColor.z, 0.85), 100)
-    addButton(panel.content, "WalkButton", this.walkLabel, this.buttonWidthCm, this.buttonHeightCm,
+    this.sayIt = addButton(panel.content, "SayItButton", "Say it", this.buttonWidthCm, 4.2, null,
+      () => this._onSayIt.invoke(), this.textColor, 100, "Button")
+    addText(panel.content, "SayItHint", "stand-in: on real Specs you say it", "Caption", width - 3, 1.8,
+      new vec4(this.textColor.x, this.textColor.y, this.textColor.z, 0.85), 100)
+    addButton(panel.content, "WhereToButton", "Where to?", this.buttonWidthCm, 4.2, icon("location_on"),
+      () => this._onWhereTo.invoke(), this.textColor, 100, "Button")
+    addButton(panel.content, "WalkButton", this.walkLabel, this.buttonWidthCm, this.buttonHeightCm - 1.5,
       icon("directions_walk"), () => this._onWalk.invoke(), this.textColor, 100, "HeadlineXL", "Primary")
     addButton(panel.content, "StepFreeButton", this.stepFreeLabel, this.buttonWidthCm,
-      this.buttonHeightCm, icon("accessible"), () => this._onStepFree.invoke(), this.textColor, 100,
+      this.buttonHeightCm - 1.5, icon("accessible"), () => this._onStepFree.invoke(), this.textColor, 100,
       "Headline1", "Primary")
-    addButton(panel.content, "MapThisPlaceButton", "Learn this place (map it by walking)", this.buttonWidthCm, 4.2,
-      icon("map"), () => this._onMapping.invoke(), this.textColor, 100, "Caption")
-    addText(panel.content, "InterestsTitle", "Point out (optional):", "Headline2", width - 3, 2.6,
+    addText(panel.content, "InterestsTitle", "Point out (optional):", "Caption", width - 3, 2,
       new vec4(this.textColor.x, this.textColor.y, this.textColor.z, 0.85), 100)
     const rows = [["coffee", "food", "shopping"], ["toilet", "pharmacy", "accessibleToilet"]]
     const w = (this.buttonWidthCm - 1) / 3
@@ -83,6 +92,11 @@ export class FindYourWayModePanelUI extends BaseScriptComponent {
       }
     }
   }
+
+  // The destination line ("To: Bolt Hardware") and the phrase on the "Say it" button.
+  setDestination(label: string): void { this.destText.text = "To: " + label }
+  getDestinationText(): string { return this.destText.text }
+  setSayItPhrase(phrase: string): void { this.sayIt.label.text = phrase ? 'Say it: "' + phrase + '"' : "Say it" }
 
   private toggleInterest(id: string): void {
     this.picked[id] = !this.picked[id]

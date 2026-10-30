@@ -44,8 +44,19 @@ export async function waitFor(cond: () => boolean, ms: number, what: string): Pr
   }
 }
 
-// Restart on the airport map, choose a mode, stand 1.5 m in front of the sign, pinch it.
-// beforeMode runs once the world anchor has settled, just before the mode button.
+// From the Restart: pinch the scan sign at the start pose, then Go to a place and the given mode
+// button. Stops at the "error" phase when the scan fails.
+export async function afterRestartGo(interactor: DefaultLeafInteractor, main: FindYourWayMain, button: string): Promise<void> {
+  await tap(interactor, "ScanSignButton")
+  await waitFor(() => main.getPhase() === "choose" || main.getPhase() === "error", 8000, "the three modes after the scan (map load ≤ 5 s)")
+  if (main.getPhase() === "error") return
+  await tap(interactor, "GoToPlaceButton")
+  await waitFor(() => main.getPhase() === "mode", 3000, "Go to a place panel")
+  await tap(interactor, button)
+}
+
+// Restart on the airport map, stand 1.5 m in front of the sign, pinch it, Go to a place, a mode.
+// beforeMode runs once the world anchor has settled, just before the scan.
 export async function startTrip(interactor: DefaultLeafInteractor, profile: Profile,
     footY: number = 0, beforeScan?: (m: FindYourWayMain) => void,
     until: string[] = ["nav"], mapKey: string = "airport",
@@ -56,16 +67,14 @@ export async function startTrip(interactor: DefaultLeafInteractor, profile: Prof
     await sleep(800)
   }
   await tap(interactor, "RestartButton")
-  await waitFor(() => main.getPhase() === "mode" && main.isModePanelShown(), 3000, "mode panel")
+  await waitFor(() => main.getPhase() === "scan" && main.isScanSignVisible(), 3000, "scan sign")
   await sleep(800) // world anchor settles
   await waitFor(() => !main.isAnchorSettling(), 3000, "world anchor settled")
   if (beforeMode) beforeMode(main)
-  await tap(interactor, profile === "walk" ? "WalkButton" : "StepFreeButton")
-  await waitFor(() => main.getPhase() === "scan" && main.isScanSignVisible(), 3000, "scan sign")
   const sign = findNode(main.getMapData(), main.getStartId())!
   main.debugSetPose(sign.x, footY, sign.z - 1.5, 0)
   if (beforeScan) beforeScan(main)
-  await tap(interactor, "ScanSignButton")
+  await afterRestartGo(interactor, main, profile === "walk" ? "WalkButton" : "StepFreeButton")
   await waitFor(() => until.indexOf(main.getPhase()) >= 0, 8000, "phase " + until.join("/") + " after scan (map load ≤ 5 s)")
   await sleep(300)
   return main

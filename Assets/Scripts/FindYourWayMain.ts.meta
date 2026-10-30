@@ -34,20 +34,31 @@
     buildingUI: false
     camera: false
     chime: false
+    companionAheadM: false
     companionModel: false
     companionOnAtStart: false
     demoControls: false
     demoOffset: false
+    dotCm: false
+    dotOffset: false
+    dotPinchCm: false
     eyeHeightCm: false
     halfViewDeg: false
     hud: false
     internetModule: false
     lineAheadM: false
+    lookRangeM: false
     mapBaseUrl: false
     mapKey: false
+    maxStopsPerWalk: false
     modePanel: false
     modePanelOffset: false
     multiStops: false
+    offerOffset: false
+    playPanelOffset: false
+    pointRadiusM: false
+    pointSeconds: false
+    presetPreferences: false
     routeLine: false
     showDemoControls: false
     signOffset: false
@@ -90,8 +101,19 @@
       modePanelOffset: !<Vec3> {x: 0.000000, y: -20.000000, z: -100.000000}
       companionModel: dog
       companionOnAtStart: false
+      presetPreferences: "coffee,clothes,hardware"
+      companionAheadM: 2.500000
+      pointSeconds: !<float> 3.000000
+      pointRadiusM: !<float> 8.000000
+      maxStopsPerWalk: !<float> 0.000000
+      lookRangeM: !<float> 12.000000
+      dotOffset: !<Vec3> {x: 28.000000, y: 18.000000, z: -100.000000}
+      offerOffset: !<Vec3> {x: 24.000000, y: 0.000000, z: -100.000000}
+      dotCm: !<float> 2.000000
+      dotPinchCm: !<float> 8.000000
       multiStops: "pharmacy,iceCream,sushi"
       appPanelOffset: !<Vec3> {x: -30.000000, y: -38.000000, z: -55.000000}
+      playPanelOffset: !<Vec3> {x: -34.000000, y: -14.000000, z: -55.000000}
       demoOffset: !<Vec3> {x: -38.000000, y: -60.000000, z: -42.000000}
   ScriptTypes:
     -
@@ -128,7 +150,18 @@
     - '// @input vec3 modePanelOffset = "{8,-4,-100}" {"hint":"Mode panel offset from the head at start (right, up, forward), cm"}'
     - "// @input string companionModel = \"dog\" {\"hint\":\"The companion's model: same logic, only the look and the collectible change\", \"widget\":\"combobox\", \"values\":[{\"label\":\"Dog (treats)\", \"value\":\"dog\"}, {\"label\":\"Robot (bolts)\", \"value\":\"robot\"}, {\"label\":\"Rover (stars)\", \"value\":\"rover\"}]}"
     - '// @input bool companionOnAtStart {"hint":"Companion on when a trip starts (it can always be turned on or off on the app panel)"}'
+    - '// @input string presetPreferences = "coffee,clothes,hardware" {"hint":"The saved preferences of the demo (category ids, comma separated)"}'
+    - '// @input float companionAheadM = 2.5 {"hint":"Free walk: how far ahead the companion walks, m", "widget":"slider", "min":1.5, "max":5, "step":0.1}'
+    - '// @input float pointSeconds = 3 {"hint":"Free walk: seconds the companion points at a matching shop", "widget":"slider", "min":1, "max":8, "step":0.5}'
+    - '// @input float pointRadiusM = 8 {"hint":"Free walk: how near a matching shop must be for the companion to stop, m", "widget":"slider", "min":2, "max":15, "step":0.5}'
+    - '// @input float maxStopsPerWalk {"hint":"Free walk: most stops per walk (0 = every match); stopping everywhere may get annoying", "widget":"slider", "min":0, "max":30, "step":1}'
+    - '// @input float lookRangeM = 12 {"hint":"Free walk: how far a shop front can be looked at from, m", "widget":"slider", "min":3, "max":25, "step":0.5}'
+    - '// @input vec3 dotOffset = "{28,18,-100}" {"hint":"The dot, from the head (right, up, forward), cm"}'
+    - '// @input vec3 offerOffset = "{24,0,-100}" {"hint":"The offer list, from the head (right, up, forward), cm"}'
+    - "// @input float dotCm = 2 {\"hint\":\"The dot's size, cm\", \"widget\":\"slider\", \"min\":1, \"max\":5, \"step\":0.5}"
+    - "// @input float dotPinchCm = 8 {\"hint\":\"The dot's invisible pinch area, cm: a small target at the edge of view is hard to aim at\", \"widget\":\"slider\", \"min\":2, \"max\":14, \"step\":0.5}"
     - '// @input string multiStops = "pharmacy,iceCream,sushi" {"hint":"Multi-stop trip on maps that have these place ids (comma separated, ordered for the shortest walk); empty = off"}'
     - '// @input vec3 appPanelOffset = "{-30,-38,-55}" {"hint":"App panel offset from the head (right, up, forward), cm — waist height, to the left"}'
+    - '// @input vec3 playPanelOffset = "{-34,-14,-55}" {"hint":"Where the app panel sits while playing Hop (cm from the head): to the side, clear of the lane"}'
     - '// @input vec3 demoOffset = "{-15,-14,-80}" {"hint":"Demo controls offset from the head (right, up, forward), cm — low-left, inside the ~32° view"}'
     - '// @ui {"widget":"group_end"}'

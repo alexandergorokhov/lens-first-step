@@ -112,16 +112,12 @@ export class FindYourWayDemoRunner extends BaseScriptComponent {
     await this.beat(id, "intro")
     await this.toMap(id, "airport")
     this.press("RestartButton")
-    await this.until(id, () => m.getPhase() === "mode", 3000)
+    await this.until(id, () => m.getPhase() === "scan", 3000)
 
     // Walk run
     await this.beat(id, "walk-choose")
-    this.press("WalkButton")
-    await this.until(id, () => m.getPhase() === "scan", 3000)
     await this.beat(id, "walk-scan")
-    this.standAtSign(0)
-    this.press("ScanSignButton")
-    await this.until(id, () => m.getPhase() === "nav", 8000)
+    await this.scanAndGo(id, 0, "WalkButton")
     await this.beat(id, "walk-follow")
     await this.walkTo(id, "escFoot")
     await this.beat(id, "walk-escalator")
@@ -142,14 +138,10 @@ export class FindYourWayDemoRunner extends BaseScriptComponent {
     // Step-Free run, seated
     await this.beat(id, "restart")
     this.press("RestartButton")
-    await this.until(id, () => m.getPhase() === "mode", 3000)
-    await this.beat(id, "stepfree-choose")
-    this.press("StepFreeButton")
     await this.until(id, () => m.getPhase() === "scan", 3000)
+    await this.beat(id, "stepfree-choose")
     await this.beat(id, "stepfree-scan")
-    this.standAtSign(SEATED_FEET_M)
-    this.press("ScanSignButton")
-    await this.until(id, () => m.getPhase() === "nav", 8000)
+    await this.scanAndGo(id, SEATED_FEET_M, "StepFreeButton")
     await this.beat(id, "to-lift1")
     await this.walkTo(id, "lift1G")
     await this.beat(id, "lift1-out")
@@ -166,13 +158,9 @@ export class FindYourWayDemoRunner extends BaseScriptComponent {
     // Campus, Step-Free: the Science lift is out, so the ramp
     await this.beat(id, "campus")
     await this.toMap(id, "campus")
-    await this.until(id, () => m.getPhase() === "mode", 3000)
-    this.press("StepFreeButton")
     await this.until(id, () => m.getPhase() === "scan", 3000)
     await this.beat(id, "campus-scan")
-    this.standAtSign(SEATED_FEET_M)
-    this.press("ScanSignButton")
-    await this.until(id, () => m.getPhase() === "nav", 8000)
+    await this.scanAndGo(id, SEATED_FEET_M, "StepFreeButton")
     await this.walkTo(id, "sciDoor")
     await this.beat(id, "campus-lift-out")
     this.press("ClosureButton_sciLift")
@@ -190,6 +178,18 @@ export class FindYourWayDemoRunner extends BaseScriptComponent {
   }
 
   // ── Steps ──────────────────────────────────────────────────────────────────
+  // The scan comes first, then Go to a place, then Walk or Step-Free.
+  private async scanAndGo(id: number, feet: number, button: string): Promise<void> {
+    const m = this.main
+    this.standAtSign(feet)
+    this.press("ScanSignButton")
+    await this.until(id, () => m.getPhase() === "choose", 8000)
+    this.press("GoToPlaceButton")
+    await this.until(id, () => m.getPhase() === "mode", 3000)
+    this.press(button)
+    await this.until(id, () => m.getPhase() === "nav", 3000)
+  }
+
   private async beat(id: number, beatId: string): Promise<void> {
     this.check(id)
     const b = DEMO_BEATS[beatIndex(beatId)]
