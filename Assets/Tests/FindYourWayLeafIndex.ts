@@ -32,6 +32,7 @@ import {FywT1MallStopsScenario} from "./FywTripsScenario"
 import {FywM5LearnThisPlaceScenario} from "./FywM5LearnThisPlaceScenario"
 import {FywPk1PeekScenario} from "./FywPk1PeekScenario"
 import {FywS1StartAtSignScenario} from "./FywS1StartAtSignScenario"
+import {FywBg1BackdropScenario} from "./FywBg1BackdropScenario"
 
 @component
 export class FindYourWayLeafIndex extends BaseScriptComponent {
@@ -68,6 +69,7 @@ export class FindYourWayLeafIndex extends BaseScriptComponent {
     {id: "t1-mall-multi-stop", typename: FywT1MallStopsScenario.getTypeName()},
     {id: "m5-learn-this-place-save-route", typename: FywM5LearnThisPlaceScenario.getTypeName()},
     {id: "pk1-peek-ahead-shows-and-hides", typename: FywPk1PeekScenario.getTypeName()},
+    {id: "bg1-backdrop-solid-in-preview", typename: FywBg1BackdropScenario.getTypeName()},
     // Screenshot set-ups — skipped by the runner unless named in `only`.
     {id: "visual-start", typename: FywVisualScenario.getTypeName(), parameters: {shot: "start"}},
     {id: "visual-card", typename: FywVisualScenario.getTypeName(), parameters: {shot: "card"}},

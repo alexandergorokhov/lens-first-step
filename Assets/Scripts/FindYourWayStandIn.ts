@@ -1,13 +1,22 @@
 // FindYourWayStandIn — builds the stand-in building from the map at load: light translucent
 // floor slabs per level, low perimeter walls, inclined escalator / stairs / ramp slabs, lift
 // shafts with doors, and a red plate where a "connection closed" sign hangs. A new map gives
-// a new building with no code change. Must not: route or draw the line.
+// a new building with no code change. In Lens Studio only, the same parts turn solid and a backdrop
+// (shell, tiles, lights, shop fronts) hides the preview room, so the place can be walked through;
+// on Specs the display only adds light, so it stays see-through. Must not: route or draw the line.
 // Positions arrive as building-local cm through the `toLocal` callback.
 
 import {MapData, MapNode, findNode} from "./FindYourWayRouter"
 import {approachDir, PlaceInfo} from "./FindYourWayMapLibrary"
 
 type ToLocal = (x: number, y: number, z: number) => vec3
+
+const BACKDROP_MARGIN_M = 4
+const TILE_M = 2
+const LIGHT_GAP_M = 8
+const TILE_LIFT = new vec3(0, -0.8, 0) // just under the line, on the floor slab
+const SHOP_COLORS = [new vec4(0.2, 0.42, 0.62, 1), new vec4(0.72, 0.42, 0.22, 1), new vec4(0.24, 0.52, 0.42, 1),
+  new vec4(0.56, 0.3, 0.46, 1), new vec4(0.76, 0.62, 0.28, 1)]
 
 @component
 export class FindYourWayStandIn extends BaseScriptComponent {
@@ -54,9 +63,14 @@ export class FindYourWayStandIn extends BaseScriptComponent {
   @hint("Wall height, m")
   @widget(new SliderWidget(1, 6, 0.5))
   wallHeightM: number = 3
+
+  @input
+  @hint("In Lens Studio only: solid building you can walk through, hiding the preview room. Never on Specs.")
+  previewBackdrop: boolean = true
   @ui.group_end
 
   private model: SceneObject | null = null
+  private solid = false
   private closedPlates: {[edgeId: string]: RenderMeshVisual} = {}
 
   clear(): void {
@@ -69,7 +83,9 @@ export class FindYourWayStandIn extends BaseScriptComponent {
     this.clear()
     this.model = global.scene.createSceneObject("Model")
     this.model.setParent(this.sceneObject)
+    this.solid = false
     if (!place.standInModel) return
+    this.solid = this.previewBackdrop && global.deviceInfoSystem.isEditor()
 
     const floors = new Boxes()
     const walls = new Boxes()
@@ -166,12 +182,13 @@ export class FindYourWayStandIn extends BaseScriptComponent {
       }
     }
 
-    this.addMesh("Ground", ground, this.groundColor)
-    this.addMesh("Paths", paths, this.pathColor)
-    this.addMesh("Floors", floors, this.floorColor)
-    this.addMesh("Walls", walls, this.wallColor)
-    this.addMesh("Connectors", connectors, this.connectorColor)
-    this.addMesh("Lifts", lifts, this.liftColor)
+    this.addMesh("Ground", ground, this.groundColor, new vec4(0.55, 0.68, 0.5, 1))
+    this.addMesh("Paths", paths, this.pathColor, new vec4(0.8, 0.77, 0.7, 1))
+    this.addMesh("Floors", floors, this.floorColor, new vec4(0.5, 0.53, 0.56, 1))
+    this.addMesh("Walls", walls, this.wallColor, new vec4(0.44, 0.47, 0.5, 1))
+    this.addMesh("Connectors", connectors, this.connectorColor, new vec4(0.5, 0.55, 0.62, 1))
+    this.addMesh("Lifts", lifts, this.liftColor, new vec4(0.58, 0.68, 0.76, 1))
+    if (this.solid) this.addBackdrop(map, place, toLocal, lowest)
 
     // Red plate behind each "connection closed" sign (the sign itself is a UIKit button).
     for (const ev of place.events) {
@@ -202,17 +219,105 @@ export class FindYourWayStandIn extends BaseScriptComponent {
     return !!r && r.mainMaterial.mainPass.baseColor.w > 0.99
   }
 
-  private addMesh(name: string, boxes: Boxes, color: vec4): RenderMeshVisual {
+  isSolid(): boolean { return this.solid }
+
+  // Lens Studio only: a shell around the whole map (hides the preview room), floor tiles and wall
+  // bands (they make walking visible on unlit surfaces), ceiling lights, and a shop front behind
+  // every named place.
+  private addBackdrop(map: MapData, place: PlaceInfo, toLocal: ToLocal, lowest: number): void {
+    const outdoor = place.buildings.length > 0
+    let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity
+    for (const n of map.nodes) {
+      minX = Math.min(minX, n.x); maxX = Math.max(maxX, n.x)
+      minZ = Math.min(minZ, n.z); maxZ = Math.max(maxZ, n.z)
+    }
+    if (place.footprint) {
+      minX = Math.min(minX, place.footprint.minX); maxX = Math.max(maxX, place.footprint.maxX)
+      minZ = Math.min(minZ, place.footprint.minZ); maxZ = Math.max(maxZ, place.footprint.maxZ)
+    }
+    minX -= BACKDROP_MARGIN_M; maxX += BACKDROP_MARGIN_M; minZ -= BACKDROP_MARGIN_M; maxZ += BACKDROP_MARGIN_M
+    const highest = Math.max.apply(null, place.levels.map((l) => l.y))
+    const top = highest + this.wallHeightM + 1.5
+    const a = toLocal(minX, lowest, minZ), b = toLocal(maxX, top, maxZ)
+    const c = a.add(b).uniformScale(0.5)
+    const w = Math.abs(b.x - a.x), d = Math.abs(b.z - a.z), h = b.y - a.y
+
+    const shell = new Boxes()
+    shell.box(new vec3(c.x, c.y, a.z), new vec3(w, h, 20))
+    shell.box(new vec3(c.x, c.y, b.z), new vec3(w, h, 20))
+    shell.box(new vec3(a.x, c.y, c.z), new vec3(20, h, d))
+    shell.box(new vec3(b.x, c.y, c.z), new vec3(20, h, d))
+    shell.box(new vec3(c.x, b.y + 10, c.z), new vec3(w, 20, d))
+    this.addMesh("Shell", shell, this.wallColor, outdoor ? new vec4(0.62, 0.78, 0.93, 1) : new vec4(0.38, 0.4, 0.43, 1))
+    const under = new Boxes()
+    under.box(new vec3(c.x, a.y - 30, c.z), new vec3(w, 20, d))
+    this.addMesh("Under", under, this.floorColor, outdoor ? new vec4(0.35, 0.48, 0.32, 1) : new vec4(0.5, 0.53, 0.56, 1))
+
+    const tiles = new Boxes(), bands = new Boxes(), lights = new Boxes()
+    if (!outdoor) {
+      for (const level of place.levels) {
+        const ns = map.nodes.filter((n) => Math.abs(n.y - level.y) < 0.01)
+        if (ns.length === 0) continue
+        const onFoot = level.y === lowest
+        const x0 = onFoot ? minX : Math.min.apply(null, ns.map((n) => n.x)) - 3
+        const x1 = onFoot ? maxX : Math.max.apply(null, ns.map((n) => n.x)) + 3
+        const z0 = onFoot ? minZ : Math.min.apply(null, ns.map((n) => n.z)) - 3
+        const z1 = onFoot ? maxZ : Math.max.apply(null, ns.map((n) => n.z)) + 3
+        for (let x = x0; x <= x1; x += TILE_M) {
+          tiles.slab(toLocal(x, level.y, z0).add(TILE_LIFT), toLocal(x, level.y, z1).add(TILE_LIFT), 3, 0.4)
+        }
+        for (let z = z0; z <= z1; z += TILE_M) {
+          tiles.slab(toLocal(x0, level.y, z).add(TILE_LIFT), toLocal(x1, level.y, z).add(TILE_LIFT), 3, 0.4)
+        }
+        // Lights: on the top ceiling, and under each upper floor for the level below.
+        const lightY = level.y === lowest ? top : level.y
+        for (let x = x0 + LIGHT_GAP_M / 2; x < x1; x += LIGHT_GAP_M) {
+          const q = toLocal(x, lightY, (z0 + z1) / 2)
+          lights.box(new vec3(q.x, q.y - 16, q.z), new vec3(45, 4, (z1 - z0) * 80))
+        }
+      }
+      for (const level of place.levels) {
+        const y = toLocal(minX, level.y, minZ).y + 120
+        bands.box(new vec3(c.x, y, a.z + (b.z > a.z ? 14 : -14)), new vec3(w - 30, 70, 4))
+        bands.box(new vec3(c.x, y, b.z + (b.z > a.z ? -14 : 14)), new vec3(w - 30, 70, 4))
+        bands.box(new vec3(a.x + (b.x > a.x ? 14 : -14), y, c.z), new vec3(4, 70, d - 30))
+        bands.box(new vec3(b.x + (b.x > a.x ? -14 : 14), y, c.z), new vec3(4, 70, d - 30))
+      }
+    }
+    this.addMesh("Tiles", tiles, this.floorColor, new vec4(0.36, 0.39, 0.42, 1))
+    this.addMesh("Bands", bands, this.wallColor, new vec4(0.47, 0.58, 0.68, 1))
+    this.addMesh("Lights", lights, this.floorColor, new vec4(0.85, 0.85, 0.8, 1))
+
+    // A shop front behind each named place, seen as you arrive; the sign is the place's own.
+    const fronts = SHOP_COLORS.map(() => new Boxes())
+    const awnings = new Boxes()
+    map.nodes.forEach((n, i) => {
+      if (n.kind !== "place" && n.kind !== "destination") return
+      const ad = approachDir(map, n.id)
+      const fwd = new vec3(ad.x, 0, -ad.z)
+      const side = new vec3(-fwd.z, 0, fwd.x)
+      const back = toLocal(n.x, n.y, n.z).sub(fwd.uniformScale(170))
+      fronts[i % fronts.length].boxAxes(back.add(new vec3(0, 140, 0)), side.uniformScale(170), new vec3(0, 140, 0), fwd.uniformScale(10))
+      awnings.boxAxes(back.add(fwd.uniformScale(30)).add(new vec3(0, 285, 0)), side.uniformScale(180), new vec3(0, 12, 0), fwd.uniformScale(40))
+    })
+    fronts.forEach((f, i) => this.addMesh("Shops" + i, f, this.wallColor, SHOP_COLORS[i]))
+    this.addMesh("Awnings", awnings, this.wallColor, new vec4(0.2, 0.28, 0.38, 1))
+  }
+
+  private addMesh(name: string, boxes: Boxes, color: vec4, solidColor?: vec4): RenderMeshVisual {
     const so = global.scene.createSceneObject(name)
     so.setParent(this.model)
     const rmv = so.createComponent("Component.RenderMeshVisual") as RenderMeshVisual
     const m = this.material.clone()
     m.mainPass.baseTex = whiteTexture()
-    m.mainPass.baseColor = color
-    m.mainPass.blendMode = BlendMode.Normal
-    m.mainPass.depthWrite = false
+    const solid = this.solid && !!solidColor
+    m.mainPass.baseColor = solid ? solidColor : color
+    m.mainPass.blendMode = solid ? BlendMode.Disabled : BlendMode.Normal
+    m.mainPass.depthWrite = solid
     m.mainPass.twoSided = true
     rmv.mainMaterial = m
+    // Solid parts draw first, so the line and the signs always land on top of them.
+    if (solid) rmv.setRenderOrder(-20)
     if (boxes.count() > 0) rmv.mesh = boxes.mesh()
     return rmv
   }

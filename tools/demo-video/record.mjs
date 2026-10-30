@@ -11,6 +11,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildPetTimeline, buildTimeline } from "./timeline.mjs";
 import { buildAirportTripTimeline, buildCampusTimeline, buildHospitalTimeline } from "./scenarios.mjs";
+import { buildAllFeaturesTimeline } from "./all-features.mjs";
 
 const args = process.argv.slice(2);
 const ROOT = fileURLToPath(new URL("../../", import.meta.url));
@@ -36,7 +37,7 @@ const PET = args.includes("--pet") || ci >= 0;
 // --map hospital|campus renders that place's scenarios (find-your-way-hospital.mp4, ...).
 const mi = args.indexOf("--map");
 const MAP = mi >= 0 ? args[mi + 1] : null;
-const SCENES = { hospital: buildHospitalTimeline, campus: buildCampusTimeline, "airport-trip": buildAirportTripTimeline };
+const SCENES = { hospital: buildHospitalTimeline, campus: buildCampusTimeline, "airport-trip": buildAirportTripTimeline, all: buildAllFeaturesTimeline };
 if (MAP && !SCENES[MAP]) throw new Error("--map must be one of " + Object.keys(SCENES).join(", "));
 const NAME = MAP || (PET ? (COMPANION === "dog" ? "pet" : COMPANION) : "demo");
 const timeline = MAP ? SCENES[MAP]() : PET ? buildPetTimeline(undefined, COMPANION) : buildTimeline();

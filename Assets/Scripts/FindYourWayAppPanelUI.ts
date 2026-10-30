@@ -22,6 +22,7 @@ export interface AppPanelHandlers {
 const WIDTH = 22
 const BUTTON_H = 4.2
 const TEXT = new vec4(1, 1, 1, 1)
+const PLAY_SCALE = 0.7
 
 @component
 export class FindYourWayAppPanelUI extends BaseScriptComponent {
@@ -35,6 +36,9 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
   // Every row in order; hidden rows are taken out of the layout so they leave no gap.
   private rows: SceneObject[] = []
   private layoutKey = ""
+  // The rows hidden while playing, and the scale that keeps the rest small at the side of the view.
+  private optionRows: SceneObject[] = []
+  private playing = false
 
   setup(h: AppPanelHandlers): void {
     const panel = makePanel(this.sceneObject, WIDTH + 2, 1.2, 0.8)
@@ -53,6 +57,7 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
       h.onNextStop, TEXT, 70)
     this.rows = [title.getSceneObject(), this.companion.so, model.so, this.places.so, this.play.so, this.jump.so,
       this.throwBtn.so, this.nextStop.so]
+    this.optionRows = [title.getSceneObject(), this.companion.so, model.so, this.places.so]
     this.setPlay(false, false, false)
     this.setNextStop(null)
   }
@@ -90,8 +95,16 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
     this.play.label.text = playing ? "Stop playing" : "Play while you wait"
     this.jump.so.enabled = playing
     this.throwBtn.so.enabled = canThrow && !playing
+    // While playing only Stop and Jump stay, small, so nothing covers the game.
+    if (playing !== this.playing) {
+      this.playing = playing
+      for (const r of this.optionRows) r.enabled = !playing
+      this.getTransform().setLocalScale(vec3.one().uniformScale(playing ? PLAY_SCALE : 1))
+    }
     this.relayout()
   }
+
+  isPlaying(): boolean { return this.playing }
 
   isPlayOffered(): boolean { return this.play.so.isEnabledInHierarchy }
 

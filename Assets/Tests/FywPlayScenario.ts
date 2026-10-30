@@ -4,6 +4,7 @@ import {Scenario} from "Leaf.lspkg/Scenarios/scenario/Scenario"
 import {DefaultLeafInteractor} from "Leaf.lspkg/Interactors/interactor/DefaultLeafInteractor"
 import {expect} from "Leaf.lspkg/Utils/common/Expect"
 import {sleep} from "Leaf.lspkg/Utils/common/Utils"
+import {findInteractableByName} from "Leaf.lspkg/Interactors/InteractableUtils"
 import {log, startTrip, tap, waitFor} from "./FindYourWayLeafSupport"
 import {nodePos, standStill} from "./FywBrief2Support"
 
@@ -26,6 +27,9 @@ export class FywG1HopScenario extends Scenario {
     await tap(it, "PlayButton")
     expect(main.getHopPhase(), "running").toBe("running")
     expect(main.isHopLaneShown(), "lane shown").toBe(true)
+    await sleep(200)
+    expect(main.isAppPanelPlaying(), "the panel moves to the side while playing").toBe(true)
+    expect(findInteractableByName("CompanionButton", undefined, true) === undefined, "only Stop and Jump stay").toBe(true)
     await waitFor(() => main.getHopObstacles() > 0, 4000, "an obstacle comes")
     await waitFor(() => main.getHopPhase() === "crashed", 8000, "bump without a jump")
     expect((main.getPlayLine() || "").indexOf("Bump!") === 0, "bump text").toBe(true)
@@ -41,6 +45,7 @@ export class FywG1HopScenario extends Scenario {
     await sleep(400)
     expect(main.getHopPhase(), "walking ends play").toBe("idle")
     expect(main.isHopLaneShown(), "lane hidden").toBe(false)
+    expect(main.isAppPanelPlaying(), "the panel comes back").toBe(false)
     await tap(it, "CompanionButton")
     log("g1 pass")
   }

@@ -35,6 +35,17 @@
   #app .sw.on::after { left: 23px; }
   #app .t.press { outline: 3px solid rgba(255,255,255,.8); outline-offset: 4px; border-radius: 10px; }
   #app small { opacity: .7; font-size: 12px; }
+  #app .b { padding: 8px 14px; border-radius: 12px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.25); text-align: center; }
+  #app .b.on { background: var(--blue); border-color: #9cc4ff; box-shadow: 0 0 0 3px rgba(59,140,255,.35); }
+  #stopChip { top: 124px; left: 50%; transform: translateX(-50%); padding: 7px 18px; font-size: 18px; font-weight: 600; border-color: rgba(140,190,255,.6); white-space: nowrap; }
+  #hopLine { top: 78px; left: 50%; transform: translateX(-50%); padding: 7px 18px; font-size: 19px; font-weight: 600; border-color: rgba(255,211,77,.6); white-space: nowrap; }
+  #hand { left: 50%; bottom: 150px; transform: translateX(-50%); padding: 8px 18px; font-size: 18px; font-weight: 600; }
+  #mapPanel { position: absolute; left: 28px; bottom: 76px; width: 250px; padding: 14px; border-radius: 18px; background: var(--glass); border: 1px solid var(--glass-line);
+              backdrop-filter: blur(8px); display: flex; flex-direction: column; gap: 7px; font-size: 15px; }
+  #mapPanel h4 { margin: 0; font-size: 17px; }
+  #mapPanel small { opacity: .8; min-height: 18px; }
+  #mapPanel .b { padding: 7px 12px; border-radius: 11px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.25); text-align: center; }
+  #mapPanel .b.on { background: var(--blue); border-color: #9cc4ff; box-shadow: 0 0 0 3px rgba(59,140,255,.35); }
   #tag { position: absolute; bottom: 254px; right: 26px; width: 336px; text-align: right; font-size: 12px; opacity: .75; text-shadow: 0 1px 3px #000; }
   .panel { position: absolute; left: 50%; top: 56%; transform: translate(-50%, -50%); background: var(--glass);
            border: 1px solid var(--glass-line); border-radius: 26px; padding: 22px 26px; backdrop-filter: blur(8px);
@@ -88,6 +99,10 @@
     <div id="score" class="pill" hidden></div>
     <div id="app" class="pill" hidden></div>
     <div id="cue" class="pill" hidden></div>
+    <div id="stopChip" class="pill" hidden></div>
+    <div id="hopLine" class="pill" hidden></div>
+    <div id="hand" class="pill" hidden>&#9995; raised hand</div>
+    <div id="mapPanel" hidden></div>
     <div id="trip" class="pill" hidden><b></b><span></span></div>
     <div id="tag">Concept render (three.js), not the Lens · route, re-routes and arrival from the Lens's own route engine</div>
     <div id="panel" class="panel" hidden></div>
@@ -241,6 +256,72 @@ function placeIcons(list) {
   for (const [id, s] of iconSprites) if (!seen.has(id)) s.visible = false;
 }
 
+// Shop signs on the mall: its stand-in is a plain hall, so each place carries its name.
+if (timeline.shopSigns) for (const n of map.nodes) {
+  if (n.kind !== "place" && n.kind !== "destination") continue;
+  const c = document.createElement("canvas");
+  c.width = 512; c.height = 128;
+  const g = c.getContext("2d");
+  g.fillStyle = "#17324f"; g.beginPath(); g.roundRect(4, 4, 504, 120, 22); g.fill();
+  g.strokeStyle = "#7fb3ff"; g.lineWidth = 6; g.stroke();
+  g.fillStyle = "#fff"; g.font = "600 56px 'Segoe UI', sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
+  g.fillText(n.label, 256, 68, 470);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, transparent: true, depthWrite: false }));
+  s.scale.set(3.6, 0.9, 1);
+  s.position.copy(V(n.x, n.y + 2.9, n.z));
+  s.layers.set(1); // not in the inset: its camera sits at sign height
+  scene.add(s);
+}
+camera.layers.enable(1);
+
+// Round bars between points, for the mapped walk and the peek model.
+function bar(a, b, r, mat) {
+  const len = a.distanceTo(b);
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 10), mat);
+  m.position.copy(a).add(b).multiplyScalar(0.5);
+  m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize());
+  m.renderOrder = 13;
+  return m;
+}
+const clearGroup = (g) => { while (g.children.length) { const c = g.children.pop(); c.geometry && c.geometry.dispose(); } };
+const overlay = (color, opacity = 1) => new THREE.MeshBasicMaterial({ color, transparent: true, opacity, depthTest: false, depthWrite: false });
+
+// Hop: the lane on the floor ahead, obstacles coming from the far end.
+const lane = new THREE.Group();
+const laneFloor = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 7), new THREE.MeshBasicMaterial({ color: 0x3b8cff, transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide }));
+laneFloor.rotation.x = -Math.PI / 2; laneFloor.position.set(0, 0.02, 3);
+lane.add(laneFloor);
+const blocks = [];
+for (let i = 0; i < 6; i++) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1, 1), new THREE.MeshStandardMaterial({ color: 0xff8a4d, emissive: 0xff6a20, emissiveIntensity: 0.6, transparent: true, opacity: 0.85 }));
+  blocks.push(m); lane.add(m);
+}
+scene.add(lane);
+
+// Catch: the thrown treat.
+const thrown = new THREE.Mesh(new THREE.IcosahedronGeometry(0.11, 1), new THREE.MeshStandardMaterial({ color: 0xffd34d, emissive: 0xffa800, emissiveIntensity: 0.9 }));
+scene.add(thrown);
+
+// Peek ahead: a small model of the route in front of you; the walked part dim, the rest glowing.
+const peekGroup = new THREE.Group();
+peekGroup.position.set(0, -0.08, -0.72);
+camera.add(peekGroup);
+const peekBase = new THREE.Mesh(new THREE.CircleGeometry(0.27, 48), overlay(0x16263f, 0.72));
+peekBase.rotation.x = -Math.PI / 2; peekBase.position.y = -0.14; peekBase.renderOrder = 12;
+peekGroup.add(peekBase);
+const peekLines = new THREE.Group();
+peekGroup.add(peekLines);
+const peekDim = overlay(0x7c8aa0, 0.8), peekGlow = overlay(0x4d97ff), peekDot = overlay(0xffffff);
+let peekKey = "";
+
+// Learn this place: the pinched points and the stretches between them.
+const walked = new THREE.Group();
+scene.add(walked);
+const walkMat = overlay(0x4ade80, 0.85), walkDot = overlay(0xffffff);
+let walkedKey = "";
+
 function ribbon(geo, pts, width, t) {
   // Resample the polyline every 0.25 m so the fade and slopes are smooth.
   const P = pts.map(([x, y, z]) => V(x, y + 0.04, z));
@@ -380,6 +461,15 @@ function hud(f) {
   if (f.score) { $("score").innerHTML = ICONS.bone + `<span>${f.score.text}</span>`; $("score").classList.toggle("pop", !!f.score.pop); }
   show($("app"), !!f.app && !f.end);
   if (f.app) $("app").innerHTML = `<small>App panel</small><div class="t ${f.app.pressing ? "press" : ""}"><div class="sw ${f.app.pet ? "on" : ""}"></div>${f.app.label || "Pet"}</div>`;
+  if (f.app && f.app.buttons) $("app").innerHTML += f.app.buttons.map((x) => `<div class="b ${x.on ? "on" : ""}">${x.label}</div>`).join("");
+  show($("stopChip"), !!f.stopLabel && !f.arrival && !f.end);
+  $("stopChip").textContent = f.stopLabel || "";
+  show($("hopLine"), !!f.hop);
+  $("hopLine").textContent = f.hop ? f.hop.text : "";
+  show($("hand"), f.hand);
+  show($("mapPanel"), !!f.mapping);
+  if (f.mapping) $("mapPanel").innerHTML = `<h4>Learn this place</h4><small>${f.mapping.status}</small>` +
+    ["Point here", "Step-free", "Name it", "Save and route"].map((l) => `<div class="b ${f.mapping.pressed === l ? "on" : ""}">${l}</div>`).join("");
   $("mode").style.bottom = "26px";
   // Distance pill with the floor badge first; the floor-change cue just above it.
   show($("trip"), !!f.pill && !f.arrival);
@@ -402,6 +492,47 @@ function renderFrame(i) {
   if (f.line) { ribbon(lineMesh.geometry, f.line, 0.34, t); ribbon(glowMesh.geometry, f.line, 0.8, t); }
   pet.update(f, t, camera);
   placeIcons(f.places);
+  lane.visible = !!f.hop;
+  if (f.hop) {
+    const [ox, oy, oz] = f.hop.origin;
+    lane.position.copy(V(ox, oy, oz));
+    lane.rotation.y = Math.PI - f.hop.heading * Math.PI / 180;
+    blocks.forEach((m, i) => {
+      const o = f.hop.obstacles[i];
+      m.visible = !!o;
+      if (o) { m.scale.set(1, o[1], o[2]); m.position.set(0, o[1] / 2, o[0]); }
+    });
+  }
+  thrown.visible = !!f.thrown;
+  if (f.thrown) { thrown.position.copy(V(f.thrown[0], f.thrown[1], f.thrown[2])); thrown.rotation.y = t * 8; }
+  peekGroup.visible = !!f.peek;
+  if (f.peek) {
+    if (peekKey !== f.peek.route.join()) {
+      peekKey = f.peek.route.join();
+      clearGroup(peekLines);
+      const P = f.peek.route.map(([x, y, z]) => V(x, y, z));
+      for (let i = 1; i < P.length; i++) peekLines.add(bar(P[i - 1], P[i], 0.0065, i < f.peek.done ? peekDim : peekGlow));
+      const dot = new THREE.Mesh(new THREE.SphereGeometry(0.016, 16, 12), peekDot);
+      dot.position.copy(V(...f.peek.you)); dot.renderOrder = 14;
+      peekLines.add(dot);
+    }
+    peekGroup.scale.setScalar(Math.max(0.01, f.peek.k));
+    peekGroup.rotation.set(0.5, t * 0.25, 0);
+  }
+  walked.visible = !!f.mapping;
+  if (f.mapping) {
+    const key = f.mapping.points.length + ":" + f.mapping.edges.length;
+    if (key !== walkedKey) {
+      walkedKey = key;
+      clearGroup(walked);
+      for (const [ax, ay, az, bx, by, bz] of f.mapping.edges) walked.add(bar(V(ax, ay + 0.06, az), V(bx, by + 0.06, bz), 0.05, walkMat));
+      for (const [x, y, z] of f.mapping.points) {
+        const dot = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 12), walkDot);
+        dot.position.copy(V(x, y + 0.2, z)); dot.renderOrder = 14;
+        walked.add(dot);
+      }
+    }
+  }
   marker.visible = !!f.marker;
   if (f.marker) {
     const [mx, my, mz] = f.marker.at;

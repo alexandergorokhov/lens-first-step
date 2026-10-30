@@ -5,7 +5,7 @@ No glasses needed. Everything below runs in Lens Studio's Preview panel on your 
 ## 1. Open it
 
 1. Open `C:\Sasha\Projects\Lens\first-step\first-step\first-step.esproj` in Lens Studio.
-2. In the **Preview** panel, check the settings: device **SPECS 27**, mode **Interactive**, room **Sunlit Room**.
+2. In the **Preview** panel, check the settings: device **SPECS 27**, mode **Interactive**, scene **Plane**. The Specs preview adds the Lens's light on top of the scene, so an empty scene is what lets the solid stand-in building (`previewBackdrop` on FindYourWayStandIn, Lens Studio only, never on Specs) read as a place you walk through. Use **Sunlit Room** for the see-through look real glasses give.
 3. Click the **reset preview** button (circular arrow) so the Lens starts fresh.
 
 ## 2. Controls
@@ -33,7 +33,7 @@ Tip: the building is laid out from where you stand and face when you pick a mode
 ## 4. Walk run (escalator)
 
 1. Click **Walk**.
-2. A "You are here" sign appears 2.5 m ahead. Click **Scan sign** (the label says "on real Specs: look at the sign").
+2. The **Scan sign** panel floats about 1.2 m ahead. Click it (the label says "on real Specs: look at the sign").
 3. Top-left badge: **offline map** (normal for now). A blue line starts at the sign.
 4. Follow the line forward through the check-in hall to the escalator foot (about 16 m).
 5. Click the gold **Ride escalator up** button next to the escalator foot. You're now on Departures.
@@ -62,7 +62,7 @@ Tip: the building is laid out from where you stand and face when you pick a mode
 
 ## 7. Other places (same app, different map)
 
-Click **Map: … (switch)** on Demo controls. It cycles **Airport → Hospital → Campus → Preview room** and restarts at the mode panel.
+Click **Map: … (switch)** on Demo controls. It cycles through the bundled maps (Airport, Hospital, Campus, Preview room, Shopping mall), then **My place** if you saved one, and restarts at the mode panel.
 
 - **Hospital:** Ward 4 on Level 1. Walk uses the stairs, Step-Free uses Lift A. Red signs on Lift A (re-routes to Lift B) and Lift B. Demo controls has **Room change Ward 4 → X-ray**.
 - **Campus** (outdoor paths + two buildings, first floors 4 m up):
@@ -95,7 +95,7 @@ cd C:\Sasha\Projects\Lens\first-step\first-step
 npm test
 ```
 
-It first checks the Lens copies (`npm run sync:check`). Expect `pass 234`, `fail 0` (one test downloads the maps from the public gist; with no internet set `OFFLINE=1` to skip it: `pass 233`, `skipped 1`). `docs.test.ts` keeps this number up to date: it fails if the docs quote a different count. Covers: Walk and Step-Free routes on all four maps, Step-Free never uses stairs or escalators, Walk is always shortest, closures and re-routes, destination changes, broken maps, unknown signs, the turn arrow maths, the map download URL, the local map server, the demo's beats and walking speed, and that the Lens copies of the code and maps match `src/core`.
+It first checks the Lens copies (`npm run sync:check`). Expect `pass 235`, `fail 0` (one test downloads the maps from the public gist; with no internet set `OFFLINE=1` to skip it: `pass 234`, `skipped 1`). `docs.test.ts` keeps this number up to date: it fails if the docs quote a different count. Covers: Walk and Step-Free routes on all four maps, Step-Free never uses stairs or escalators, Walk is always shortest, closures and re-routes, destination changes, broken maps, unknown signs, the turn arrow maths, the map download URL, the local map server, the demo's beats and walking speed, and that the Lens copies of the code and maps match `src/core`.
 
 After editing anything in `src/core`, run `npm run sync` to copy it into `Assets/`. `npm run hooks` (once) makes git run `npm test` before every commit.
 
@@ -103,7 +103,7 @@ After editing anything in `src/core`, run `npm run sync` to copy it into `Assets
 
 1. In Lens Studio's Scene Hierarchy select **LeafIndex**, tick **autoRun** in the Inspector. (To run just one, type its id in **only**, e.g. `dc4-gate-change-stairs-and-ramp`.)
 2. Reset the preview.
-3. In the **Logger** panel look for `[FYW-LEAF] RESULT` lines and the `SUMMARY` (30 scenarios: the first 19 passed before the brief-2 work; the 11 new ones — `s1-…`, `fl1-…`, `fl2-…`, `p1-…`, `p3-…`, `q4-…`, `g1-…`, `pc1-…`, `t1-…`, `m5-…`, `pk1-…` — are written but **not run yet**).
+3. In the **Logger** panel look for `[FYW-LEAF] RESULT` lines and the `SUMMARY` (30 scenarios, all passing in the preview).
 4. Untick **autoRun** afterwards so the preview opens straight into the demo.
 
 The 14 scenarios: your 5 done criteria (dc1–dc5), the two route rules, broken map (e2), no step-free route (e3), already at the destination (e4), unknown sign (e5), map switch, restart, and the whole autoplay demo at 10× speed (`demo-autoplay-completes`). `devpost/SCENARIOS.md` lists which test covers each scenario.
@@ -134,7 +134,7 @@ After **Scan sign** (any map):
 - **Learn this place**: on the mode panel. You are the entrance sign; walk (WASD) and click **Point here** at corners; tag a stretch (Stairs / Lift / Ramp / Step-free); **Next name** + **Name it**; **Save and route**. You're back at the mode panel on "My place": Walk, Scan, and the line goes to your named point. The map is kept on the device (after the bundled maps in the map switch).
 - **Peek ahead** (Specs hand tracking): pinch and pull a hand toward you: a small model of the route shows below your view; let go to hide it. Not reachable with the mouse in the preview; LEAF covers it with a test hook.
 
-Not done yet: grab-and-throw with the hand (the button throws straight ahead), and none of this has been run in the preview by Claude (no Lens Studio connection in that session): run the LEAF suite first.
+Not done yet: grab-and-throw with the hand (the button throws straight ahead).
 
 ## 10. Watch the demo (no clicking)
 
@@ -203,6 +203,8 @@ A first-person video of the trip through a 3D stand-in airport: walking (with th
 - The main video also shows the distance pill with the floor badge, the cue before each floor change and the up/down post where the line leaves the floor.
 - `npm run demo:pet` renders `devpost/video/find-your-way-pet.mp4` (about 1 minute): the companion turned on from the app panel (line stays at 50%), coffee picked as an interest, the sponsored juice bar and the café pointed out, the wait at the escalator, off/on, the treats game. `npm run demo:pet:watch` plays it live.
 - The companion is any model: `node tools/demo-video/record.mjs --companion robot` (or `rover`) renders `find-your-way-robot.mp4` / `find-your-way-rover.mp4`, the same clip with another model and collectible.
+
+- `npm run demo:all` renders `find-your-way-all.mp4` (about 2:30): the mall with three stops, the dog, Hop, a swap to the rover, catch, peek ahead, then Learn this place routing back to the sign. The walking is a time-lapse (1.6× speed).
 
 - `npm run demo:hospital` renders `find-your-way-hospital.mp4` (~1:45): walking up the stairs to Ward 4, a room change back down to X-ray; then in a wheelchair: Lift A out (re-routed to Lift B), Lift B out too, so no step-free route and the line leads to Reception.
 - `npm run demo:campus` renders `find-your-way-campus.mp4` (~2:20): outdoors across the quad with the rover companion (it points at the coffee cart), walking off the line and being re-routed, a room change down to Lab 2; then in a wheelchair: the science lift is out, so up the ramp.

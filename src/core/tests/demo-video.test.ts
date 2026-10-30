@@ -162,3 +162,35 @@ test("airport trip video (no gate change): east stairs and lounge stairs on foot
   }
   assert.ok(f.some((x: any) => (x.places || []).length > 0), "shops along the way show");
 });
+
+test("all-features video: three stops in order, Hop, catch, model swap, peek, then a mapped place routes back to its sign", async () => {
+  const { buildAllFeaturesTimeline } = await import("../../../tools/demo-video/all-features.mjs");
+  const t = buildAllFeaturesTimeline();
+  const f = t.frames;
+  assert.ok(f.length / 30 < 180, "under 3 minutes");
+  assert.equal(f.at(-1).fade, 0, "the end card is not faded to black");
+  const labels = [...new Set(f.map((x: any) => x.stopLabel).filter(Boolean))];
+  assert.deepEqual(labels, ["Stop 1 of 3: Pharmacy", "Stop 2 of 3: Ice Cream", "Stop 3 of 3: Sushi Bar"]);
+  assert.ok(f.some((x: any) => x.feet[1] > 1 && x.feet[1] < 4), "rode between floors");
+  const hop = f.filter((x: any) => x.hop);
+  assert.ok(hop.some((x: any) => x.hop.y > 0.3), "the companion jumped");
+  assert.ok(hop.some((x: any) => x.hop.text.startsWith("Bump!")), "it bumped");
+  assert.ok(hop.at(-1).hop.text.startsWith("Jumps"), "and played again");
+  assert.ok(f.some((x: any) => x.thrown), "a treat was thrown");
+  assert.ok(new Set(f.map((x: any) => x.companion).filter(Boolean)).size === 2, "the model was swapped");
+  assert.ok(f.some((x: any) => x.peek), "peek ahead");
+  assert.deepEqual(t.routeDuringPlay.before, t.routeDuringPlay.after, "play never changes the route");
+  const mapped = f.filter((x: any) => x.mapping);
+  assert.ok(mapped.at(-1).mapping.points.length >= 4, "points were mapped");
+  assert.equal(t.mappedTrip.destination, "sign");
+  assert.ok(t.mappedTrip.length > 5, "a real route on the mapped place");
+  const L = t.layout;
+  f.forEach((fr: any, i: number) => {
+    const [x, y, z] = fr.feet;
+    for (const s of L.solids) {
+      if (Math.abs(y - s.y) < 1 && x > s.x0 - 0.3 && x < s.x1 + 0.3 && z > s.z0 - 0.3 && z < s.z1 + 0.3) {
+        assert.fail(`all @${(i / 30).toFixed(1)}s: inside ${s.label} at ${x.toFixed(1)},${z.toFixed(1)}`);
+      }
+    }
+  });
+});

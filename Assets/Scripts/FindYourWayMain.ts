@@ -210,6 +210,10 @@ export class FindYourWayMain extends BaseScriptComponent {
   @hint("App panel offset from the head (right, up, forward), cm — waist height, to the left")
   appPanelOffset: vec3 = new vec3(-30, -38, -55)
 
+  @input("vec3", "{-34,-14,-55}")
+  @hint("Where the app panel sits while playing Hop (cm from the head): to the side, clear of the lane")
+  playPanelOffset: vec3 = new vec3(-34, -14, -55)
+
   @input("vec3", "{-15,-14,-80}")
   @hint("Demo controls offset from the head (right, up, forward), cm — low-left, inside the ~32° view")
   demoOffset: vec3 = new vec3(-15, -14, -80)
@@ -1378,7 +1382,8 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.appPanel.show(on)
     if (!on) return
     const t = this.camera.getTransform()
-    const p = t.getWorldPosition().add(this.headYaw().multiplyVec3(this.appPanelOffset))
+    const offset = this.appPanel.isPlaying() ? this.playPanelOffset : this.appPanelOffset
+    const p = t.getWorldPosition().add(this.headYaw().multiplyVec3(offset))
     const so = this.appPanel.getSceneObject().getTransform()
     so.setWorldPosition(wasOn ? vec3.lerp(so.getWorldPosition(), p, 1 - Math.exp(-getDeltaTime() * 4)) : p)
     so.setWorldRotation(quat.lookAt(t.getWorldPosition().sub(so.getWorldPosition()).normalize(), vec3.up()))
@@ -1546,6 +1551,8 @@ export class FindYourWayMain extends BaseScriptComponent {
   getCatches(): number { return this.catchGame.catches }
   getStopLabel(): string | null { return this.stops ? this.stops.label((id) => nodeLabel(this.getMapData(), id)) : null }
   getStops(): string[] { return this.stops ? this.stops.stops.slice() : [] }
+  isAppPanelPlaying(): boolean { return !!this.appPanel && this.appPanel.isPlaying() }
+  isBackdropSolid(): boolean { return this.standIn.isSolid() }
   isAppPanelShown(): boolean { return !!this.appPanel && this.appPanel.getSceneObject().isEnabledInHierarchy }
   // Simulates one raised hand (LEAF can't move tracked hands); used on the next frame.
   debugRaiseHand(): void { this.debugRaise = true }

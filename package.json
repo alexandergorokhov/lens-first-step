@@ -16,7 +16,8 @@
     "demo:pet:watch": "node tools/demo-video/record.mjs --pet --watch",
     "demo:hospital": "node tools/demo-video/record.mjs --map hospital",
     "demo:campus": "node tools/demo-video/record.mjs --map campus",
-    "demo:airport-trip": "node tools/demo-video/record.mjs --map airport-trip"
+    "demo:airport-trip": "node tools/demo-video/record.mjs --map airport-trip",
+    "demo:all": "node tools/demo-video/record.mjs --map all"
   },
   "engines": {
     "node": ">=22.18"

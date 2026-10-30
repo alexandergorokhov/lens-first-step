@@ -23,7 +23,7 @@ const near = (b, id, m) => () => {
 };
 
 // Fade in at the start sign, pick the mode (and interests), scan the sign, start the route.
-function start(b, { title, mode, seated, to, interests = null }) {
+export function start(b, { title, mode, seated, to, interests = null }) {
   const S = b.state;
   const sign = findNode(b.map, (b.map.place && b.map.place.start) || "sign");
   const next = b.map.edges.find((e) => e.from === sign.id || e.to === sign.id);
@@ -81,7 +81,7 @@ function pinchOut(b, eventId) {
   b.hold(1.4);
 }
 
-function arrive(b, text, sec = 3.4) {
+export function arrive(b, text, sec = 3.4) {
   const S = b.state;
   S.arrival = text;
   b.showLine = false;
@@ -90,7 +90,7 @@ function arrive(b, text, sec = 3.4) {
   S.arrival = null;
 }
 
-function finish(b, title, lines) {
+export function finish(b, title, lines) {
   const S = b.state;
   S.caption = "";
   S.badge = null;
@@ -99,6 +99,7 @@ function finish(b, title, lines) {
   b.guide = null;
   b.nav = null;
   S.end = { title, lines };
+  S.fade = 0; // the last arrival faded out; the card sits under the fade layer
   b.hold(4.0);
 }
 

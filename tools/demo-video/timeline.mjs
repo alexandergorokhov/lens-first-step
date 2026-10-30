@@ -135,9 +135,11 @@ export class Builder {
       this.state.caption = this.pointed.caption;
       this.pointed.caption = undefined;
     }
-    for (const i of g.update(route, feet, DT, r.nodes.join(">"), arrived, now)) this.treatAt[i] = now;
+    // While playing the games move the companion (the Lens stops the guide too).
+    if (!this.petOverride) for (const i of g.update(route, feet, DT, r.nodes.join(">"), arrived, now)) this.treatAt[i] = now;
     if (this.treatAt.length !== g.spots.length) this.treatAt = g.spots.map((_, i) => this.treatAt[i] ?? null);
     const c = g.companion;
+    const shown = this.petOverride || g.pet;
     const bright = this.pointed && now < this.pointed.until ? this.pointed.id : null;
     const icons = r.status === "route" ? visiblePlaces(this.map, route, feet, { profile: r.profile, muted: !!this.state.muted }) : [];
     if (bright && !icons.some((p) => p.id === bright)) {
@@ -146,7 +148,7 @@ export class Builder {
     }
     return {
       companion: c.model,
-      pet: g.on && g.pet ? { pos: [g.pet.pos.x, g.pet.pos.y, g.pet.pos.z], heading: +g.pet.heading.toFixed(2), mood: g.pet.mood, point: bright ? (() => { const p = placesOf(this.map).find((x) => x.id === bright); return [p.x, p.y, p.z]; })() : null } : null,
+      pet: g.on && shown ? { pos: [shown.pos.x, shown.pos.y, shown.pos.z], heading: +shown.heading.toFixed(2), mood: shown.mood, point: bright ? (() => { const p = placesOf(this.map).find((x) => x.id === bright); return [p.x, p.y, p.z]; })() : null } : null,
       treats: g.on ? g.spots.map((p, i) => ({ at: [p.x, p.y, p.z], got: g.got[i], age: g.got[i] && this.treatAt[i] != null ? +(now - this.treatAt[i]).toFixed(3) : null })) : null,
       score: g.on || g.found > 0 ? { text: treatsText(g.found, g.total, c), pop: this.treatAt.some((t) => t != null && now - t < 0.6) } : null,
       app: app ? { ...app, label: c.name } : null,
@@ -200,6 +202,13 @@ export class Builder {
       lifts: JSON.parse(JSON.stringify(this.lifts)),
       wheel: +this.wheel.toFixed(3),
       pinch: s.pinch ? { ...s.pinch } : null,
+      // The all-features clip (all-features.mjs): stops, games, peek ahead, mapping.
+      stopLabel: s.stopLabel || null,
+      hop: s.hop || null,
+      thrown: s.thrown || null,
+      hand: !!s.hand,
+      peek: s.peek || null,
+      mapping: s.mapping || null,
     });
     if (s.card && this.frames.length * DT - s.card.at > s.card.hold) s.card = null;
   }
@@ -253,7 +262,7 @@ export class Builder {
       while (along < segLen) {
         const base = kind === "escalator" ? 1.3 : kind === "stairs" ? 0.75 : kind === "ramp" ? 0.9 : this.seated ? 1.25 : 1.4;
         // Long straights speed up after the first few metres (the Lens demo does the same).
-        const fast = kind === "walk" && segLen > 8 ? 1 + 2.0 * ease((along - 4) / 4) * ease((segLen - along - 3) / 3) : 1;
+        const fast = (this.pace || 1) * (kind === "walk" && segLen > 8 ? 1 + 2.0 * ease((along - 4) / 4) * ease((segLen - along - 3) / 3) : 1);
         along = Math.min(segLen, along + base * fast * DT);
         const t = along / segLen;
         this.feet = {
