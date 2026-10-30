@@ -20,6 +20,7 @@ export function pillMetres(text: string | null): number {
 // Stands still at `pos` until play is offered (≥ 2 s still with the companion on).
 export async function standStill(main: FindYourWayMain, pos: Vec3, heading: number = 0): Promise<void> {
   main.debugSetPose(pos.x, pos.y, pos.z, heading)
+  await sleep(100) // let a frame see the new pose, or a stale canPlay passes the wait below
   await waitFor(() => main.canPlayNow(), 5000, "play offered after standing still")
 }
 

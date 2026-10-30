@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { findNode, findRoute, parseMap, validateMap, EDGE_SLACK, type MapData, type Vec3 } from "../router.ts";
-import { MAPPING_NAMES, MapRecorder } from "../mapping.ts";
+import { MAPPING_NAMES, MapRecorder, tripAfterSaving } from "../mapping.ts";
 
 const d3 = (a: Vec3, b: Vec3) => Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
 
@@ -211,6 +211,30 @@ test("M5 toJson is a map parseMap accepts, and findRoute from the sign to a name
   assert.equal(r.status, "route");
   assert.ok(r.status === "route" && r.nodes[0] === "sign" && r.nodes.at(-1) === room.id);
   assert.ok(r.status === "route" && Math.abs(r.length - (4 + Math.hypot(4, 4) + 5)) < 0.1, String(r.status === "route" && r.length));
+});
+
+test("M5 saved at the last named point: the trip starts there and leads back to the sign", () => {
+  const rec = twoFloors();
+  const map = parsed(rec);
+  const trip = tripAfterSaving(rec.toMap(), { x: 8, y: 4, z: 5 });
+  assert.equal(trip.destination, "sign");
+  assert.equal(findNode(map, trip.start)?.label, "Room");
+  assert.equal(findRoute(map, trip.start, trip.destination, "walk").status, "route");
+});
+
+test("M5 saved away from a named point: the trip starts at the nearest point and goes to it", () => {
+  const rec = twoFloors();
+  const map = parsed(rec);
+  const trip = tripAfterSaving(rec.toMap(), { x: 0.4, y: 0, z: 0 });
+  assert.equal(trip.start, "sign");
+  assert.equal(findNode(map, trip.destination)?.label, "Room");
+  assert.equal(findRoute(map, trip.start, trip.destination, "walk").status, "route");
+});
+
+test("M5 a named point straight above you is away: another floor is a trip", () => {
+  const rec = twoFloors();
+  const trip = tripAfterSaving(rec.toMap(), { x: 8, y: 0, z: 5 });
+  assert.notEqual(trip.destination, "sign");
 });
 
 test("M5 fromJson resumes after a reload: same map, and mapping carries on", () => {

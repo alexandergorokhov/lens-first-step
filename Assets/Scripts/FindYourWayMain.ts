@@ -53,7 +53,7 @@ import {Companion, companionOf, COMPANIONS, PetGuide, treatsResult, treatsText} 
 import {Place, placesOf, placeTag, PointingCoach, POINT_SECONDS, visiblePlaces} from "./FindYourWayPlaces"
 import {CatchGame, canThrow, HopGame, hopText, landingSpot, PlayGate, RaiseDetector} from "./FindYourWayPlay"
 import {MultiStopTrip, orderStops} from "./FindYourWayTrip"
-import {MapRecorder, MAPPING_NAMES, MappingTag} from "./FindYourWayMapping"
+import {MapRecorder, MAPPING_NAMES, MappingTag, tripAfterSaving} from "./FindYourWayMapping"
 import {peekModel} from "./FindYourWayPeek"
 import {FindYourWayMappingPanelUI} from "./FindYourWayMappingPanelUI"
 import {FindYourWayPeekView} from "./FindYourWayPeekView"
@@ -250,6 +250,8 @@ export class FindYourWayMain extends BaseScriptComponent {
   // Trip state that survives the map (re)load at scan time: a destination change made before
   // the scan (closures are in `closed`). Cleared by restart.
   private tripDestination: string | null = null
+  // Where the trip starts right after "Learn this place": the mapped point you stand at.
+  private tripStart: string | null = null
   // Bumped by every restart, so a slow map download from an earlier trip is ignored.
   private tripGeneration = 0
   // World y of the head while standing, taken while the anchor settles after a restart; the
@@ -454,8 +456,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     const text = this.recorder.toJson()
     const parsed = parseMap(text)
     const m = this.recorder.toMap()
-    const named = m.nodes.filter((n) => n.kind === "destination")
-    if (!parsed.ok || named.length === 0) {
+    if (!parsed.ok || !m.nodes.some((n) => n.kind === "destination")) {
       this.mapStatus(parsed.ok ? "Name at least one point first" : "Map not valid: " + (parsed as {ok: false; error: string}).error)
       return false
     }
@@ -481,9 +482,9 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.rideOffset = offset
     this.keepAnchor = true
     this.placeBuilding()
-    // Go to the last named point you are not standing at, else back to the entrance sign.
-    const away = named.filter((n) => Math.sqrt((n.x - here.x) ** 2 + (n.z - here.z) ** 2) > 3)
-    this.tripDestination = away.length > 0 ? away[away.length - 1].id : "sign"
+    const trip = tripAfterSaving(m, here)
+    this.tripStart = trip.start
+    this.tripDestination = trip.destination
     print("[FYW] mapping: saved " + m.nodes.length + " points, " + m.edges.length + " stretches")
     return true
   }
@@ -584,6 +585,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.viewFollowsPose = false
     this.tripGeneration++
     this.tripDestination = null
+    this.tripStart = null
     this.standingEyeY = null
     this.downloadOverride = null
     this.downloadDelayMs = 0
@@ -690,9 +692,10 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.demoControls.setStatus((this.profile === "walk" ? "Walk" : "Step-Free") + " · " +
       (source === "online" ? "online map" : "offline map"))
     if (notice) this.hud.showCard(notice, "info")
-    const startId = this.startOverride || this.place.start
-    const located = locateSign(this.map, startId)
-    if (!located.ok) {
+    const startId = this.startOverride || this.tripStart || this.place.start
+    // A just-mapped place starts where you stand, which need not be a sign.
+    const located = this.tripStart ? null : locateSign(this.map, startId)
+    if (located && !located.ok) {
       this.phase = "error"
       this.routeLine.clear()
       this.hud.showCard((located as {ok: false; message: string}).message, "info")

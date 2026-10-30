@@ -7,6 +7,7 @@
     - !<own> beae2714-1555-483e-8750-5ad8ad6d00ed
     - !<own> 49237bc4-f9e6-442f-b388-f2f7c7ddc103
     - !<own> abd7f7cc-fe64-4a6c-9229-15566f25581c
+    - !<own> 751e73ac-f379-4756-a687-04b10374e2ce
   layers: !<Layers/267ee9a7-aff2-4f9d-9a49-f71214747d03>
     userLayers:
       - id: 1
@@ -905,6 +906,22 @@
   ScriptInputs:
     "":
       drawDebug: false
+  ScriptTypes:
+    "":
+      {}
+- !<ScriptComponent/142dab12-d581-4fb7-be43-19aea115ebf2>
+  PrefabRemaps:
+    []
+  Name: MessagingBridge
+  Enabled: true
+  ScriptAsset: !<reference> 4c470e55-3d80-4780-ba2b-d011215918a3
+  ScriptInputsDefault:
+    {}
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      {}
   ScriptTypes:
     "":
       {}
@@ -4183,6 +4200,21 @@
   ScriptTypes:
     "":
       {}
+- !<SceneObject/751e73ac-f379-4756-a687-04b10374e2ce>
+  PrefabRemaps:
+    []
+  Name: LEAF Plugin Bridge
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 142dab12-d581-4fb7-be43-19aea115ebf2
 - !<SceneObject/75f8edd3-c83d-4d64-a512-e976b9f93b38>
   PrefabRemaps:
     []
@@ -6702,6 +6734,10 @@
   ScriptAsset: !<reference> 1c808812-8022-4137-91bc-6e33a237a6a7
   ScriptInputsDefault:
     captionPosition: true
+    pillPosition: true
+    cuePosition: true
+    scorePosition: true
+    playPosition: true
     cardSeconds: true
     textColor: true
   ScriptTypesDefault:
@@ -6711,6 +6747,10 @@
       cardPosition: !<Vec3> {x: 7.000000, y: 7.000000, z: -70.000000}
       badgePosition: !<Vec3> {x: -8.000000, y: 8.000000, z: -70.000000}
       captionPosition: !<Vec3> {x: 0.000000, y: 11.500000, z: -70.000000}
+      pillPosition: !<Vec3> {x: 0.000000, y: -9.000000, z: -70.000000}
+      cuePosition: !<Vec3> {x: 0.000000, y: -5.600000, z: -70.000000}
+      scorePosition: !<Vec3> {x: -8.000000, y: 5.200000, z: -70.000000}
+      playPosition: !<Vec3> {x: 0.000000, y: -12.200000, z: -70.000000}
       cardSeconds: !<float> 5.000000
       textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
   ScriptTypes:
@@ -8470,9 +8510,14 @@
   ScriptInputsDefault:
     mapKey: true
     tryOnlineMap: true
-    mapBaseUrl: true
+    startAtSign: true
+    showDemoControls: true
     lineAheadM: true
     halfViewDeg: true
+    companionModel: true
+    companionOnAtStart: true
+    multiStops: true
+    appPanelOffset: true
   ScriptTypesDefault:
     {}
   ScriptInputs:
@@ -8494,10 +8539,16 @@
       tryOnlineMap: true
       mapBaseUrl: "https://gist.githubusercontent.com/alexandergorokhov/ac59c2c8d02687651f256b320fff27b8/raw/"
       eyeHeightCm: !<float> 180.000000
+      startAtSign: true
+      showDemoControls: false
       signOffset: !<Vec3> {x: 0.000000, y: 0.000000, z: -250.000000}
       lineAheadM: !<float> 10.000000
       halfViewDeg: !<float> 16.000000
       modePanelOffset: !<Vec3> {x: 8.000000, y: -4.000000, z: -100.000000}
+      companionModel: dog
+      companionOnAtStart: false
+      multiStops: "pharmacy,iceCream,sushi"
+      appPanelOffset: !<Vec3> {x: -30.000000, y: -38.000000, z: -55.000000}
       demoOffset: !<Vec3> {x: -15.000000, y: -14.000000, z: -80.000000}
   ScriptTypes:
     "":

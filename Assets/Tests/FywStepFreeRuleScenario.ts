@@ -17,14 +17,17 @@ export class FywStepFreeRuleScenario extends Scenario {
       const variants: MapData[] = [map]
       for (const e of map.edges) if (e.id) variants.push(setEdgeOpen(map, e.id, false))
       for (const m of variants) {
-        for (const a of m.nodes) for (const b of m.nodes) {
-          if (a.id === b.id) continue
-          const r = findRoute(m, a.id, b.id, "stepFree")
-          const edges = r.status === "route" ? r.edges : r.status === "askStaff" && r.assistance ? r.assistance.edges : []
-          for (const k of kindsOf(edges)) {
-            expect(k !== "stairs" && k !== "escalator", key + " " + a.id + "->" + b.id + " used " + k).toBe(true)
+        for (const a of m.nodes) {
+          await sleep(1) // one source node per frame: the big maps pass the per-frame JS limit
+          for (const b of m.nodes) {
+            if (a.id === b.id) continue
+            const r = findRoute(m, a.id, b.id, "stepFree")
+            const edges = r.status === "route" ? r.edges : r.status === "askStaff" && r.assistance ? r.assistance.edges : []
+            for (const k of kindsOf(edges)) {
+              expect(k !== "stairs" && k !== "escalator", key + " " + a.id + "->" + b.id + " used " + k).toBe(true)
+            }
+            checked++
           }
-          checked++
         }
       }
     }

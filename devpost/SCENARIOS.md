@@ -14,7 +14,7 @@ Approved test scenarios and where each is tested.
   seated height and the scanned sign are simulated with test hooks on `FindYourWayMain`
   (LEAF cannot drive WASD/Q/E).
 
-Status as of the last run: Node 231 tests, all passing (offline, `OFFLINE=1`, the live gist download
+Status as of the last run: Node 234 tests, all passing (offline, `OFFLINE=1`, the live gist download
 is skipped). `src/core/tests/docs.test.ts` checks this count, the test list and every test named
 below. LEAF 19 of 19 passed before the brief-2 work. The brief-2 features below now have their Lens
 UI (type-checked) and 11 more LEAF scenarios written test-first; **those 11 have not been run yet**

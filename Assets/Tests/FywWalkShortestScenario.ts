@@ -15,17 +15,20 @@ export class FywWalkShortestScenario extends Scenario {
     await sleep(500)
     let checked = 0
     for (const {key, map} of bundledMaps()) {
-      for (const a of map.nodes) for (const b of map.nodes) {
-        if (a.id === b.id) continue
-        const best = bruteShortest(map, a.id, b.id, "walk")
-        const r = findRoute(map, a.id, b.id, "walk")
-        if (best === Infinity) {
-          expect(r.status !== "route", key + " " + a.id + "->" + b.id + " should have no route").toBe(true)
-          continue
+      for (const a of map.nodes) {
+        await sleep(1) // one source node per frame: the big maps pass the per-frame JS limit
+        for (const b of map.nodes) {
+          if (a.id === b.id) continue
+          const best = bruteShortest(map, a.id, b.id, "walk")
+          const r = findRoute(map, a.id, b.id, "walk")
+          if (best === Infinity) {
+            expect(r.status !== "route", key + " " + a.id + "->" + b.id + " should have no route").toBe(true)
+            continue
+          }
+          expect(r.status, key + " " + a.id + "->" + b.id).toBe("route")
+          if (r.status === "route") expect(Math.abs(r.length - best) < 1e-6, key + " " + a.id + "->" + b.id + " " + r.length + " vs " + best).toBe(true)
+          checked++
         }
-        expect(r.status, key + " " + a.id + "->" + b.id).toBe("route")
-        if (r.status === "route") expect(Math.abs(r.length - best) < 1e-6, key + " " + a.id + "->" + b.id + " " + r.length + " vs " + best).toBe(true)
-        checked++
       }
     }
     const main = await startTrip(it, "walk")

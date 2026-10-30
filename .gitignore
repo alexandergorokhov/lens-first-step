@@ -53,3 +53,6 @@ devpost/video/
 devpost/NEXT-SESSION*.md
 devpost/*HANDOFF*.md
 devpost/*ADDENDUM*.md
+
+# Added by Lens Studio (LEAF plugin)
+leaf_plugin_settings.json

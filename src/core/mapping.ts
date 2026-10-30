@@ -53,6 +53,8 @@ export type MappingTag = "stairs" | "lift" | "ramp" | "escalator" | "walk" | "st
 // A point closer than this (m) to the previous one is a double pinch and ignored; one this close
 // to any other point joins that point (closing a loop, e.g. back at the sign).
 export const MIN_POINT_GAP = 0.5;
+// A named point closer than this (m) is where you already are, not a place to be guided to.
+export const NEAR_POINT = 3;
 // Router limit on nodes in a map file (MAX_MAP_NODES).
 export const MAX_POINTS = 2000;
 export const DEFAULT_TITLE = "My place";
@@ -67,6 +69,15 @@ function d3(a: MapPoint, b: MapPoint): number {
 
 // Millimetres are plenty for a walked map and keep the file short.
 const mm = (v: number) => Math.round(v * 1000) / 1000;
+
+// The trip right after saving, from where the traveller stands: start at the nearest point and go
+// to the last named point that is further than NEAR_POINT away, else back to the sign.
+export function tripAfterSaving(map: MappedMap, here: MapPoint): { start: string; destination: string } {
+  let start = map.nodes[0];
+  for (const n of map.nodes) if (d3(n, here) < d3(start, here)) start = n;
+  const away = map.nodes.filter((n) => n.kind === "destination" && d3(n, here) > NEAR_POINT);
+  return { start: start.id, destination: away.length > 0 ? away[away.length - 1].id : "sign" };
+}
 
 // One undoable step: the node it added (if new), the edge it added (if any), the level it
 // started (if any) and the point that was last before it.

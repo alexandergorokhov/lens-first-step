@@ -29,7 +29,10 @@ export async function tap(interactor: DefaultLeafInteractor, name: string): Prom
     target = findInteractableByName(name, undefined, true)
   }
   if (!target) throw new Error("Interactable '" + name + "' not found or not enabled")
-  await interactor.trigger(target)
+  // LEAF's trigger waits forever on its hover/trigger events: fail instead if they never come.
+  let done = false
+  interactor.trigger(target).then(() => { done = true })
+  await waitFor(() => done, 3000, "tap on '" + name + "' (enabled now: " + target.getSceneObject().isEnabledInHierarchy + ")")
   await sleep(250)
 }
 
