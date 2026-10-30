@@ -1,0 +1,321 @@
+// Play with the companion while you wait (part of the companion feature: only when it is on).
+// - Hop: while you stand still, a short lane appears on the floor in front of you with the
+//   companion at the near end, seen from behind. Obstacles come from the far end; raise a hand
+//   and it jumps. A hit makes it shake; raise a hand again (or Play again) to restart.
+// - Catch: throw a treat; the companion runs to where it lands, catches it and brings it back.
+// Neither game reads or changes the route. Walking off ends play and the companion goes back to
+// guiding.
+// Pure logic shared by the Lens and the Node tests: no imports and no Lens globals; the Lens
+// keeps a byte-identical copy at Assets/Scripts/FindYourWayPlay.ts.
+//
+// Map metres: x east, y up, z north. Hop distances are metres along the lane, ahead of the
+// companion (0 = the companion, HOP_LANE = the far end).
+
+export interface PlayXYZ {
+  x: number;
+  y: number;
+  z: number;
+}
+
+export interface PlayCompanion {
+  name: string;
+}
+
+// A small repeatable random source (mulberry32), so a seed replays the same game.
+export function seededRandom(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// ---- Standing still ----
+
+// How long you stand still before play is offered (s), and how far you may sway (m).
+export const STILL_SECONDS = 2;
+export const STILL_RADIUS = 0.6;
+
+// Offers play while you stand still with the companion on and no card showing; walking off
+// (beyond STILL_RADIUS) or turning the companion off ends it at once.
+export class PlayGate {
+  canPlay = false;
+  private anchor: PlayXYZ | null = null;
+  private still = 0;
+
+  update(feet: PlayXYZ, dt: number, opts: { companionOn: boolean; cardShowing: boolean }): boolean {
+    const moved = this.anchor === null ? Infinity : Math.hypot(feet.x - this.anchor.x, feet.z - this.anchor.z);
+    if (moved > STILL_RADIUS || Math.abs(feet.y - (this.anchor ? this.anchor.y : feet.y)) > 0.5) {
+      this.anchor = { x: feet.x, y: feet.y, z: feet.z };
+      this.still = 0;
+    } else this.still += dt;
+    this.canPlay = opts.companionOn && !opts.cardShowing && this.still >= STILL_SECONDS;
+    return this.canPlay;
+  }
+
+  reset(): void {
+    this.anchor = null;
+    this.still = 0;
+    this.canPlay = false;
+  }
+}
+
+// ---- Raising a hand ----
+
+// Hand height relative to the head (m, + up). Above RAISE_UP counts as raised; it must come back
+// below RAISE_DOWN before the next raise counts (so holding the hand up is one jump).
+export const RAISE_UP = -0.2;
+export const RAISE_DOWN = -0.45;
+
+export class RaiseDetector {
+  private armed = false;
+
+  // handMinusHead: the wrist's height above the head (m), or null when no hand is tracked.
+  // Returns true once per raise.
+  update(handMinusHead: number | null): boolean {
+    if (handMinusHead === null) {
+      this.armed = false;
+      return false;
+    }
+    if (handMinusHead < RAISE_DOWN) {
+      this.armed = true;
+      return false;
+    }
+    if (this.armed && handMinusHead > RAISE_UP) {
+      this.armed = false;
+      return true;
+    }
+    return false;
+  }
+}
+
+// ---- Hop: the jump game ----
+
+export const HOP_LANE = 6; // lane length (m)
+export const JUMP_SPEED = 4.2; // m/s up: ~0.63 m high, ~0.6 s in the air
+export const HOP_GRAVITY = 14; // m/s²
+export const SHAKE_SECONDS = 1.2;
+export const HOP_START_SPEED = 3; // m/s the obstacles come at
+export const HOP_MAX_SPEED = 5;
+export const HOP_SPEED_UP = 0.05; // m/s faster per obstacle cleared
+const BODY_HALF = 0.2; // half the companion's length along the lane (m)
+const OBSTACLE_WIDTH = 0.3;
+const FIRST_OBSTACLE_S = 1;
+const MAX_STEP = 1 / 60;
+
+export type HopPhase = "idle" | "running" | "crashed";
+
+export interface Obstacle {
+  d: number; // metres ahead of the companion
+  h: number; // height (m)
+  w: number; // length along the lane (m)
+  passed: boolean;
+}
+
+export class HopGame {
+  phase: HopPhase = "idle";
+  petY = 0; // the companion's jump height (m)
+  obstacles: Obstacle[] = [];
+  score = 0;
+  best = 0;
+  speed = HOP_START_SPEED;
+  readonly maxSpeed = HOP_MAX_SPEED;
+  private vy = 0;
+  private shakeLeft = 0;
+  private untilFirst = 0;
+  private nextGap = 0;
+  private rand: () => number;
+
+  constructor(rand: () => number = Math.random) {
+    this.rand = rand;
+  }
+
+  get shaking(): boolean {
+    return this.shakeLeft > 0;
+  }
+
+  start(): void {
+    this.phase = "running";
+    this.petY = 0;
+    this.vy = 0;
+    this.obstacles = [];
+    this.score = 0;
+    this.speed = HOP_START_SPEED;
+    this.shakeLeft = 0;
+    this.untilFirst = FIRST_OBSTACLE_S;
+    this.nextGap = this.gap();
+  }
+
+  restart(): void {
+    this.start();
+  }
+
+  stop(): void {
+    this.phase = "idle";
+    this.petY = 0;
+    this.vy = 0;
+    this.obstacles = [];
+    this.shakeLeft = 0;
+  }
+
+  // A raised hand: jump while running and on the ground; after a crash (once the shake is over)
+  // it starts a new game. Returns whether it did anything.
+  jump(): boolean {
+    if (this.phase === "crashed") {
+      if (this.shaking) return false;
+      this.restart();
+      return true;
+    }
+    if (this.phase !== "running" || this.petY > 0) return false;
+    this.vy = JUMP_SPEED;
+    this.petY = 1e-6;
+    return true;
+  }
+
+  update(dt: number): void {
+    if (this.phase === "crashed") {
+      this.shakeLeft = Math.max(0, this.shakeLeft - dt);
+      return;
+    }
+    if (this.phase !== "running") return;
+    // Small steps, so a big frame never skips through an obstacle.
+    let left = dt;
+    while (left > 0 && this.phase === "running") {
+      const step = Math.min(MAX_STEP, left);
+      this.tick(step);
+      left -= step;
+    }
+  }
+
+  // The gap to the next obstacle (m): always long enough to land and jump again.
+  private gap(): number {
+    const min = this.speed * 0.75 + 1.2 + BODY_HALF * 2 + OBSTACLE_WIDTH;
+    return min + this.rand() * 4;
+  }
+
+  private tick(dt: number): void {
+    if (this.petY > 0) {
+      this.vy -= HOP_GRAVITY * dt;
+      this.petY = Math.max(0, this.petY + this.vy * dt);
+      if (this.petY === 0) this.vy = 0;
+    }
+    for (const o of this.obstacles) o.d -= this.speed * dt;
+    // Spawn at the far end once the last one is a gap away (the first after FIRST_OBSTACLE_S).
+    const last = this.obstacles[this.obstacles.length - 1];
+    if (!last) {
+      this.untilFirst -= dt;
+      if (this.untilFirst <= 0) this.spawn();
+    } else if (HOP_LANE - last.d >= this.nextGap) this.spawn();
+    for (const o of this.obstacles) {
+      const reach = BODY_HALF + o.w / 2;
+      if (Math.abs(o.d) < reach && this.petY < o.h) {
+        this.crash();
+        return;
+      }
+      if (!o.passed && o.d < -reach) {
+        o.passed = true;
+        this.score++;
+        this.best = Math.max(this.best, this.score);
+        this.speed = Math.min(HOP_MAX_SPEED, this.speed + HOP_SPEED_UP);
+      }
+    }
+    this.obstacles = this.obstacles.filter((o) => o.d > -1);
+  }
+
+  private spawn(): void {
+    this.obstacles.push({ d: HOP_LANE, h: 0.2 + this.rand() * 0.15, w: OBSTACLE_WIDTH, passed: false });
+    this.nextGap = this.gap();
+  }
+
+  private crash(): void {
+    this.phase = "crashed";
+    this.shakeLeft = SHAKE_SECONDS;
+    this.best = Math.max(this.best, this.score);
+  }
+}
+
+export function hopText(game: HopGame, companion: PlayCompanion): string {
+  if (game.phase === "idle") return "Raise your hand: " + companion.name + " jumps";
+  if (game.phase === "crashed") return "Bump! Raise your hand to play again";
+  return "Jumps " + game.score + " · best " + game.best;
+}
+
+// ---- Catch: throw a treat ----
+
+export const THROW_MAX = 5; // m from you
+const THROW_GRAVITY = 9.8;
+export const FETCH_SPEED = 3; // m/s
+export const DROP_DISTANCE = 0.7; // where it drops the treat, from you (m)
+
+export function canThrow(s: { moving: boolean; nearChange: boolean; cardShowing: boolean; companionOn: boolean }): boolean {
+  return s.companionOn && !s.moving && !s.nearChange && !s.cardShowing;
+}
+
+// Where a treat released at `hand` with velocity `v` (m/s) lands on the floor at height floorY:
+// always on your floor, at most THROW_MAX away horizontally.
+export function landingSpot(hand: PlayXYZ, v: PlayXYZ, floorY: number): PlayXYZ {
+  const h = Math.max(0, hand.y - floorY);
+  // Time to fall from h with upward speed v.y: h + v.y t - g t²/2 = 0.
+  const t = (v.y + Math.sqrt(Math.max(0, v.y * v.y + 2 * THROW_GRAVITY * h))) / THROW_GRAVITY;
+  let dx = v.x * t;
+  let dz = v.z * t;
+  const d = Math.hypot(dx, dz);
+  if (d > THROW_MAX) {
+    dx *= THROW_MAX / d;
+    dz *= THROW_MAX / d;
+  }
+  return { x: hand.x + dx, y: floorY, z: hand.z + dz };
+}
+
+export type CatchPhase = "idle" | "fetch" | "return";
+
+export class CatchGame {
+  phase: CatchPhase = "idle";
+  catches = 0;
+  pos: PlayXYZ = { x: 0, y: 0, z: 0 };
+  private target: PlayXYZ = { x: 0, y: 0, z: 0 };
+
+  // Starts a fetch from the companion's position `from`; one throw at a time.
+  throwTo(spot: PlayXYZ, from: PlayXYZ): boolean {
+    if (this.phase !== "idle") return false;
+    this.pos = { x: from.x, y: from.y, z: from.z };
+    this.target = { x: spot.x, y: spot.y, z: spot.z };
+    this.phase = "fetch";
+    return true;
+  }
+
+  cancel(): void {
+    this.phase = "idle";
+  }
+
+  // Moves the companion; `caught` is true on the frame it catches the treat.
+  update(dt: number, user: PlayXYZ): { pos: PlayXYZ; phase: CatchPhase; caught: boolean } {
+    let caught = false;
+    if (this.phase === "return") {
+      const dx = this.pos.x - user.x;
+      const dz = this.pos.z - user.z;
+      const d = Math.hypot(dx, dz) || 1;
+      this.target = { x: user.x + (dx / d) * DROP_DISTANCE, y: user.y, z: user.z + (dz / d) * DROP_DISTANCE };
+    }
+    if (this.phase !== "idle") {
+      const dx = this.target.x - this.pos.x;
+      const dz = this.target.z - this.pos.z;
+      const d = Math.hypot(dx, dz);
+      const step = FETCH_SPEED * dt;
+      if (d <= step) {
+        this.pos = { x: this.target.x, y: this.target.y, z: this.target.z };
+        if (this.phase === "fetch") {
+          this.phase = "return";
+          caught = true;
+        } else {
+          this.phase = "idle";
+          this.catches++;
+        }
+      } else this.pos = { x: this.pos.x + (dx / d) * step, y: this.target.y, z: this.pos.z + (dz / d) * step };
+    }
+    return { pos: this.pos, phase: this.phase, caught };
+  }
+}

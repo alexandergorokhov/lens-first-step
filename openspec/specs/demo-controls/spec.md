@@ -55,6 +55,13 @@ destination-change).
 - **THEN** the destination becomes `gateC3`
 - Verified by: dc4-gate-change-stairs-and-ramp; restart-resets-trip
 
+### Requirement: Hidden by default
+The demo controls SHALL be hidden unless `showDemoControls` (Inspector) is on; the LEAF suite turns
+them on with a test hook. The ride buttons in the building stay (the preview can't change floors).
+
+#### Scenario: H2 Hidden
+- Verified by: s1-start-at-sign-controls-hidden (LEAF written, not run yet)
+
 ## Known gaps
 
 - Placement: the brief says "waist height, to the user's left"; the code places it 15 cm left,

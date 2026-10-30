@@ -107,7 +107,13 @@ export class Builder {
   petFrame() {
     const g = this.guide;
     const app = this.state.app ? { ...this.state.app } : null;
-    if (!g || !this.nav) return { pet: null, treats: null, score: null, app, places: null };
+    if (!g || !this.nav) {
+      // No companion: place icons can still show along the way (showPlaces).
+      const r = this.nav && this.nav.route;
+      const icons = this.showPlaces && r && r.status === "route"
+        ? visiblePlaces(this.map, routePoints(this.nav.map, r), this.feet, { profile: r.profile, muted: false }) : [];
+      return { pet: null, treats: null, score: null, app, places: icons.map((p) => ({ id: p.id, at: [p.x, p.y, p.z], category: p.category, label: placeTag(p), sponsored: p.sponsored, bright: false })) };
+    }
     const now = this.frames.length * DT;
     const r = this.nav.route;
     const arrived = r.status === "arrived";

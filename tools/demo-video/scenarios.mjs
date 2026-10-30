@@ -8,7 +8,7 @@ import { Navigator, findNode, noticeFor, parseMap } from "../../src/core/router.
 import { arrivalText, nodeLabel } from "../../src/core/place.ts";
 import { PetGuide, companionOf, treatsResult } from "../../src/core/pet.ts";
 import { PointingCoach } from "../../src/core/places.ts";
-import { Builder, FPS, ease, hdist, headingOf } from "./timeline.mjs";
+import { Builder, FPS, ease, hdist, headingOf, loadAirport } from "./timeline.mjs";
 import { placeLayout } from "./place-layout.mjs";
 
 export function loadMap(file) {
@@ -192,6 +192,51 @@ export function buildCampusTimeline(map = loadMap("campus.json")) {
   arrive(b, arrivalText(map, "lectureHall1"));
   finish(b, "Find Your Way Inside: Campus", ["Indoors and outdoors, between buildings.", "Wander off and the line re-routes from where you are.", "A lift out? The ramp, never the stairs."]);
   return { fps: FPS, frames: b.frames, map, scene: "place", layout: placeLayout(map), offRouteRerouted: b.rerouted };
+}
+
+// The bigger airport, no gate change: walking to the Sky Lounge (the east stairs, the B pier with
+// its shops, the lounge stairs), then on to Gate B18; in a wheelchair the same by lifts, then B20.
+export function buildAirportTripTimeline(map = loadAirport()) {
+  const b = new Builder(map);
+  const S = b.state;
+  b.showPlaces = true;
+  start(b, { title: "Airport, a longer trip: the Sky Lounge first", mode: "Walk", seated: false, to: "skyLounge" });
+  S.caption = "Far gates: the line takes the east stairs";
+  b.follow({ captions: { eastStairsTop: "The B pier: shops and gates on both sides", loungeStairsFoot: "Up the lounge stairs to the Sky Lounge" } });
+  S.caption = "Arrived";
+  S.arrival = arrivalText(map, "skyLounge");
+  b.showLine = false;
+  b.hold(3.0);
+  S.arrival = null;
+  b.card("Boarding soon: Gate B18", "flight", 3.5);
+  b.nav.setDestination("gateB18");
+  b.noteDestination(3.5);
+  b.showLine = true;
+  S.caption = "Time to board: down the lounge stairs, on to Gate B18";
+  b.hold(1.4);
+  b.follow();
+  S.caption = "Arrived";
+  arrive(b, arrivalText(map, "gateB18"));
+
+  start(b, { title: "Same trip in a wheelchair", mode: "Step-Free", seated: true, to: "skyLounge" });
+  S.caption = "Step-Free: Lift 1 up, then along the B pier";
+  b.follow({ captions: { bPier1: "Shops and lounges along the pier", loungeLiftG: "The lounge lift: never the stairs" } });
+  S.caption = "Arrived";
+  S.arrival = arrivalText(map, "skyLounge");
+  b.showLine = false;
+  b.hold(2.6);
+  S.arrival = null;
+  b.card("Boarding soon: Gate B20", "flight", 3.5);
+  b.nav.setDestination("gateB20");
+  b.noteDestination(3.5);
+  b.showLine = true;
+  S.caption = "Down by lift and on to Gate B20, at the far end";
+  b.hold(1.2);
+  b.follow();
+  S.caption = "Arrived";
+  arrive(b, arrivalText(map, "gateB20"));
+  finish(b, "Find Your Way Inside: a longer airport trip", ["Three ways up: escalator, two staircases; lifts for Step-Free.", "Shops, cafés and lounges along the B pier.", "Plain Dijkstra over the map graph; Step-Free removes stairs and escalators."]);
+  return { fps: FPS, frames: b.frames, map, scene: "airport" };
 }
 
 if (process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/\\/g, "/").split("/").pop())) {

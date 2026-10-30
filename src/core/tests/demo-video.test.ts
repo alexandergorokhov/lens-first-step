@@ -40,15 +40,17 @@ test("pet clip: Pet toggles on, off (line back, score kept) and on; the pet neve
 
 test("demo videos never walk or roll through a shop, a kiosk or a lift's glass (only through its doors)", async () => {
   const { buildPetTimeline } = await import("../../../tools/demo-video/timeline.mjs");
-  const { SHOPS, LIFTS, LIFT_HALF, doorFace } = await import("../../../tools/demo-video/layout.mjs");
+  const { SHOPS, FURNITURE, LIFTS, LIFT_HALF, doorFace } = await import("../../../tools/demo-video/layout.mjs");
+  const { buildAirportTripTimeline } = await import("../../../tools/demo-video/scenarios.mjs");
   const main = buildTimeline();
   const node = (id: string) => main.map.nodes.find((n: any) => n.id === id);
   const BODY = 0.3; // wheelchair / shoulder half-width
-  for (const [name, tl] of [["main", main], ["pet", buildPetTimeline()]] as [string, any][]) {
+  const solids = [...SHOPS.map((s: any[]) => [s[0], s[1], s[2], s[3], s[4], s[5]]), ...FURNITURE.map((f: any[]) => [f[0], f[1], f[2], f[3], f[4], f[7]])];
+  for (const [name, tl] of [["main", main], ["pet", buildPetTimeline()], ["airport-trip", buildAirportTripTimeline()]] as [string, any][]) {
     let prev: number[] | null = null;
     tl.frames.forEach((f: any, i: number) => {
       const [x, y, z] = f.feet;
-      for (const [x0, x1, z0, z1, sy, label] of SHOPS) {
+      for (const [x0, x1, z0, z1, sy, label] of solids) {
         if (Math.abs(y - sy) < 1 && x > x0 - BODY && x < x1 + BODY && z > z0 - BODY && z < z1 + BODY) {
           assert.fail(`${name} @${(i / 30).toFixed(1)}s: inside ${label} at ${x.toFixed(1)},${z.toFixed(1)}`);
         }
@@ -140,3 +142,23 @@ for (const key of ["hospital", "campus"]) {
     });
   });
 }
+
+test("airport trip video (no gate change): east stairs and lounge stairs on foot, lifts only in the wheelchair; Sky Lounge, B18, Sky Lounge, B20", async () => {
+  const { buildAirportTripTimeline } = await import("../../../tools/demo-video/scenarios.mjs");
+  const t = buildAirportTripTimeline();
+  const f = t.frames;
+  const arrivals = f.map((x: any) => x.arrival).filter(Boolean).filter((a: string, i: number, all: string[]) => i === 0 || all[i - 1] !== a);
+  assert.deepEqual(arrivals.map((a: string) => a.split(".")[0]), ["Sky Lounge", "Gate B18", "Sky Lounge", "Gate B20"]);
+  assert.ok(!f.some((x: any) => x.card && /change/i.test(x.card.text)), "no gate change");
+  const walk = f.filter((x: any) => x.mode === "Walk");
+  const roll = f.filter((x: any) => x.mode === "Step-Free");
+  assert.ok(walk.some((x: any) => Math.abs(x.feet[0] - 64) < 0.3 && x.feet[1] > 0.5 && x.feet[1] < 5.5), "walked up the east stairs");
+  assert.ok(walk.some((x: any) => Math.abs(x.feet[0] - 72) < 0.3 && x.feet[1] > 6.5 && x.feet[1] < 8.5), "walked the lounge stairs");
+  // In the wheelchair, between floors only inside a lift shaft.
+  const shafts = [[48, 10], [8, 20], [82, 30]];
+  for (const x of roll) {
+    const between = ![0, 5, 6, 9].some((lv) => Math.abs(x.feet[1] - lv) < 0.05);
+    if (between) assert.ok(shafts.some(([sx, sz]) => Math.abs(x.feet[0] - sx) < 1.3 && Math.abs(x.feet[2] - sz) < 1.3), "the wheelchair left a floor outside a lift at " + x.feet.join(","));
+  }
+  assert.ok(f.some((x: any) => (x.places || []).length > 0), "shops along the way show");
+});

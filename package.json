@@ -4,7 +4,7 @@
   "type": "module",
   "description": "Indoor navigation Lens for Snap Specs (Learn AR with SPECS)",
   "scripts": {
-    "test": "npm run sync:check && node --test src/core/tests/router.test.ts src/core/tests/maps.test.ts src/core/tests/geometry.test.ts src/core/tests/demo.test.ts src/core/tests/serve-maps.test.ts src/core/tests/review.test.ts src/core/tests/sync.test.ts src/core/tests/demo-video.test.ts src/core/tests/floors.test.ts src/core/tests/pet.test.ts src/core/tests/places.test.ts src/core/tests/coverage.test.ts src/core/tests/security.test.ts",
+    "test": "npm run sync:check && node --test src/core/tests/router.test.ts src/core/tests/maps.test.ts src/core/tests/geometry.test.ts src/core/tests/demo.test.ts src/core/tests/serve-maps.test.ts src/core/tests/review.test.ts src/core/tests/sync.test.ts src/core/tests/demo-video.test.ts src/core/tests/floors.test.ts src/core/tests/pet.test.ts src/core/tests/places.test.ts src/core/tests/coverage.test.ts src/core/tests/security.test.ts src/core/tests/docs.test.ts src/core/tests/play.test.ts src/core/tests/mapping.test.ts src/core/tests/peek.test.ts src/core/tests/trip.test.ts src/core/tests/astar.test.ts",
     "sync": "node tools/sync-core.mjs",
     "sync:check": "node tools/sync-core.mjs --check",
     "hooks": "git config core.hooksPath .githooks",
@@ -15,7 +15,8 @@
     "demo:pet": "node tools/demo-video/record.mjs --pet",
     "demo:pet:watch": "node tools/demo-video/record.mjs --pet --watch",
     "demo:hospital": "node tools/demo-video/record.mjs --map hospital",
-    "demo:campus": "node tools/demo-video/record.mjs --map campus"
+    "demo:campus": "node tools/demo-video/record.mjs --map campus",
+    "demo:airport-trip": "node tools/demo-video/record.mjs --map airport-trip"
   },
   "engines": {
     "node": ">=22.18"

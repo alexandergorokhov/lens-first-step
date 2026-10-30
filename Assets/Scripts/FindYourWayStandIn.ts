@@ -233,7 +233,7 @@ export function whiteTexture(): Texture {
 const FLOATS_PER_VERTEX = 8
 
 // Accumulates oriented boxes into one mesh.
-class Boxes {
+export class Boxes {
   private v: number[] = []
   private i: number[] = []
   private n = 0

@@ -84,6 +84,17 @@ If the scanned sign id is not a node of kind `sign` in the loaded map, the Lens 
 - **THEN** the last valid yaw is kept instead of a jump
 - Verified by: C13 yaw: looking straight down keeps the last valid yaw
 
+### Requirement: Start at the entrance sign
+With `startAtSign` (Inspector, on by default) the Lens SHALL lay the building out with the traveller
+standing at the entrance sign, facing into the building, so the line starts at their feet; the scan
+panel SHALL float ~1.2 m ahead (on real Specs: looking at the sign). Off: the old virtual sign at
+`signOffset`.
+
+#### Scenario: H1 Start at the sign
+- **WHEN** a mode is chosen
+- **THEN** the start sign's foot is within 30 cm (horizontally) of the head
+- Verified by: s1-start-at-sign-controls-hidden (LEAF written, not run yet)
+
 ## Known gaps
 
 - Mode panel position: the brief says "about 1 m in front, a little below eye level"; the code also

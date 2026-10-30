@@ -32,6 +32,10 @@
     captionPosition: false
     cardPosition: false
     cardSeconds: false
+    cuePosition: false
+    pillPosition: false
+    playPosition: false
+    scorePosition: false
     textColor: false
   ScriptTypesHidden:
     {}
@@ -45,6 +49,10 @@
     - cardPosition: !<Vec3> {x: 11.000000, y: 6.500000, z: -70.000000}
       badgePosition: !<Vec3> {x: -12.000000, y: 7.500000, z: -70.000000}
       captionPosition: !<Vec3> {x: 0.000000, y: 11.500000, z: -70.000000}
+      pillPosition: !<Vec3> {x: 0.000000, y: -9.000000, z: -70.000000}
+      cuePosition: !<Vec3> {x: 0.000000, y: -5.600000, z: -70.000000}
+      scorePosition: !<Vec3> {x: -8.000000, y: 5.200000, z: -70.000000}
+      playPosition: !<Vec3> {x: 0.000000, y: -12.200000, z: -70.000000}
       cardSeconds: !<float> 5.000000
       textColor: !<Vec4> {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
   ScriptTypes:
@@ -57,6 +65,10 @@
     - '// @input vec3 cardPosition = "{7,7,-70}" {"hint":"Notice card position relative to the camera, cm (top-right, inside the ~32° view)"}'
     - '// @input vec3 badgePosition = "{-8,8,-70}" {"hint":"Map badge position relative to the camera, cm"}'
     - '// @input vec3 captionPosition = "{0,11.5,-70}" {"hint":"Demo caption position relative to the camera, cm (top centre)"}'
+    - '// @input vec3 pillPosition = "{0,-9,-70}" {"hint":"Distance pill position relative to the camera, cm (bottom centre)"}'
+    - '// @input vec3 cuePosition = "{0,-5.6,-70}" {"hint":"Floor-change cue position (just above the pill), cm"}'
+    - '// @input vec3 scorePosition = "{-8,5.2,-70}" {"hint":"Companion score chip position (under the map badge), cm"}'
+    - '// @input vec3 playPosition = "{0,-12.2,-70}" {"hint":"Play line position (Hop / catch), cm"}'
     - '// @input float cardSeconds = 5 {"hint":"Seconds the notice card stays up", "widget":"slider", "min":1, "max":15, "step":0.5}'
     - '// @input vec4 textColor = "{1,1,1,1}" {"hint":"Card text colour", "widget":"color"}'
     - '// @ui {"widget":"group_end"}'

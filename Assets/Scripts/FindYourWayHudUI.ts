@@ -1,6 +1,8 @@
 // FindYourWayHudUI — head-locked HUD (child of the camera): the short-lived notice card in
 // the top-right corner ("Gate change B12 → C3", lift closed, ask staff) and the small
-// online/offline map badge. Must not: decide when a gate changes or which map is used.
+// online/offline map badge; the distance pill (bottom centre, floor badge first), the floor-change
+// cue just above it, the companion's score chip under the map badge and the play line (Hop /
+// catch hints and score). Must not: decide when a gate changes or which map is used.
 
 import {addIcon, addRow, addText, easeOutCubic, makePanel, obj, Panel} from "./FindYourWayWidgetsUI"
 import {icon} from "./FindYourWayIconsUI"
@@ -22,6 +24,22 @@ export class FindYourWayHudUI extends BaseScriptComponent {
   @hint("Demo caption position relative to the camera, cm (top centre)")
   captionPosition: vec3 = new vec3(0, 11.5, -70)
 
+  @input("vec3", "{0,-9,-70}")
+  @hint("Distance pill position relative to the camera, cm (bottom centre)")
+  pillPosition: vec3 = new vec3(0, -9, -70)
+
+  @input("vec3", "{0,-5.6,-70}")
+  @hint("Floor-change cue position (just above the pill), cm")
+  cuePosition: vec3 = new vec3(0, -5.6, -70)
+
+  @input("vec3", "{-8,5.2,-70}")
+  @hint("Companion score chip position (under the map badge), cm")
+  scorePosition: vec3 = new vec3(-8, 5.2, -70)
+
+  @input("vec3", "{0,-12.2,-70}")
+  @hint("Play line position (Hop / catch), cm")
+  playPosition: vec3 = new vec3(0, -12.2, -70)
+
   @input
   @hint("Seconds the notice card stays up")
   @widget(new SliderWidget(1, 15, 0.5))
@@ -40,6 +58,14 @@ export class FindYourWayHudUI extends BaseScriptComponent {
   private caption: SceneObject
   private captionText: Text
   private badgeText: Text
+  private pill: SceneObject
+  private pillText: Text
+  private cue: SceneObject
+  private cueText: Text
+  private score: SceneObject
+  private scoreText: Text
+  private play: SceneObject
+  private playText: Text
   private cardTime = -1
   private cardDuration = 5
 
@@ -67,8 +93,39 @@ export class FindYourWayHudUI extends BaseScriptComponent {
       this.textColor, 70)
     this.caption.enabled = false
 
+    const line = (name: string, pos: vec3, width: number, value: string): [SceneObject, Text] => {
+      const so = obj(this.sceneObject, name, pos)
+      const p = makePanel(so, width, 0.4, 0.2)
+      const t = addText(p.content, name + "Text", value, "Headline2", width - 1, 2, this.textColor, 70)
+      so.enabled = false
+      return [so, t]
+    }
+    ;[this.pill, this.pillText] = line("DistancePill", this.pillPosition, 26, "Gate B12 · 140 m · 3 min")
+    ;[this.cue, this.cueText] = line("FloorCue", this.cuePosition, 24, "In 15 m: escalator up")
+    ;[this.score, this.scoreText] = line("ScoreChip", this.scorePosition, 9, "Treats 0 of 0")
+    ;[this.play, this.playText] = line("PlayLine", this.playPosition, 24, "Raise your hand: Pet jumps")
+
     this.createEvent("UpdateEvent").bind(() => this.tick())
   }
+
+  // One-line chips: null hides; same text = no work.
+  private setLine(so: SceneObject, t: Text, text: string | null): void {
+    if (text === null) {
+      so.enabled = false
+      return
+    }
+    if (t.text !== text) t.text = text
+    so.enabled = true
+  }
+
+  setPill(text: string | null): void { this.setLine(this.pill, this.pillText, text) }
+  getPillText(): string | null { return this.pill.enabled ? this.pillText.text : null }
+  setCue(text: string | null): void { this.setLine(this.cue, this.cueText, text) }
+  getCueText(): string | null { return this.cue.enabled ? this.cueText.text : null }
+  setScore(text: string | null): void { this.setLine(this.score, this.scoreText, text) }
+  getScoreText(): string | null { return this.score.enabled ? this.scoreText.text : null }
+  setPlayLine(text: string | null): void { this.setLine(this.play, this.playText, text) }
+  getPlayLine(): string | null { return this.play.enabled ? this.playText.text : null }
 
   showCard(text: string, iconName?: string | null, seconds?: number): void {
     this.cardText.text = text

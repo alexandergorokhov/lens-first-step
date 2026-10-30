@@ -22,9 +22,11 @@ Click inside the Preview panel first so it gets your keys.
 ## 3. What you see at the start
 
 - **Mode panel** ("How are you getting there?"): about 1 m ahead, a little right and below eye level.
-- **Demo controls**: low on your left; they follow you. Buttons: **Gate change B12 → C3**, **Restart trip**, **Map: Airport (switch)**, **Play demo**. These are for the demo, not part of the real app.
+- **Demo controls** are now **hidden by default** (real use). To get them back (gate change, restart, map switch, Play demo), select **FindYourWay** in the Scene Hierarchy and tick **showDemoControls** in the Inspector. They sit low on your left and follow you.
+- **You start at the entrance sign** (`startAtSign`, on by default): the building is laid out with you standing at the sign, facing in, and the line starts at your feet. The **Scan sign** panel floats ~1.2 m ahead. Untick `startAtSign` for the old layout (a virtual sign 2.5 m ahead).
+- The mode panel also has **Learn this place** and a row of interests (Coffee, Food, Shops, Toilets, Pharmacy, Acc. toilets: what the companion may point out; none by default).
 
-Just want to watch? Click **Play demo** (see section 10).
+Just want to watch? Tick **showDemoControls** and click **Play demo**, or tick **autoplayDemo** (see section 10).
 
 Tip: the building is laid out from where you stand and face when you pick a mode. Walk forward (W) about 2 m into open floor first, away from the sofa.
 
@@ -93,15 +95,15 @@ cd C:\Sasha\Projects\Lens\first-step\first-step
 npm test
 ```
 
-It first checks the Lens copies (`npm run sync:check`). Expect `pass 96`, `fail 0` (one test downloads the maps from the public gist; set `OFFLINE=1` to skip it with no internet). Covers: Walk and Step-Free routes on all four maps, Step-Free never uses stairs or escalators, Walk is always shortest, closures and re-routes, destination changes, broken maps, unknown signs, the turn arrow maths, the map download URL, the local map server, the demo's beats and walking speed, and that the Lens copies of the code and maps match `src/core`.
+It first checks the Lens copies (`npm run sync:check`). Expect `pass 231`, `fail 0` (one test downloads the maps from the public gist; with no internet set `OFFLINE=1` to skip it: `pass 230`, `skipped 1`). `docs.test.ts` keeps this number up to date: it fails if the docs quote a different count. Covers: Walk and Step-Free routes on all four maps, Step-Free never uses stairs or escalators, Walk is always shortest, closures and re-routes, destination changes, broken maps, unknown signs, the turn arrow maths, the map download URL, the local map server, the demo's beats and walking speed, and that the Lens copies of the code and maps match `src/core`.
 
 After editing anything in `src/core`, run `npm run sync` to copy it into `Assets/`. `npm run hooks` (once) makes git run `npm test` before every commit.
 
-### b. LEAF tests (the running Lens, about 2 minutes)
+### b. LEAF tests (the running Lens, a few minutes)
 
 1. In Lens Studio's Scene Hierarchy select **LeafIndex**, tick **autoRun** in the Inspector. (To run just one, type its id in **only**, e.g. `dc4-gate-change-stairs-and-ramp`.)
 2. Reset the preview.
-3. In the **Logger** panel look for `[FYW-LEAF] RESULT` lines and `SUMMARY 19/19 passed`.
+3. In the **Logger** panel look for `[FYW-LEAF] RESULT` lines and the `SUMMARY` (30 scenarios: the first 19 passed before the brief-2 work; the 11 new ones — `s1-…`, `fl1-…`, `fl2-…`, `p1-…`, `p3-…`, `q4-…`, `g1-…`, `pc1-…`, `t1-…`, `m5-…`, `pk1-…` — are written but **not run yet**).
 4. Untick **autoRun** afterwards so the preview opens straight into the demo.
 
 The 14 scenarios: your 5 done criteria (dc1–dc5), the two route rules, broken map (e2), no step-free route (e3), already at the destination (e4), unknown sign (e5), map switch, restart, and the whole autoplay demo at 10× speed (`demo-autoplay-completes`). `devpost/SCENARIOS.md` lists which test covers each scenario.
@@ -118,6 +120,21 @@ Run sections 4–7 above and tick:
 - [ ] Each map (Airport, Hospital, Campus, Room) loads and routes correctly in both modes.
 
 Write **"logic proven"** next to what tests and the preview show working, and **"feel unproven"** next to what only real glasses could tell (comfort, real hand tracking, real sign recognition, real floor detection).
+
+## 9b. Brief 2 in the preview: floors, companion, places, play, mall, mapping
+
+After **Scan sign** (any map):
+
+- **Distance pill** at the bottom centre: "Ground floor · Gate B12 · 58 m · 1 floor up · 1 min". The first chip is your floor; it changes after a ride. Just above it for a few seconds: "Gate B12 is on Departures, 1 floor up", then, within 15 m of the escalator, "In 12 m: escalator up to Departures". The line stops at the escalator foot with a short glowing post.
+- **App panel** (waist height, to your left, during a trip): **Pet: off/on** (the companion; the line stays), **Swap model** (dog → robot → rover), **Places: on/off** (icons and pointing), and, while you stand still with the companion on, **Play while you wait**, **Jump**, **Throw a treat**; **Next stop** on a mall trip.
+- **Companion**: walks ~2.5 m ahead on the line, sits at the escalator foot until you get there, collects treats (chip under the map badge). With an interest picked it steps aside and points at a matching or sponsored place; that place's sign shows its name, "Sponsored · demo" if sponsored, and **Go here?**.
+- **Hop (play while you wait)**: stand still ~2 s with the companion on, click **Play while you wait**. A lane appears ahead, the companion at the near end seen from behind, obstacles coming from the far end. On Specs raise a hand to jump; in the preview click **Jump**. A bump: it shakes, then Jump (or a raised hand) plays again. Walk off (W) and it stops.
+- **Catch**: standing still, click **Throw a treat**: it fetches it and brings it back.
+- **Mall** (`mapKey` = Shopping mall, or the map switch): three shops (Inspector `multiStops`), ordered for the shortest walk: "Stop 1 of 3: Pharmacy"; at each stop click **Next stop**.
+- **Learn this place**: on the mode panel. You are the entrance sign; walk (WASD) and click **Point here** at corners; tag a stretch (Stairs / Lift / Ramp / Step-free); **Next name** + **Name it**; **Save and route**. You're back at the mode panel on "My place": Walk, Scan, and the line goes to your named point. The map is kept on the device (after the bundled maps in the map switch).
+- **Peek ahead** (Specs hand tracking): pinch and pull a hand toward you: a small model of the route shows below your view; let go to hide it. Not reachable with the mouse in the preview; LEAF covers it with a test hook.
+
+Not done yet: grab-and-throw with the hand (the button throws straight ahead), and none of this has been run in the preview by Claude (no Lens Studio connection in that session): run the LEAF suite first.
 
 ## 10. Watch the demo (no clicking)
 
@@ -175,6 +192,8 @@ If you change a map in `src/core/data`, update the gist too: `gh gist edit ac59c
 **Local server:** `http://localhost:8787/` is refused by the preview (*"URL is not secure (Experimental API must be enabled to access insecure URLs)"*), so the Lens falls back to its built-in map ("offline map"). Turning on the Experimental API would allow it, but Lenses that use experimental APIs can't be published.
 
 ## 12. Demo video (no Lens Studio needed)
+
+**These are concept renders, not the Lens.** They are drawn with three.js in a browser, not by Lens Studio or the glasses; only the route engine (`src/core`) is shared with the Lens. Each frame carries the tag "Concept render (three.js), not the Lens". The hackathon video should be recorded from the Lens Studio preview.
 
 A first-person video of the trip through a 3D stand-in airport: walking (with the gate change B12 → C3), then in a wheelchair at seated height (Lift 1 out, re-routed to Lift 2). The route, every re-route and both arrivals come from the Lens's own route engine (`src/core/router.ts`); a small inset shows the traveller from behind.
 

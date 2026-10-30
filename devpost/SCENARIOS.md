@@ -14,9 +14,12 @@ Approved test scenarios and where each is tested.
   seated height and the scanned sign are simulated with test hooks on `FindYourWayMain`
   (LEAF cannot drive WASD/Q/E).
 
-Status as of the last run: Node 144 passed, 0 failed, 1 skipped (the live gist download, run
-offline; it needs the gist updated with the new map.json). LEAF 19 of 19 passed (before the floors work; the proposed S10–S17 LEAF tests are not
-written yet).
+Status as of the last run: Node 231 tests, all passing (offline, `OFFLINE=1`, the live gist download
+is skipped). `src/core/tests/docs.test.ts` checks this count, the test list and every test named
+below. LEAF 19 of 19 passed before the brief-2 work. The brief-2 features below now have their Lens
+UI (type-checked) and 11 more LEAF scenarios written test-first; **those 11 have not been run yet**
+(they need Lens Studio connected), and the first 19 must be re-run on the bigger airport and with
+the start at the sign. "LEAF written (not run yet)" means exactly that: not done until it passes.
 
 ## Approved scenarios
 
@@ -38,47 +41,139 @@ written yet).
 | E5 | Unknown sign id | "This sign isn't in the map"; nothing drawn | Node: "E5 Unknown sign id…". LEAF: `e5-unknown-sign` | Passing |
 | E6 | Seated height (Q) | Line and cards readable and in view at seated eye height; a seated traveller can ride | Node: "C1 ride reach…", "C1 level snap…". LEAF: `dc3-stepfree-seated-lift-reroute` (sits down before choosing: the floor stays at standing height, line 1 cm above it and within 25° below the eyes), `dc3b-seated-lift-ride` (0.5 m from Lift 2, feet −0.45 m: rides; card "Lift up to Departures") | Logic passing. Real readability on glasses: feel unproven |
 
-## Proposed: floors and distance (brief 2, features a–d, g and 1)
+## Brief 2: floors and distance (brief 2, features a–d, g and 1)
 
-Status "proposed": the route-engine logic is built and passes in Node
-(`src/core/tests/floors.test.ts`) and shows in the demo video; the Lens UI and its LEAF tests
-come next, once Lens Studio is connected.
-
-| # | Scenario | Expected result | Tests | Status |
-|---|---|---|---|---|
-| S10 | Distance pill | "Gate C3 · 140 m · 1 floor down · 3 min" at the bottom centre after the scan; equals the route length at the start, drops as you walk, updates after a re-route, hides at arrival | Node: "S10 Distance: at the start…", "S10 Distance drops as you walk…", "S10 Distance updates after a re-route…", "S10 Pill text…". LEAF (to write): `fl1-pill-shows-and-counts-down` | Proposed: logic passing |
-| S11 | Floors and time | Floors counted in storeys (a level's `floor` in the map, else height order; the airport's C pier shares storey 1 with Departures); Walk 1.3 m/s, Step-Free 1.0 m/s; +20 s escalator, +45 s lift, +15 s per floor of stairs; a map can override; mid-escalator still counts from the floor you left | Node: "S11 Floors…", "S11 Time…", "S11 A map can override…", "S11 Halfway up the escalator…" | Proposed: logic passing |
-| S12 | Floor badge | First chip of the pill names your floor; changes when a ride ends (from the route, not feet height: C pier and Departures are 1 m apart) | Node: "S12 Floor badge…". LEAF (to write): `fl2-badge-changes-after-lift` | Proposed: logic passing |
-| S13 | Floor-change cue | Within 15 m of a lift/escalator/stairs/ramp: "In 15 m: lift up to Departures" ("Now:" within 2 m), above the pill; after the scan or a gate change: "Gate C3 is on C pier, 1 floor down"; Step-Free cues are only lifts or ramps | Node: "S13 Floor-change cue…", "S13 Cue texts…", "S13 Step-Free cues…". LEAF (to write): `fl3-cue-before-escalator` | Proposed: logic passing |
-| S14 | Line on your floor | The line ends at the foot of the next floor change with an up/down marker; drawn up an escalator/stairs/ramp once you are on it; in a lift only the marker | Node: "S14 Line on your floor…" (`lineOnLevel`) | Proposed: logic passing |
-| S15 | Down escalator | Airport has a down escalator beside the up one (`escDownTop` → `escDownFoot`); Walk going down rides it, with it closed takes the stairs; the up one is never ridden down | Node: "S15 Going down on Walk…", "S15 The up escalator is never ridden down…", "Escalators are one-way…" | Proposed: logic passing |
-| S16 | Going down by lift and stairs | Step-Free from Departures to the entrance takes a lift down; Departures → C pier: Walk stairs down, Step-Free ramp down | Node: "S16 Riding a lift down…", "S16 Stairs down on Walk…" | Proposed: logic passing |
-| S15b | Escalator feet and tops joined | A re-route at the foot of the up escalator never sends you back through the hall | Node: "S15 Re-routing at the foot of the up escalator…" | Proposed: logic passing |
-| S17 | Three levels, both directions | Ground → Departures → C pier is cued up then down; a trip from upstairs to the entrance arrives | Node: "S17 Three levels…", "S17 A trip that starts upstairs…" | Proposed: logic passing |
-
-## Proposed: the companion and places (brief 2, features 2 and 6, addendum B and C)
-
-Status "proposed": logic built test-first and passing in Node (`src/core/tests/pet.test.ts`,
-`src/core/tests/places.test.ts`), shown in the demo videos (`npm run demo:pet`,
-`-- --companion robot|rover`); Lens UI and LEAF tests next.
+Status: the route-engine logic passes in Node (`src/core/tests/floors.test.ts`); the Lens shows the
+pill (floor badge first, bottom centre), the cue / destination note above it and the up/down post
+(`FindYourWayMain.updatePill`, `lineOnLevel`); LEAF `fl1-pill-shows-and-counts-down` and
+`fl2-cue-post-and-badge-after-escalator` are written, not run yet.
 
 | # | Scenario | Expected result | Tests | Status |
 |---|---|---|---|---|
-| P1 | Companion on/off | A toggle on the app panel; the line shows either way (at 50%); toggling never changes the route | Node: "P1 Pet on/off…" | Proposed: logic passing |
-| P2 | It leads | ~2.5 m ahead along the route, on the route | Node: "P2 The pet trots ~2.5 m ahead…" | Proposed: logic passing |
-| P3 | It waits at floor changes | Sits at the foot of the escalator/lift; never on another floor before you; trots up, never jumps | Node: "P3 The pet waits at the foot…" | Proposed: logic passing |
-| P4 | It waits for you | More than 6 m behind: it stops and looks back | Node: "P4 The pet stops and looks back…" | Proposed: logic passing |
-| P5 | Step-Free companion | Only ever on the step-free route | Node: "P5 Step-Free with the pet…" | Proposed: logic passing |
-| P6 | Collectibles | At turns, floor changes, the gate and every ~7 m; each collected once; arrival never re-lays or double-counts (real Navigator, airport and room) | Node: "P6 Treats…", "P6 Arrival through a real Navigator…" | Proposed: logic passing |
-| P7 | Score kept | Off/on and a re-route keep the score | Node: "P7 Turning the pet off keeps the score…" | Proposed: logic passing |
-| Q1 | Places from the map | `kind: "place"` + `category`; nothing shop-specific in code; adding places changes no route | Node: "Q1 …" (2 tests) | Proposed: logic passing |
-| Q2 | Icons + mute | ≤3, my floor, ≤15 m and near the route; Step-Free: accessible toilets and lifts first; mute hides all and never changes the route | Node: "Q2 …" (3 tests) | Proposed: logic passing |
-| Q3 | Interests | coffee, food, shopping, toilets, pharmacy (+ accessible toilets on Step-Free); none by default | Node: "Q3 …" | Proposed: logic passing |
-| Q4 | Pointing rules | Only interests or sponsored; "Sponsored" always shown; muted: none; ≤1 per 30 s and 20 m; never within 10 m of a turn/floor change or while a card shows; never behind you; never changes route, distance or destination | Node: "Q4 …" (7 tests) | Proposed: logic passing |
-| Q5 | Point, then carry on | Steps ~1.2 m off the line toward the place, stays ahead in view, faces it ~3 s, then back on the line 2–3 m ahead | Node: "Q5 …" | Proposed: logic passing |
-| Q6 | Go here? | The place becomes the destination; Step-Free rules kept | Node: "Q6 …" | Proposed: logic passing |
-| Q7 | Line at 50% | In every guide mode; Lens default alpha 0.5; video line 0.5 | Node: "Q7 …" | Proposed: logic passing |
-| Q8 | Any companion | dog / robot / rover: same logic, own name, model and collectible | Node: "Q8 …" | Proposed: logic passing |
+| S10 | Distance pill | "Gate C3 · 140 m · 1 floor down · 3 min" at the bottom centre after the scan; equals the route length at the start, drops as you walk, updates after a re-route, hides at arrival | Node: "S10 Distance: at the start…", "S10 Distance drops as you walk…", "S10 Distance updates after a re-route…", "S10 Pill text…". LEAF: `fl1-pill-shows-and-counts-down` | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+| S11 | Floors and time | Floors counted in storeys (a level's `floor` in the map, else height order; the airport's C pier shares storey 1 with Departures); Walk 1.3 m/s, Step-Free 1.0 m/s; +20 s escalator, +45 s lift, +15 s per floor of stairs; a map can override; mid-escalator still counts from the floor you left | Node: "S11 Floors…", "S11 Time…", "S11 A map can override…", "S11 Halfway up the escalator…" | Built: Node passing, Lens uses it (tripAhead) |
+| S12 | Floor badge | First chip of the pill names your floor; changes when a ride ends (from the route, not feet height: C pier and Departures are 1 m apart) | Node: "S12 Floor badge…". LEAF: `fl2-cue-post-and-badge-after-escalator` | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+| S13 | Floor-change cue | Within 15 m of a lift/escalator/stairs/ramp: "In 15 m: lift up to Departures" ("Now:" within 2 m), above the pill; after the scan or a gate change: "Gate C3 is on C pier, 1 floor down"; Step-Free cues are only lifts or ramps | Node: "S13 Floor-change cue…", "S13 Cue texts…", "S13 Step-Free cues…". LEAF: `fl2-cue-post-and-badge-after-escalator` | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+| S14 | Line on your floor | The line ends at the foot of the next floor change with an up/down marker; drawn up an escalator/stairs/ramp once you are on it; in a lift only the marker | Node: "S14 Line on your floor…" (`lineOnLevel`). LEAF: `fl2-cue-post-and-badge-after-escalator` | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+| S15 | Down escalator | Airport has a down escalator beside the up one (`escDownTop` → `escDownFoot`); Walk going down rides it, with it closed takes the stairs; the up one is never ridden down | Node: "S15 Going down on Walk…", "S15 The up escalator is never ridden down…", "Escalators are one-way…" | Built: Node passing, Lens uses it (tripAhead) |
+| S16 | Going down by lift and stairs | Step-Free from Departures to the entrance takes a lift down; Departures → C pier: Walk stairs down, Step-Free ramp down | Node: "S16 Riding a lift down…", "S16 Stairs down on Walk…" | Built: Node passing, Lens uses it (tripAhead) |
+| S15b | Escalator feet and tops joined | A re-route at the foot of the up escalator never sends you back through the hall | Node: "S15 Re-routing at the foot of the up escalator…" | Built: Node passing, Lens uses it (tripAhead) |
+| S17 | Three levels, both directions | Ground → Departures → C pier is cued up then down; a trip from upstairs to the entrance arrives | Node: "S17 Three levels…", "S17 A trip that starts upstairs…" | Built: Node passing, Lens uses it (tripAhead) |
+
+## Brief 2: the companion and places (brief 2, features 2 and 6, addendum B and C)
+
+Status: logic passing in Node (`pet.test.ts`, `places.test.ts`, `play.test.ts`); in the Lens the
+companion is a feature you turn on or off on the app panel (waist height, left: "Pet: on/off",
+"Swap model", "Places: on/off", play buttons), drawn by `FindYourWayCompanionView` (dog / robot /
+rover from light primitives), place icons by `FindYourWayPlacesUI`, interests on the mode panel.
+LEAF written, not run yet: `p1-companion-toggle-and-models`, `p3-companion-waits-at-escalator`,
+`q4-points-at-interests-and-sponsored`, `pc1-throw-and-fetch-any-model`.
+
+| # | Scenario | Expected result | Tests | Status |
+|---|---|---|---|---|
+| P1 | Companion on/off | A toggle on the app panel; the line shows either way (at 50%); toggling never changes the route | Node: "P1 Pet on/off…". LEAF: `p1-companion-toggle-and-models` | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+| P2 | It leads | ~2.5 m ahead along the route, on the route | Node: "P2 The pet trots ~2.5 m ahead…" | Built: Node passing, Lens UI built |
+| P3 | It waits at floor changes | Sits at the foot of the escalator/lift; never on another floor before you; trots up, never jumps | Node: "P3 The pet waits at the foot…". LEAF: `p3-companion-waits-at-escalator` | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+| P4 | It waits for you | More than 6 m behind: it stops and looks back | Node: "P4 The pet stops and looks back…" | Built: Node passing, Lens UI built |
+| P5 | Step-Free companion | Only ever on the step-free route | Node: "P5 Step-Free with the pet…" | Built: Node passing, Lens UI built |
+| P6 | Collectibles | At turns, floor changes, the gate and every ~7 m; each collected once; arrival never re-lays or double-counts (real Navigator, airport and room) | Node: "P6 Treats…", "P6 Arrival through a real Navigator…" | Built: Node passing, Lens UI built |
+| P7 | Score kept | Off/on and a re-route keep the score | Node: "P7 Turning the pet off keeps the score…" | Built: Node passing, Lens UI built |
+| P8 | Play catch: throw | Throw the treat: it lands on your floor within ~5 m; no throw while walking, near a turn/floor change or while a card shows. In the Lens: "Throw a treat" on the app panel throws straight ahead (grab-and-throw with the hand is not built yet) | Node: "P8 A throw lands on your floor…", "P8 No throw while walking…". LEAF: `pc1-throw-and-fetch-any-model` | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+| P9 | Play catch: fetch | The companion runs to the landing spot, catches it (chime), brings it back, then returns to guiding; route, distance and destination never change | Node: "P9 Fetch: the companion runs to the landing spot…". LEAF: `pc1-throw-and-fetch-any-model` | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+| P10 | Any model plays | Dog (treat), robot (bolt), rover (star): the same game, only the model, object and colour change | Node: "G9 Any companion plays…". LEAF: `pc1-throw-and-fetch-any-model` (rover) | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+| Q1 | Places from the map | `kind: "place"` + `category`; nothing shop-specific in code; adding places changes no route | Node: "Q1 …" (2 tests) | Built: Node passing, Lens UI built |
+| Q2 | Icons + mute | ≤3, my floor, ≤15 m and near the route; Step-Free: accessible toilets and lifts first; mute hides all and never changes the route | Node: "Q2 …" (3 tests). LEAF: `q4-points-at-interests-and-sponsored` | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+| Q3 | Interests | coffee, food, shopping, toilets, pharmacy (+ accessible toilets on Step-Free); none by default | Node: "Q3 …" | Built: Node passing, Lens UI built |
+| Q4 | Pointing rules | Only interests or sponsored; "Sponsored" always shown; muted: none; ≤1 per 30 s and 20 m; never within 10 m of a turn/floor change or while a card shows; never behind you; never changes route, distance or destination | Node: "Q4 …" (7 tests). LEAF: `q4-points-at-interests-and-sponsored` | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+| Q5 | Point, then carry on | Steps ~1.2 m off the line toward the place, stays ahead in view, faces it ~3 s, then back on the line 2–3 m ahead | Node: "Q5 …". LEAF: `q4-points-at-interests-and-sponsored` | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+| Q6 | Go here? | The place becomes the destination; Step-Free rules kept | Node: "Q6 …". LEAF: `q4-points-at-interests-and-sponsored` | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+| Q7 | Line at 50% | In every guide mode; Lens default alpha 0.5; video line 0.5 | Node: "Q7 …". LEAF: `p1-companion-toggle-and-models` (line stays) | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+| Q8 | Any companion | dog / robot / rover: same logic, own name, model and collectible | Node: "Q8 …". LEAF: `p1-companion-toggle-and-models` | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+
+## Brief 2: "Learn this place" — mapping mode by walking (brief 2, feature 5)
+
+Status: `src/core/mapping.ts` (`MapRecorder`) passes in Node (`mapping.test.ts`); in the Lens,
+"Learn this place" on the mode panel opens `FindYourWayMappingPanelUI` (Point here, Stairs / Lift /
+Ramp / Step-free, Next name + Name it, Next floor, Undo, Cancel, Save and route). Save checks the map
+with `parseMap`, keeps it in persistent storage and loads it as "My place" (after the bundled maps
+in the map switch). LEAF `m5-learn-this-place-save-route` written, not run yet. A real reload of the
+Lens is a manual check (LEAF checks the stored copy).
+
+| # | Scenario | Expected result | Tests | Status |
+|---|---|---|---|---|
+| M1 | Start at the sign | The first point is the entrance sign (kind "sign"); a new map has one node | Node: M1 (2 tests in mapping.test.ts). LEAF: `m5-learn-this-place-save-route` | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+| M2 | Point here | Each pinch adds a node at the feet and a walk edge from the previous point, length = distance walked (never less than the straight line); < 0.5 m from the previous point is ignored; near another point it joins it | Node: M2 (3 tests). LEAF: `m5-learn-this-place-save-route` | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+| M3 | Tag a stretch | One pinch turns the last stretch into stairs / lift / ramp / step-free; Step-Free routing then avoids stairs; Next floor starts a new level | Node: M3 (3 tests). LEAF: `m5-learn-this-place-save-route` | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+| M4 | Name a point | Names come from a short list (Entrance sign, Gate, Room, Toilet, Lift, Stairs, Exit, Café, Shop); duplicates become "Room 2"; named points are destinations | Node: M4 (2 tests). LEAF: `m5-learn-this-place-save-route` | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+| M5 | Save and route | Save writes map.json in the `src/core` format, `parseMap` accepts it, routing works on it at once and after a reload (`fromJson`); undo | Node: M5 (4 tests). LEAF: `m5-learn-this-place-save-route` | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+
+## Brief 2: peek ahead — hand zoom (brief 2, feature 4, stretch)
+
+Status: `src/core/peek.ts` (`peekModel`) passes in Node (`peek.test.ts`); in the Lens
+`FindYourWayPeekView` shows the route model ~60 cm ahead at waist height while you pinch and pull a
+hand toward you (SIK hand tracking), and hides it when you let go. LEAF
+`pk1-peek-ahead-shows-and-hides` (written, not run yet) uses a test hook, since LEAF can't pinch
+with a tracked hand.
+
+| # | Scenario | Expected result | Tests | Status |
+|---|---|---|---|---|
+| Z1 | Pinch and pull | A small model of the route appears ~0.6 m ahead at waist height, the rest of the route glowing and a dot for you | LEAF: `pk1-peek-ahead-shows-and-hides` | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+| Z2 | Let go | Releasing the pinch hides the model | LEAF: `pk1-peek-ahead-shows-and-hides` | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+| Z3 | Route unchanged | Showing or hiding the model never changes the route, distance or destination | Node: Z3 (5 tests in peek.test.ts). LEAF: `pk1-peek-ahead-shows-and-hides` | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+
+## Play while you wait — Hop (the user's game, 2026-10-29)
+
+While you stand still with the companion on, a short lane appears on the floor ~1.3 m ahead with
+the companion at the near end, seen from behind. Obstacles come from the far end; raise a hand (on
+Specs: either wrist near head height, once per raise; in the preview: the Jump button) and it jumps.
+A hit: it shakes; raise a hand again (or Play again) to restart. Walking off ends it. Logic:
+`src/core/play.ts` (`PlayGate`, `RaiseDetector`, `HopGame`); Lens: `FindYourWayMain.updateCompanion`,
+lane and obstacles in `FindYourWayCompanionView`, the line under the pill shows the score.
+
+| # | Scenario | Expected result | Tests | Status |
+|---|---|---|---|---|
+| G1 | Only while you wait | Offered after 2 s standing still (sway ≤ 0.6 m) with the companion on and no card; walking off or turning the companion off ends it | Node: "G1 Play is offered only while you stand still…". LEAF: `g1-hop-jump-bump-restart` | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+| G2 | Raise a hand to jump | One jump per raise (re-arms when the hand comes down); no double jump in the air; ~0.63 m high, ~0.6 s | Node: G2 (2 tests). LEAF: `g1-hop-jump-bump-restart` (Jump button / test hook) | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+| G3 | Obstacles come from far | They appear at the far end (6 m) and come toward the companion at the game speed | Node: "G3 Obstacles appear at the far end…". LEAF: `g1-hop-jump-bump-restart` | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+| G4 | Jump or bump | Not jumping hits the first obstacle; a well-timed jump clears it | Node: "G4 Not jumping hits the first obstacle…" | Built: Node passing, Lens UI built |
+| G5 | Shake and restart | A hit: it shakes 1.2 s, the game stops; then raise a hand (or Play again) to restart; the best score is kept | Node: G5 (2 tests). LEAF: `g1-hop-jump-bump-restart` | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+| G6 | Always jumpable | Gaps always leave time to land and jump again: a good player never crashes in 2 min (25 seeds) | Node: "G6 Every obstacle can be jumped…" | Built: Node passing, Lens UI built |
+| G7 | Score and speed | Each cleared obstacle counts once; it speeds up a little, up to a cap | Node: "G7 The score counts obstacles cleared…" | Built: Node passing, Lens UI built |
+| G8 | Start and stop | Nothing runs before start or after stop; stop clears it | Node: "G8 The game never runs before start…" | Built: Node passing, Lens UI built |
+| G9 | Any companion | The same game for the dog, robot and rover; their own words | Node: "G9 Any companion plays…" | Built: Node passing, Lens UI built |
+
+## Shopping mall, several shops (handoff item 12)
+
+New map `mall` (`src/core/data/mall.json`: 2 floors, 14 places, up and down escalators, stairs,
+two lifts, Lift A out-of-service event). The Lens orders the Inspector's `multiStops`
+("pharmacy,iceCream,sushi") for the shortest total walk and guides stop by stop ("Stop 2 of 4:
+Pharmacy" on the arrival card, Next stop on the app panel). Logic: `src/core/trip.ts`.
+
+| # | Scenario | Expected result | Tests | Status |
+|---|---|---|---|---|
+| T1 | Best order | The order is no longer than the picked order or any other (every order up to 6 stops), Walk and Step-Free | Node: "T1 best order is no longer…". LEAF: `t1-mall-multi-stop` | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+| T2 | Step-Free legs | Every leg of a Step-Free trip avoids stairs and escalators | Node: "T2 every leg of a Step-Free trip…". LEAF: `t1-mall-multi-stop` | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+| T3 | Stop by stop | Arriving shows "Stop n of N"; Next stop draws the line to the next; then it ends | Node: "T3 arriving and pressing Next…". LEAF: `t1-mall-multi-stop` | Built: Node passing, Lens UI built, LEAF written (not run yet) |
+| T4 | Labels | "Stop 2 of 4: Pharmacy" from the map's names | Node: "T4 labels read…" | Built: Node passing, Lens UI built |
+
+## A* (handoff item 11)
+
+`src/core/astar.ts`: A* with a binary heap and a straight-line heuristic (scaled by the map's
+smallest edge-to-straight-line ratio, so `EDGE_SLACK` can't make it inexact). Kept beside the plain
+Dijkstra (`shortestTree`), which the Lens still uses; A* is for big maps (a mall, a mapped campus).
+
+| # | Scenario | Expected result | Tests | Status |
+|---|---|---|---|---|
+| A1 | Same as Dijkstra | For every pair of nodes on every map (incl. the mall), Walk and Step-Free: the same length, and no route exactly when Dijkstra finds none | Node: "A1 A* length equals Dijkstra…" | Passing (Node) |
+| A2 | Closures | Every closable edge closed, and all lifts closed at once | Node: "A2 closed connections are respected…" | Passing (Node) |
+| A3 | One-way and edge cases | Escalators one-way; unknown nodes; a predicate that allows nothing | Node: "A3 one-way escalators…" | Passing (Node) |
+
+## Start at the sign; demo controls hidden (handoff items 1 and 2)
+
+| # | Scenario | Expected result | Tests | Status |
+|---|---|---|---|---|
+| H1 | Start at the sign | With `startAtSign` (on by default) the building is laid out with you at the entrance sign, facing in; the line starts at your feet; the scan panel floats ~1.2 m ahead (on Specs you look at the sign) | LEAF: `s1-start-at-sign-controls-hidden` | Built: LEAF written (not run yet) |
+| H2 | Demo controls hidden | Off by default (`showDemoControls`); the LEAF suite and recordings turn them on | LEAF: `s1-start-at-sign-controls-hidden` | Built: LEAF written (not run yet) |
 
 ## Done criteria (design brief)
 
@@ -137,7 +232,7 @@ Status "proposed": logic built test-first and passing in Node (`src/core/tests/p
 - Arrival radius 3 m, off-route distance 5 m and ride reach 2.5 m (lift) / 3.5 m (others) are
   defaults in `router.ts`; a map's `place` block can override them (`tripSettings`; the preview
   room uses 0.6 m / 1.5 m). Arrival and ride reach are horizontal, on the same level.
-- The shared core is `src/core/{router,geometry,demo,place}.ts`; `npm run sync` copies it and the
+- The shared core is `src/core/{router,geometry,demo,place,pet,places,play,mapping,peek,trip,astar}.ts`; `npm run sync` copies it and the
   maps listed in `src/core/data/index.json` into `Assets/`.
 - E3 uses the map's `assistance` node; the route to it is returned with the ask-staff result
   so the Lens can draw it.

@@ -241,12 +241,16 @@ test("S9/E1 logic: loadMapWithTimeout uses the download when it arrives in time"
 });
 
 test("E1 logic: a download slower than the timeout falls back to the built-in map", async () => {
-  const slow = () => new Promise<string>((res) => setTimeout(() => res(MAP_TEXT), 200));
-  const started = Date.now();
+  // The download would take 5 s; the 50 ms timeout must win. A flag, not the wall clock, so a
+  // busy machine can't make this fail.
+  let finished = false;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const slow = () => new Promise<string>((res) => (timer = setTimeout(() => ((finished = true), res(MAP_TEXT)), 5000)));
   const r = await loadMapWithTimeout(slow, "https://example.test/map.json", MAP_TEXT, 50);
+  clearTimeout(timer);
   assert.equal(r.source, "offline");
   assert.equal(r.notice, null);
-  assert.ok(Date.now() - started < 190, "should not wait for the slow download");
+  assert.equal(finished, false, "should not wait for the slow download");
   assert.equal(findRoute(r.map, "sign", "gateB12", "walk").status, "route");
   assert.equal(DOWNLOAD_TIMEOUT_MS, 5000);
 });

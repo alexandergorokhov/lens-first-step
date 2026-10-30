@@ -2,7 +2,7 @@
   "version": 1,
   "name": "Stand-in airport floor",
   "units": "m",
-  "axes": "x east, y up, z north; floor 60 x 40 m; ground level y=0, upper level y=6, C pier y=5",
+  "axes": "x east, y up, z north; floor 96 x 40 m; ground level y=0, departures y=6, C pier y=5, Sky Lounge y=9",
   "place": {
     "title": "Airport",
     "standInLabel": "Stand-in building",
@@ -12,14 +12,16 @@
     "levels": [
       { "y": 0, "name": "Ground floor", "floor": 0 },
       { "y": 5, "name": "C pier", "floor": 1 },
-      { "y": 6, "name": "Departures", "floor": 1 }
+      { "y": 6, "name": "Departures", "floor": 1 },
+      { "y": 9, "name": "Sky Lounge", "floor": 2 }
     ],
-    "footprint": { "minX": 0, "maxX": 60, "minZ": 0, "maxZ": 40 },
+    "footprint": { "minX": 0, "maxX": 96, "minZ": 0, "maxZ": 40 },
     "scanSign": { "title": "You are here", "button": "Scan sign", "hint": "on real Specs: look at the sign" },
     "events": [
       { "id": "gateChange", "type": "destinationChanged", "to": "gateC3", "button": "Gate change B12 → C3", "card": "Gate change B12 → C3" },
       { "id": "lift1Out", "type": "connectionClosed", "edge": "lift1", "at": "lift1G", "sign": "Lift 1 out of service", "card": "Lift 1 out of service. Re-routing." },
-      { "id": "lift2Out", "type": "connectionClosed", "edge": "lift2", "at": "lift2G", "sign": "Lift 2 out of service", "card": "Lift 2 out of service. Re-routing." }
+      { "id": "lift2Out", "type": "connectionClosed", "edge": "lift2", "at": "lift2G", "sign": "Lift 2 out of service", "card": "Lift 2 out of service. Re-routing." },
+      { "id": "loungeLiftOut", "type": "connectionClosed", "edge": "loungeLift", "at": "loungeLiftG", "sign": "Lounge lift out of service", "card": "Lounge lift out of service. Re-routing." }
     ]
   },
   "nodes": [
@@ -49,7 +51,27 @@
     { "id": "cafeD", "x": 43, "y": 6, "z": 37.5, "kind": "place", "category": "coffee", "label": "Café" },
     { "id": "toiletsD", "x": 40, "y": 6, "z": 25.5, "kind": "place", "category": "toilet", "label": "Toilets" },
     { "id": "accToiletD", "x": 42.5, "y": 6, "z": 25.5, "kind": "place", "category": "accessibleToilet", "label": "Accessible toilet" },
-    { "id": "pharmacyD", "x": 27, "y": 6, "z": 37.5, "kind": "place", "category": "pharmacy", "label": "Pharmacy" }
+    { "id": "pharmacyD", "x": 27, "y": 6, "z": 37.5, "kind": "place", "category": "pharmacy", "label": "Pharmacy" },
+    { "id": "eastStairsFoot", "x": 64, "y": 0, "z": 16, "kind": "junction", "label": "East stairs (bottom)" },
+    { "id": "eastStairsTop", "x": 64, "y": 6, "z": 26, "kind": "junction", "label": "East stairs (top)" },
+    { "id": "bPier1", "x": 62, "y": 6, "z": 32, "kind": "junction", "label": "B pier" },
+    { "id": "bPier2", "x": 74, "y": 6, "z": 32, "kind": "junction", "label": "B pier (middle)" },
+    { "id": "bPier3", "x": 86, "y": 6, "z": 32, "kind": "junction", "label": "B pier (end)" },
+    { "id": "gateB14", "x": 66, "y": 6, "z": 37, "kind": "destination", "icon": "flight", "type": "gate", "code": "B14", "label": "Gate B14", "arrivalCard": "Gate B14. Boarding in 20 min." },
+    { "id": "gateB16", "x": 78, "y": 6, "z": 37, "kind": "destination", "icon": "flight", "type": "gate", "code": "B16", "label": "Gate B16", "arrivalCard": "Gate B16. Boarding in 15 min." },
+    { "id": "gateB18", "x": 90, "y": 6, "z": 37, "kind": "destination", "icon": "flight", "type": "gate", "code": "B18", "label": "Gate B18", "arrivalCard": "Gate B18. Boarding now." },
+    { "id": "gateB20", "x": 93, "y": 6, "z": 32, "kind": "destination", "icon": "flight", "type": "gate", "code": "B20", "label": "Gate B20", "arrivalCard": "Gate B20. Boarding in 30 min." },
+    { "id": "familyLounge", "x": 90, "y": 6, "z": 27, "kind": "destination", "type": "lounge", "label": "Family lounge", "arrivalCard": "Family lounge. Play area and quiet room." },
+    { "id": "loungeStairsFoot", "x": 72, "y": 6, "z": 30, "kind": "junction", "label": "Lounge stairs (bottom)" },
+    { "id": "loungeStairsTop", "x": 72, "y": 9, "z": 25, "kind": "junction", "label": "Lounge stairs (top)" },
+    { "id": "loungeLanding", "x": 75, "y": 9, "z": 24, "kind": "junction", "label": "Sky Lounge entrance" },
+    { "id": "loungeLiftG", "x": 82, "y": 6, "z": 30, "kind": "lift", "label": "Lounge lift (departures)" },
+    { "id": "loungeLiftU", "x": 82, "y": 9, "z": 30, "kind": "lift", "label": "Lounge lift (Sky Lounge)" },
+    { "id": "skyLounge", "x": 80, "y": 9, "z": 23, "kind": "destination", "type": "lounge", "label": "Sky Lounge", "arrivalCard": "Sky Lounge. Show your boarding pass at the desk." },
+    { "id": "bookshop", "x": 55, "y": 6, "z": 28.5, "kind": "place", "category": "shopping", "label": "Bookshop" },
+    { "id": "sweets", "x": 66.75, "y": 6, "z": 28.5, "kind": "place", "category": "shopping", "label": "Sweets & toys" },
+    { "id": "cafeB", "x": 72.5, "y": 6, "z": 37, "kind": "place", "category": "coffee", "label": "Café" },
+    { "id": "techStore", "x": 84.5, "y": 6, "z": 37, "kind": "place", "category": "shopping", "label": "Tech store" }
   ],
   "edges": [
     { "from": "sign",       "to": "hall",       "length": 6,    "kind": "walk",      "open": true },
@@ -84,6 +106,28 @@
     { "from": "bJunction", "to": "cafeD", "length": 6.0, "kind": "walk", "open": true },
     { "from": "bJunction", "to": "toiletsD", "length": 8.3, "kind": "walk", "open": true },
     { "from": "bJunction", "to": "accToiletD", "length": 7.1, "kind": "walk", "open": true },
-    { "from": "concourse", "to": "pharmacyD", "length": 6.4, "kind": "walk", "open": true }
+    { "from": "concourse", "to": "pharmacyD", "length": 6.4, "kind": "walk", "open": true },
+    { "from": "hall", "to": "eastStairsFoot", "length": 35.0, "kind": "walk", "open": true },
+    { "from": "eastStairsFoot", "to": "eastStairsTop", "length": 11.8, "kind": "stairs", "open": true },
+    { "from": "eastStairsTop", "to": "bPier1", "length": 6.4, "kind": "walk", "open": true },
+    { "from": "bJunction", "to": "bPier1", "length": 17.1, "kind": "walk", "open": true },
+    { "from": "bPier1", "to": "bPier2", "length": 12.1, "kind": "walk", "open": true },
+    { "from": "bPier2", "to": "bPier3", "length": 12.1, "kind": "walk", "open": true },
+    { "from": "bPier3", "to": "gateB20", "length": 7.1, "kind": "walk", "open": true },
+    { "from": "bPier1", "to": "gateB14", "length": 6.5, "kind": "walk", "open": true },
+    { "from": "bPier2", "to": "gateB16", "length": 6.5, "kind": "walk", "open": true },
+    { "from": "bPier3", "to": "gateB18", "length": 6.5, "kind": "walk", "open": true },
+    { "from": "bPier3", "to": "familyLounge", "length": 6.5, "kind": "walk", "open": true },
+    { "from": "bPier2", "to": "loungeStairsFoot", "length": 2.9, "kind": "walk", "open": true },
+    { "from": "loungeStairsFoot", "to": "loungeStairsTop", "length": 5.9, "kind": "stairs", "open": true },
+    { "from": "loungeStairsTop", "to": "loungeLanding", "length": 3.3, "kind": "walk", "open": true },
+    { "from": "loungeLanding", "to": "skyLounge", "length": 5.2, "kind": "walk", "open": true },
+    { "from": "bPier2", "to": "loungeLiftG", "length": 8.3, "kind": "walk", "open": true },
+    { "from": "loungeLiftU", "to": "skyLounge", "length": 7.4, "kind": "walk", "open": true },
+    { "from": "bPier1", "to": "bookshop", "length": 7.9, "kind": "walk", "open": true },
+    { "from": "bPier1", "to": "sweets", "length": 6.0, "kind": "walk", "open": true },
+    { "from": "bPier2", "to": "cafeB", "length": 5.3, "kind": "walk", "open": true },
+    { "from": "bPier3", "to": "techStore", "length": 5.3, "kind": "walk", "open": true },
+    { "id": "loungeLift", "from": "loungeLiftG", "to": "loungeLiftU", "length": 3, "kind": "lift", "open": true }
   ]
 }

@@ -1,7 +1,10 @@
 // FindYourWayMain — orchestrates the trip: mode choice -> simulated sign scan -> map load
 // (online with 5 s timeout, else built-in) -> live routing with the floor line, turn arrow,
 // notice card, arrival card, rides (lift / escalator / stairs / ramp), closures and
-// destination changes.
+// destination changes. Brief 2: the distance pill with the floor badge and the floor-change cue,
+// the line only on your floor with an up/down post, place icons ("Places on/off", "Go here?"),
+// the companion (a feature you turn on or off; any model) with its collectibles and pointing,
+// play while you wait (Hop: raise a hand to jump; catch: throw a treat) and multi-stop trips.
 // Owns: trip state (map, profile, Navigator, ride offset). UI modules are passive views:
 // Main pushes state via their setters and listens to their events.
 // Inputs: authored scene objects (camera, world anchor, building) and the UI/controller
@@ -24,6 +27,8 @@ import {
   Profile,
   routePoints,
   setEdgeOpen,
+  tripAhead,
+  TripAhead,
   tripSettings,
   Vec3,
   withinReach,
@@ -42,7 +47,20 @@ import {
   placeOf,
   rideCard,
 } from "./FindYourWayMapLibrary"
-import {nextTurnAlong, stopAtLift, turnOutOfView, yawFromForward, yawTo} from "./FindYourWayGeometry"
+import {lineOnLevel, nextTurnAlong, turnOutOfView, yawFromForward, yawTo} from "./FindYourWayGeometry"
+import {destinationFloorText, floorCueFor, tripPill} from "./FindYourWayPlace"
+import {Companion, companionOf, COMPANIONS, PetGuide, treatsResult, treatsText} from "./FindYourWayPet"
+import {Place, placesOf, placeTag, PointingCoach, POINT_SECONDS, visiblePlaces} from "./FindYourWayPlaces"
+import {CatchGame, canThrow, HopGame, hopText, landingSpot, PlayGate, RaiseDetector} from "./FindYourWayPlay"
+import {MultiStopTrip, orderStops} from "./FindYourWayTrip"
+import {MapRecorder, MAPPING_NAMES, MappingTag} from "./FindYourWayMapping"
+import {peekModel} from "./FindYourWayPeek"
+import {FindYourWayMappingPanelUI} from "./FindYourWayMappingPanelUI"
+import {FindYourWayPeekView} from "./FindYourWayPeekView"
+import {FindYourWayCompanionView} from "./FindYourWayCompanionView"
+import {FindYourWayAppPanelUI} from "./FindYourWayAppPanelUI"
+import {FindYourWayPlacesUI} from "./FindYourWayPlacesUI"
+import SIK from "SpectaclesInteractionKit.lspkg/SIK"
 import {FindYourWayRouteLine} from "./FindYourWayRouteLine"
 import {FindYourWayStandIn} from "./FindYourWayStandIn"
 import {FindYourWayTurnArrow} from "./FindYourWayTurnArrow"
@@ -52,7 +70,7 @@ import {FindYourWayDemoControlsUI} from "./FindYourWayDemoControlsUI"
 import {FindYourWayHudUI} from "./FindYourWayHudUI"
 import {FindYourWayArrivalUI} from "./FindYourWayArrivalUI"
 
-export type Phase = "mode" | "scan" | "loading" | "nav" | "arrived" | "error"
+export type Phase = "mode" | "scan" | "loading" | "nav" | "arrived" | "error" | "mapping"
 
 // Heights (cm above a node's floor) of the signs placed in the building.
 const SCAN_SIGN_CM = 125
@@ -67,6 +85,24 @@ const ARRIVAL_CARD_CM = 200
 const LINE_LIFT_CM = 1 // the floor line sits 1 cm above the floor
 const CLOSED_SIGN_TEXT = "Closed — re-routing"
 const RIDE_CARD_S = 2.5
+const SCAN_PANEL_AHEAD_CM = 120
+const DEST_NOTE_S = 3.5
+const PLACE_FACE_CM = 0 // place icons sit on the node (the shop front)
+// Hop lane: starts this far ahead of you (m), so you see the companion from behind.
+const HOP_AHEAD_M = 1.3
+// Catch: the treat leaves your hand at this height above the floor (m) and speed (m/s).
+const THROW_FROM_M = 1.2
+const THROW_SPEED = 6
+const COMPANION_IDS = ["dog", "robot", "rover"]
+const CAUGHT_LINE_S = 2.5
+// Learn this place: the saved map lives in the device's persistent storage under this key.
+const MAPPED_KEY = "fyw.mappedMap"
+const MAPPED_KEY_NAME = "mine"
+// Peek ahead: the model floats this far ahead and below the eyes (cm); pull a pinch this far
+// toward you (cm) to show it.
+const PEEK_AHEAD_CM = 60
+const PEEK_BELOW_CM = 45
+const PEEK_PULL_CM = 8
 // Frames after a restart during which the world keeps re-anchoring to the settling camera.
 const ANCHOR_SETTLE_FRAMES = 30
 
@@ -110,6 +146,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     new ComboBoxItem("Hospital wing", "hospital"),
     new ComboBoxItem("Campus (two buildings)", "campus"),
     new ComboBoxItem("Preview room floor", "room"),
+    new ComboBoxItem("Shopping mall (multi-stop)", "mall"),
   ]))
   mapKey: string = "airport"
 
@@ -125,6 +162,14 @@ export class FindYourWayMain extends BaseScriptComponent {
   @hint("Standing eye height above the floor, cm — used when the floor can't be detected")
   @widget(new SliderWidget(100, 200, 1))
   eyeHeightCm: number = 180
+
+  @input
+  @hint("Lay the building out with you standing at the entrance sign, facing in (the line starts at your feet). Off: the old virtual sign at signOffset")
+  startAtSign: boolean = true
+
+  @input
+  @hint("Show the demo controls (gate change, restart, map switch, play demo) — for recording; off for real use")
+  showDemoControls: boolean = false
 
   @input("vec3", "{0,0,-250}")
   @hint("Where the 'you are here' sign stands relative to the user when a mode is chosen (right, -, forward), cm")
@@ -143,6 +188,27 @@ export class FindYourWayMain extends BaseScriptComponent {
   @input("vec3", "{8,-4,-100}")
   @hint("Mode panel offset from the head at start (right, up, forward), cm")
   modePanelOffset: vec3 = new vec3(8, -4, -100)
+
+  @input
+  @hint("The companion's model: same logic, only the look and the collectible change")
+  @widget(new ComboBoxWidget([
+    new ComboBoxItem("Dog (treats)", "dog"),
+    new ComboBoxItem("Robot (bolts)", "robot"),
+    new ComboBoxItem("Rover (stars)", "rover"),
+  ]))
+  companionModel: string = "dog"
+
+  @input
+  @hint("Companion on when a trip starts (it can always be turned on or off on the app panel)")
+  companionOnAtStart: boolean = false
+
+  @input
+  @hint("Multi-stop trip on maps that have these place ids (comma separated, ordered for the shortest walk); empty = off")
+  multiStops: string = "pharmacy,iceCream,sushi"
+
+  @input("vec3", "{-30,-38,-55}")
+  @hint("App panel offset from the head (right, up, forward), cm — waist height, to the left")
+  appPanelOffset: vec3 = new vec3(-30, -38, -55)
 
   @input("vec3", "{-15,-14,-80}")
   @hint("Demo controls offset from the head (right, up, forward), cm — low-left, inside the ~32° view")
@@ -192,8 +258,58 @@ export class FindYourWayMain extends BaseScriptComponent {
   private lastYaw = 0
   private downloadDelayMs = 0
   private cameraDropCm = 0
+  // Brief 2: companion, places, play, multi-stop. Views are created at runtime in onStart.
+  private view: FindYourWayCompanionView | null = null
+  private appPanel: FindYourWayAppPanelUI | null = null
+  private placesUI: FindYourWayPlacesUI | null = null
+  private companion: Companion = COMPANIONS.dog
+  private guide = new PetGuide()
+  private coach: PointingCoach | null = null
+  private placesMuted = false
+  private pointed: {place: Place; until: number} | null = null
+  private travelled = 0
+  private lastFeet: Vec3 | null = null
+  private trip: TripAhead | null = null
+  private gate = new PlayGate()
+  private hop = new HopGame()
+  private hopOrigin: Vec3 | null = null
+  private hopHeading = 0
+  private raiseByHand: {[hand: string]: RaiseDetector} = {left: new RaiseDetector(), right: new RaiseDetector()}
+  private catchGame = new CatchGame()
+  private catchSpot: Vec3 | null = null
+  private catchHeading = 0
+  private caughtUntil = 0
+  private stops: MultiStopTrip | null = null
+  private debugRaise = false
+  private ptsCache: {key: string; frame: number; map: MapData; pts: Vec3[]} | null = null
+  private mappingPanelPlaced = false
+  // Save and route keeps the world where it is (the walk was mapped in it): no re-anchor once.
+  private keepAnchor = false
+  // "Gate C3 is on C pier, 1 floor up": shown in the cue slot for DEST_NOTE_S after the scan or a
+  // destination change (null = work it out on the next frame).
+  private destNote: string | null = null
+  private destNoteUntil = 0
+  // Learn this place.
+  private recorder: MapRecorder | null = null
+  private mappingPanel: FindYourWayMappingPanelUI | null = null
+  private nameIndex = 2 // "Room"
+  private mappedText: string | null = null
+  // Peek ahead.
+  private peekView: FindYourWayPeekView | null = null
+  private peekPinch: {[hand: string]: number | null} = {left: null, right: null}
+  private peekOn = false
+  private peekForced = false
+  private peekBuiltAt = -1
+  // The LEAF scenarios and the autoplay demo show the demo controls even when they're off.
+  private demoControlsForced = false
 
   onAwake() {
+    try {
+      const store = global.persistentStorageSystem.store
+      if (store.has(MAPPED_KEY)) this.mappedText = store.getString(MAPPED_KEY)
+    } catch (e) {
+      print("[FYW] no persistent storage: " + e)
+    }
     const idx = MAP_SOURCES.map((m) => m.key).indexOf(this.mapKey)
     this.mapIndex = idx >= 0 ? idx : 0
     this.loadBuiltIn()
@@ -220,22 +336,224 @@ export class FindYourWayMain extends BaseScriptComponent {
     }
     this.modePanel.onWalk.add(() => this.chooseMode("walk"))
     this.modePanel.onStepFree.add(() => this.chooseMode("stepFree"))
+    this.modePanel.onMapping.add(() => this.startMapping())
     this.buildingUI.onScan.add(() => this.scanSign())
     this.buildingUI.onClosure.add((id) => this.closeConnection(id))
     this.buildingUI.onRide.add((id) => this.ride(id))
     this.demoControls.onEvent.add(() => this.changeDestination())
     this.demoControls.onRestart.add(() => this.restart())
     this.demoControls.onNextMap.add(() => this.nextMap())
+    this.createViews()
     this.restart()
+  }
+
+  // The companion view and place icons live in the building (building-local cm); the app panel
+  // follows the head at waist height. Built at runtime, so the scene needs no new objects.
+  private createViews(): void {
+    const v = global.scene.createSceneObject("CompanionView")
+    v.setParent(this.building)
+    this.view = v.createComponent(FindYourWayCompanionView.getTypeName()) as FindYourWayCompanionView
+    this.view.setup(this.standIn.material)
+    const pl = global.scene.createSceneObject("PlaceIcons")
+    pl.setParent(this.building)
+    this.placesUI = pl.createComponent(FindYourWayPlacesUI.getTypeName()) as FindYourWayPlacesUI
+    this.placesUI.setup((id) => this.goHere(id))
+    const ap = global.scene.createSceneObject("AppPanel")
+    this.appPanel = ap.createComponent(FindYourWayAppPanelUI.getTypeName()) as FindYourWayAppPanelUI
+    this.appPanel.setup({
+      onCompanion: () => this.setCompanionOn(!this.guide.on),
+      onModel: () => this.setCompanionModel(COMPANION_IDS[(COMPANION_IDS.indexOf(this.companion.id) + 1) % COMPANION_IDS.length]),
+      onPlaces: () => this.setPlacesMuted(!this.placesMuted),
+      onPlay: () => this.togglePlay(),
+      onJump: () => this.jump(),
+      onThrow: () => this.throwTreat(),
+      onNextStop: () => this.nextStop(),
+    })
+    this.setCompanionModel(this.companionModel)
+    const mp = global.scene.createSceneObject("MappingPanel")
+    this.mappingPanel = mp.createComponent(FindYourWayMappingPanelUI.getTypeName()) as FindYourWayMappingPanelUI
+    this.mappingPanel.setup({
+      onPoint: () => this.mapPoint(),
+      onTag: (k) => this.mapTag(k),
+      onNameNext: () => {
+        this.nameIndex = (this.nameIndex + 1) % MAPPING_NAMES.length
+        if (this.mappingPanel) this.mappingPanel.setNameLabel(MAPPING_NAMES[this.nameIndex])
+      },
+      onName: () => this.mapName(),
+      onNextFloor: () => this.mapNextFloor(),
+      onUndo: () => this.mapUndo(),
+      onSave: () => this.saveMapping(),
+      onCancel: () => this.endMapping(true),
+    })
+    this.mappingPanel.setNameLabel(MAPPING_NAMES[this.nameIndex])
+    this.mappingPanel.show(false)
+    const pk = global.scene.createSceneObject("PeekAhead")
+    this.peekView = pk.createComponent(FindYourWayPeekView.getTypeName()) as FindYourWayPeekView
+    this.peekView.setup(this.standIn.material)
+  }
+
+  // ── Learn this place (mapping mode) ──────────────────────────────────────
+
+  // Starts mapping where you stand: that spot is the entrance sign (the first point).
+  startMapping(): void {
+    if (this.phase !== "mode") return
+    this.modePanel.hide()
+    this.anchorFrames = 0
+    this.anchorWorld()
+    this.phase = "mapping"
+    this.mappingPanelPlaced = false
+    // The old building would only be in the way while you map a real place.
+    this.standIn.clear()
+    this.buildingUI.clear()
+    if (this.placesUI) this.placesUI.clear()
+    this.recorder = new MapRecorder()
+    this.recorder.start(this.userPos())
+    if (this.mappingPanel) this.mappingPanel.show(true)
+    this.mapStatus("Entrance sign set. Walk and pinch Point here")
+    print("[FYW] mapping: start")
+  }
+
+  private mapStatus(text: string): void {
+    if (!this.mappingPanel || !this.recorder) return
+    const m = this.recorder.toMap()
+    this.mappingPanel.setStatus(text + " · " + m.nodes.length + " points")
+  }
+
+  private mapPoint(): void {
+    if (!this.recorder) return
+    const id = this.recorder.pointHere(this.userPos())
+    this.mapStatus(id ? "Point added" : "Walk a little further first")
+  }
+
+  private mapTag(kind: string): void {
+    if (!this.recorder) return
+    this.mapStatus(this.recorder.tagLast(kind as MappingTag) ? "Last stretch: " + kind : "Add a point first")
+  }
+
+  private mapName(): void {
+    if (!this.recorder) return
+    const label = this.recorder.name(MAPPING_NAMES[this.nameIndex])
+    this.mapStatus(label ? "Named: " + label : "Add a point first")
+  }
+
+  private mapNextFloor(): void {
+    if (!this.recorder) return
+    this.recorder.nextFloor()
+    this.mapStatus("Next point is on a new floor")
+  }
+
+  private mapUndo(): void {
+    if (!this.recorder) return
+    this.mapStatus(this.recorder.undo() ? "Undone" : "Nothing to undo")
+  }
+
+  // Save: the walk becomes a map (checked by parseMap), kept on the device, and the Lens routes on
+  // it at once: back to the mode panel with "My place" loaded, the last named point as destination.
+  saveMapping(): boolean {
+    if (!this.recorder) return false
+    const text = this.recorder.toJson()
+    const parsed = parseMap(text)
+    const m = this.recorder.toMap()
+    const named = m.nodes.filter((n) => n.kind === "destination")
+    if (!parsed.ok || named.length === 0) {
+      this.mapStatus(parsed.ok ? "Name at least one point first" : "Map not valid: " + (parsed as {ok: false; error: string}).error)
+      return false
+    }
+    try {
+      global.persistentStorageSystem.store.putString(MAPPED_KEY, text)
+    } catch (e) {
+      print("[FYW] could not save the map: " + e)
+    }
+    this.mappedText = text
+    // Keep the world where the walk was mapped: the new map's origin is its sign (where mapping
+    // started), so shift the building by that point and stand the traveller where they are now.
+    const signAt = this.local(m.nodes[0])
+    const worldPos = this.world.getTransform().getWorldPosition()
+    const worldRot = this.world.getTransform().getWorldRotation()
+    const offset = this.rideOffset.sub(signAt)
+    const here = this.userPos()
+    this.endMapping(false)
+    this.mapIndex = MAP_SOURCES.length
+    this.restart()
+    this.anchorFrames = 0
+    this.world.getTransform().setWorldPosition(worldPos)
+    this.world.getTransform().setWorldRotation(worldRot)
+    this.rideOffset = offset
+    this.keepAnchor = true
+    this.placeBuilding()
+    // Go to the last named point you are not standing at, else back to the entrance sign.
+    const away = named.filter((n) => Math.sqrt((n.x - here.x) ** 2 + (n.z - here.z) ** 2) > 3)
+    this.tripDestination = away.length > 0 ? away[away.length - 1].id : "sign"
+    print("[FYW] mapping: saved " + m.nodes.length + " points, " + m.edges.length + " stretches")
+    return true
+  }
+
+  private endMapping(backToMode: boolean): void {
+    if (this.mappingPanel) this.mappingPanel.show(false)
+    this.recorder = null
+    if (this.phase === "mapping") {
+      this.phase = "mode"
+      if (backToMode) {
+        this.buildPlace()
+        this.placeModePanel()
+        this.modePanel.show()
+      }
+    }
+  }
+
+  // ── Peek ahead ───────────────────────────────────────────────────────────
+
+  // Pinch and pull toward you: the model shows; let go: it hides. Never changes the route.
+  private updatePeek(): void {
+    if (!this.peekView) return
+    const navOn = (this.phase === "nav" || this.phase === "arrived") && !!this.nav
+    let pulled = false
+    try {
+      const head = this.cameraPos()
+      for (const side of ["left", "right"]) {
+        const hand = SIK.HandInputData.getHand(side as "left" | "right")
+        if (!hand || !hand.isTracked() || !hand.isPinching()) {
+          this.peekPinch[side] = null
+          continue
+        }
+        const d = hand.thumbTip.position.distance(head)
+        const start = this.peekPinch[side]
+        if (start === null) this.peekPinch[side] = d
+        else if (start - d >= PEEK_PULL_CM) pulled = true
+        else if (this.peekOn) pulled = true
+      }
+    } catch (e) {
+      // No hand tracking: only the test hook.
+    }
+    const want = navOn && (pulled || this.peekForced)
+    const now = getTime()
+    if (want && (!this.peekOn || now - this.peekBuiltAt > 0.5)) {
+      this.peekView.show(peekModel(this.routeMapPoints(), this.userPos()))
+      this.peekBuiltAt = now
+    } else if (!want && this.peekOn) this.peekView.show(null)
+    this.peekOn = want
+    if (want) {
+      const t = this.camera.getTransform()
+      const yaw = this.headYaw()
+      const so = this.peekView.getSceneObject().getTransform()
+      so.setWorldPosition(t.getWorldPosition().add(yaw.multiplyVec3(new vec3(0, -PEEK_BELOW_CM, -PEEK_AHEAD_CM))))
+      // Map north points where the building's north points.
+      so.setWorldRotation(this.building.getTransform().getWorldRotation())
+    }
   }
 
   // ── Trip flow ────────────────────────────────────────────────────────────
 
   private loadBuiltIn(): void {
-    this.builtInText = MAP_SOURCES[this.mapIndex].asset.getString()
+    const src = this.source()
+    this.builtInText = src ? src.asset.getString() : this.mappedText || ""
     const parsed = parseMap(this.builtInText)
     if (!parsed.ok) {
-      print("[FYW] ERROR built-in map " + MAP_SOURCES[this.mapIndex].key + " is invalid")
+      print("[FYW] ERROR built-in map " + this.getMapKey() + " is invalid")
+      if (!src) {
+        this.mapIndex = 0
+        this.loadBuiltIn()
+      }
       return
     }
     this.setMap(parsed.map)
@@ -247,7 +565,14 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.frame = MapFrame.forMap(map, this.place.start)
   }
 
+  // The bundled map in use, or null for the map saved by "Learn this place".
+  private source(): typeof MAP_SOURCES[0] | null {
+    return this.mapIndex < MAP_SOURCES.length ? MAP_SOURCES[this.mapIndex] : null
+  }
+
   restart(): void {
+    this.keepAnchor = false
+    this.endMapping(false)
     this.loadBuiltIn()
     this.phase = "mode"
     this.profile = null
@@ -267,20 +592,26 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.destinationOverride = null
     this.lastLineKey = ""
     this.lineMapPoints = []
+    this.resetGuide()
     this.anchorFrames = ANCHOR_SETTLE_FRAMES
     this.floorProbeFrames = 120
     this.anchorWorld(true)
     this.buildPlace()
     this.hud.hideCard()
     this.hud.setBadge(null)
+    this.hud.setPill(null)
+    this.hud.setCue(null)
+    this.hud.setScore(null)
+    this.hud.setPlayLine(null)
     this.demoControls.setStatus("Choose a mode to start")
     this.placeModePanel()
     this.modePanel.show()
-    print("[FYW] restart: map=" + MAP_SOURCES[this.mapIndex].key)
+    print("[FYW] restart: map=" + this.getMapKey())
   }
 
   private nextMap(): void {
-    this.mapIndex = (this.mapIndex + 1) % MAP_SOURCES.length
+    // The saved map (Learn this place) comes after the bundled ones.
+    this.mapIndex = (this.mapIndex + 1) % (MAP_SOURCES.length + (this.mappedText ? 1 : 0))
     this.restart()
   }
 
@@ -291,7 +622,8 @@ export class FindYourWayMain extends BaseScriptComponent {
     // The sign (and so the building) is placed in front of where the user stands now, so they
     // can first step into clear floor and then choose. The choice ends the settling.
     this.anchorFrames = 0
-    this.anchorWorld()
+    if (this.keepAnchor) this.keepAnchor = false
+    else this.anchorWorld()
     this.buildingUI.setScanSignVisible(true)
     this.phase = "scan"
     this.demoControls.setStatus(profile === "walk" ? "Mode: Walk" : "Mode: Step-Free")
@@ -303,7 +635,8 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.phase = "loading"
     this.buildingUI.setScanSignVisible(false)
     this.hud.setBadge("loading map…")
-    const url = this.tryOnlineMap ? mapUrl(this.mapBaseUrl, MAP_SOURCES[this.mapIndex]) : ""
+    const src = this.source()
+    const url = this.tryOnlineMap && src ? mapUrl(this.mapBaseUrl, src) : ""
     print("[FYW] map download: " + (url || "(none, built-in map)"))
     const override = this.downloadOverride
     const delay = this.downloadDelayMs
@@ -337,6 +670,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     }
     const generation = this.tripGeneration
     loadMapWithTimeout(fetchText, url, this.builtInText).then((res) => {
+      if (res.error) print("[FYW] downloaded map rejected: " + res.error)
       if (this.phase !== "loading" || generation !== this.tripGeneration) return
       this.startTrip(res.map, res.source, res.notice)
     })
@@ -365,18 +699,27 @@ export class FindYourWayMain extends BaseScriptComponent {
       print("[FYW] scan failed: " + (located as {ok: false; message: string}).message)
       return
     }
-    const dest = this.destinationOverride || this.tripDestination || this.place.destination
+    this.stops = this.planStops(startId)
+    const dest = this.destinationOverride || this.tripDestination || (this.stops ? this.stops.current() as string : this.place.destination)
     this.nav = new Navigator(this.map, startId, dest, this.profile as Profile)
+    this.destNote = null
+    this.coach = new PointingCoach(this.map)
+    this.coach.interests = this.modePanel.getInterests()
+    this.coach.muted = this.placesMuted
+    this.travelled = 0
+    this.lastFeet = null
+    if (this.companionOnAtStart) this.setCompanionOn(true)
     this.phase = "nav"
     this.pendingSwing = true
     this.lastLineKey = ""
-    this.announce(null, null)
+    this.announce(this.stops ? this.stops.label((id) => nodeLabel(this.map, id)) : null, "location_on")
     this.reportRoute("scan")
   }
 
   private changeDestination(): void {
     const ev = this.firstEvent("destinationChanged")
     if (!ev || !ev.to) return
+    this.endStops()
     this.tripDestination = ev.to
     if (this.nav) {
       if (this.nav.to !== ev.to) this.nav.setDestination(ev.to)
@@ -446,6 +789,7 @@ export class FindYourWayMain extends BaseScriptComponent {
       print("[FYW] ride " + id + " refused: " + Math.sqrt(dx * dx + dz * dz).toFixed(1) + " m away, feet y " + user.y.toFixed(2))
       return
     }
+    this.stopPlay()
     const delta = this.local(there).sub(this.local(here))
     this.rideOffset = this.rideOffset.add(delta)
     this.placeBuilding()
@@ -455,6 +799,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   }
 
   private afterRouteChange(): void {
+    this.destNote = null
     this.pendingSwing = true
     this.lastLineKey = ""
     if (this.phase === "arrived" && this.nav && this.nav.route.status !== "arrived") {
@@ -513,7 +858,8 @@ export class FindYourWayMain extends BaseScriptComponent {
   private placeBuilding(): void {
     const b = this.building.getTransform()
     b.setLocalRotation(quat.quatIdentity())
-    b.setLocalPosition(new vec3(this.signOffset.x, -this.eye(), this.signOffset.z).sub(this.rideOffset))
+    const off = this.startAtSign ? new vec3(0, 0, 0) : this.signOffset
+    b.setLocalPosition(new vec3(off.x, -this.eye(), off.z).sub(this.rideOffset))
   }
 
   // Test / screenshot aid: move the building so the real camera sees it from the debug pose.
@@ -594,7 +940,9 @@ export class FindYourWayMain extends BaseScriptComponent {
     ui.clear()
     const start = findNode(map, place.start)
     if (start) {
-      ui.setScanSign(this.local(start, SCAN_SIGN_CM), place.scanSign.title, place.scanSign.button,
+      // Standing at the sign: the scan panel floats ~1.2 m ahead (on Specs you just look at the sign).
+      const scanAt = this.local(start, SCAN_SIGN_CM).add(this.startAtSign ? new vec3(0, 0, -SCAN_PANEL_AHEAD_CM) : new vec3(0, 0, 0))
+      ui.setScanSign(scanAt, place.scanSign.title, place.scanSign.button,
         place.scanSign.hint, place.standInLabel)
       ui.addPlaceSign("StandIn", this.local(start, PLACE_SIGN_CM).add(new vec3(-260, 0, -150)),
         place.standInLabel, place.title, "map")
@@ -656,6 +1004,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.arrivalCard.hide()
     this.routeLine.clear()
     this.turnArrow.hide()
+    this.buildPlaceIcons()
   }
 
   // ── Per-frame ────────────────────────────────────────────────────────────
@@ -669,6 +1018,12 @@ export class FindYourWayMain extends BaseScriptComponent {
     }
     this.probeFloor()
     this.followDemoControls()
+    this.followAppPanel()
+    this.updatePeek()
+    if (this.phase === "mapping") {
+      if (this.recorder) this.recorder.walked(this.userPos())
+      this.followMappingPanel()
+    }
     if (this.viewFollowsPose && this.debugPose) this.placeBuildingForPose()
     if ((this.phase !== "nav" && this.phase !== "arrived") || !this.nav) return
     const pos = this.userPos()
@@ -687,20 +1042,356 @@ export class FindYourWayMain extends BaseScriptComponent {
         this.lineMapPoints = []
         const at = this.nav.route.nodes[0]
         const d = findNode(this.nav.map, at)
-        if (d) this.arrivalCard.show(arrivalText(this.nav.map, at), this.local(d, ARRIVAL_CARD_CM), this.iconOfNode(at))
+        if (d) this.arrivalCard.show(this.arrivalWords(at), this.local(d, ARRIVAL_CARD_CM), this.iconOfNode(at))
+        this.hud.setPill(null)
+        this.hud.setCue(null)
+        this.pointed = null
+        if (this.placesUI) this.placesUI.show([], null)
+        if (this.view) this.view.setPost(null, true)
         print("[FYW] arrived at " + at)
       }
+      this.updateCompanion(pos, true)
       return
     }
     if (this.phase === "arrived") {
       this.phase = "nav"
       this.arrivalCard.hide()
     }
+    this.trip = tripAhead(this.nav.map, this.nav.route, pos)
+    this.updatePill()
     this.updateLine(pos)
     this.updateArrow(pos)
+    this.updatePlaces(pos)
+    this.updateCompanion(pos, false)
+  }
+
+  // ── Brief 2: pill, places, companion, play, stops ────────────────────────
+
+  private updatePill(): void {
+    if (!this.nav) return
+    const dest = nodeLabel(this.nav.map, this.nav.to)
+    const pill = tripPill(dest, this.trip)
+    // The floor badge is the pill's first chip: the floor under your feet (from the route).
+    this.hud.setPill(pill && this.trip ? levelName(this.place, this.trip.floorY) + " · " + pill : null)
+    const cue = floorCueFor(this.place, this.nav.map, this.trip)
+    if (this.destNote === null && this.trip) {
+      const to = findNode(this.nav.map, this.nav.to)
+      this.destNote = destinationFloorText(dest, levelName(this.place, to ? to.y : 0), this.trip.floors)
+      this.destNoteUntil = getTime() + DEST_NOTE_S
+    }
+    this.hud.setCue(cue || (getTime() < this.destNoteUntil ? this.destNote : null))
+  }
+
+  private cardShowing(): boolean {
+    return this.hud.getCardText() !== null
+  }
+
+  private updatePlaces(pos: Vec3): void {
+    if (!this.nav || !this.placesUI || !this.coach) return
+    const route = this.routeMapPoints()
+    const now = getTime()
+    if (this.lastFeet) {
+      const dx = pos.x - this.lastFeet.x, dz = pos.z - this.lastFeet.z
+      this.travelled += Math.sqrt(dx * dx + dz * dz)
+    }
+    this.lastFeet = {x: pos.x, y: pos.y, z: pos.z}
+    if (this.pointed && now >= this.pointed.until) this.pointed = null
+    const p = this.coach.check(route, pos, now, this.travelled, this.cardShowing())
+    if (p) {
+      this.pointed = {place: p, until: now + POINT_SECONDS}
+      this.guide.point(p, now)
+      print("[FYW] pointing at " + p.id + " (" + placeTag(p) + ")")
+    }
+    const shown = visiblePlaces(this.nav.map, route, pos, {profile: this.nav.profile, muted: this.placesMuted})
+    this.placesUI.show(shown.map((q) => q.id), this.pointed && !this.placesMuted ? this.pointed.place.id : null)
+  }
+
+  private buildPlaceIcons(): void {
+    if (!this.placesUI) return
+    this.placesUI.clear()
+    const map = this.map
+    const all = placesOf(map)
+    for (const n of map.nodes) {
+      if (n.kind === "lift") all.push({id: n.id, x: n.x, y: n.y, z: n.z, label: n.label || n.id, category: "lift", sponsored: false, sponsorTag: ""})
+    }
+    for (const p of all) {
+      const ad = approachDir(map, p.id)
+      // Face the walkway the place is approached from.
+      const yaw = Math.atan2(ad.x, -ad.z)
+      this.placesUI.addPlace(p.id, this.local(p, PLACE_FACE_CM), yaw, p.label, p.category, p.category === "lift" ? "" : placeTag(p), p.sponsored)
+    }
+  }
+
+  // "Go here?" on a place: it becomes the destination (the same re-route as a gate change).
+  private goHere(id: string): void {
+    if (!this.nav) return
+    this.endStops()
+    this.tripDestination = id
+    if (this.nav.to !== id) this.nav.setDestination(id)
+    this.pointed = null
+    this.afterRouteChange()
+    this.announce("Going to " + nodeLabel(this.nav.map, id), "location_on")
+    this.reportRoute("go here " + id)
+  }
+
+  private setPlacesMuted(muted: boolean): void {
+    this.placesMuted = muted
+    if (this.coach) this.coach.muted = muted
+    if (muted) this.pointed = null
+    if (this.appPanel) this.appPanel.setPlaces(!muted)
+  }
+
+  private resetGuide(): void {
+    this.guide = new PetGuide()
+    this.guide.companion = this.companion
+    this.coach = null
+    this.pointed = null
+    this.travelled = 0
+    this.lastFeet = null
+    this.trip = null
+    this.stops = null
+    this.stopPlay()
+    this.gate.reset()
+    this.catchGame.cancel()
+    this.catchSpot = null
+    if (this.view) {
+      this.view.setVisible(false)
+      this.view.setPost(null, true)
+      this.view.setCollectibles([], [])
+      this.view.setTreat(null)
+    }
+    if (this.placesUI) this.placesUI.clear()
+    if (this.appPanel) {
+      this.appPanel.setCompanion(this.companion.name, false, this.companion.collectible.one)
+      this.appPanel.setPlay(false, false, false)
+      this.appPanel.setNextStop(null)
+      this.appPanel.show(false)
+    }
+  }
+
+  setCompanionOn(on: boolean): void {
+    const route = this.routeMapPoints()
+    const pos = this.nav ? this.userPos() : {x: 0, y: 0, z: 0}
+    this.guide.setOn(on, route, pos, this.routeKey())
+    if (!on) this.stopPlay()
+    if (this.view) this.view.setVisible(on)
+    if (this.appPanel) this.appPanel.setCompanion(this.companion.name, on, this.companion.collectible.one)
+    this.hud.setScore(on && this.nav ? treatsText(this.guide.found, this.guide.total, this.companion) : null)
+    print("[FYW] companion " + this.companion.id + " " + (on ? "on" : "off"))
+  }
+
+  // Any model: only the look, its name and its collectible change; the logic is the same.
+  setCompanionModel(id: string): void {
+    this.companion = companionOf(id)
+    this.guide.companion = this.companion
+    if (this.view) this.view.setModel(this.companion.model)
+    if (this.appPanel) this.appPanel.setCompanion(this.companion.name, this.guide.on, this.companion.collectible.one)
+  }
+
+  private routeKey(): string {
+    if (!this.nav) return ""
+    const r = this.nav.route
+    return r.status === "route" ? r.nodes.join(">") : r.status
+  }
+
+  private updateCompanion(pos: Vec3, arrived: boolean): void {
+    if (!this.view || !this.nav) return
+    const dt = getDeltaTime()
+    const now = getTime()
+    this.gate.update(pos, dt, {companionOn: this.guide.on, cardShowing: this.cardShowing()})
+    if (this.hop.phase !== "idle" && !this.gate.canPlay) this.stopPlay()
+    const nearChange = !!this.trip && !!this.trip.next && this.trip.next.metres < 10
+    const throwOk = canThrow({moving: !this.gate.canPlay, nearChange, cardShowing: this.cardShowing(), companionOn: this.guide.on})
+    if (this.appPanel) this.appPanel.setPlay(this.gate.canPlay, this.hop.phase !== "idle", throwOk && this.catchGame.phase === "idle")
+    if (!this.guide.on) {
+      this.hud.setPlayLine(null)
+      return
+    }
+    if (this.hop.phase !== "idle") {
+      if (this.handRaised()) this.jump()
+      this.hop.update(dt)
+      const origin = this.hopOrigin as Vec3
+      this.view.setLane(this.local(origin), this.hopHeading, this.hop.obstacles)
+      this.view.setPose(this.local(origin), this.hopHeading, this.hop.petY * 100, this.hop.shaking ? 1 : 0)
+      this.hud.setPlayLine(hopText(this.hop, this.companion))
+      return
+    }
+    this.view.setLane(null, 0, [])
+    if (this.catchGame.phase !== "idle") {
+      const before = {x: this.catchGame.pos.x, y: this.catchGame.pos.y, z: this.catchGame.pos.z}
+      const r = this.catchGame.update(dt, pos)
+      if (r.caught && this.chime) this.audio.play(1)
+      // Face the way it runs.
+      const dx = r.pos.x - before.x, dz = r.pos.z - before.z
+      if (dx * dx + dz * dz > 1e-8) this.catchHeading = (Math.atan2(dx, dz) * 180) / Math.PI
+      this.view.setPose(this.local(r.pos), this.catchHeading, r.caught ? 15 : 0)
+      this.view.setTreat(r.phase === "fetch" && this.catchSpot ? this.local(this.catchSpot) : null)
+      this.hud.setPlayLine(null)
+      if (r.phase === "idle") {
+        this.caughtUntil = now + CAUGHT_LINE_S
+        this.catchSpot = null
+        this.guide.pet = {pos: r.pos, heading: 0, mood: "lead"}
+      }
+      return
+    }
+    const route = this.routeMapPoints()
+    this.guide.update(route, pos, dt, this.routeKey(), arrived, now)
+    const pet = this.guide.pet
+    if (pet) {
+      const hop = pet.mood === "arrived" ? Math.abs(Math.sin(now * 6)) * 12 : 0
+      this.view.setPose(this.local(pet.pos), pet.heading, hop, 0, pet.mood === "sit" || pet.mood === "wait")
+    }
+    this.view.setCollectibles(this.guide.spots.map((q) => this.local(q)), this.guide.got)
+    this.hud.setScore(arrived ? treatsResult(this.guide.found, this.guide.total, this.companion)
+      : treatsText(this.guide.found, this.guide.total, this.companion))
+    this.hud.setPlayLine(now < this.caughtUntil ? "Caught! " + this.catchGame.catches + " so far"
+      : this.gate.canPlay ? hopText(this.hop, this.companion) : null)
+  }
+
+  // Play while you wait (Hop): the lane starts HOP_AHEAD_M ahead of you, along where you look.
+  private togglePlay(): void {
+    if (this.hop.phase !== "idle") {
+      this.stopPlay()
+      return
+    }
+    if (!this.gate.canPlay || !this.nav) return
+    const pos = this.userPos()
+    this.hopHeading = this.userHeading()
+    const r = (this.hopHeading * Math.PI) / 180
+    this.hopOrigin = {x: pos.x + Math.sin(r) * HOP_AHEAD_M, y: pos.y, z: pos.z + Math.cos(r) * HOP_AHEAD_M}
+    this.catchGame.cancel()
+    this.catchSpot = null
+    this.debugRaise = false
+    if (this.view) this.view.setTreat(null)
+    this.hop.start()
+    print("[FYW] hop: start")
+  }
+
+  private stopPlay(): void {
+    if (this.hop.phase === "idle") return
+    this.hop.stop()
+    this.hopOrigin = null
+    if (this.view) this.view.setLane(null, 0, [])
+    this.hud.setPlayLine(null)
+    print("[FYW] hop: stop")
+  }
+
+  // A raised hand (or the Jump button): jump, or after a bump, play again.
+  jump(): boolean {
+    const did = this.hop.jump()
+    if (did && this.hop.phase === "running" && this.hop.score === 0 && this.hop.obstacles.length === 0) print("[FYW] hop: play again")
+    return did
+  }
+
+  // Either hand's wrist near head height counts as raised (once per raise).
+  private handRaised(): boolean {
+    let raised = false
+    if (this.debugRaise) {
+      this.debugRaise = false
+      return true
+    }
+    try {
+      const head = this.cameraPos().y
+      for (const side of ["left", "right"]) {
+        const hand = SIK.HandInputData.getHand(side as "left" | "right")
+        const h = hand && hand.isTracked() ? (hand.wrist.position.y - head) / 100 : null
+        if (this.raiseByHand[side].update(h)) raised = true
+      }
+    } catch (e) {
+      // No hand tracking (editor without SIK): only the Jump button.
+    }
+    return raised
+  }
+
+  // Catch: throw the treat ahead of you (on Specs: grab and throw; the button throws straight ahead).
+  throwTreat(): void {
+    if (!this.nav || !this.guide.on || !this.guide.pet || this.catchGame.phase !== "idle") return
+    const nearChange = !!this.trip && !!this.trip.next && this.trip.next.metres < 10
+    if (!canThrow({moving: !this.gate.canPlay, nearChange, cardShowing: this.cardShowing(), companionOn: this.guide.on})) return
+    const pos = this.userPos()
+    const r = (this.userHeading() * Math.PI) / 180
+    const v = {x: Math.sin(r) * THROW_SPEED * 0.7, y: THROW_SPEED * 0.7, z: Math.cos(r) * THROW_SPEED * 0.7}
+    this.catchSpot = landingSpot({x: pos.x, y: pos.y + THROW_FROM_M, z: pos.z}, v, pos.y)
+    this.catchGame.throwTo(this.catchSpot, this.guide.pet.pos)
+    print("[FYW] catch: thrown")
+  }
+
+  // Multi-stop trip: the map's places named in multiStops, ordered for the shortest walk.
+  private planStops(startId: string): MultiStopTrip | null {
+    if (this.destinationOverride || this.tripDestination) return null
+    const ids = this.multiStops.split(",").map((x) => x.trim()).filter((x) => x && !!findNode(this.map, x))
+    if (ids.length < 2) return null
+    const profile = this.profile as Profile
+    const dist = (a: string, b: string): number => {
+      const r = new Navigator(this.map, a, b, profile).route
+      return r.status === "route" || r.status === "arrived" ? (r.status === "route" ? r.length : 0) : Infinity
+    }
+    const order = orderStops(startId, ids, dist)
+    print("[FYW] stops: " + order.join(" > "))
+    return new MultiStopTrip(order)
+  }
+
+  private arrivalWords(at: string): string {
+    const map = this.nav ? this.nav.map : this.map
+    if (this.stops && this.stops.current() === at) {
+      const last = this.stops.index === this.stops.total - 1
+      if (this.appPanel) this.appPanel.setNextStop(last ? null : "Next stop")
+      return this.stops.label((id) => nodeLabel(map, id)) + (last ? " · last stop" : "")
+    }
+    return arrivalText(map, at)
+  }
+
+  private endStops(): void {
+    this.stops = null
+    if (this.appPanel) this.appPanel.setNextStop(null)
+  }
+
+  // Next stop: the line to the next shop (Step-Free rules hold for every leg).
+  nextStop(): void {
+    if (!this.nav || !this.stops || this.stops.index >= this.stops.total - 1 || !this.stops.next()) return
+    const to = this.stops.current() as string
+    this.nav.setDestination(to)
+    this.afterRouteChange()
+    if (this.appPanel) this.appPanel.setNextStop(null)
+    this.announce(this.stops.label((id) => nodeLabel(this.nav!.map, id)), "location_on")
+    this.reportRoute("next stop " + to)
+  }
+
+  private followMappingPanel(): void {
+    if (!this.mappingPanel) return
+    const t = this.camera.getTransform()
+    const p = t.getWorldPosition().add(this.headYaw().multiplyVec3(new vec3(0, -18, -75)))
+    const so = this.mappingPanel.getSceneObject().getTransform()
+    const k = this.mappingPanelPlaced ? 1 - Math.exp(-getDeltaTime() * 4) : 1
+    this.mappingPanelPlaced = true
+    so.setWorldPosition(vec3.lerp(so.getWorldPosition(), p, k))
+    so.setWorldRotation(quat.lookAt(t.getWorldPosition().sub(so.getWorldPosition()).normalize(), vec3.up()))
+  }
+
+  private followAppPanel(): void {
+    if (!this.appPanel) return
+    const on = this.phase === "nav" || this.phase === "arrived"
+    const wasOn = this.appPanel.getSceneObject().enabled
+    this.appPanel.show(on)
+    if (!on) return
+    const t = this.camera.getTransform()
+    const p = t.getWorldPosition().add(this.headYaw().multiplyVec3(this.appPanelOffset))
+    const so = this.appPanel.getSceneObject().getTransform()
+    so.setWorldPosition(wasOn ? vec3.lerp(so.getWorldPosition(), p, 1 - Math.exp(-getDeltaTime() * 4)) : p)
+    so.setWorldRotation(quat.lookAt(t.getWorldPosition().sub(so.getWorldPosition()).normalize(), vec3.up()))
   }
 
   private routeMapPoints(): Vec3[] {
+    if (!this.nav) return []
+    const key = this.routeKey()
+    const frame = getTime()
+    if (this.ptsCache && this.ptsCache.key === key && this.ptsCache.frame === frame && this.ptsCache.map === this.nav.map) return this.ptsCache.pts
+    const pts = this.computeRoutePoints()
+    this.ptsCache = {key, frame, map: this.nav.map, pts}
+    return pts
+  }
+
+  private computeRoutePoints(): Vec3[] {
     if (!this.nav) return []
     const r = this.nav.route
     if (r.status === "route") return routePoints(this.nav.map, r)
@@ -714,7 +1405,10 @@ export class FindYourWayMain extends BaseScriptComponent {
   }
 
   private updateLine(pos: Vec3): void {
-    const pts = stopAtLift(lineAhead(this.routeMapPoints(), pos, this.lineAheadM))
+    // Only your floor: the line ends at the foot of the next floor change, with an up/down post.
+    const onLevel = lineOnLevel(lineAhead(this.routeMapPoints(), pos, this.lineAheadM), this.trip ? this.trip.floorY : undefined)
+    const pts = onLevel.line
+    if (this.view) this.view.setPost(onLevel.marker ? this.local(onLevel.marker.at) : null, onLevel.marker ? onLevel.marker.up : true)
     const key = pts.map((p) => Math.round(p.x * 20) + "," + Math.round(p.y * 20) + "," + Math.round(p.z * 20)).join(";")
     if (key === this.lastLineKey && !this.pendingSwing) return
     this.lastLineKey = key
@@ -735,6 +1429,10 @@ export class FindYourWayMain extends BaseScriptComponent {
   }
 
   private followDemoControls(): void {
+    const shown = this.showDemoControls || this.demoControlsForced
+    const dso = this.demoControls.getSceneObject()
+    if (dso.enabled !== shown) dso.enabled = shown
+    if (!shown) return
     const t = this.camera.getTransform()
     const yaw = this.headYaw()
     const target = t.getWorldPosition().add(yaw.multiplyVec3(this.demoOffset))
@@ -778,7 +1476,7 @@ export class FindYourWayMain extends BaseScriptComponent {
 
   getPhase(): Phase { return this.phase }
   getProfile(): Profile | null { return this.profile }
-  getMapKey(): string { return MAP_SOURCES[this.mapIndex].key }
+  getMapKey(): string { const src = this.source(); return src ? src.key : MAPPED_KEY_NAME }
   getMapData(): MapData { return this.nav ? this.nav.map : this.map }
   getMapSource(): string | null { return this.mapSource }
   getDestinationId(): string { return this.nav ? this.nav.to : this.tripDestination || this.place.destination }
@@ -819,6 +1517,69 @@ export class FindYourWayMain extends BaseScriptComponent {
   }
 
   getHudCardTextOrEmpty(): string { return this.hud.getCardText() || "" }
+  // Brief 2 state for the LEAF scenarios.
+  getPillText(): string | null { return this.hud.getPillText() }
+  getCueText(): string | null { return this.hud.getCueText() }
+  getScoreText(): string | null { return this.hud.getScoreText() }
+  getPlayLine(): string | null { return this.hud.getPlayLine() }
+  isFloorPostShown(): boolean { return !!this.view && this.view.isPostShown() }
+  isCompanionOn(): boolean { return this.guide.on }
+  isCompanionShown(): boolean { return !!this.view && this.view.isVisible() }
+  getCompanionModel(): string { return this.view ? this.view.getModel() : "" }
+  getCompanionName(): string { return this.companion.name }
+  getCompanionMapPos(): Vec3 | null { return this.guide.pet ? this.guide.pet.pos : null }
+  getCompanionMood(): string { return this.guide.pet ? this.guide.pet.mood : "none" }
+  getTreats(): {found: number; total: number} { return {found: this.guide.found, total: this.guide.total} }
+  getVisiblePlaceIds(): string[] { return this.placesUI ? this.placesUI.visibleIds() : [] }
+  getPointedPlaceId(): string | null { return this.pointed ? this.pointed.place.id : null }
+  getPlaceTag(id: string): string | null { return this.placesUI ? this.placesUI.tagOf(id) : null }
+  isPlacesMuted(): boolean { return this.placesMuted }
+  canPlayNow(): boolean { return this.gate.canPlay }
+  getHopPhase(): string { return this.hop.phase }
+  getHopScore(): number { return this.hop.score }
+  getHopObstacles(): number { return this.hop.obstacles.length }
+  isHopLaneShown(): boolean { return !!this.view && this.view.isLaneShown() }
+  getCatchPhase(): string { return this.catchGame.phase }
+  getCatches(): number { return this.catchGame.catches }
+  getStopLabel(): string | null { return this.stops ? this.stops.label((id) => nodeLabel(this.getMapData(), id)) : null }
+  getStops(): string[] { return this.stops ? this.stops.stops.slice() : [] }
+  isAppPanelShown(): boolean { return !!this.appPanel && this.appPanel.getSceneObject().isEnabledInHierarchy }
+  // Simulates one raised hand (LEAF can't move tracked hands); used on the next frame.
+  debugRaiseHand(): void { this.debugRaise = true }
+  debugGoHere(id: string): void { this.goHere(id) }
+  debugShowDemoControls(on: boolean): void {
+    this.demoControlsForced = on
+    this.demoControls.getSceneObject().enabled = this.showDemoControls || on
+  }
+  // World position of the start sign's foot (where you stand with startAtSign).
+  getStartWorldPos(): vec3 {
+    const n = findNode(this.map, this.place.start)
+    return this.building.getTransform().getWorldTransform().multiplyPoint(n ? this.local(n) : new vec3(0, 0, 0))
+  }
+  getCameraWorldPos(): vec3 { return this.camera.getTransform().getWorldPosition() }
+  // Learn this place / peek ahead state and hooks.
+  isMappingPanelShown(): boolean { return !!this.mappingPanel && this.mappingPanel.isShown() }
+  getMappingStatus(): string { return this.mappingPanel ? this.mappingPanel.getStatus() : "" }
+  getMappedNodeCount(): number { return this.recorder ? this.recorder.toMap().nodes.length : 0 }
+  hasSavedMap(): boolean { return this.mappedText !== null }
+  debugMapPointAt(x: number, y: number, z: number): string | null {
+    this.debugPose = {pos: {x, y, z}, heading: this.debugPose ? this.debugPose.heading : 0}
+    if (this.recorder) this.recorder.walked({x, y, z})
+    return this.recorder ? this.recorder.pointHere({x, y, z}) : null
+  }
+  debugMapName(label: string): string | null { return this.recorder ? this.recorder.name(label) : null }
+  debugMapTag(kind: string): boolean { return !!this.recorder && this.recorder.tagLast(kind as MappingTag) }
+  debugSaveMapping(): boolean { return this.saveMapping() }
+  // Forgets the saved map (device storage too); the map switch then cycles the bundled maps only.
+  debugForgetSavedMap(): void {
+    this.mappedText = null
+    try { global.persistentStorageSystem.store.remove(MAPPED_KEY) } catch (e) { /* none */ }
+    if (this.mapIndex >= MAP_SOURCES.length) this.mapIndex = 0
+  }
+  debugPeek(on: boolean): void { this.peekForced = on }
+  isPeekShown(): boolean { return !!this.peekView && this.peekView.isShown() }
+  areDemoControlsShown(): boolean { return this.demoControls.getSceneObject().enabled }
+  debugSetInterests(ids: string[]): void { this.modePanel.setInterests(ids) }
   isEdgeOpen(edgeId: string): boolean {
     for (const e of this.getMapData().edges) if (e.id === edgeId) return e.open
     return false

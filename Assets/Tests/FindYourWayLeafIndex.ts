@@ -21,6 +21,11 @@ import {FywDestBeforeScanScenario} from "./FywDestBeforeScanScenario"
 import {FywE3bNoStepFreeAtScanScenario} from "./FywE3bNoStepFreeAtScanScenario"
 import {FywStaleLoadScenario} from "./FywStaleLoadScenario"
 import {FywClosureCardScenario} from "./FywClosureCardScenario"
+import {FywFl1PillScenario, FywFl2CueBadgeScenario} from "./FywFloorsScenario"
+import {FywP1CompanionToggleScenario, FywP3WaitsAtEscalatorScenario} from "./FywCompanionScenario"
+import {FywQ4PointingScenario} from "./FywPlacesScenario"
+import {FywG1HopScenario, FywPc1CatchScenario} from "./FywPlayScenario"
+import {FywM5LearnThisPlaceScenario, FywPk1PeekScenario, FywS1StartAtSignScenario, FywT1MallStopsScenario} from "./FywTripsScenario"
 
 @component
 export class FindYourWayLeafIndex extends BaseScriptComponent {
@@ -45,6 +50,18 @@ export class FindYourWayLeafIndex extends BaseScriptComponent {
     {id: "e3b-no-step-free-at-scan", typename: FywE3bNoStepFreeAtScanScenario.getTypeName()},
     {id: "c12-stale-load-and-closures-kept", typename: FywStaleLoadScenario.getTypeName()},
     {id: "closure-card-signs-and-5s-hide", typename: FywClosureCardScenario.getTypeName()},
+    // Brief 2 (devpost/SCENARIOS.md S10-S14, P1-P10, Q2-Q8, G1-G9, T1-T3, M1-M5, Z1-Z3).
+    {id: "s1-start-at-sign-controls-hidden", typename: FywS1StartAtSignScenario.getTypeName()},
+    {id: "fl1-pill-shows-and-counts-down", typename: FywFl1PillScenario.getTypeName()},
+    {id: "fl2-cue-post-and-badge-after-escalator", typename: FywFl2CueBadgeScenario.getTypeName()},
+    {id: "p1-companion-toggle-and-models", typename: FywP1CompanionToggleScenario.getTypeName()},
+    {id: "p3-companion-waits-at-escalator", typename: FywP3WaitsAtEscalatorScenario.getTypeName()},
+    {id: "q4-points-at-interests-and-sponsored", typename: FywQ4PointingScenario.getTypeName()},
+    {id: "g1-hop-jump-bump-restart", typename: FywG1HopScenario.getTypeName()},
+    {id: "pc1-throw-and-fetch-any-model", typename: FywPc1CatchScenario.getTypeName()},
+    {id: "t1-mall-multi-stop", typename: FywT1MallStopsScenario.getTypeName()},
+    {id: "m5-learn-this-place-save-route", typename: FywM5LearnThisPlaceScenario.getTypeName()},
+    {id: "pk1-peek-ahead-shows-and-hides", typename: FywPk1PeekScenario.getTypeName()},
     // Screenshot set-ups — skipped by the runner unless named in `only`.
     {id: "visual-start", typename: FywVisualScenario.getTypeName(), parameters: {shot: "start"}},
     {id: "visual-card", typename: FywVisualScenario.getTypeName(), parameters: {shot: "card"}},

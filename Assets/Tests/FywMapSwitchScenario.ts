@@ -19,7 +19,7 @@ export class FywMapSwitchScenario extends Scenario {
       await sleep(600)
     }
     expect(main.getMapKey(), "start on the airport").toBe("airport")
-    const order = ["hospital", "campus", "room", "airport"]
+    const order = ["hospital", "campus", "room", "mall", "airport"]
     for (const key of order) {
       await tap(it, "NextMapButton")
       await waitFor(() => main.getMapKey() === key, 3000, "map " + key)

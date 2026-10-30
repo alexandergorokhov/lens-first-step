@@ -38,6 +38,7 @@ export const MAP_SOURCES: MapSource[] = [
   {key: "hospital", asset: requireAsset("../Maps/hospital.json") as JsonAsset, file: "hospital.json"},
   {key: "campus", asset: requireAsset("../Maps/campus.json") as JsonAsset, file: "campus.json"},
   {key: "room", asset: requireAsset("../Maps/room.json") as JsonAsset, file: "room.json"},
+  {key: "mall", asset: requireAsset("../Maps/mall.json") as JsonAsset, file: "mall.json"},
 ]
 
 // The map download URL for a source, or "" when there is no base URL.

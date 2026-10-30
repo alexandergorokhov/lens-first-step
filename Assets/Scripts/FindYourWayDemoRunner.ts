@@ -70,6 +70,8 @@ export class FindYourWayDemoRunner extends BaseScriptComponent {
     this.arrivals = []
     this.missedPresses = []
     this.demoControls.setPlayDemoLabel("Stop demo")
+    // The demo presses the demo controls, which are hidden by default (real use).
+    this.main.debugShowDemoControls(true)
     const id = ++this.runId
     this.runDemoScript(id).then(
       () => this.done(id),

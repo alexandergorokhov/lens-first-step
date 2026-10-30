@@ -18,10 +18,18 @@ Capabilities of "Find Your Way Inside" (see `../project.md` for context and conv
 | Demo controls: event, restart, map switch | [demo-controls/spec.md](demo-controls/spec.md) |
 | Airport, hospital, campus, room maps; stand-in | [sample-maps/spec.md](sample-maps/spec.md) |
 | Step-Free rules, assistance point, seated height | [accessibility/spec.md](accessibility/spec.md) |
+| Distance pill, floor badge, floor-change cue, line on your floor | [floors-and-distance/spec.md](floors-and-distance/spec.md) |
+| Companion on/off, any model, leads/waits/collects | [companion/spec.md](companion/spec.md) |
+| Place icons, interests, pointing, Go here? | [places/spec.md](places/spec.md) |
+| Play while you wait: Hop and catch | [play/spec.md](play/spec.md) |
+| Multi-stop trips (mall) | [multi-stop/spec.md](multi-stop/spec.md) |
+| A* beside Dijkstra | [route-search/spec.md](route-search/spec.md) |
+| Learn this place (mapping by walking) | [mapping-mode/spec.md](mapping-mode/spec.md) |
+| Peek ahead | [peek-ahead/spec.md](peek-ahead/spec.md) |
 
 ## Traceability
 
-Status: **Pass (auto)** = covered by a passing Node test and/or LEAF scenario (Node 96 pass / 0 todo;
+Status: **Pass (auto)** = covered by a passing Node test and/or LEAF scenario (Node 231 tests, all passing / 0 todo;
 LEAF 19/19 as of the last recorded run in `devpost/SCENARIOS.md`); **Partial** = logic tested but
 part of the behaviour only manual or untested; **Manual** = checked by hand in the preview only;
 **Gap** = no test.
@@ -121,6 +129,15 @@ part of the behaviour only manual or untested; **Manual** = checked by hand in t
 | X60 | Looking straight down keeps the heading | trip-flow | C13 yaw… | — | Pass (auto, Node) |
 | X61 | Optional map fields typed | map-format | (compile) | (compile) | Pass (review) |
 | X62 | Lens copies kept identical by tooling | routing | A1 ×3; A4 no dead helpers… | — | Pass (auto) |
+| S10–S14 | Pill, floor badge, cue, line on your floor | floors-and-distance | S10–S14 | fl1-pill-shows-and-counts-down, fl2-cue-post-and-badge-after-escalator | Pass (Node); LEAF written, not run |
+| P1–P7, Q7, Q8 | Companion on/off, any model, leads/waits/collects | companion | P1–P7, Q7, Q8 | p1-companion-toggle-and-models, p3-companion-waits-at-escalator | Pass (Node); LEAF written, not run |
+| Q1–Q6 | Places, interests, pointing, Go here? | places | Q1–Q6 | q4-points-at-interests-and-sponsored | Pass (Node); LEAF written, not run |
+| G1–G9, P8–P10 | Hop and catch | play | G1–G9, P8, P9 | g1-hop-jump-bump-restart, pc1-throw-and-fetch-any-model | Pass (Node); LEAF written, not run |
+| T1–T4 | Multi-stop mall trip | multi-stop | T1–T4 | t1-mall-multi-stop | Pass (Node); LEAF written, not run |
+| A1–A3 | A* equals Dijkstra | route-search | A1–A3 | — | Pass (auto, Node) |
+| M1–M5 | Learn this place | mapping-mode | M1–M5 | m5-learn-this-place-save-route | Pass (Node); LEAF written, not run |
+| Z1–Z3 | Peek ahead | peek-ahead | Z3 | pk1-peek-ahead-shows-and-hides | Pass (Node); LEAF written, not run |
+| H1–H2 | Start at the sign; demo controls hidden | trip-flow, demo-controls | — | s1-start-at-sign-controls-hidden | Pass (Node); LEAF written, not run |
 
 `<map>` = airport, hospital, campus, room (one Node test each). The LEAF `visual-*` ids are
 screenshot set-ups, not tests.

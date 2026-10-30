@@ -48,3 +48,8 @@ devpost/maps/downloaded/
 
 # Rendered demo videos (large; regenerate with npm run demo:video / demo:pet)
 devpost/video/
+
+# Session handoff notes between Claude sessions (local only)
+devpost/NEXT-SESSION*.md
+devpost/*HANDOFF*.md
+devpost/*ADDENDUM*.md

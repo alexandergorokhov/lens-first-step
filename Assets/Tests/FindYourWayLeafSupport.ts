@@ -16,11 +16,18 @@ export function getMain(): FindYourWayMain {
   if (!so) throw new Error("SceneObject 'FindYourWay' not found")
   const main = so.getComponent(FindYourWayMain.getTypeName()) as FindYourWayMain
   if (!main) throw new Error("FindYourWayMain component not found")
+  // The demo controls (restart, map switch, gate change) are hidden by default; tests use them.
+  main.debugShowDemoControls(true)
   return main
 }
 
 export async function tap(interactor: DefaultLeafInteractor, name: string): Promise<void> {
-  const target = findInteractableByName(name, undefined, true)
+  // A button shown this frame gets its Interactable on its first frame: retry for ~1 s.
+  let target = findInteractableByName(name, undefined, true)
+  for (let i = 0; i < 10 && !target; i++) {
+    await sleep(100)
+    target = findInteractableByName(name, undefined, true)
+  }
   if (!target) throw new Error("Interactable '" + name + "' not found or not enabled")
   await interactor.trigger(target)
   await sleep(250)

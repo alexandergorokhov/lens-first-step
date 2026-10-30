@@ -3,7 +3,7 @@
 // shops, gates, signs and people. Positions come from the map's nodes, so the router's route
 // runs exactly through it. Map metres: x east, y up, z north -> three.js (x, y, -z).
 import * as THREE from "three";
-import { LIFTS, LIFT_HALF, SHOPS, doorFace as faceOf } from "./layout.mjs";
+import { FURNITURE, LIFTS, LIFT_HALF, SHOPS, doorFace as faceOf } from "./layout.mjs";
 
 export const V = (x, y, z) => new THREE.Vector3(x, y, -z);
 const DEG = Math.PI / 180;
@@ -276,18 +276,24 @@ export function buildAirport(scene, map) {
   root.add(p1, p2);
 
   // Ground floor.
-  slab(root, [[0, 0], [60, 0], [60, 40], [0, 40]], 0, terrazzo, 0.3);
+  slab(root, [[0, 0], [96, 0], [96, 40], [0, 40]], 0, terrazzo, 0.3);
 
   // Departures (y 6) with the atrium edge, escalator and stairs openings, the lift 1 bridge
   // and a notch where the C pier stairs go down.
   const dep = [[4, 18], [12, 18], [12, 22], [26.4, 22], [26.4, 28.6], [31.5, 28.6], [31.5, 22], [32.8, 22], [32.8, 24],
-    [35.2, 24], [35.2, 22], [44, 22], [44, 8], [52, 8], [52, 22], [60, 22], [60, 40], [13, 40], [13, 33.6], [15.1, 33.2],
+    [35.2, 24], [35.2, 22], [44, 22], [44, 8], [52, 8], [52, 22], [96, 22], [96, 40], [13, 40], [13, 33.6], [15.1, 33.2],
     [15.1, 31.2], [13, 31.4], [13, 30.5], [4, 30.5]];
   const shaftHole = (id) => {
     const n = node(id);
     return [[n.x - 1.3, n.z - 1.3], [n.x + 1.3, n.z - 1.3], [n.x + 1.3, n.z + 1.3], [n.x - 1.3, n.z + 1.3]];
   };
-  slab(root, dep, 6, upperFloor, 0.45, [shaftHole("lift1U"), shaftHole("lift2U")]);
+  // The east stairs come up through the B pier floor (opening from z 22 to their top at z 26).
+  const eastHole = [[62.9, 22.01], [65.1, 22.01], [65.1, 26], [62.9, 26]];
+  slab(root, dep, 6, upperFloor, 0.45, [shaftHole("lift1U"), shaftHole("lift2U"), eastHole]);
+  // Sky Lounge mezzanine (y 9) over the B pier, with the lounge stairs and lift openings.
+  const loungeM = new THREE.MeshLambertMaterial({ map: tileTex("#b9a58a", "#9a8669", "#6f5f48", 0.9) });
+  slab(root, [[69, 20], [84, 20], [84, 31.5], [69, 31.5]], 9, loungeM, 0.35,
+    [[[70.9, 25], [73.1, 25], [73.1, 30.2], [70.9, 30.2]], shaftHole("loungeLiftU")]);
   // C pier (y 5).
   slab(root, [[0, 30.5], [13, 30.5], [13, 40], [0, 40]], 5, pierFloor);
   box(root, 0, 4, 5.55, 6, 18, 30.5, wallM); // closes the gap west of the lift 2 landing
@@ -300,13 +306,18 @@ export function buildAirport(scene, map) {
   };
   for (const [ax, az, bx, bz] of [[4, 18, 12, 18], [12, 18, 12, 22], [12, 22, 26.4, 22], [26.4, 22, 26.4, 28.6], [31.5, 28.6, 31.5, 22],
     [31.5, 22, 32.8, 22], [32.8, 22, 32.8, 24], [35.2, 24, 35.2, 22], [35.2, 22, 44, 22], [44, 22, 44, 8], [52, 8, 52, 22],
-    [52, 22, 60, 22], [13, 40, 13, 33.6], [13, 31.4, 13, 30.5]]) rail(ax, az, bx, bz, 6);
+    [52, 22, 62.9, 22], [65.1, 22, 96, 22], [62.9, 22, 62.9, 25.2], [65.1, 22, 65.1, 25.2],
+    [13, 40, 13, 33.6], [13, 31.4, 13, 30.5]]) rail(ax, az, bx, bz, 6);
+  // Sky Lounge edges and its stair opening (open on the side you step off, south).
+  for (const [ax, az, bx, bz] of [[69, 31.5, 80.7, 31.5], [83.3, 31.5, 84, 31.5], [69, 20, 69, 31.5], [84, 20, 84, 31.5],
+    [70.9, 30.2, 73.1, 30.2], [70.9, 25.8, 70.9, 30.2], [73.1, 25.8, 73.1, 30.2]]) rail(ax, az, bx, bz, 9);
+  box(root, 69, 84, 9, 12, 19.6, 20, lambert(0xd9cbb6)); // lounge back wall, up to the roof (12 m)
   rail(4, 30.5, 4, 40, 5); // C pier west edge has the wall; this is the pier's inner rail line
 
   // Outer walls: glass on the airside (north, east), entrance glass (south), solid west.
   const H = 12;
   box(root, -0.2, 0, 0, H, 0, 40, wallM);
-  for (const [x0, z0, x1, z1] of [[0, 0, 60, 0], [60, 0, 60, 40], [60, 40, 0, 40]]) {
+  for (const [x0, z0, x1, z1] of [[0, 0, 96, 0], [96, 0, 96, 40], [96, 40, 0, 40]]) {
     beam(root, { x: x0, y: H / 2, z: z0 }, { x: x1, y: H / 2, z: z1 }, 0.05, H, glass);
     const len = Math.hypot(x1 - x0, z1 - z0);
     for (let s = 0; s <= len + 0.01; s += 3) {
@@ -316,11 +327,11 @@ export function buildAirport(scene, map) {
     for (const y of [3, 6.4, 9.2, H]) beam(root, { x: x0, y, z: z0 }, { x: x1, y, z: z1 }, 0.12, 0.12, frame);
   }
   // Roof with rows of lights.
-  box(root, 0, 60, H, H + 0.3, 0, 40, lambert(0xf6f6f4));
+  box(root, 0, 96, H, H + 0.3, 0, 40, lambert(0xf6f6f4));
   const lightM = new THREE.MeshBasicMaterial({ color: 0xffffff });
-  for (let z = 2; z < 40; z += 4) box(root, 2, 58, H - 0.03, H - 0.01, z, z + 0.35, lightM);
+  for (let z = 2; z < 40; z += 4) box(root, 2, 94, H - 0.03, H - 0.01, z, z + 0.35, lightM);
   // Light strips under the mezzanine.
-  for (let z = 24; z < 40; z += 3) box(root, 13, 59, 5.52, 5.54, z, z + 0.25, lightM);
+  for (let z = 24; z < 40; z += 3) box(root, 13, 95, 5.52, 5.54, z, z + 0.25, lightM);
   for (let x = 46; x < 52; x += 3) box(root, x, x + 0.25, 5.52, 5.54, 9, 21, lightM);
 
   // Columns: a grid, kept clear of the walking routes.
@@ -330,9 +341,11 @@ export function buildAirport(scene, map) {
     const t = Math.max(0, Math.min(1, ((x - a.x) * dx + (z - a.z) * dz) / L));
     return Math.hypot(x - a.x - dx * t, z - a.z - dz * t) > r;
   });
-  for (const x of [6, 18, 24, 36, 42, 54]) for (const z of [6, 14, 26, 34]) {
-    if (!clear(x, z, 2.2)) continue;
+  const inBox = (x, z, list) => list.some(([x0, x1, z0, z1]) => x > x0 - 1 && x < x1 + 1 && z > z0 - 1 && z < z1 + 1);
+  for (const x of [6, 18, 24, 36, 42, 54, 60, 70, 80, 90]) for (const z of [6, 14, 26, 34]) {
+    if (!clear(x, z, 2.2) || inBox(x, z, SHOPS) || inBox(x, z, FURNITURE)) continue;
     if (x > 26 && x < 38 && z > 15 && z < 30) continue;
+    if (x > 60 && x < 68 && z > 14 && z < 28) continue; // east stairs
     const c = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, H, 16), lambert(0xf1f1ef));
     c.position.copy(V(x, H / 2, z));
     root.add(c);
@@ -406,7 +419,7 @@ export function buildAirport(scene, map) {
     const grp = new THREE.Group();
     root.add(grp);
     // corner posts + glass walls
-    for (const [sx, sz] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) box(grp, g.x + sx * half - 0.06, g.x + sx * half + 0.06, 0, H, g.z + sz * half - 0.06, g.z + sz * half + 0.06, frame);
+    for (const [sx, sz] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) box(grp, g.x + sx * half - 0.06, g.x + sx * half + 0.06, g.y, H, g.z + sz * half - 0.06, g.z + sz * half + 0.06, frame);
     // Glass on every side, with a door-high opening where a landing door is (you go through it).
     const doorAt = { N: [], S: [], E: [], W: [] };
     doorAt[doorFace(g, gFrom)].push(g.y);
@@ -416,7 +429,7 @@ export function buildAirport(scene, map) {
       const c = { x: g.x + (f === "E" ? half : f === "W" ? -half : 0), z: g.z + (f === "N" ? half : f === "S" ? -half : 0) };
       const a = horiz ? { x: c.x - half, z: c.z } : { x: c.x, z: c.z - half };
       const b = horiz ? { x: c.x + half, z: c.z } : { x: c.x, z: c.z + half };
-      let from = 0;
+      let from = g.y; // the shaft starts at its lowest landing
       for (const lvl of doorAt[f].sort((p, q) => p - q)) {
         if (lvl > from) beam(grp, { ...a, y: (from + lvl) / 2 }, { ...b, y: (from + lvl) / 2 }, 0.03, lvl - from, glass);
         from = lvl + 2.5;
@@ -514,6 +527,20 @@ export function buildAirport(scene, map) {
     return glassFront;
   };
   for (const s of SHOPS) shop(...s);
+  for (const [x0, x1, z0, z1, y, h, color] of FURNITURE) box(root, x0, x1, y, y + h, z0, z1, lambert(color));
+  // B pier gates: seating and gate boards (B12's are below).
+  for (const [id, code, dest] of [["gateB14", "B14", "Oslo 09:30"], ["gateB16", "B16", "Vienna 09:45"], ["gateB18", "B18", "Dublin 09:20"]]) {
+    const g = node(id);
+    chairRow(root, g.x - 3, g.x + 1, 6, 39.2, false);
+    signBoard(root, g.x, 9.0, 39.6, 180, 2.4, 1.2, signTex([code, dest], { w: 512, h: 256, size: 120 }), false);
+  }
+  const b20 = node("gateB20");
+  chairRow(root, 94.6, 95.4, 6, 30.5, true);
+  signBoard(root, 95.8, 8.8, b20.z, 270, 2.4, 1.2, signTex(["B20", "Prague 10:05"], { w: 512, h: 256, size: 120 }), false);
+  signBoard(root, 58, 9.0, 32, 90, 4.4, 0.75, signTex(["Gates B14 – B20  →"], { w: 1536, h: 260, size: 110 }));
+  signBoard(root, 72, 8.6, 31.2, 180, 3.2, 0.7, signTex(["↑  Sky Lounge"], { w: 1280, h: 240, bg: "#4a3a26", fg: "#ffe2a8" }), false);
+  signBoard(root, 76.5, 11.0, 20.1, 180, 4.0, 0.8, signTex(["Sky Lounge"], { w: 1280, h: 256, bg: "#4a3a26", fg: "#ffe2a8", size: 140 }), false);
+  signBoard(root, 64, 3.2, 15, 180, 3.2, 0.7, signTex(["↑  Gates B14 – B20"], { w: 1280, h: 240 }));
 
   // Gates: desks, seating, gate boards.
   const b12 = node("gateB12"), c3 = node("gateC3");

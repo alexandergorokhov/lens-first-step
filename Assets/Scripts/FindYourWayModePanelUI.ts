@@ -1,10 +1,16 @@
 // FindYourWayModePanelUI — the first panel: pick Walk or Step-Free once for the whole trip.
-// Owns: the panel's UIKit surface and its two big buttons. Emits onWalk / onStepFree.
+// Owns: the panel's UIKit surface, its two big buttons and the interests row (what the companion
+// may point out: none picked by default). Emits onWalk / onStepFree.
 // Must not: decide routing or remember the choice (FindYourWayMain owns the profile).
 
 import Event, {PublicApi} from "SpectaclesInteractionKit.lspkg/Utils/Event"
-import {addButton, addText, makePanel} from "./FindYourWayWidgetsUI"
+import {addButton, addRow, addText, LabeledButton, makePanel} from "./FindYourWayWidgetsUI"
 import {icon} from "./FindYourWayIconsUI"
+
+const INTEREST_LABEL: {[id: string]: string} = {
+  coffee: "Coffee", food: "Food", shopping: "Shops", toilet: "Toilets", pharmacy: "Pharmacy",
+  accessibleToilet: "Acc. toilets",
+}
 
 @component
 export class FindYourWayModePanelUI extends BaseScriptComponent {
@@ -43,8 +49,12 @@ export class FindYourWayModePanelUI extends BaseScriptComponent {
   textColor: vec4 = new vec4(1, 1, 1, 1)
   @ui.group_end
 
+  private picked: {[interest: string]: boolean} = {}
+  private interestButtons: {[interest: string]: LabeledButton} = {}
   private _onWalk = new Event<void>()
   private _onStepFree = new Event<void>()
+  private _onMapping = new Event<void>()
+  get onMapping(): PublicApi<void> { return this._onMapping.publicApi() }
   get onWalk(): PublicApi<void> { return this._onWalk.publicApi() }
   get onStepFree(): PublicApi<void> { return this._onStepFree.publicApi() }
 
@@ -59,6 +69,36 @@ export class FindYourWayModePanelUI extends BaseScriptComponent {
     addButton(panel.content, "StepFreeButton", this.stepFreeLabel, this.buttonWidthCm,
       this.buttonHeightCm, icon("accessible"), () => this._onStepFree.invoke(), this.textColor, 100,
       "Headline1", "Primary")
+    addButton(panel.content, "MapThisPlaceButton", "Learn this place (map it by walking)", this.buttonWidthCm, 4.2,
+      icon("map"), () => this._onMapping.invoke(), this.textColor, 100, "Caption")
+    addText(panel.content, "InterestsTitle", "Point out (optional):", "Headline2", width - 3, 2.6,
+      new vec4(this.textColor.x, this.textColor.y, this.textColor.z, 0.85), 100)
+    const rows = [["coffee", "food", "shopping"], ["toilet", "pharmacy", "accessibleToilet"]]
+    const w = (this.buttonWidthCm - 1) / 3
+    for (let r = 0; r < rows.length; r++) {
+      const row = addRow(panel.content, "InterestsRow" + r, this.buttonWidthCm, 4, 0.5)
+      for (const id of rows[r]) {
+        this.interestButtons[id] = addButton(row, "Interest_" + id, INTEREST_LABEL[id], w, 3.6, null,
+          () => this.toggleInterest(id), this.textColor, 100, "Caption")
+      }
+    }
+  }
+
+  private toggleInterest(id: string): void {
+    this.picked[id] = !this.picked[id]
+    const b = this.interestButtons[id]
+    if (b) b.label.text = (this.picked[id] ? "✓ " : "") + INTEREST_LABEL[id]
+  }
+
+  // The picked interests (category ids as in the map: coffee, food, shopping, toilet, pharmacy,
+  // accessibleToilet), in a fixed order.
+  getInterests(): string[] {
+    return Object.keys(INTEREST_LABEL).filter((k) => this.picked[k])
+  }
+
+  // Test hook: set the picked interests directly (the same state the buttons toggle).
+  setInterests(ids: string[]): void {
+    for (const k of Object.keys(INTEREST_LABEL)) if (!!this.picked[k] !== (ids.indexOf(k) >= 0)) this.toggleInterest(k)
   }
 
   show(): void { this.sceneObject.enabled = true }

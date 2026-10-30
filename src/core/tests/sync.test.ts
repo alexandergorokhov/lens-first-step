@@ -47,7 +47,7 @@ test("A1 npm test runs sync:check first; npm run hooks enables a pre-commit hook
 test("A1/C13 the maps index is the one list: Assets/Maps, MAP_SOURCES and the mapKey picker all match it", async () => {
   const { mapIndex } = await tool();
   const keys = mapIndex().map((m: any) => m.key);
-  assert.deepEqual(keys, ["airport", "hospital", "campus", "room"]);
+  assert.deepEqual(keys, ["airport", "hospital", "campus", "room", "mall"]);
   const lib = read("Assets/Scripts/FindYourWayMapLibrary.ts");
   for (const m of mapIndex()) {
     assert.ok(existsSync(path.join(ROOT, "Assets/Maps", m.lens)), m.lens);
