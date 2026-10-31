@@ -26,6 +26,13 @@ Capabilities of "Find Your Way Inside" (see `../project.md` for context and conv
 | A* beside Dijkstra | [route-search/spec.md](route-search/spec.md) |
 | Learn this place (mapping by walking) | [mapping-mode/spec.md](mapping-mode/spec.md) |
 | Peek ahead | [peek-ahead/spec.md](peek-ahead/spec.md) |
+| Free walk: dots, offers, companion with no route | [free-walk/spec.md](free-walk/spec.md) |
+| Map builder: walk, floors, Mark shop, upload | [map-builder/spec.md](map-builder/spec.md) |
+| Go to a place: Say it, Talk, Where to? list and map | [go-to-a-place/spec.md](go-to-a-place/spec.md) |
+| Tour of the shops your picks match | [tour/spec.md](tour/spec.md) |
+| Seated play and catch by hand | [seated-and-hand-play/spec.md](seated-and-hand-play/spec.md) |
+| Floor-plan draft to map (`npm run map:from-plan`) | [map-from-plan/spec.md](map-from-plan/spec.md) |
+| Solid walkable backdrop in Lens Studio; companion models | [preview-backdrop/spec.md](preview-backdrop/spec.md) |
 
 ## Traceability
 
@@ -138,6 +145,21 @@ part of the behaviour only manual or untested; **Manual** = checked by hand in t
 | M1–M5 | Learn this place | mapping-mode | M1–M5 | m5-learn-this-place-save-route | Pass (Node); LEAF passing |
 | Z1–Z3 | Peek ahead | peek-ahead | Z3 | pk1-peek-ahead-shows-and-hides | Pass (Node); LEAF passing |
 | H1–H2 | Start at the sign; demo controls hidden | trip-flow, demo-controls | — | s1-start-at-sign-controls-hidden | Pass (Node); LEAF passing |
+| FW1 | Three modes after the scan; checkbox list from the map | free-walk | I1 (freewalk.test.ts) | b3-modes-scan-first-preset | Pass (Node); LEAF passing |
+| FW2, FW3 | Dot on looking at a front; offer list, at most 3 rows | free-walk | L1–L3, D1–D3, O1, O2 | b3-dc5-companion-off-dots | Pass (Node); LEAF passing |
+| FW4 | Companion ahead of you, runs around on a turn | free-walk | A1, A2, C5–C7 | b3-dc3-turn-around | Pass (Node); LEAF passing |
+| FW5 | Stops only at matching shops, once per walk | free-walk | C1–C4 | b3-dc2-companion-stops-at-matches | Pass (Node); LEAF passing |
+| FW6 | Other-floor bubble and list | free-walk | F1–F3, H1, H1b, H2, H3 | b3-dc4-another-floor | Pass (Node); LEAF passing |
+| MB1–MB4 | Map builder: path, floors, Mark shop, upload | map-builder | B1–B16, U1–U3 (builder.test.ts) | b3-dc1-map-builder-two-floors | Pass (Node); LEAF passing; `map:publish` write untested |
+| GP1, GP3 | Say it; Where to? list | go-to-a-place | G1–G3 (freewalk.test.ts) | b3-dc6-go-to-a-place | Pass (Node); LEAF passing |
+| GP2 | Talk: words reach the matcher | go-to-a-place | G1 (matcher only) | v1-voice-reaches-the-matcher | Partial (words fed in by a test hook; real mic and ASR not tested) |
+| GP4 | Where to? as a map, floor by floor | go-to-a-place | U8–U13 (tour.test.ts) | pm1-pick-a-place-on-the-map | Pass (Node); LEAF passing |
+| TR1, TR2 | Tour: matching shops, stop by stop | tour | U1–U7 (tour.test.ts) | tr1-tour-stop-by-stop | Pass (Node); LEAF passing |
+| SP1–SP3 | Seated play: detect, close short lane, card ends it | seated-and-hand-play | S1–S9 (play.test.ts) | sp1-seated-play | Pass (Node); LEAF passing |
+| GT1 | Catch by hand: grab, swing, release | seated-and-hand-play | G1–G4 (play.test.ts, releaseVelocity) | gt1-grab-and-throw | Pass (Node); LEAF passing; hand feel unproven |
+| MP1–MP3 | Floor-plan draft to map | map-from-plan | map-from-plan.test.ts (6 tests) | — | Pass (auto, Node) |
+| PB1, PB2 | Solid backdrop and wall shops, Lens Studio only | preview-backdrop | — | bg1-backdrop-solid-in-preview | LEAF passing; shop look manual |
+| PB3 | Companion model or box fallback | preview-backdrop | — | p1-companion-toggle-and-models, pc1-throw-and-fetch-any-model | Partial (look manual) |
 
 `<map>` = airport, hospital, campus, room (one Node test each). The LEAF `visual-*` ids are
 screenshot set-ups, not tests.

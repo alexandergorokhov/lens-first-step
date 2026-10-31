@@ -36,7 +36,8 @@ play again".
 "Throw a <collectible>" SHALL throw it ahead (lands on your floor, ≤ 5 m); the companion runs to it,
 catches it (chime), brings it back and drops it ~0.7 m from you, then guides again. Not while
 moving, within 10 m of a floor change, or while a card shows. Any model plays the same game.
-Grab-and-throw with the tracked hand is not built yet (the button throws straight ahead).
+The button throws straight ahead; grab-and-throw by hand, and seated play, are in
+`seated-and-hand-play`.
 
 #### Scenario: P9 Fetch
 - **WHEN** the treat is thrown while standing still
