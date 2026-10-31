@@ -58,14 +58,15 @@ import {mapLevels, tourStops} from "./FindYourWayTour"
 import {FindYourWayVoice} from "./FindYourWayVoice"
 import {FindYourWayPickMapUI} from "./FindYourWayPickMapUI"
 import {MultiStopTrip, orderStops} from "./FindYourWayTrip"
-import {mapLogLines, MappedEdgeKind, MapRecorder, MappingTag, tripAfterSaving, WalkTracer} from "./FindYourWayMapping"
-import {peekMap, peekModel} from "./FindYourWayPeek"
+import {mapLogLines, tripAfterSaving} from "./FindYourWayMapping"
+import {peekModel} from "./FindYourWayPeek"
 import {destinationsOf, FreeWalk, interestList, matchDestination, sayItPhrase} from "./FindYourWayFreeWalk"
 import {FindYourWayHomePanelUI} from "./FindYourWayHomePanelUI"
 import {FindYourWayPrefsUI} from "./FindYourWayPrefsUI"
 import {FindYourWayOfferUI} from "./FindYourWayOfferUI"
 import {FindYourWayBubbleUI} from "./FindYourWayBubbleUI"
 import {FindYourWayWhereToUI} from "./FindYourWayWhereToUI"
+import {FindYourWayMapBuilder} from "./FindYourWayMapBuilder"
 import {FindYourWayMappingPanelUI} from "./FindYourWayMappingPanelUI"
 import {FindYourWayPeekView} from "./FindYourWayPeekView"
 import {FindYourWayCompanionView} from "./FindYourWayCompanionView"
@@ -377,11 +378,9 @@ export class FindYourWayMain extends BaseScriptComponent {
   private destNote: string | null = null
   private destNoteUntil = 0
   // Learn this place.
-  private recorder: MapRecorder | null = null
-  private tracer: WalkTracer | null = null
+  private builder: FindYourWayMapBuilder
   private mappingPanel: FindYourWayMappingPanelUI | null = null
   private mappedText: string | null = null
-  private seeMapOn = false
   // The three modes, Free walk and Go to a place. Views are created at runtime in onStart.
   private homePanel: FindYourWayHomePanelUI | null = null
   private prefsPanel: FindYourWayPrefsUI | null = null
@@ -474,18 +473,27 @@ export class FindYourWayMain extends BaseScriptComponent {
     const mp = global.scene.createSceneObject("MappingPanel")
     this.mappingPanel = mp.createComponent(FindYourWayMappingPanelUI.getTypeName()) as FindYourWayMappingPanelUI
     this.mappingPanel.setup({
-      onMarkShop: () => this.mapMarkShop(),
-      onConfirmFloor: () => this.mapConfirmFloor(),
-      onTag: (k) => this.mapConfirmFloor(k),
-      onNextFloor: () => this.mapNextFloor(),
-      onUndo: () => this.mapUndo(),
-      onSeeMap: () => this.mapSee(!this.seeMapOn),
+      onMarkShop: () => this.builder.markShop(),
+      onConfirmFloor: () => this.builder.confirmFloor(),
+      onTag: (k) => this.builder.confirmFloor(k),
+      onNextFloor: () => this.builder.nextFloor(),
+      onUndo: () => this.builder.undo(),
+      onSeeMap: () => this.builder.toggleSeeMap(),
       onUpload: () => this.saveMapping(),
       onCancel: () => this.endMapping(true),
     })
     this.mappingPanel.show(false)
     const pk = global.scene.createSceneObject("PeekAhead")
     this.peekView = pk.createComponent(FindYourWayPeekView.getTypeName()) as FindYourWayPeekView
+    const main = this
+    this.builder = new FindYourWayMapBuilder({
+      get panel() { return main.mappingPanel },
+      get peek() { return main.peekView },
+      userPos: () => this.userPos(),
+      userHeading: () => this.userHeading(),
+      showPins: (spots) => { if (this.view) this.view.setPins(spots.map((p) => this.local(p))) },
+      placeMapModel: () => this.placeMapModel(),
+    })
     this.peekView.setup(this.standIn.material)
     const hp = global.scene.createSceneObject("HomePanel")
     this.homePanel = hp.createComponent(FindYourWayHomePanelUI.getTypeName()) as FindYourWayHomePanelUI
@@ -779,94 +787,29 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (!this.standIn.isSolid()) this.standIn.clear()
     this.buildingUI.clear()
     if (this.placesUI) this.placesUI.clear()
-    this.recorder = new MapRecorder()
-    this.tracer = new WalkTracer(this.recorder)
-    this.tracer.start(this.userPos(), getTime())
-    this.seeMapOn = false
-    if (this.mappingPanel) {
-      this.mappingPanel.show(true)
-      this.mappingPanel.setSeeMap(false)
-      this.mappingPanel.setFloorGuess(null)
-    }
-    this.mapStatus("Just walk: the path records itself")
+    this.builder.start()
     print("[FYW] mapping: start")
   }
 
-  private mapStatus(text: string): void {
-    if (!this.mappingPanel || !this.recorder) return
-    const m = this.recorder.toMap()
-    const shops = m.nodes.filter((n) => n.kind === "place").length
-    this.mappingPanel.setStatus(text + " · " + m.place.levels.length + (m.place.levels.length === 1 ? " floor · " : " floors · ") + shops + (shops === 1 ? " shop" : " shops"))
-  }
-
-  // Keeps the panel in step with the tracer, once a frame.
-  private tickMapping(): void {
-    if (!this.tracer) return
-    this.tracer.sample(this.userPos(), getTime())
-    const guess = this.tracer.floorPending()
-    if (this.mappingPanel) this.mappingPanel.setFloorGuess(guess)
-    if (this.seeMapOn && this.peekView) {
-      const t = this.camera.getTransform()
-      const so = this.peekView.getSceneObject().getTransform()
-      so.setWorldPosition(t.getWorldPosition().add(this.headYaw().multiplyVec3(new vec3(26, -20, -PEEK_AHEAD_CM - 15))))
-      so.setWorldRotation(this.building.getTransform().getWorldRotation())
-    }
-  }
-
-  private mapMarkShop(): void {
-    if (!this.tracer) return
-    const s = this.tracer.markShop(this.userPos(), this.userHeading())
-    this.mapStatus(s ? (s.replaced ? "Moved " : "Marked ") + s.label : "Map is full")
-    this.showMapPins()
-    if (s) print("[FYW] mapping: " + s.label + (s.replaced ? " replaced" : " marked"))
-  }
-
-  private showMapPins(): void {
-    if (!this.view) return
-    const shops = this.recorder ? this.recorder.toMap().nodes.filter((n) => n.kind === "place") : []
-    this.view.setPins(shops.map((n) => this.local({x: n.x, y: n.y, z: n.z})))
-  }
-
-  // One pinch on the guess, or on another kind.
-  private mapConfirmFloor(kind?: string): void {
-    if (!this.tracer) return
-    const guess = this.tracer.floorPending()
-    if (this.tracer.confirmFloor(kind as MappedEdgeKind)) this.mapStatus("Floor change: " + (kind || guess))
-    else this.mapStatus("No floor change to confirm")
-  }
-
-  private mapNextFloor(): void {
-    if (!this.tracer) return
-    this.tracer.nextFloor(this.userPos(), getTime())
-    this.mapStatus("New floor")
-  }
-
-  private mapUndo(): void {
-    if (!this.tracer) return
-    this.mapStatus(this.tracer.undo() ? "Undone" : "Nothing to undo")
-  }
-
-  // "See my map": the small model of the whole walk.
-  private mapSee(on: boolean): void {
-    if (!this.recorder || !this.peekView) return
-    this.seeMapOn = on
-    this.peekView.showMap(on ? peekMap(this.recorder.toMap(), this.userPos()) : null)
-    if (this.mappingPanel) this.mappingPanel.setSeeMap(on)
+  // "See my map" sits low on the right, in the mall's frame.
+  private placeMapModel(): void {
+    if (!this.peekView) return
+    const t = this.camera.getTransform()
+    const so = this.peekView.getSceneObject().getTransform()
+    so.setWorldPosition(t.getWorldPosition().add(this.headYaw().multiplyVec3(new vec3(26, -20, -PEEK_AHEAD_CM - 15))))
+    so.setWorldRotation(this.building.getTransform().getWorldRotation())
   }
 
   // Upload: a Lens must not hold a git token, so the map goes to the log between markers, where
   // the laptop's map:publish reads it. It is also kept on the device and a walking mode routes on
   // it at once: back to the three modes with "My place" loaded.
   saveMapping(): boolean {
-    if (!this.recorder) return false
-    if (this.tracer) this.tracer.finish(this.userPos())
-    const text = JSON.stringify(this.recorder.toMap())
-    const parsed = parseMap(text)
-    const m = this.recorder.toMap()
-    if (!parsed.ok || !m.nodes.some((n) => n.kind === "destination" || n.kind === "place")) {
-      this.mapStatus(parsed.ok ? "Mark a shop first" : "Map not valid: " + (parsed as {ok: false; error: string}).error)
-      return false
-    }
+    const done = this.builder.finish((t) => {
+      const parsed = parseMap(t)
+      return parsed.ok ? null : (parsed as {ok: false; error: string}).error
+    })
+    if (!done) return false
+    const m = done.map, text = done.text
     for (const line of mapLogLines(text, MAPPED_KEY_NAME)) print(line)
     try {
       global.persistentStorageSystem.store.putString(MAPPED_KEY, text)
@@ -900,12 +843,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   }
 
   private endMapping(backToChoose: boolean): void {
-    if (this.mappingPanel) this.mappingPanel.show(false)
-    if (this.seeMapOn && this.peekView) this.peekView.showMap(null)
-    this.seeMapOn = false
-    this.recorder = null
-    this.tracer = null
-    this.showMapPins()
+    this.builder.end()
     if (this.phase === "mapping" && backToChoose) {
       this.buildPlace()
       this.buildingUI.setScanSignVisible(false)
@@ -918,7 +856,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   // Pinch and pull toward you: the model shows; let go: it hides. Never changes the route.
   private updatePeek(): void {
     if (!this.peekView) return
-    if (this.seeMapOn) return
+    if (this.builder.isSeeingMap()) return
     const navOn = (this.phase === "nav" || this.phase === "arrived") && !!this.nav
     let pulled = false
     try {
@@ -1453,7 +1391,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.followAppPanel()
     this.updatePeek()
     if (this.phase === "mapping") {
-      this.tickMapping()
+      this.builder.tick()
       this.followMappingPanel()
     }
     if (this.viewFollowsPose && this.debugPose) this.placeBuildingForPose()
@@ -2109,22 +2047,21 @@ export class FindYourWayMain extends BaseScriptComponent {
   getDestinationLabel(): string { return this.modePanel.getDestinationText() }
   isWhereToShown(): boolean { return !!this.whereTo && this.whereTo.isShown() }
   getWhereToLabels(): string[] { return this.whereTo ? this.whereTo.getShownLabels() : [] }
-  getFloorGuess(): string | null { return this.tracer ? this.tracer.floorPending() : null }
-  isMapModelShown(): boolean { return this.seeMapOn && !!this.peekView && this.peekView.isShown() }
+  getFloorGuess(): string | null { return this.builder.floorGuess() }
+  isMapModelShown(): boolean { return this.builder.isSeeingMap() && !!this.peekView && this.peekView.isShown() }
   isMappingPanelShown(): boolean { return !!this.mappingPanel && this.mappingPanel.isShown() }
   getMappingStatus(): string { return this.mappingPanel ? this.mappingPanel.getStatus() : "" }
   getMapPinCount(): number { return this.view ? this.view.getPinCount() : 0 }
-  getMappedNodeCount(): number { return this.recorder ? this.recorder.toMap().nodes.length : 0 }
+  getMappedNodeCount(): number { return this.builder.nodeCount() }
   hasSavedMap(): boolean { return this.mappedText !== null }
   debugMapPointAt(x: number, y: number, z: number): string | null {
     this.debugPose = {pos: {x, y, z}, heading: this.debugPose ? this.debugPose.heading : 0}
-    if (this.recorder) this.recorder.walked({x, y, z})
-    return this.recorder ? this.recorder.pointHere({x, y, z}) : null
+    return this.builder.debugPointAt({x, y, z})
   }
-  debugMapName(label: string): string | null { return this.recorder ? this.recorder.name(label) : null }
-  debugMapTag(kind: string): boolean { return !!this.recorder && this.recorder.tagLast(kind as MappingTag) }
+  debugMapName(label: string): string | null { return this.builder.debugName(label) }
+  debugMapTag(kind: string): boolean { return this.builder.debugTag(kind) }
   // Walked by the tests: one tracer sample, as a frame would give it.
-  getMappedMapText(): string { return this.recorder ? this.recorder.toJson() : this.mappedText || "" }
+  getMappedMapText(): string { return this.builder.mapText() || this.mappedText || "" }
   debugSaveMapping(): boolean { return this.saveMapping() }
   // Forgets the saved map (device storage too); the map switch then cycles the bundled maps only.
   debugForgetSavedMap(): void {
