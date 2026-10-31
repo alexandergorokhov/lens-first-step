@@ -37,8 +37,20 @@ export const DEMO_BEATS: DemoBeat[] = [
   { id: "end", caption: "That's the demo. Find Your Way Inside." },
 ];
 
-export function beatIndex(id: string): number {
-  for (let i = 0; i < DEMO_BEATS.length; i++) if (DEMO_BEATS[i].id === id) return i;
+// Free walk in the mall with the companion: the heart of the app, one click from the demo controls.
+export const FREE_WALK_BEATS: DemoBeat[] = [
+  { id: "fw-intro", caption: "Find Your Way Inside: a shopping mall" },
+  { id: "fw-scan", caption: "Scan the 'you are here' sign" },
+  { id: "fw-prefs", caption: "Your preferences, saved for next time" },
+  { id: "fw-lead", caption: "No destination. Your companion walks ahead" },
+  { id: "fw-upstairs", caption: "More picks upstairs? It waits and says so" },
+  { id: "fw-point", caption: "It stops at shops you'd like, and points" },
+  { id: "fw-turn", caption: "Turn around: it runs round you and stays in front" },
+  { id: "fw-end", caption: "Keep walking. It's your walk." },
+];
+
+export function beatIndex(id: string, beats: DemoBeat[] = DEMO_BEATS): number {
+  for (let i = 0; i < beats.length; i++) if (beats[i].id === id) return i;
   return -1;
 }
 

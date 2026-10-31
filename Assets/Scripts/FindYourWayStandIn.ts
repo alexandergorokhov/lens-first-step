@@ -455,7 +455,7 @@ export function whiteTexture(): Texture {
 
 let SHADE: Texture | null = null
 // A grey ramp sampled by each face's u: the solid backdrop is unlit, so faces carry their own shade.
-function shadeTexture(): Texture {
+export function shadeTexture(): Texture {
   if (SHADE) return SHADE
   const size = 64
   const tex = ProceduralTextureProvider.createWithFormat(size, 1, TextureFormat.RGBA8Unorm)

@@ -6,11 +6,10 @@ import { readFileSync } from "node:fs";
 import {
   DEMO_BEATS,
   PolylineWalker,
-  beatIndex,
+ 
   polylineLength,
   pointAt,
-  walkSeconds,
-} from "../demo.ts";
+  walkSeconds, FREE_WALK_BEATS, beatIndex } from "../demo.ts";
 
 const P = (x: number, y: number, z: number) => ({ x, y, z });
 
@@ -100,4 +99,14 @@ test("demo edge cases: empty and one-point paths, zero-length and vertical segme
   assert.equal(pose.heading, 90);
   assert.deepEqual([pose.x, pose.y, pose.z], [4, 6, 0]);
   assert.equal(beatIndex("no-such-beat"), -1);
+});
+
+test("D20 The Free walk demo has its own beats, each with a short caption", () => {
+  const ids = FREE_WALK_BEATS.map((b) => b.id);
+  assert.equal(new Set(ids).size, ids.length);
+  for (const b of FREE_WALK_BEATS) {
+    assert.ok(b.caption.length > 0 && b.caption.length <= 60, b.id);
+    assert.equal(beatIndex(b.id), -1, "not mixed into the main demo: " + b.id);
+    assert.equal(FREE_WALK_BEATS[beatIndex(b.id, FREE_WALK_BEATS)].id, b.id);
+  }
 });

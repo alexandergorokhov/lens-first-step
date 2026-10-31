@@ -59,6 +59,18 @@ validates with `parseMap`, and says what it will publish. `--dry-run` changes no
 - **THEN** the last complete block wins; a map that fails `parseMap` is refused
 - Verified by: B16, U1, U2, U3 (Node, builder.test.ts) | b3-dc1-map-builder-two-floors
 
+### Requirement: Map a real-looking place (planned, brief 4)
+The Map builder demo SHALL run with the mall visible, so the person has shops to look at. They SHALL be
+able to look at a shop and mark it as a node, connect marked nodes by walking between them, and mark
+stairs and lifts on the way, seeing the map grow as they go.
+Today `WalkTracer` and `markShop` do the logic; the demo runs in an empty room.
+
+#### Scenario: MB5 Marks a shop in the mall
+- **GIVEN** the Map builder running in the mall
+- **WHEN** the person looks at a shop and marks it, then walks to the next one
+- **THEN** both shops are nodes on the new map, joined by the walked path
+- Verified by: none (gap): planned
+
 ## Not tested
 
 - `map:publish` without `--dry-run` (writes `src/core/data` and updates the public gist): not run in tests.

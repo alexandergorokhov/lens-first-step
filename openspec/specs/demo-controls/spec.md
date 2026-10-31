@@ -62,6 +62,17 @@ them on with a test hook. The ride buttons in the building stay (the preview can
 #### Scenario: H2 Hidden
 - Verified by: s1-start-at-sign-controls-hidden (LEAF written, not run yet)
 
+### Requirement: Free walk demo
+Demo controls SHALL have a **Free walk demo** button that plays Free walk in the mall with the companion
+on the real app: the scan, the preferences, the companion leading, its "picks upstairs" hint, a stop at
+a shop you like and turning around. The button SHALL read "Stop demo" while it plays. The default map
+SHALL be the mall.
+
+#### Scenario: FW7 One click to the core
+- **WHEN** Free walk demo is pinched
+- **THEN** every beat in `FREE_WALK_BEATS` is reached with no missed press, and the companion stops at Bolt Hardware
+- Verified by: D20 (Node, demo.test.ts) | fw1-free-walk-demo
+
 ## Known gaps
 
 - Placement: the brief says "waist height, to the user's left"; the code places it 15 cm left,

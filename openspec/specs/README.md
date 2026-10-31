@@ -36,7 +36,7 @@ Capabilities of "Find Your Way Inside" (see `../project.md` for context and conv
 
 ## Traceability
 
-Status: **Pass (auto)** = covered by a passing Node test and/or LEAF scenario (Node 327 tests, all passing / 0 todo;
+Status: **Pass (auto)** = covered by a passing Node test and/or LEAF scenario (Node 341 tests, all passing / 0 todo;
 LEAF 43 scenarios as of the last recorded run in `devpost/SCENARIOS.md`); **Partial** = logic tested but
 part of the behaviour only manual or untested; **Manual** = checked by hand in the preview only;
 **Gap** = no test.
@@ -137,7 +137,13 @@ part of the behaviour only manual or untested; **Manual** = checked by hand in t
 | X61 | Optional map fields typed | map-format | (compile) | (compile) | Pass (review) |
 | X62 | Lens copies kept identical by tooling | routing | A1 ×3; A4 no dead helpers… | — | Pass (auto) |
 | S10–S14 | Pill, floor badge, cue, line on your floor | floors-and-distance | S10–S14 | fl1-pill-shows-and-counts-down, fl2-cue-post-and-badge-after-escalator | Pass (Node); LEAF passing |
-| P1–P7, Q7, Q8 | Companion on/off, any model, leads/waits/collects | companion | P1–P7, Q7, Q8 | p1-companion-toggle-and-models, p3-companion-waits-at-escalator | Pass (Node); LEAF passing |
+| A1–A13 | Jointed, animated companions | companion | A1–A13 (anim.test.ts) | visual-rigs (by eye) | Pass (Node) |
+| FW7 | Free walk demo button, in the mall | demo-controls | D20 | fw1-free-walk-demo | Pass (auto) |
+| MB5 | Map builder demo with the mall behind it | map-builder | — | — | Planned |
+| P1–P7, Q7, Q8 | Companion on/off, any model, leads/waits/collects | companion | A1–A13 | Jointed, animated companions | companion | A1–A13 (anim.test.ts) | visual-rigs (by eye) | Pass (Node) |
+| FW7 | Free walk demo button, in the mall | demo-controls | D20 | fw1-free-walk-demo | Pass (auto) |
+| MB5 | Map builder demo with the mall behind it | map-builder | — | — | Planned |
+| P1–P7, Q7, Q8 | p1-companion-toggle-and-models, p3-companion-waits-at-escalator | Pass (Node); LEAF passing |
 | Q1–Q6 | Places, interests, pointing, Go here? | places | Q1–Q6 | q4-points-at-interests-and-sponsored | Pass (Node); LEAF passing |
 | G1–G9, P8–P10 | Hop and catch | play | G1–G9, P8, P9 | g1-hop-jump-bump-restart, pc1-throw-and-fetch-any-model | Pass (Node); LEAF passing |
 | T1–T4 | Multi-stop mall trip | multi-stop | T1–T4 | t1-mall-multi-stop | Pass (Node); LEAF passing |

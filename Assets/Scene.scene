@@ -8492,7 +8492,6 @@
   Enabled: true
   ScriptAsset: !<reference> d0bdf33e-8bba-4454-9763-31fde3229a3d
   ScriptInputsDefault:
-    mapKey: true
     tryOnlineMap: true
     startAtSign: true
     showDemoControls: true
@@ -8526,7 +8525,7 @@
       arrivalCard: !<MappingBased.AssignableType_8> 8885f245-15db-4224-a2ef-6afac601eb19
       internetModule: !<reference.InternetModule> 4ce0c535-05ea-4273-ab39-6e2d18686686
       chime: !<reference.AudioTrackAsset> fed4446f-8a97-484e-8dd6-713dc07e2d7c
-      mapKey: airport
+      mapKey: mall
       tryOnlineMap: true
       mapBaseUrl: "https://gist.githubusercontent.com/alexandergorokhov/ac59c2c8d02687651f256b320fff27b8/raw/"
       eyeHeightCm: !<float> 180.000000
@@ -8539,9 +8538,6 @@
       companionModel: dog
       companionOnAtStart: false
       presetPreferences: "coffee,clothes,hardware"
-      dogPrefab: !<reference.ObjectPrefab> 64b649de-986a-4e2c-9f2f-a544b51066b2
-      robotPrefab: !<reference.ObjectPrefab> c724c43f-4f37-4161-b309-5dfd5bb20edf
-      roverPrefab: !<reference.ObjectPrefab> 9b345982-1ac4-4bb1-9de7-7c6e1c3b979d
       companionAheadM: !<float> 7.000000
       pointSeconds: !<float> 3.000000
       pointRadiusM: !<float> 8.000000

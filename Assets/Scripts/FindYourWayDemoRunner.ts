@@ -5,7 +5,7 @@
 // FindYourWayDemo.ts (the shared, Node-tested src/core/demo.ts).
 // Owns: demo progress only. Must not: change routing or build UI itself.
 
-import {DEMO_BEATS, PolylineWalker, XYZ, beatIndex} from "./FindYourWayDemo"
+import {DEMO_BEATS, DemoBeat, FREE_WALK_BEATS, PolylineWalker, XYZ, beatIndex} from "./FindYourWayDemo"
 import {findNode, levelDistance} from "./FindYourWayRouter"
 import {pressButton} from "./FindYourWayWidgetsUI"
 import {FindYourWayMain} from "./FindYourWayMain"
@@ -13,6 +13,9 @@ import {FindYourWayHudUI} from "./FindYourWayHudUI"
 import {FindYourWayDemoControlsUI} from "./FindYourWayDemoControlsUI"
 
 const SEATED_FEET_M = -0.45 // seated: eyes ~45 cm lower than standing
+const FREE_WALK_SPEED_MS = 2.2 // a brisk walk, so the demo doesn't drag
+const STAND_BACK_M = 8 // the companion stops close to you, below the narrow view: step back to see it
+const ESCALATOR_HEADING = -56 // from the hall's middle, looking at the escalator foot
 
 @component
 export class FindYourWayDemoRunner extends BaseScriptComponent {
@@ -47,6 +50,7 @@ export class FindYourWayDemoRunner extends BaseScriptComponent {
   private arrivals: string[] = []
   private missedPresses: string[] = []
   private feetOffset = 0
+  private beats: DemoBeat[] = DEMO_BEATS
 
   onAwake() {
     this.createEvent("OnStartEvent").bind(() => {
@@ -55,6 +59,7 @@ export class FindYourWayDemoRunner extends BaseScriptComponent {
         return
       }
       this.demoControls.onPlayDemo.add(() => (this.running ? this.stop() : this.play()))
+      this.demoControls.onPlayFreeWalk.add(() => (this.running ? this.stop() : this.playFreeWalk()))
       if (this.autoplayDemo) setTimeout(() => this.play(), 2500)
     })
   }
@@ -63,17 +68,27 @@ export class FindYourWayDemoRunner extends BaseScriptComponent {
   play(speed?: number, holdSeconds?: number): void {
     if (speed !== undefined) this.speed = speed
     if (holdSeconds !== undefined) this.holdSeconds = holdSeconds
+    this.start(DEMO_BEATS, (id) => this.runDemoScript(id))
+    this.demoControls.setPlayDemoLabel("Stop demo")
+  }
+
+  playFreeWalk(): void {
+    this.start(FREE_WALK_BEATS, (id) => this.runFreeWalkScript(id))
+    this.demoControls.setFreeWalkLabel("Stop demo")
+  }
+
+  private start(beats: DemoBeat[], script: (id: number) => Promise<void>): void {
     this.stop()
+    this.beats = beats
     this.running = true
     this.finished = false
     this.reached = []
     this.arrivals = []
     this.missedPresses = []
-    this.demoControls.setPlayDemoLabel("Stop demo")
     // The demo presses the demo controls, which are hidden by default (real use).
     this.main.debugShowDemoControls(true)
     const id = ++this.runId
-    this.runDemoScript(id).then(
+    script(id).then(
       () => this.done(id),
       (e) => {
         if (String(e).indexOf("demo stopped") < 0) print("[FYW-DEMO] ERROR " + e)
@@ -87,7 +102,7 @@ export class FindYourWayDemoRunner extends BaseScriptComponent {
     this.runId++
     this.running = false
     this.hud.setCaption(null)
-    this.demoControls.setPlayDemoLabel("Play demo")
+    this.resetLabels()
     this.main.debugClearPose()
     print("[FYW-DEMO] stopped")
   }
@@ -101,9 +116,14 @@ export class FindYourWayDemoRunner extends BaseScriptComponent {
   private done(id: number): void {
     if (id !== this.runId) return
     this.running = false
-    this.finished = this.reached.length === DEMO_BEATS.length
+    this.finished = this.reached.length === this.beats.length
+    this.resetLabels()
+    print("[FYW-DEMO] finished: " + this.reached.length + "/" + this.beats.length + " beats; arrivals: " + this.arrivals.join(" | "))
+  }
+
+  private resetLabels(): void {
     this.demoControls.setPlayDemoLabel("Play demo")
-    print("[FYW-DEMO] finished: " + this.reached.length + "/" + DEMO_BEATS.length + " beats; arrivals: " + this.arrivals.join(" | "))
+    this.demoControls.setFreeWalkLabel("Free walk demo")
   }
 
   // ── The script: the brief's video beats ────────────────────────────────────
@@ -177,6 +197,75 @@ export class FindYourWayDemoRunner extends BaseScriptComponent {
     this.hud.setCaption(null)
   }
 
+  // ── The Free walk script: the mall, with the companion ─────────────────────
+  private async runFreeWalkScript(id: number): Promise<void> {
+    const m = this.main
+    await this.beat(id, "fw-intro")
+    await this.toMap(id, "mall")
+    this.press("RestartButton")
+    await this.until(id, () => m.getPhase() === "scan" && !m.isAnchorSettling(), 12000)
+    await this.beat(id, "fw-scan")
+    this.standAtSign(0)
+    this.press("ScanSignButton")
+    await this.until(id, () => m.getPhase() === "choose", 8000)
+    this.press("FreeWalkButton")
+    await this.until(id, () => m.getPhase() === "prefs", 3000)
+    await this.beat(id, "fw-prefs")
+    this.press("PrefsViewButton")
+    await this.hold(id, 1.5)
+    this.press("PrefsStartButton")
+    await this.until(id, () => m.getPhase() === "free", 3000)
+    m.debugMarkPointed(["threads", "cafe"]) // on to Bolt Hardware, the first shop it can reach in view
+    await this.beat(id, "fw-lead")
+    await this.walkPoints(id, [{x: 30, y: 0, z: 10}])
+    await this.beat(id, "fw-upstairs")
+    await this.turnTo(id, ESCALATOR_HEADING, 0.6)
+    await this.until(id, () => m.getBubbleText() !== null, 8000)
+    await this.hold(id, 2.5)
+    await this.walkPoints(id, [{x: 30, y: 0, z: 19.5}])
+    await this.beat(id, "fw-point")
+    await this.turnTo(id, 0, 0.5)
+    await this.until(id, () => m.getStopId() === "boltHardware", 6000)
+    const pet = m.getCompanionMapPos()
+    if (pet) m.debugSetPose(pet.x, 0, pet.z - STAND_BACK_M, 0)
+    await this.hold(id, 3)
+    await this.beat(id, "fw-turn")
+    await this.turnTo(id, 180, 1.2)
+    await this.hold(id, 4)
+    await this.turnTo(id, 0, 1)
+    await this.beat(id, "fw-end")
+    this.hud.setCaption(null)
+  }
+
+  // Walks on from the pose through the points, at Free walk's pace.
+  private async walkPoints(id: number, pts: XYZ[]): Promise<void> {
+    const pose = this.main.getDebugPose()
+    if (!pose) return
+    const walker = new PolylineWalker([{x: pose.pos.x, y: pose.pos.y, z: pose.pos.z}, ...pts], FREE_WALK_SPEED_MS * this.speed)
+    let last = getTime()
+    for (;;) {
+      await this.wait(id, 33)
+      const now = getTime()
+      const s = walker.step(now - last)
+      last = now
+      this.main.debugSetPose(s.x, s.y, s.z, s.heading)
+      if (s.done) return
+    }
+  }
+
+  private async turnTo(id: number, heading: number, seconds: number): Promise<void> {
+    const pose = this.main.getDebugPose()
+    if (!pose) return
+    const by = ((heading - pose.heading + 540) % 360) - 180
+    const t0 = getTime()
+    let f = 0
+    while (f < 1) {
+      await this.wait(id, 33)
+      f = Math.min(1, (getTime() - t0) / seconds)
+      this.main.debugSetPose(pose.pos.x, pose.pos.y, pose.pos.z, pose.heading + by * f)
+    }
+  }
+
   // ── Steps ──────────────────────────────────────────────────────────────────
   // The scan comes first, then Go to a place, then Walk or Step-Free.
   private async scanAndGo(id: number, feet: number, button: string): Promise<void> {
@@ -192,7 +281,7 @@ export class FindYourWayDemoRunner extends BaseScriptComponent {
 
   private async beat(id: number, beatId: string): Promise<void> {
     this.check(id)
-    const b = DEMO_BEATS[beatIndex(beatId)]
+    const b = this.beats[beatIndex(beatId, this.beats)]
     this.reached.push(beatId)
     this.hud.setCaption(b.caption)
     print("[FYW-DEMO] beat " + beatId + ": " + b.caption)

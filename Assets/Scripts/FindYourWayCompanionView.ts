@@ -5,12 +5,16 @@
 // Created at runtime by FindYourWayMain (child of the building) and set up with the stand-in's
 // Unlit material. Must not: decide where the companion goes (FindYourWayPet / FindYourWayPlay do).
 
-import {Boxes, whiteTexture} from "./FindYourWayStandIn"
+import {Boxes, shadeTexture, whiteTexture} from "./FindYourWayStandIn"
+import {RigMood, poseFor, rigOf} from "./FindYourWayAnim"
+import {LiveRig} from "./FindYourWayRigMesh"
 import {Interactable} from "SpectaclesInteractionKit.lspkg/Components/Interaction/Interactable/Interactable"
 import {InteractableManipulation} from "SpectaclesInteractionKit.lspkg/Components/Interaction/InteractableManipulation/InteractableManipulation"
 
 // A Hop obstacle: d metres ahead of the companion, h metres high.
 const GRAB_TARGET_CM = 16 // bigger than the treat, so it is easy to pinch
+const TELEPORT_MS = 8 // moved faster than this: a ride or a jump to a new place, not walking
+const SPEED_SMOOTHING = 8
 
 export interface HopObstacleLike {
   d: number
@@ -23,38 +27,7 @@ interface Part {
   boxes: number[][]
 }
 
-const WARM = new vec4(1, 0.82, 0.55, 0.85)
-const DARK = new vec4(0.55, 0.45, 0.35, 0.85)
-const STEEL = new vec4(0.82, 0.88, 1, 0.85)
 const CYAN = new vec4(0.4, 1, 1, 0.95)
-const SAND = new vec4(1, 0.9, 0.6, 0.85)
-const TYRE = new vec4(0.5, 0.52, 0.6, 0.85)
-
-const MODELS: {[id: string]: Part[]} = {
-  dog: [
-    {color: WARM, boxes: [
-      [0, 25, 0, 18, 16, 40], [0, 40, -24, 16, 14, 16], [0, 36, -34, 8, 7, 8],
-      [-6, 9, -14, 5, 18, 5], [6, 9, -14, 5, 18, 5], [-6, 9, 14, 5, 18, 5], [6, 9, 14, 5, 18, 5],
-      [0, 34, 24, 4, 4, 12],
-    ]},
-    {color: DARK, boxes: [[-6, 49, -22, 4, 8, 4], [6, 49, -22, 4, 8, 4], [0, 37, -38.5, 3, 3, 1]]},
-  ],
-  robot: [
-    {color: STEEL, boxes: [
-      [0, 40, 0, 22, 26, 16], [0, 62, 0, 16, 14, 14], [-6, 14, 0, 6, 28, 8], [6, 14, 0, 6, 28, 8],
-      [-14, 42, 0, 4, 20, 4], [14, 42, 0, 4, 20, 4],
-    ]},
-    {color: CYAN, boxes: [[-4, 63, -7.5, 3, 3, 1], [4, 63, -7.5, 3, 3, 1]]},
-  ],
-  rover: [
-    {color: SAND, boxes: [[0, 14, 0, 26, 8, 36], [0, 30, -10, 3, 24, 3], [0, 44, -12, 10, 7, 7]]},
-    {color: TYRE, boxes: [
-      [-15, 8, -12, 5, 14, 14], [15, 8, -12, 5, 14, 14], [-15, 8, 0, 5, 14, 14], [15, 8, 0, 5, 14, 14],
-      [-15, 8, 12, 5, 14, 14], [15, 8, 12, 5, 14, 14],
-    ]},
-    {color: CYAN, boxes: [[0, 44, -16, 5, 4, 1]]},
-  ],
-}
 
 // What each companion collects / plays with: a small floating shape and its colour.
 const COLLECTIBLE_COLOR: {[id: string]: vec4} = {
@@ -76,7 +49,12 @@ const POINTER_LENGTH_CM = 110
 @component
 export class FindYourWayCompanionView extends BaseScriptComponent {
   private material: Material | null = null
-  private prefabs: {[id: string]: ObjectPrefab} = {}
+  private rig: LiveRig | null = null
+  private mood: RigMood = "lead"
+  private runningMs = 0
+  private lastPos: vec3 | null = null
+  private speedMs = 0
+  private travelledM = 0
   private modelId = ""
   private model: SceneObject | null = null
   private collectibles: SceneObject[] = []
@@ -91,11 +69,9 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
   private spin = 0
   private shown = false
 
-  // Call once after createComponent: the Unlit material to clone for every part, and the 3D models
-  // by companion id. A companion with no model is built from boxes.
-  setup(material: Material, prefabs: {[id: string]: ObjectPrefab} = {}): void {
+  // Call once after createComponent: the Unlit material to clone for every part.
+  setup(material: Material): void {
     this.material = material
-    this.prefabs = prefabs
     const one = new Boxes()
     one.box(new vec3(0, 0, 0), new vec3(COLLECTIBLE_CM, COLLECTIBLE_CM, COLLECTIBLE_CM))
     this.collectibleMesh = one.mesh()
@@ -131,11 +107,14 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
 
   // Swap the model (same logic, only the look changes). Unknown ids get the dog.
   setModel(id: string): void {
-    const key = MODELS[id] ? id : "dog"
+    const key = COLLECTIBLE_COLOR[id] ? id : "dog"
     if (key === this.modelId) return
     this.modelId = key
     if (this.model) this.model.destroy()
-    this.model = this.prefabs[key] ? this.makeModel("Companion_" + key, this.prefabs[key]) : this.makeObject("Companion_" + key, MODELS[key])
+    this.model = global.scene.createSceneObject("Companion_" + key)
+    this.model.setParent(this.sceneObject)
+    this.rig = new LiveRig(this.model, rigOf(key), (c) => this.rigMaterial(c))
+    this.lastPos = null
     this.model.enabled = this.shown
     if (this.treat) this.recolor(this.treat, COLLECTIBLE_COLOR[key])
     for (const c of this.collectibles) this.recolor(c, COLLECTIBLE_COLOR[key])
@@ -161,16 +140,36 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
 
   isVisible(): boolean { return this.shown && !!this.model && this.model.enabled }
 
+  // What the companion is doing. runningMs: legs at this speed even if it isn't moving (Hop).
+  setMood(mood: RigMood, runningMs: number = 0): void {
+    this.mood = mood
+    this.runningMs = runningMs
+  }
+
+  // Feet and wheels keep time with the distance really moved.
+  private animate(pos: vec3): void {
+    if (!this.rig) return
+    const dt = Math.max(getDeltaTime(), 1e-3)
+    const step = this.lastPos ? pos.sub(this.lastPos).length / 100 : 0
+    this.lastPos = pos
+    const speed = this.runningMs > 0 ? this.runningMs : step / dt
+    if (speed < TELEPORT_MS) {
+      this.travelledM += this.runningMs > 0 ? this.runningMs * dt : step
+      this.speedMs += (speed - this.speedMs) * Math.min(1, dt * SPEED_SMOOTHING)
+    }
+    this.rig.apply(poseFor(this.modelId, {mood: this.mood, speedMs: this.speedMs, travelledM: this.travelledM, t: getTime()}))
+  }
+
   // pos: building-local cm on the floor; headingDeg: clockwise from map north;
-  // liftCm: jump height; shake: 0..1 sideways wobble; sit: lower and still.
-  setPose(pos: vec3, headingDeg: number, liftCm: number = 0, shake: number = 0, sit: boolean = false): void {
+  // liftCm: jump height; shake: 0..1 sideways wobble.
+  setPose(pos: vec3, headingDeg: number, liftCm: number = 0, shake: number = 0): void {
     if (!this.model) return
     const t = this.model.getTransform()
     const rot = quat.angleAxis((-headingDeg * Math.PI) / 180, vec3.up())
     const side = rot.multiplyVec3(new vec3(1, 0, 0)).uniformScale(Math.sin(getTime() * 40) * SHAKE_CM * shake)
     t.setLocalPosition(pos.add(new vec3(0, liftCm, 0)).add(side))
     t.setLocalRotation(rot)
-    t.setLocalScale(new vec3(1, sit ? 0.82 : 1, 1))
+    this.animate(pos)
     if (this.pointer && this.pointer.enabled) {
       this.pointer.getTransform().setLocalPosition(pos)
       this.pointer.getTransform().setLocalRotation(rot)
@@ -278,14 +277,6 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
     if (this.treat && this.treat.enabled) this.treat.getTransform().setLocalRotation(r)
   }
 
-  // A wrapper keeps the model's own import scale away from the transforms set each frame.
-  private makeModel(name: string, prefab: ObjectPrefab): SceneObject {
-    const root = global.scene.createSceneObject(name)
-    root.setParent(this.sceneObject)
-    prefab.instantiate(root)
-    return root
-  }
-
   private makeObject(name: string, parts: Part[]): SceneObject {
     const root = global.scene.createSceneObject(name)
     root.setParent(this.sceneObject)
@@ -308,6 +299,17 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
       const rmv = so.getComponent("Component.RenderMeshVisual") as RenderMeshVisual
       if (rmv && rmv.mainMaterial) rmv.mainMaterial.mainPass.baseColor = color
     }
+  }
+
+  // The rig's light is baked in the vertices: the ramp texture turns it into shade.
+  private rigMaterial(color: vec4): Material {
+    const m = (this.material as Material).clone()
+    m.mainPass.baseTex = shadeTexture()
+    m.mainPass.baseColor = color
+    m.mainPass.blendMode = BlendMode.Disabled
+    m.mainPass.depthWrite = true
+    m.mainPass.twoSided = true
+    return m
   }
 
   private makeMaterial(color: vec4): Material {

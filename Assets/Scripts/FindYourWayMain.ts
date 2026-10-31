@@ -113,6 +113,7 @@ const THROW_FROM_M = 1.2
 const THROW_SPEED = 6
 // The treat you grab floats here, relative to your head (cm).
 const GRAB_OFFSET = new vec3(20, -28, -45)
+const HOP_RUN_MS = 2.4 // Hop's lane moves under the companion: its legs run at this speed
 // Voice: stop listening after this long with no finished phrase (s).
 const VOICE_TIMEOUT_S = 8
 const COMPANION_IDS = ["dog", "robot", "rover"]
@@ -231,21 +232,6 @@ export class FindYourWayMain extends BaseScriptComponent {
   @input
   @hint("The saved preferences of the demo (category ids, comma separated)")
   presetPreferences: string = "coffee,clothes,hardware"
-
-  @input
-  @allowUndefined
-  @hint("3D model of the dog companion (boxes if empty)")
-  dogPrefab: ObjectPrefab
-
-  @input
-  @allowUndefined
-  @hint("3D model of the robot companion (boxes if empty)")
-  robotPrefab: ObjectPrefab
-
-  @input
-  @allowUndefined
-  @hint("3D model of the rover companion (boxes if empty)")
-  roverPrefab: ObjectPrefab
 
   @input
   @hint("How far ahead the companion walks, m. The floor only enters the view from about 5.4 m")
@@ -467,7 +453,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     const v = global.scene.createSceneObject("CompanionView")
     v.setParent(this.building)
     this.view = v.createComponent(FindYourWayCompanionView.getTypeName()) as FindYourWayCompanionView
-    this.view.setup(this.standIn.material, {dog: this.dogPrefab, robot: this.robotPrefab, rover: this.roverPrefab})
+    this.view.setup(this.standIn.material)
     const pl = global.scene.createSceneObject("PlaceIcons")
     pl.setParent(this.building)
     this.placesUI = pl.createComponent(FindYourWayPlacesUI.getTypeName()) as FindYourWayPlacesUI
@@ -764,7 +750,8 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (this.view && pet) {
       const pointing = pet.mood === "point"
       this.view.setPointing(pointing)
-      this.view.setPose(this.local(pet.pos), pet.heading, pointing ? Math.abs(Math.sin(now * 6)) * 6 : 0)
+      this.view.setMood(pet.mood)
+      this.view.setPose(this.local(pet.pos), pet.heading)
     }
     if (this.bubble) this.bubble.show(f.bubble, pet ? this.local(pet.pos, BUBBLE_ABOVE_CM) : null)
     if (f.stopped) {
@@ -787,8 +774,9 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.anchorWorld()
     this.phase = "mapping"
     this.mappingPanelPlaced = false
-    // The old building would only be in the way while you map a real place.
-    this.standIn.clear()
+    // On Specs the old building would only be in the way of the real place. In the preview it is
+    // the place: its shops are what you look at and mark.
+    if (!this.standIn.isSolid()) this.standIn.clear()
     this.buildingUI.clear()
     if (this.placesUI) this.placesUI.clear()
     this.recorder = new MapRecorder()
@@ -1656,6 +1644,7 @@ export class FindYourWayMain extends BaseScriptComponent {
       this.hop.update(dt)
       const origin = this.hopOrigin as Vec3
       this.view.setLane(this.local(origin), this.hopHeading, this.hop.obstacles, this.hop.lane)
+      this.view.setMood("run", HOP_RUN_MS)
       this.view.setPose(this.local(origin), this.hopHeading, this.hop.petY * 100, this.hop.shaking ? 1 : 0)
       this.hud.setPlayLine(hopText(this.hop, this.companion))
       return
@@ -1668,6 +1657,7 @@ export class FindYourWayMain extends BaseScriptComponent {
       // Face the way it runs.
       const dx = r.pos.x - before.x, dz = r.pos.z - before.z
       if (dx * dx + dz * dz > 1e-8) this.catchHeading = (Math.atan2(dx, dz) * 180) / Math.PI
+      this.view.setMood("run")
       this.view.setPose(this.local(r.pos), this.catchHeading, r.caught ? 15 : 0)
       this.view.setTreat(r.phase === "fetch" && this.catchSpot ? this.local(this.catchSpot) : null)
       this.hud.setPlayLine(null)
@@ -1682,8 +1672,8 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.guide.update(route, pos, dt, this.routeKey(), arrived, now)
     const pet = this.guide.pet
     if (pet) {
-      const hop = pet.mood === "arrived" ? Math.abs(Math.sin(now * 6)) * 12 : 0
-      this.view.setPose(this.local(pet.pos), pet.heading, hop, 0, pet.mood === "sit" || pet.mood === "wait")
+      this.view.setMood(pet.mood)
+      this.view.setPose(this.local(pet.pos), pet.heading)
     }
     this.view.setCollectibles(this.guide.spots.map((q) => this.local(q)), this.guide.got)
     this.hud.setScore(arrived ? treatsResult(this.guide.found, this.guide.total, this.companion)
