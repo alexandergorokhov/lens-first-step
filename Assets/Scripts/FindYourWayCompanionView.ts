@@ -76,6 +76,7 @@ const POINTER_LENGTH_CM = 110
 @component
 export class FindYourWayCompanionView extends BaseScriptComponent {
   private material: Material | null = null
+  private prefabs: {[id: string]: ObjectPrefab} = {}
   private modelId = ""
   private model: SceneObject | null = null
   private collectibles: SceneObject[] = []
@@ -90,9 +91,11 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
   private spin = 0
   private shown = false
 
-  // Call once after createComponent: the Unlit material to clone for every part.
-  setup(material: Material): void {
+  // Call once after createComponent: the Unlit material to clone for every part, and the 3D models
+  // by companion id. A companion with no model is built from boxes.
+  setup(material: Material, prefabs: {[id: string]: ObjectPrefab} = {}): void {
     this.material = material
+    this.prefabs = prefabs
     const one = new Boxes()
     one.box(new vec3(0, 0, 0), new vec3(COLLECTIBLE_CM, COLLECTIBLE_CM, COLLECTIBLE_CM))
     this.collectibleMesh = one.mesh()
@@ -132,7 +135,7 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
     if (key === this.modelId) return
     this.modelId = key
     if (this.model) this.model.destroy()
-    this.model = this.makeObject("Companion_" + key, MODELS[key])
+    this.model = this.prefabs[key] ? this.makeModel("Companion_" + key, this.prefabs[key]) : this.makeObject("Companion_" + key, MODELS[key])
     this.model.enabled = this.shown
     if (this.treat) this.recolor(this.treat, COLLECTIBLE_COLOR[key])
     for (const c of this.collectibles) this.recolor(c, COLLECTIBLE_COLOR[key])
@@ -273,6 +276,14 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
     const r = quat.angleAxis(this.spin, vec3.up()).multiply(quat.angleAxis(Math.PI / 4, new vec3(1, 0, 1).normalize()))
     for (const c of this.collectibles) if (c.enabled) c.getTransform().setLocalRotation(r)
     if (this.treat && this.treat.enabled) this.treat.getTransform().setLocalRotation(r)
+  }
+
+  // A wrapper keeps the model's own import scale away from the transforms set each frame.
+  private makeModel(name: string, prefab: ObjectPrefab): SceneObject {
+    const root = global.scene.createSceneObject(name)
+    root.setParent(this.sceneObject)
+    prefab.instantiate(root)
+    return root
   }
 
   private makeObject(name: string, parts: Part[]): SceneObject {

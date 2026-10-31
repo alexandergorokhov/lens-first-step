@@ -207,6 +207,7 @@
       pathColor: !<Vec4> {x: 1.000000, y: 0.950000, z: 0.850000, w: 0.220000}
       wallHeightM: !<float> 3.000000
       previewBackdrop: true
+      planterPrefab: !<reference.ObjectPrefab> 5f633954-25c9-4c16-ba3e-ffda8974c4db
   ScriptTypes:
     "":
       {}
@@ -8538,6 +8539,9 @@
       companionModel: dog
       companionOnAtStart: false
       presetPreferences: "coffee,clothes,hardware"
+      dogPrefab: !<reference.ObjectPrefab> 64b649de-986a-4e2c-9f2f-a544b51066b2
+      robotPrefab: !<reference.ObjectPrefab> c724c43f-4f37-4161-b309-5dfd5bb20edf
+      roverPrefab: !<reference.ObjectPrefab> 9b345982-1ac4-4bb1-9de7-7c6e1c3b979d
       companionAheadM: !<float> 7.000000
       pointSeconds: !<float> 3.000000
       pointRadiusM: !<float> 8.000000

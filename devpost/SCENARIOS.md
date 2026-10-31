@@ -16,7 +16,7 @@ Approved test scenarios and where each is tested.
 
 Status as of the last run: Node 327 tests, all passing (offline, `OFFLINE=1`, the live gist download
 is skipped). `src/core/tests/docs.test.ts` checks this count, the test list and every test named
-below. LEAF 2026-10-31: 42 of 43 in one batch on the final code; the one failure (gt1) was the catch
+below. LEAF 2026-10-31: 43 of 43 in one batch on the final code. Before that, one failure (gt1) was the catch
 count surviving Restart, fixed, and pc1 + gt1 then passed together. Older rows may still say "not run
 yet": every scenario in the index has now run in the preview.
 

@@ -47,6 +47,7 @@ import {FywTr1TourScenario} from "./FywTr1TourScenario"
 import {FywSp1SeatedPlayScenario} from "./FywSp1SeatedPlayScenario"
 import {FywGt1GrabThrowScenario} from "./FywGt1GrabThrowScenario"
 import {FywCheckPlacesScenario} from "./FywCheckPlacesScenario"
+import {FywLookScenario} from "./FywLookScenario"
 
 // The LEAF plugin's stall after loading the list grows steeply with its length (44: ~30 s, 51: ~4 min
 // of a frozen editor), so the 13 screenshot set-ups are only listed when they are needed.
@@ -104,6 +105,7 @@ export class FindYourWayLeafIndex extends BaseScriptComponent {
     {id: "gt1-grab-and-throw", typename: FywGt1GrabThrowScenario.getTypeName()},
     {id: "visual-reel", typename: FywReelScenario.getTypeName()},
     {id: "visual-check-places", typename: FywCheckPlacesScenario.getTypeName()},
+    {id: "visual-look", typename: FywLookScenario.getTypeName()},
   ] as ScenarioMetadata[]).concat(!INCLUDE_SHOTS ? [] : [
     // Screenshot set-ups — skipped by the runner unless named in `only`.
     {id: "visual-start", typename: FywVisualScenario.getTypeName(), parameters: {shot: "start"}},

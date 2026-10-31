@@ -15,8 +15,20 @@ const BACKDROP_MARGIN_M = 4
 const TILE_M = 2
 const LIGHT_GAP_M = 8
 const TILE_LIFT = new vec3(0, -0.8, 0) // just under the line, on the floor slab
-const SHOP_COLORS = [new vec4(0.2, 0.42, 0.62, 1), new vec4(0.72, 0.42, 0.22, 1), new vec4(0.24, 0.52, 0.42, 1),
-  new vec4(0.56, 0.3, 0.46, 1), new vec4(0.76, 0.62, 0.28, 1)]
+const SHOP_COLORS = [new vec4(0.13, 0.33, 0.52, 1), new vec4(0.74, 0.36, 0.2, 1), new vec4(0.16, 0.45, 0.38, 1),
+  new vec4(0.5, 0.22, 0.4, 1), new vec4(0.82, 0.6, 0.18, 1)]
+const STONE = new vec4(0.66, 0.63, 0.6, 1)
+const GROUT = new vec4(0.56, 0.53, 0.5, 1)
+const PLASTER = new vec4(0.95, 0.93, 0.89, 1)
+const SAND = new vec4(0.8, 0.72, 0.6, 1)
+const GALLERY_DEPTH_M = 3
+const TRIM = new vec4(0.3, 0.27, 0.25, 1)
+const GLAZING = 0.62 // how far a shop's windows lean from its colour toward white
+const PLANT_EVERY = 3 // a planter by every third shop front
+const RETAIL_MIN_PLACES = 10 // this many named places: the walls fill up with shops
+const BAY_M = 7 // one wall shop, pilaster to pilaster
+const BANNER_GAP_M = 12
+const INLAY = new vec4(0.27, 0.42, 0.47, 1)
 
 @component
 export class FindYourWayStandIn extends BaseScriptComponent {
@@ -67,6 +79,11 @@ export class FindYourWayStandIn extends BaseScriptComponent {
   @input
   @hint("In Lens Studio only: solid building you can walk through, hiding the preview room. Never on Specs.")
   previewBackdrop: boolean = true
+
+  @input
+  @allowUndefined
+  @hint("Optional: a planter set along the shop fronts in the preview backdrop")
+  planterPrefab: ObjectPrefab
   @ui.group_end
 
   private model: SceneObject | null = null
@@ -86,10 +103,13 @@ export class FindYourWayStandIn extends BaseScriptComponent {
     this.solid = false
     if (!place.standInModel) return
     this.solid = this.previewBackdrop && global.deviceInfoSystem.isEditor()
+    // In a shopping place the shops line the outer walls, so the low wall would hide them.
+    const retail = this.solid && map.nodes.filter((n) => n.kind === "place" || n.kind === "destination").length >= RETAIL_MIN_PLACES
 
     const floors = new Boxes()
     const walls = new Boxes()
     const connectors = new Boxes()
+    const rails = new Boxes()
     const lifts = new Boxes()
 
     const ground = new Boxes()
@@ -148,7 +168,7 @@ export class FindYourWayStandIn extends BaseScriptComponent {
       const a = toLocal(minX, level.y, minZ), b = toLocal(maxX, level.y, maxZ)
       const c = a.add(b).uniformScale(0.5)
       floors.box(new vec3(c.x, c.y - 6, c.z), new vec3(Math.abs(b.x - a.x), 10, Math.abs(b.z - a.z)))
-      if (level.y === lowest && place.footprint) addWalls(a, b)
+      if (level.y === lowest && place.footprint && !retail) addWalls(a, b)
     }
 
     for (const e of map.edges) {
@@ -158,6 +178,14 @@ export class FindYourWayStandIn extends BaseScriptComponent {
       if (e.kind === "escalator" || e.kind === "stairs" || e.kind === "ramp") {
         const width = e.kind === "escalator" ? 120 : e.kind === "stairs" ? 180 : 160
         connectors.slab(pf.add(new vec3(0, -4, 0)), pt.add(new vec3(0, -4, 0)), width, 8)
+        const across = new vec3(pt.z - pf.z, 0, pf.x - pt.x)
+        if (e.kind !== "ramp" && across.length > 1) {
+          const off = across.normalize().uniformScale(width / 2)
+          for (const q of [off, off.uniformScale(-1)]) {
+            const up = q.add(new vec3(0, 50, 0))
+            rails.slab(pf.add(up), pt.add(up), 5, 60) // glass balustrade
+          }
+        }
         if (e.kind === "stairs") {
           // a few step edges so stairs read as stairs
           const steps = 8
@@ -184,10 +212,11 @@ export class FindYourWayStandIn extends BaseScriptComponent {
 
     this.addMesh("Ground", ground, this.groundColor, new vec4(0.55, 0.68, 0.5, 1))
     this.addMesh("Paths", paths, this.pathColor, new vec4(0.8, 0.77, 0.7, 1))
-    this.addMesh("Floors", floors, this.floorColor, new vec4(0.5, 0.53, 0.56, 1))
-    this.addMesh("Walls", walls, this.wallColor, new vec4(0.44, 0.47, 0.5, 1))
-    this.addMesh("Connectors", connectors, this.connectorColor, new vec4(0.5, 0.55, 0.62, 1))
-    this.addMesh("Lifts", lifts, this.liftColor, new vec4(0.58, 0.68, 0.76, 1))
+    this.addMesh("Floors", floors, this.floorColor, STONE)
+    this.addMesh("Walls", walls, this.wallColor, PLASTER)
+    this.addMesh("Connectors", connectors, this.connectorColor, new vec4(0.62, 0.65, 0.7, 1))
+    this.addMesh("Rails", rails, this.connectorColor, new vec4(0.72, 0.84, 0.88, 1))
+    this.addMesh("Lifts", lifts, this.liftColor, new vec4(0.74, 0.78, 0.82, 1))
     if (this.solid) this.addBackdrop(map, place, toLocal, lowest)
 
     // Red plate behind each "connection closed" sign (the sign itself is a UIKit button).
@@ -247,11 +276,14 @@ export class FindYourWayStandIn extends BaseScriptComponent {
     shell.box(new vec3(c.x, c.y, b.z), new vec3(w, h, 20))
     shell.box(new vec3(a.x, c.y, c.z), new vec3(20, h, d))
     shell.box(new vec3(b.x, c.y, c.z), new vec3(20, h, d))
-    shell.box(new vec3(c.x, b.y + 10, c.z), new vec3(w, 20, d))
-    this.addMesh("Shell", shell, this.wallColor, outdoor ? new vec4(0.62, 0.78, 0.93, 1) : new vec4(0.38, 0.4, 0.43, 1))
+    const sky = outdoor ? new vec4(0.62, 0.78, 0.93, 1) : PLASTER
+    this.addMesh("Shell", shell, this.wallColor, outdoor ? sky : SAND)
+    const ceiling = new Boxes()
+    ceiling.box(new vec3(c.x, b.y + 10, c.z), new vec3(w, 20, d))
+    this.addMesh("Ceiling", ceiling, this.wallColor, sky)
     const under = new Boxes()
     under.box(new vec3(c.x, a.y - 30, c.z), new vec3(w, 20, d))
-    this.addMesh("Under", under, this.floorColor, outdoor ? new vec4(0.35, 0.48, 0.32, 1) : new vec4(0.5, 0.53, 0.56, 1))
+    this.addMesh("Under", under, this.floorColor, outdoor ? new vec4(0.35, 0.48, 0.32, 1) : STONE)
 
     const tiles = new Boxes(), bands = new Boxes(), lights = new Boxes()
     if (!outdoor) {
@@ -277,31 +309,117 @@ export class FindYourWayStandIn extends BaseScriptComponent {
         }
       }
       for (const level of place.levels) {
-        const y = toLocal(minX, level.y, minZ).y + 120
-        bands.box(new vec3(c.x, y, a.z + (b.z > a.z ? 14 : -14)), new vec3(w - 30, 70, 4))
-        bands.box(new vec3(c.x, y, b.z + (b.z > a.z ? -14 : 14)), new vec3(w - 30, 70, 4))
-        bands.box(new vec3(a.x + (b.x > a.x ? 14 : -14), y, c.z), new vec3(4, 70, d - 30))
-        bands.box(new vec3(b.x + (b.x > a.x ? -14 : 14), y, c.z), new vec3(4, 70, d - 30))
+        const y = toLocal(minX, level.y, minZ).y + 15 // skirting board
+        bands.box(new vec3(c.x, y, a.z + (b.z > a.z ? 14 : -14)), new vec3(w - 30, 30, 4))
+        bands.box(new vec3(c.x, y, b.z + (b.z > a.z ? -14 : 14)), new vec3(w - 30, 30, 4))
+        bands.box(new vec3(a.x + (b.x > a.x ? 14 : -14), y, c.z), new vec3(4, 30, d - 30))
+        bands.box(new vec3(b.x + (b.x > a.x ? -14 : 14), y, c.z), new vec3(4, 30, d - 30))
       }
     }
-    this.addMesh("Tiles", tiles, this.floorColor, new vec4(0.36, 0.39, 0.42, 1))
-    this.addMesh("Bands", bands, this.wallColor, new vec4(0.47, 0.58, 0.68, 1))
-    this.addMesh("Lights", lights, this.floorColor, new vec4(0.85, 0.85, 0.8, 1))
+    this.addMesh("Tiles", tiles, this.floorColor, GROUT)
+    this.addMesh("Bands", bands, this.wallColor, TRIM)
+    this.addMesh("Lights", lights, this.floorColor, new vec4(1, 0.98, 0.92, 1))
 
     // A shop front behind each named place, seen as you arrive; the sign is the place's own.
     const fronts = SHOP_COLORS.map(() => new Boxes())
+    const windows = SHOP_COLORS.map(() => new Boxes())
+    const frames = new Boxes()
     const awnings = new Boxes()
+    const signs = new Boxes()
+    const gallery = new Boxes()
+    const glass = new Boxes()
+    const planters: vec3[] = []
+    const shopFront = (back: vec3, fwd: vec3, k: number, half: number): ((x: number, y: number, z: number) => vec3) => {
+      const side = new vec3(-fwd.z, 0, fwd.x)
+      const at = (x: number, y: number, z: number) => back.add(side.uniformScale(x)).add(new vec3(0, y, 0)).add(fwd.uniformScale(z))
+      fronts[k].boxAxes(at(0, 260, 0), side.uniformScale(half), new vec3(0, 40, 0), fwd.uniformScale(12)) // fascia, for the name
+      windows[k].boxAxes(at(0, 125, 0), side.uniformScale(half), new vec3(0, 95, 0), fwd.uniformScale(8))
+      frames.boxAxes(at(0, 15, 0), side.uniformScale(half + 4), new vec3(0, 15, 0), fwd.uniformScale(12)) // plinth
+      for (const x of [-1, -0.34, 0.34, 1]) {
+        frames.boxAxes(at(x * half, 125, 2), side.uniformScale(5), new vec3(0, 95, 0), fwd.uniformScale(10)) // mullions
+      }
+      frames.boxAxes(at(0, 110, 3), side.uniformScale(80), new vec3(0, 95, 0), fwd.uniformScale(7)) // the door
+      signs.boxAxes(at(0, 262, 3), side.uniformScale(half * 0.42), new vec3(0, 11, 0), fwd.uniformScale(11)) // lit lettering
+      awnings.boxAxes(at(0, 215, 30), side.uniformScale(half + 10), new vec3(0, 6, 0), fwd.uniformScale(30))
+      return at
+    }
     map.nodes.forEach((n, i) => {
       if (n.kind !== "place" && n.kind !== "destination") return
       const ad = approachDir(map, n.id)
       const fwd = new vec3(ad.x, 0, -ad.z)
-      const side = new vec3(-fwd.z, 0, fwd.x)
-      const back = toLocal(n.x, n.y, n.z).sub(fwd.uniformScale(170))
-      fronts[i % fronts.length].boxAxes(back.add(new vec3(0, 140, 0)), side.uniformScale(280), new vec3(0, 140, 0), fwd.uniformScale(10))
-      awnings.boxAxes(back.add(fwd.uniformScale(30)).add(new vec3(0, 285, 0)), side.uniformScale(290), new vec3(0, 12, 0), fwd.uniformScale(40))
+      const at = shopFront(toLocal(n.x, n.y, n.z).sub(fwd.uniformScale(170)), fwd, i % fronts.length, 280)
+      if (i % PLANT_EVERY === 0) planters.push(at(340, 0, 50))
     })
+    const inlay = new Boxes()
+    if (!outdoor && map.nodes.filter((n) => n.kind === "place" || n.kind === "destination").length >= RETAIL_MIN_PLACES) {
+      // The ground floor's walls: a run of shops with pilasters, a border in the floor, banners overhead.
+      const y = lowest
+      const inset = 0.3
+      let bay = 0
+      const wall = (x0: number, z0: number, x1: number, z1: number, dx: number, dz: number, y: number): void => {
+        const len = Math.sqrt((x1 - x0) ** 2 + (z1 - z0) ** 2)
+        const bays = Math.floor(len / BAY_M)
+        for (let i = 0; i < bays; i++) {
+          const t = (i + 0.5) / bays
+          const p = toLocal(x0 + (x1 - x0) * t + dx * inset, y, z0 + (z1 - z0) * t + dz * inset)
+          const at = shopFront(p, new vec3(dx, 0, -dz), bay % fronts.length, (len / bays) * 50 - 20)
+          frames.boxAxes(at((len / bays) * 50, 170, 10), new vec3(22, 0, 0), new vec3(0, 170, 0), new vec3(0, 0, 22)) // pilaster
+          if (y === lowest && bay % PLANT_EVERY === 1) planters.push(at((len / bays) * 50 - 90, 0, 90))
+          bay++
+        }
+      }
+      for (const level of place.levels) {
+        wall(minX, minZ, maxX, minZ, 0, 1, level.y)
+        wall(maxX, maxZ, minX, maxZ, 0, -1, level.y)
+        wall(minX, maxZ, minX, minZ, 1, 0, level.y)
+        wall(maxX, minZ, maxX, maxZ, -1, 0, level.y)
+        if (level.y === lowest) continue
+        // A gallery round the upper floor, its shops behind a glass balustrade.
+        const g = GALLERY_DEPTH_M
+        const ring = (x0: number, z0: number, x1: number, z1: number): void => {
+          const p = toLocal(x0, level.y, z0), q = toLocal(x1, level.y, z1)
+          gallery.box(p.add(q).uniformScale(0.5).add(new vec3(0, -16, 0)), new vec3(Math.abs(q.x - p.x), 30, Math.abs(q.z - p.z)))
+        }
+        ring(minX, minZ, maxX, minZ + g)
+        ring(minX, maxZ - g, maxX, maxZ)
+        ring(minX, minZ, minX + g, maxZ)
+        ring(maxX - g, minZ, maxX, maxZ)
+        const edge = (x0: number, z0: number, x1: number, z1: number): void =>
+          glass.slab(toLocal(x0, level.y, z0).add(new vec3(0, 50, 0)), toLocal(x1, level.y, z1).add(new vec3(0, 50, 0)), 5, 100)
+        edge(minX + g, minZ + g, maxX - g, minZ + g)
+        edge(minX + g, maxZ - g, maxX - g, maxZ - g)
+        edge(minX + g, minZ + g, minX + g, maxZ - g)
+        edge(maxX - g, minZ + g, maxX - g, maxZ - g)
+      }
+      const rim = 2.5
+      const strip = (x0: number, z0: number, x1: number, z1: number): void =>
+        inlay.slab(toLocal(x0, y, z0).add(new vec3(0, -0.5, 0)), toLocal(x1, y, z1).add(new vec3(0, -0.5, 0)), 40, 0.4)
+      strip(minX + rim, minZ + rim, maxX - rim, minZ + rim)
+      strip(minX + rim, maxZ - rim, maxX - rim, maxZ - rim)
+      strip(minX + rim, minZ + rim, minX + rim, maxZ - rim)
+      strip(maxX - rim, minZ + rim, maxX - rim, maxZ - rim)
+      let k = 0
+      for (let x = minX + BANNER_GAP_M / 2; x < maxX; x += BANNER_GAP_M) {
+        for (const z of [minZ + (maxZ - minZ) * 0.3, minZ + (maxZ - minZ) * 0.7]) {
+          fronts[k++ % fronts.length].box(toLocal(x, y + 3.9, z), new vec3(150, 200, 6))
+        }
+      }
+    }
+    this.addMesh("Inlay", inlay, this.floorColor, INLAY)
+    this.addMesh("Signs", signs, this.wallColor, new vec4(1, 0.97, 0.88, 1))
+    this.addMesh("Gallery", gallery, this.wallColor, PLASTER)
+    this.addMesh("GalleryGlass", glass, this.wallColor, new vec4(0.62, 0.78, 0.84, 1))
     fronts.forEach((f, i) => this.addMesh("Shops" + i, f, this.wallColor, SHOP_COLORS[i]))
-    this.addMesh("Awnings", awnings, this.wallColor, new vec4(0.2, 0.28, 0.38, 1))
+    windows.forEach((f, i) => this.addMesh("Windows" + i, f, this.wallColor,
+      vec4.lerp(SHOP_COLORS[i], new vec4(1, 0.98, 0.92, 1), GLAZING)))
+    this.addMesh("ShopFrames", frames, this.wallColor, TRIM)
+    this.addMesh("Awnings", awnings, this.wallColor, new vec4(0.2, 0.24, 0.3, 1))
+    if (this.planterPrefab && this.model) {
+      for (const p of planters) {
+        const so = this.planterPrefab.instantiate(this.model)
+        so.getTransform().setLocalPosition(p)
+      }
+    }
   }
 
   private addMesh(name: string, boxes: Boxes, color: vec4, solidColor?: vec4): RenderMeshVisual {
@@ -309,8 +427,8 @@ export class FindYourWayStandIn extends BaseScriptComponent {
     so.setParent(this.model)
     const rmv = so.createComponent("Component.RenderMeshVisual") as RenderMeshVisual
     const m = this.material.clone()
-    m.mainPass.baseTex = whiteTexture()
     const solid = this.solid && !!solidColor
+    m.mainPass.baseTex = solid ? shadeTexture() : whiteTexture()
     m.mainPass.baseColor = solid ? solidColor : color
     m.mainPass.blendMode = solid ? BlendMode.Disabled : BlendMode.Normal
     m.mainPass.depthWrite = solid
@@ -333,6 +451,27 @@ export function whiteTexture(): Texture {
   ;(tex.control as ProceduralTextureProvider).setPixels(0, 0, 2, 2, d)
   WHITE = tex
   return tex
+}
+
+let SHADE: Texture | null = null
+// A grey ramp sampled by each face's u: the solid backdrop is unlit, so faces carry their own shade.
+function shadeTexture(): Texture {
+  if (SHADE) return SHADE
+  const size = 64
+  const tex = ProceduralTextureProvider.createWithFormat(size, 1, TextureFormat.RGBA8Unorm)
+  const d = new Uint8Array(size * 4)
+  for (let i = 0; i < size; i++) {
+    const g = Math.round((i / (size - 1)) * 255)
+    d.set([g, g, g, 255], i * 4)
+  }
+  ;(tex.control as ProceduralTextureProvider).setPixels(0, 0, size, 1, d)
+  SHADE = tex
+  return tex
+}
+
+// Floors and ceilings brightest, then walls facing along z, then along x.
+function faceShade(n: vec3): number {
+  return Math.min(1, 0.78 + 0.22 * Math.abs(n.y) + 0.1 * Math.abs(n.z))
 }
 
 const FLOATS_PER_VERTEX = 8
@@ -377,9 +516,11 @@ export class Boxes {
     for (const f of faces) {
       // index of this face's first vertex (8 floats per vertex: position, normal, uv)
       const base = this.v.length / FLOATS_PER_VERTEX
+      const n = corners[f[0]].add(corners[f[2]]).uniformScale(0.5).sub(c).normalize()
+      const shade = faceShade(n)
       for (const k of f) {
         const p = corners[k]
-        this.v.push(p.x, p.y, p.z, 0, 1, 0, 0, 0)
+        this.v.push(p.x, p.y, p.z, 0, 1, 0, shade, 0.5)
       }
       this.i.push(base, base + 1, base + 2, base, base + 2, base + 3)
     }

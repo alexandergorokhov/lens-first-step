@@ -21,14 +21,12 @@ Click inside the Preview panel first so it gets your keys.
 
 ## 3. What you see at the start
 
-- **Mode panel** ("How are you getting there?"): about 1 m ahead, a little right and below eye level.
-- **Demo controls** are now **hidden by default** (real use). To get them back (gate change, restart, map switch, Play demo), select **FindYourWay** in the Scene Hierarchy and tick **showDemoControls** in the Inspector. They sit low on your left and follow you.
-- **You start at the entrance sign** (`startAtSign`, on by default): the building is laid out with you standing at the sign, facing in, and the line starts at your feet. The **Scan sign** panel floats ~1.2 m ahead. Untick `startAtSign` for the old layout (a virtual sign 2.5 m ahead).
-- The mode panel also has **Learn this place** and a row of interests (Coffee, Food, Shops, Toilets, Pharmacy, Acc. toilets: what the companion may point out; none by default).
+- **Scan sign** panel ("You are here") straight ahead, a little below eye level. You stand at the entrance sign. Click it.
+- **What would you like to do?**: Free walk, Tour, Go to a place, Map builder.
+- **Demo controls** are hidden by default. To get them back (restart, map switch, gate change, Play demo), select **FindYourWay** in the Scene Hierarchy and tick **showDemoControls** in the Inspector.
+- **To walk the shopping mall:** tick **showDemoControls**, click the Map button until it says **Shopping mall**, then scan the sign and pick Free walk. The mall is lined with shops on both floors; the companion walks 7 m ahead of you on the line.
 
 Just want to watch? Tick **showDemoControls** and click **Play demo**, or tick **autoplayDemo** (see section 10).
-
-Tip: the building is laid out from where you stand and face when you pick a mode. Walk forward (W) about 2 m into open floor first, away from the sofa.
 
 ## 4. Walk run (escalator)
 

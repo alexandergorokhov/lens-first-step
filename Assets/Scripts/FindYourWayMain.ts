@@ -233,6 +233,21 @@ export class FindYourWayMain extends BaseScriptComponent {
   presetPreferences: string = "coffee,clothes,hardware"
 
   @input
+  @allowUndefined
+  @hint("3D model of the dog companion (boxes if empty)")
+  dogPrefab: ObjectPrefab
+
+  @input
+  @allowUndefined
+  @hint("3D model of the robot companion (boxes if empty)")
+  robotPrefab: ObjectPrefab
+
+  @input
+  @allowUndefined
+  @hint("3D model of the rover companion (boxes if empty)")
+  roverPrefab: ObjectPrefab
+
+  @input
   @hint("How far ahead the companion walks, m. The floor only enters the view from about 5.4 m")
   @widget(new SliderWidget(1.5, 10, 0.1))
   companionAheadM: number = 7
@@ -452,7 +467,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     const v = global.scene.createSceneObject("CompanionView")
     v.setParent(this.building)
     this.view = v.createComponent(FindYourWayCompanionView.getTypeName()) as FindYourWayCompanionView
-    this.view.setup(this.standIn.material)
+    this.view.setup(this.standIn.material, {dog: this.dogPrefab, robot: this.robotPrefab, rover: this.roverPrefab})
     const pl = global.scene.createSceneObject("PlaceIcons")
     pl.setParent(this.building)
     this.placesUI = pl.createComponent(FindYourWayPlacesUI.getTypeName()) as FindYourWayPlacesUI
