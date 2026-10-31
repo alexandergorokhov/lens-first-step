@@ -16,10 +16,9 @@ Approved test scenarios and where each is tested.
 
 Status as of the last run: Node 327 tests, all passing (offline, `OFFLINE=1`, the live gist download
 is skipped). `src/core/tests/docs.test.ts` checks this count, the test list and every test named
-below. LEAF 19 of 19 passed before the brief-2 work. The brief-2 features below now have their Lens
-UI (type-checked) and 11 more LEAF scenarios written test-first; **those 11 have not been run yet**
-(they need Lens Studio connected), and the first 19 must be re-run on the bigger airport and with
-the start at the sign. "LEAF written (not run yet)" means exactly that: not done until it passes.
+below. LEAF 2026-10-31: 42 of 43 in one batch on the final code; the one failure (gt1) was the catch
+count surviving Restart, fixed, and pc1 + gt1 then passed together. Older rows may still say "not run
+yet": every scenario in the index has now run in the preview.
 
 ## Approved scenarios
 

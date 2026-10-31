@@ -103,7 +103,7 @@ After editing anything in `src/core`, run `npm run sync` to copy it into `Assets
 
 1. In Lens Studio's Scene Hierarchy select **LeafIndex**, tick **autoRun** in the Inspector. (To run just one, type its id in **only**, e.g. `dc4-gate-change-stairs-and-ramp`.)
 2. Reset the preview.
-3. In the **Logger** panel look for `[FYW-LEAF] RESULT` lines and the `SUMMARY` (30 scenarios, all passing in the preview).
+3. In the **Logger** panel look for `[FYW-LEAF] RESULT` lines and the `SUMMARY` (43 scenarios).
 4. Untick **autoRun** afterwards so the preview opens straight into the demo.
 
 The 14 scenarios: your 5 done criteria (dc1–dc5), the two route rules, broken map (e2), no step-free route (e3), already at the destination (e4), unknown sign (e5), map switch, restart, and the whole autoplay demo at 10× speed (`demo-autoplay-completes`). `devpost/SCENARIOS.md` lists which test covers each scenario.

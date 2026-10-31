@@ -1,9 +1,12 @@
 import {Scenario} from "Leaf.lspkg/Scenarios/scenario/Scenario"
+import {DefaultLeafInteractor} from "Leaf.lspkg/Interactors/interactor/DefaultLeafInteractor"
+import {findInteractableByName} from "Leaf.lspkg/Interactors/InteractableUtils"
 import {sleep} from "Leaf.lspkg/Utils/common/Utils"
 import {FindYourWayMain} from "../Scripts/FindYourWayMain"
 import {findNode, Vec3} from "../Scripts/FindYourWayRouter"
 import {pressButton} from "../Scripts/FindYourWayWidgetsUI"
 import {bundledMaps, getMain, waitFor} from "./FindYourWayLeafSupport"
+import {nodePos, standStill} from "./FywBrief2Support"
 
 const WALK_MS = 2.2 // walking pace of the reel (m/s)
 
@@ -147,7 +150,12 @@ export class FywReelScenario extends Scenario {
     await waitFor(() => main.getPhase() === "free", 3000, "free walk")
     main.debugMarkPointed(["threads", "cafe"]) // on to Bolt Hardware, where the camera can see it point
     this.cap("No destination. Your companion walks ahead")
-    await this.walk([{x: 30, y: 0, z: 1}, {x: 30, y: 0, z: 9}, {x: 30, y: 0, z: 19.5}])
+    await this.walk([{x: 30, y: 0, z: 1}, {x: 30, y: 0, z: 10}])
+    this.cap("More picks upstairs? It waits at the escalator and says so")
+    await this.turn(-56, 0.6) // the escalator is off to the side of the narrow view
+    await this.soft(() => main.getBubbleText() !== null, 8000)
+    await sleep(2500)
+    await this.walk([{x: 30, y: 0, z: 10}, {x: 30, y: 0, z: 19.5}])
     this.cap("It stops at shops you'd like, and points")
     await this.turn(0, 0.5)
     await this.soft(() => main.getStopId() === "boltHardware", 6000)
@@ -155,7 +163,7 @@ export class FywReelScenario extends Scenario {
     const dog = main.getCompanionMapPos()
     if (dog) {
       this.cut(true)
-      main.debugSetPose(dog.x, 0, dog.z - 6.5, 0)
+      main.debugSetPose(dog.x, 0, dog.z - 8, 0)
       await sleep(250)
       this.cut(false)
     }
@@ -169,10 +177,8 @@ export class FywReelScenario extends Scenario {
   private async stairs(): Promise<void> {
     const main = this.main
     main.debugMarkPointed(["threads", "cafe", "boltHardware"])
-    await this.walk([main.getDebugPose()!.pos, {x: 30, y: 0, z: 10}, {x: 50, y: 0, z: 10}])
-    this.cap("More picks upstairs? It waits at the stairs and says so")
-    await this.soft(() => main.getBubbleText() !== null, 6000)
-    await sleep(2500)
+    await this.walk([main.getDebugPose()!.pos, {x: 30, y: 0, z: 10}, {x: 52, y: 0, z: 10}])
+    this.cap("Look at the stairs: a dot shows what's up there")
     await this.walk([{x: 52, y: 0, z: 10}, {x: 57, y: 0, z: 13}])
     await this.turn(0, 0.5)
     await this.soft(() => main.getDotId() === "stairsFoot", 3000)
@@ -225,8 +231,51 @@ export class FywReelScenario extends Scenario {
     this.press("WalkButton")
     await waitFor(() => main.getPhase() === "nav", 3000, "routing")
     this.cap("The line leads you there, floor by floor")
+    await sleep(600) // a button shown this frame gets its Interactable on its first frame
+    this.press("CompanionButton")
+    await this.soft(() => main.isCompanionOn(), 1000)
     await this.walk([{x: 30, y: 0, z: 1}, {x: 30, y: 0, z: 10}, {x: 30, y: 0, z: 18}])
     await sleep(1000)
+  }
+
+  // Standing still on the trip: throw the treat by hand. The grab itself is cut: in the preview the
+  // treat follows the real head, not the walked view, and fills the frame for a moment.
+  private async play(): Promise<void> {
+    const main = this.main
+    await standStill(main, {x: 30, y: 0, z: 18})
+    await this.soft(() => main.isGrabTreatShown(), 2000)
+    this.cap("Waiting? Pinch the treat, swing and let go")
+    await sleep(1800)
+    this.cut(true)
+    const treat = findInteractableByName("GrabTreat", undefined, true)
+    if (treat) await new DefaultLeafInteractor().drag(treat, new vec3(0, 3, -15), 900)
+    else print("[REEL] missed GrabTreat")
+    await this.soft(() => main.getCatchPhase() !== "idle", 2000)
+    await sleep(400)
+    this.cut(false)
+    await this.soft(() => main.getCatchPhase() === "idle", 8000)
+    this.cap("Your route never changes")
+    await sleep(1500)
+  }
+
+  private async tour(): Promise<void> {
+    const main = this.main
+    this.press("TourButton")
+    await waitFor(() => main.getPhase() === "prefs", 3000, "preferences")
+    this.cap("Tour: the shops you like, one stop at a time")
+    await sleep(1800)
+    this.press("PrefsKeepButton")
+    await waitFor(() => main.getPhase() === "nav", 3000, "the tour")
+    await this.walk(main.getRouteNodes().slice(0, 3).map((id) => nodePos(main, id)))
+    const stops = main.getStops()
+    this.cut(true)
+    const p = nodePos(main, stops[0])
+    main.debugSetPose(p.x + 1, p.y, p.z, 0)
+    await this.soft(() => main.getPhase() === "arrived", 3000)
+    this.cut(false)
+    await sleep(2500)
+    this.press("NextStopButton")
+    await sleep(2500)
   }
 
   async run(): Promise<void> {
@@ -263,6 +312,12 @@ export class FywReelScenario extends Scenario {
     await this.scan()
     this.cut(false)
     await this.goTo()
+    await this.play()
+    this.cut(true)
+    await this.toSign("mall")
+    await this.scan()
+    this.cut(false)
+    await this.tour()
     this.cap("Find Your Way Inside")
     await sleep(3000)
     this.cap(null)
