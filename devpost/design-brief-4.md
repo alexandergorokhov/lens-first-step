@@ -43,7 +43,7 @@ the headline.
 | 0:50 | Offers | Look at a shop, a subtle dot, open it or ignore it. |
 | 1:05 | Upstairs | "4 picks upstairs" at the escalator. |
 | 1:20 | Navigation | "Take me to Bolt Hardware". The line, floor by floor. |
-| 1:50 | Step-free | The lift is out: rerouted without stairs. |
+| 1:50 | Plans change | "Meet at the food court": the line swings to the new place. |
 | 2:05 | Waiting | Hop, or throw a treat. Your route never changes. |
 | 2:20 | Any companion | Dog, robot, rover. |
 | 2:30 | Extension | Walk a place, mark the shops and stairs, and it becomes a map. |

@@ -10,7 +10,7 @@ import {nodePos, standStill} from "./FywBrief2Support"
 
 const WALK_MS = 2.2 // walking pace of the reel (m/s)
 
-// visual-reel — the 120 s video from design-brief-3, played on the real app. Not a test: "visual-"
+// visual-reel — the 3-minute video from design-brief-4, played on the real app. Not a test: "visual-"
 // keeps it out of the runner's "all". [REEL] lines mark each beat and what to cut in the edit.
 @component
 export class FywReelScenario extends Scenario {
@@ -96,46 +96,43 @@ export class FywReelScenario extends Scenario {
     await waitFor(() => this.main.getPhase() === "choose" && this.main.isHomePanelShown(), 8000, "the modes")
   }
 
+  // The extension: walk the mall, look at a shop and mark it, and the path joins the marks.
   private async builder(): Promise<void> {
     const main = this.main
-    const at = (x: number, y: number, z: number, h: number) => main.debugSetPose(x, y, z, h)
     this.press("MapBuilderButton")
     await waitFor(() => main.getPhase() === "mapping", 3000, "map builder")
-    this.cap("Map builder: walk the place and it draws itself")
-    await this.walk([{x: 0, y: 0, z: 0}, {x: 0, y: 0, z: 4}])
-    await this.turn(90, 0.7)
-    this.cap("Face a shop, pinch Mark shop")
-    await sleep(700)
-    this.press("MarkShopButton")
+    this.cap("Add your own place: just walk it")
+    await this.walk([{x: 30, y: 0, z: 1}, {x: 30, y: 0, z: 6}])
+    await this.turn(90, 0.6)
+    this.cap("Look at a shop and mark it")
     await sleep(900)
-    await this.walk([{x: 0, y: 0, z: 4}, {x: 0, y: 0, z: 9}])
-    await this.turn(90, 0.7)
-    await sleep(300)
     this.press("MarkShopButton")
-    await sleep(700)
-    this.cap("Go upstairs: the Lens sees the new floor")
-    await this.walk([{x: 0, y: 0, z: 9}, {x: 0, y: 3.5, z: 14}])
-    at(0, 3.5, 14, 0)
-    await waitFor(() => main.getFloorGuess() !== null, 4000, "floor change")
-    await sleep(800)
+    await sleep(1400)
+    await this.turn(0, 0.5)
+    this.cap("Your path joins the marks")
+    await this.walk([{x: 30, y: 0, z: 6}, {x: 30, y: 0, z: 14}])
+    await this.turn(-90, 0.6)
+    await sleep(500)
+    this.press("MarkShopButton")
+    await sleep(1400)
+    this.cut(true)
+    main.debugSetPose(57, 0, 14, 0)
+    await sleep(300)
+    this.cut(false)
+    this.cap("Take the stairs: it sees the new floor")
+    await this.walk([{x: 57, y: 0, z: 14}, {x: 57, y: 5, z: 24}])
+    await this.soft(() => main.getFloorGuess() !== null, 4000)
+    await sleep(900)
     this.press("ConfirmFloorButton")
-    await sleep(700)
-    this.cap("Two more shops upstairs")
-    await this.walk([{x: 0, y: 3.5, z: 14}, {x: 5, y: 3.5, z: 14}])
-    await sleep(300)
-    this.press("MarkShopButton")
-    await this.walk([{x: 5, y: 3.5, z: 14}, {x: 11, y: 3.5, z: 14}])
-    await sleep(300)
-    this.press("MarkShopButton")
-    await sleep(600)
-    this.cap("See my map, then Upload")
+    await sleep(800)
+    this.cap("Upload it, and anyone can walk it")
     this.press("SeeMapButton")
-    await sleep(3000)
+    await sleep(2800)
     this.press("SeeMapButton")
     await sleep(300)
     this.press("UploadMapButton")
-    await waitFor(() => main.getPhase() === "choose", 4000, "uploaded")
-    await sleep(1200)
+    await this.soft(() => main.getPhase() === "choose", 4000)
+    await sleep(800)
   }
 
   private async freeWalkCompanion(): Promise<void> {
@@ -238,6 +235,27 @@ export class FywReelScenario extends Scenario {
     await sleep(1000)
   }
 
+  // Plans change: the line swings to the new place at once.
+  private async planChange(): Promise<void> {
+    const main = this.main
+    main.debugShowDemoControls(true)
+    await sleep(600)
+    this.cap("Plans change? The line changes with you")
+    this.press("GateChangeButton")
+    await sleep(600)
+    main.debugShowDemoControls(false)
+    await sleep(3200)
+  }
+
+  private async companions(): Promise<void> {
+    const main = this.main
+    this.cap("Dog, robot or rover. Your pick")
+    for (const id of ["robot", "rover", "dog"]) {
+      main.setCompanionModel(id)
+      await sleep(2200)
+    }
+  }
+
   // Standing still on the trip: throw the treat by hand. The grab itself is cut: in the preview the
   // treat follows the real head, not the walked view, and fills the frame for a moment.
   private async play(): Promise<void> {
@@ -285,21 +303,13 @@ export class FywReelScenario extends Scenario {
     this.t0 = getTime()
     main.debugForgetSavedMap()
     this.cut(true)
-    await this.toSign("room")
+    await this.toSign("mall")
     this.cut(false)
-    this.cap("Lost in a big building? Scan the 'You are here' sign")
+    this.cap("Lost in a big mall? Scan the 'You are here' sign")
     await sleep(2500)
     await this.scan()
     this.cap("Then choose what you need")
-    await sleep(3000)
-    await this.builder()
-    this.cut(true)
-    await this.toSign("mall")
-    this.cut(false)
-    this.cap("Someone names the shops and adds offers; the Lens downloads that map")
-    await sleep(3500)
-    await this.scan()
-    await sleep(800)
+    await sleep(2200)
     await this.freeWalkCompanion()
     await this.stairs()
     this.cut(true)
@@ -313,11 +323,18 @@ export class FywReelScenario extends Scenario {
     this.cut(false)
     await this.goTo()
     await this.play()
+    await this.companions()
+    await this.planChange()
     this.cut(true)
     await this.toSign("mall")
     await this.scan()
     this.cut(false)
     await this.tour()
+    this.cut(true)
+    await this.toSign("mall")
+    await this.scan()
+    this.cut(false)
+    await this.builder()
     this.cap("Find Your Way Inside")
     await sleep(3000)
     this.cap(null)
