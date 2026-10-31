@@ -288,7 +288,8 @@ export class FywReelScenario extends Scenario {
     const stops = main.getStops()
     this.cut(true)
     const p = nodePos(main, stops[0])
-    main.debugSetPose(p.x + 1, p.y, p.z, 0)
+    const north = p.z > 15 // shops line both sides of the hall: stand back from this one, facing it
+    main.debugSetPose(p.x, p.y, p.z + (north ? -2.6 : 2.6), north ? 0 : 180)
     await this.soft(() => main.getPhase() === "arrived", 3000)
     this.cut(false)
     await sleep(2500)

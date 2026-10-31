@@ -28,6 +28,7 @@ export class FywS1StartAtSignScenario extends Scenario {
     const p = main.getScanSignWorldPos()
     const below = Math.atan2(c.y - p.y, Math.sqrt((p.x - c.x) ** 2 + (p.z - c.z) ** 2)) * 180 / Math.PI
     expect(below > 0 && below < 10, "scan panel a little below eye level (" + below.toFixed(1) + " deg)").toBe(true)
+    expect(main.standIn.hasDirectory(), "the 'You are here' board stands in the place").toBe(true)
     await startTrip(it, "walk")
     log("s1 pass")
   }

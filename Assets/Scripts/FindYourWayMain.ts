@@ -105,6 +105,10 @@ const RIDE_CARD_S = 2.5
 const SCAN_PANEL_AHEAD_CM = 160
 const SCAN_PANEL_RIGHT_CM = 10 // clear of the Demo controls on the left
 const SCAN_PANEL_BELOW_EYE_CM = 15
+// In the preview it sits on a board that stands in the place: further off, and beside the way in.
+const BOARD_AHEAD_CM = 340
+const BOARD_RIGHT_CM = 62
+const BOARD_BELOW_EYE_CM = 45
 const DEST_NOTE_S = 3.5
 const PLACE_FACE_CM = 0 // place icons sit on the node (the shop front)
 // Hop lane: starts this far ahead of you (m), so you see the companion from behind.
@@ -1306,10 +1310,14 @@ export class FindYourWayMain extends BaseScriptComponent {
     ui.clear()
     const start = findNode(map, place.start)
     if (start) {
-      // Standing at the sign: the scan panel floats ~1.6 m ahead (on Specs you just look at the sign).
+      // Standing at the sign: on Specs the real sign is in front of you and the panel floats by it; in
+      // the preview the board stands in the place.
+      const board = this.standIn.isSolid()
       const scanAt = this.startAtSign
-        ? this.local(start, this.eye() - SCAN_PANEL_BELOW_EYE_CM).add(new vec3(SCAN_PANEL_RIGHT_CM, 0, -SCAN_PANEL_AHEAD_CM))
+        ? this.local(start, this.eye() - (board ? BOARD_BELOW_EYE_CM : SCAN_PANEL_BELOW_EYE_CM))
+          .add(board ? new vec3(BOARD_RIGHT_CM, 0, -BOARD_AHEAD_CM) : new vec3(SCAN_PANEL_RIGHT_CM, 0, -SCAN_PANEL_AHEAD_CM))
         : this.local(start, SCAN_SIGN_CM)
+      this.standIn.addDirectory(map, place.start, scanAt, this.local(start).y, (x, y, z) => this.local({x, y, z}))
       ui.setScanSign(scanAt, place.scanSign.title, place.scanSign.button,
         place.scanSign.hint, place.standInLabel)
       ui.addPlaceSign("StandIn", this.local(start, PLACE_SIGN_CM).add(new vec3(-260, 0, -150)),

@@ -45,6 +45,17 @@ transforms. The collectibles, floor post, Hop lane and treat are always boxes.
 - **THEN** it appears (model or boxes) and plays the same game
 - Verified by: none (Node; pet.test.ts P1-P7 cover the companion's behaviour, not its model) | p1-companion-toggle-and-models, pc1-throw-and-fetch-any-model
 
+### Requirement: "You are here" directory board
+In the preview the scan SHALL be part of the place: a board standing beside the way in, showing the floor's
+paths and shops with a red mark at the sign, with the scan panel on it. Scanning it is what puts you on
+the map, and the board stays in the place afterwards. On Specs the real sign does this job and no board is
+drawn.
+
+#### Scenario: PB4 The board stands in the place
+- **WHEN** the scan sign shows in the preview
+- **THEN** the board is built, and the scan panel is within 10 degrees of eye level
+- Verified by: s1-start-at-sign-controls-hidden
+
 ## Not tested
 
 - The look: how the backdrop and the generated models read is judged by eye in the preview.

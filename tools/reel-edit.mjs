@@ -1,6 +1,6 @@
 // Edits a screen recording of the visual-reel LEAF scenario into the demo video: drops the [REEL]
 // CUT-FROM/CUT-TO stretches, and puts each caption in a column beside the Lens view.
-//   node tools/reel-edit.mjs <raw.mp4> <reel.log> <recording start HH:MM:SS.s> <out.mp4>
+//   node tools/reel-edit.mjs <raw.mp4> <reel.log> <recording start HH:MM:SS.s> <out.mp4> [music.wav]
 // reel.log holds lines "HH:MM:SS.mmm <reel seconds> <caption | CUT-FROM | CUT-TO>".
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
@@ -14,6 +14,8 @@ const WIDTH = 1920;
 const HEIGHT = 1080;
 const COLUMN = 800;
 const FONT = "C\\:/Windows/Fonts/arialbd.ttf";
+const MUSIC_LEVEL = 0.8;
+const MUSIC_FADE_S = 3;
 
 export function clock(t) {
   const [h, m, s] = t.split(":").map(Number);
@@ -64,6 +66,12 @@ export function plan(logText, startClock, duration) {
   };
 }
 
+// The music, faded out to end with the video.
+export function musicFilter(lengthS) {
+  const fadeFrom = Math.max(0, lengthS - MUSIC_FADE_S);
+  return `[1:a]atrim=0:${lengthS.toFixed(2)},volume=${MUSIC_LEVEL},afade=t=out:st=${fadeFrom.toFixed(2)}:d=${MUSIC_FADE_S}[music]`;
+}
+
 // Breaks a caption into lines that fit the column.
 export function wrap(text, width = 26) {
   const lines = [];
@@ -79,7 +87,7 @@ export function wrap(text, width = 26) {
 }
 
 function main() {
-  const [raw, log, start, out] = process.argv.slice(2);
+  const [raw, log, start, out, music] = process.argv.slice(2);
   const probe = spawnSync(ffmpeg, ["-hide_banner", "-i", raw], { encoding: "utf8" }).stderr;
   const d = /Duration: (\d\d:\d\d:\d\d\.\d+)/.exec(probe);
   const p = plan(readFileSync(log, "utf8"), clock(start), clock(d[1]));
@@ -97,10 +105,12 @@ function main() {
     chain = `t${i}`;
   });
   filters.push(`[${chain}]drawtext=fontfile='${FONT}':text='Recorded in the Lens Studio preview':fontcolor=0x9fb3d9:fontsize=26:x=56:y=h-70[out]`);
+  if (music) filters.push(musicFilter(p.length));
   const script = path.join(dir, "filters.txt");
   writeFileSync(script, filters.join(";\n"));
-  const r = spawnSync(ffmpeg, ["-y", "-hide_banner", "-loglevel", "error", "-i", raw, "-filter_complex_script", script,
-    "-map", "[out]", "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p", "-r", "24", out], { stdio: "inherit" });
+  const r = spawnSync(ffmpeg, ["-y", "-hide_banner", "-loglevel", "error", "-i", raw, ...(music ? ["-i", music] : []),
+    "-filter_complex_script", script, "-map", "[out]", ...(music ? ["-map", "[music]", "-c:a", "aac", "-b:a", "192k"] : []),
+    "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p", "-r", "24", out], { stdio: "inherit" });
   if (r.status !== 0) process.exit(r.status || 1);
   console.log(`Wrote ${out}: ${p.length.toFixed(1)} s, ${p.kept.length} parts, ${p.captions.length} captions`);
 }

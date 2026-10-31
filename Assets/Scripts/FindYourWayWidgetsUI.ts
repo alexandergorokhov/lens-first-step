@@ -56,14 +56,23 @@ export interface Panel {
 
 // Airport-signage panel colour: a bright-enough navy so it reads on an additive display
 // (very dark plates render as see-through), with white text on top.
-export const PANEL_TINT = new vec4(0.16, 0.27, 0.48, 1)
-export const ALERT_TINT = new vec4(0.5, 0.12, 0.12, 1)
+// Calm, see-through panels and warm text: easy on the eyes, and the place stays visible behind them.
+export const PANEL_TINT = new vec4(0.12, 0.22, 0.25, 0.62)
+export const ALERT_TINT = new vec4(0.46, 0.17, 0.15, 0.72)
+const PANEL_SCALE = 0.82 // every panel, so none blocks the narrow view
+const TEXT_WARMTH = new vec4(0.97, 0.94, 0.87, 1)
+
+function warm(c: vec4): vec4 {
+  return new vec4(c.x * TEXT_WARMTH.x, c.y * TEXT_WARMTH.y, c.z * TEXT_WARMTH.z, c.w)
+}
 
 // Canvas + BackPlate on `root`, a Content child (+0.6 cm Z) holding a column FlexLayout.
 // The plate hugs the laid-out content and is tinted once it has initialised.
 export function makePanel(root: SceneObject, widthCm: number, pad: number, gap: number,
     align: FlexAlign = FlexAlign.Center, tint: vec4 = PANEL_TINT): Panel {
   root.createComponent("Component.Canvas")
+  const t = root.getTransform()
+  t.setLocalScale(t.getLocalScale().uniformScale(PANEL_SCALE))
   const plate = root.createComponent(BackPlate.getTypeName()) as BackPlate
   plate.onInitialized.add(() => {
     const rr = root.getComponent(RoundedRectangle.getTypeName()) as RoundedRectangle | null
@@ -106,7 +115,7 @@ export function addText(parent: SceneObject, name: string, value: string, role: 
   t.text = value
   t.depthTest = true
   applyTextRole(t, role, distanceCm)
-  t.textFill.color = color
+  t.textFill.color = warm(color)
   t.horizontalAlignment = align
   t.verticalAlignment = VerticalAlignment.Center
   t.horizontalOverflow = HorizontalOverflow.Wrap
@@ -164,7 +173,7 @@ export function addButton(parent: SceneObject, name: string, label: string, widt
   const so = obj(parent, name)
   so.getTransform().setLocalPosition(new vec3(0, 0, LAYOUT_Z))
   const button = so.createComponent(Button.getTypeName()) as Button
-  button.setTheme("SnapOS2", style)
+  button.setTheme("SnapOS2", style === "Primary" ? "PrimaryNeutral" : style) // the theme's Primary is a loud gold
   button.size = new vec3(widthCm, heightCm, 1)
 
   const face = obj(so, "Face", new vec3(0, 0, BUTTON_LABEL_Z))
@@ -185,7 +194,7 @@ export function addButton(parent: SceneObject, name: string, label: string, widt
   t.text = label
   t.depthTest = true
   applyTextRole(t, role, distanceCm)
-  t.textFill.color = labelColor
+  t.textFill.color = warm(labelColor)
   t.horizontalAlignment = icon ? HorizontalAlignment.Left : HorizontalAlignment.Center
   t.verticalAlignment = VerticalAlignment.Center
   t.horizontalOverflow = HorizontalOverflow.Wrap

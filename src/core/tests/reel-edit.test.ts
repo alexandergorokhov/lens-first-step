@@ -1,7 +1,7 @@
 // The video edit: what the [REEL] log keeps and cuts, and how captions wrap.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { clock, plan, wrap } from "../../../tools/reel-edit.mjs";
+import { clock, plan, wrap, musicFilter } from "../../../tools/reel-edit.mjs";
 
 const LOG = `10:00:10.000 0.0 CUT-FROM
 10:00:15.000 5.0 CUT-TO
@@ -33,4 +33,11 @@ test("R3 long captions wrap, words stay whole", () => {
   const out = wrap("Someone names the shops and adds offers", 16);
   assert.ok(out.split("\n").every((l) => l.length <= 16));
   assert.equal(out.replace(/\n/g, " "), "Someone names the shops and adds offers");
+});
+
+test("R4 The music is cut to the video's length and fades out at its end", () => {
+  const f = musicFilter(150);
+  assert.match(f, /atrim=0:150\.00/);
+  assert.match(f, /afade=t=out:st=147\.00:d=3/);
+  assert.match(musicFilter(1), /st=0\.00/);
 });

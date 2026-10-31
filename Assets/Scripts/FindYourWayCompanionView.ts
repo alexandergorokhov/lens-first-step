@@ -15,6 +15,7 @@ import {InteractableManipulation} from "SpectaclesInteractionKit.lspkg/Component
 const GRAB_TARGET_CM = 16 // bigger than the treat, so it is easy to pinch
 const TELEPORT_MS = 8 // moved faster than this: a ride or a jump to a new place, not walking
 const SPEED_SMOOTHING = 8
+const COMPANION_ALPHA = 0.8 // a little see-through, so it never hides the way ahead
 
 export interface HopObstacleLike {
   d: number
@@ -180,7 +181,7 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
   // Map builder: a pin standing on each marked shop, so the map grows in front of you.
   setPins(spots: vec3[]): void {
     while (this.pins.length < spots.length) {
-      this.pins.push(this.makeObject("MapPin" + this.pins.length, [{color: CYAN, boxes: [[0, 105, 0, 5, 210, 5], [0, 225, 0, 30, 30, 30]]}]))
+      this.pins.push(this.makeObject("MapPin" + this.pins.length, [{color: new vec4(0.4, 1, 1, 0.55), boxes: [[0, 60, 0, 2.5, 120, 2.5], [0, 128, 0, 16, 16, 16]]}]))
     }
     this.pins.forEach((p, i) => {
       p.enabled = i < spots.length
@@ -319,8 +320,8 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
   private rigMaterial(color: vec4): Material {
     const m = (this.material as Material).clone()
     m.mainPass.baseTex = shadeTexture()
-    m.mainPass.baseColor = color
-    m.mainPass.blendMode = BlendMode.Disabled
+    m.mainPass.baseColor = new vec4(color.x, color.y, color.z, COMPANION_ALPHA)
+    m.mainPass.blendMode = BlendMode.Normal
     m.mainPass.depthWrite = true
     m.mainPass.twoSided = true
     return m

@@ -31,7 +31,7 @@ the headline.
    to look at. It needs the mall behind it, with the map drawn as you go.
 5. **Design pass.** Panels, the HUD and the app look at a higher level.
 6. **Code quality pass.** Split `FindYourWayMain.ts` (2,187 lines). Each step keeps LEAF at 43 of 43.
-7. **The 3-minute video.** Good looking, with sound.
+7. **The 3-minute video.** Good looking, silent, with captions.
 
 ## The 3-minute video
 
@@ -49,7 +49,7 @@ the headline.
 | 2:30 | Extension | Walk a place, mark the shops and stairs, and it becomes a map. |
 | 2:50 | Close | Built and tested in the Lens Studio preview. Name and end card. |
 
-Sound: a generated music bed, and captions in the side column. Voiceover is the user's choice.
+No music, by the user's choice: captions in the side column carry it. Voiceover stays an option.
 Honest labels stay: recorded in the Lens Studio preview, not on Specs.
 
 ## Known limits
