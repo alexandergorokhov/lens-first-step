@@ -352,7 +352,7 @@ export class FindYourWayStandIn extends BaseScriptComponent {
     })
     const inlay = new Boxes()
     if (!outdoor && map.nodes.filter((n) => n.kind === "place" || n.kind === "destination").length >= RETAIL_MIN_PLACES) {
-      // The ground floor's walls: a run of shops with pilasters, a border in the floor, banners overhead.
+      // Every floor's walls: a run of shops with pilasters. The ground floor also gets a border and banners.
       const y = lowest
       const inset = 0.3
       let bay = 0
