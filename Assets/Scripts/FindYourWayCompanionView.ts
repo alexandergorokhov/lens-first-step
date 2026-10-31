@@ -60,6 +60,7 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
   private collectibles: SceneObject[] = []
   private collectibleMesh: RenderMesh | null = null
   private post: SceneObject | null = null
+  private pins: SceneObject[] = []
   private lane: SceneObject | null = null
   private obstacles: SceneObject[] = []
   private treat: SceneObject | null = null
@@ -175,6 +176,19 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
       this.pointer.getTransform().setLocalRotation(rot)
     }
   }
+
+  // Map builder: a pin standing on each marked shop, so the map grows in front of you.
+  setPins(spots: vec3[]): void {
+    while (this.pins.length < spots.length) {
+      this.pins.push(this.makeObject("MapPin" + this.pins.length, [{color: CYAN, boxes: [[0, 105, 0, 5, 210, 5], [0, 225, 0, 30, 30, 30]]}]))
+    }
+    this.pins.forEach((p, i) => {
+      p.enabled = i < spots.length
+      if (i < spots.length) p.getTransform().setLocalPosition(spots[i])
+    })
+  }
+
+  getPinCount(): number { return this.pins.filter((p) => p.enabled).length }
 
   getPose(): vec3 | null { return this.model ? this.model.getTransform().getLocalPosition() : null }
 

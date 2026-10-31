@@ -249,6 +249,7 @@ export class FindYourWayStandIn extends BaseScriptComponent {
   }
 
   isSolid(): boolean { return this.solid }
+  isBuilt(): boolean { return !!this.model && this.model.getChildrenCount() > 0 }
 
   // Lens Studio only: a shell around the whole map (hides the preview room), floor tiles and wall
   // bands (they make walking visible on unlit surfaces), ceiling lights, and a shop front behind

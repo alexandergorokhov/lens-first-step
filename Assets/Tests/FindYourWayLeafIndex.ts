@@ -47,6 +47,7 @@ import {FywTr1TourScenario} from "./FywTr1TourScenario"
 import {FywSp1SeatedPlayScenario} from "./FywSp1SeatedPlayScenario"
 import {FywGt1GrabThrowScenario} from "./FywGt1GrabThrowScenario"
 import {FywFw1FreeWalkDemoScenario} from "./FywFw1FreeWalkDemoScenario"
+import {FywMb5BuilderInMallScenario} from "./FywMb5BuilderInMallScenario"
 import {FywCheckPlacesScenario} from "./FywCheckPlacesScenario"
 import {FywLookScenario} from "./FywLookScenario"
 import {FywRigStageScenario} from "./FywRigStageScenario"
@@ -106,6 +107,7 @@ export class FindYourWayLeafIndex extends BaseScriptComponent {
     {id: "sp1-seated-play", typename: FywSp1SeatedPlayScenario.getTypeName()},
     {id: "gt1-grab-and-throw", typename: FywGt1GrabThrowScenario.getTypeName()},
     {id: "fw1-free-walk-demo", typename: FywFw1FreeWalkDemoScenario.getTypeName()},
+    {id: "mb5-builder-in-the-mall", typename: FywMb5BuilderInMallScenario.getTypeName()},
     {id: "visual-reel", typename: FywReelScenario.getTypeName()},
     {id: "visual-check-places", typename: FywCheckPlacesScenario.getTypeName()},
     {id: "visual-look", typename: FywLookScenario.getTypeName()},

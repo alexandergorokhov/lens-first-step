@@ -817,7 +817,14 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (!this.tracer) return
     const s = this.tracer.markShop(this.userPos(), this.userHeading())
     this.mapStatus(s ? (s.replaced ? "Moved " : "Marked ") + s.label : "Map is full")
+    this.showMapPins()
     if (s) print("[FYW] mapping: " + s.label + (s.replaced ? " replaced" : " marked"))
+  }
+
+  private showMapPins(): void {
+    if (!this.view) return
+    const shops = this.recorder ? this.recorder.toMap().nodes.filter((n) => n.kind === "place") : []
+    this.view.setPins(shops.map((n) => this.local({x: n.x, y: n.y, z: n.z})))
   }
 
   // One pinch on the guess, or on another kind.
@@ -898,6 +905,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.seeMapOn = false
     this.recorder = null
     this.tracer = null
+    this.showMapPins()
     if (this.phase === "mapping" && backToChoose) {
       this.buildPlace()
       this.buildingUI.setScanSignVisible(false)
@@ -2105,6 +2113,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   isMapModelShown(): boolean { return this.seeMapOn && !!this.peekView && this.peekView.isShown() }
   isMappingPanelShown(): boolean { return !!this.mappingPanel && this.mappingPanel.isShown() }
   getMappingStatus(): string { return this.mappingPanel ? this.mappingPanel.getStatus() : "" }
+  getMapPinCount(): number { return this.view ? this.view.getPinCount() : 0 }
   getMappedNodeCount(): number { return this.recorder ? this.recorder.toMap().nodes.length : 0 }
   hasSavedMap(): boolean { return this.mappedText !== null }
   debugMapPointAt(x: number, y: number, z: number): string | null {

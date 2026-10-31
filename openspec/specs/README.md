@@ -139,10 +139,10 @@ part of the behaviour only manual or untested; **Manual** = checked by hand in t
 | S10–S14 | Pill, floor badge, cue, line on your floor | floors-and-distance | S10–S14 | fl1-pill-shows-and-counts-down, fl2-cue-post-and-badge-after-escalator | Pass (Node); LEAF passing |
 | A1–A13 | Jointed, animated companions | companion | A1–A13 (anim.test.ts) | visual-rigs (by eye) | Pass (Node) |
 | FW7 | Free walk demo button, in the mall | demo-controls | D20 | fw1-free-walk-demo | Pass (auto) |
-| MB5 | Map builder demo with the mall behind it | map-builder | — | — | Planned |
+| MB5 | Map builder demo with the mall behind it | map-builder | — | mb5-builder-in-the-mall | Pass (auto) |
 | P1–P7, Q7, Q8 | Companion on/off, any model, leads/waits/collects | companion | A1–A13 | Jointed, animated companions | companion | A1–A13 (anim.test.ts) | visual-rigs (by eye) | Pass (Node) |
 | FW7 | Free walk demo button, in the mall | demo-controls | D20 | fw1-free-walk-demo | Pass (auto) |
-| MB5 | Map builder demo with the mall behind it | map-builder | — | — | Planned |
+| MB5 | Map builder demo with the mall behind it | map-builder | — | mb5-builder-in-the-mall | Pass (auto) |
 | P1–P7, Q7, Q8 | p1-companion-toggle-and-models, p3-companion-waits-at-escalator | Pass (Node); LEAF passing |
 | Q1–Q6 | Places, interests, pointing, Go here? | places | Q1–Q6 | q4-points-at-interests-and-sponsored | Pass (Node); LEAF passing |
 | G1–G9, P8–P10 | Hop and catch | play | G1–G9, P8, P9 | g1-hop-jump-bump-restart, pc1-throw-and-fetch-any-model | Pass (Node); LEAF passing |
