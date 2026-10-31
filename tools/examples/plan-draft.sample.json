@@ -1,0 +1,39 @@
+{
+  "name": "sample-clinic",
+  "title": "Riverside Clinic (invented sample)",
+  "scale": 0.05,
+  "yDown": true,
+  "floors": [
+    { "id": "G", "name": "Ground floor", "height": 0 },
+    { "id": "1", "name": "First floor", "height": 4 }
+  ],
+  "entrance": "door",
+  "destination": "room201",
+  "points": [
+    { "id": "door", "floor": "G", "x": 100, "y": 380, "kind": "sign", "label": "Main entrance sign" },
+    { "id": "lobby", "floor": "G", "x": 100, "y": 300, "label": "Lobby" },
+    { "id": "desk", "floor": "G", "x": 40, "y": 300, "kind": "assistance", "label": "Reception desk" },
+    { "id": "hallG", "floor": "G", "x": 260, "y": 300, "label": "Ground corridor" },
+    { "id": "room101", "floor": "G", "x": 260, "y": 220, "kind": "destination", "type": "room", "code": "101", "label": "Room 101" },
+    { "id": "liftG", "floor": "G", "x": 420, "y": 300, "kind": "lift", "label": "Lift (ground)" },
+    { "id": "stairsG", "floor": "G", "x": 420, "y": 360, "label": "Stairs (ground)" },
+    { "id": "liftU", "floor": "1", "x": 420, "y": 300, "kind": "lift", "label": "Lift (first floor)" },
+    { "id": "stairsU", "floor": "1", "x": 420, "y": 360, "label": "Stairs (first floor)" },
+    { "id": "hallU", "floor": "1", "x": 260, "y": 300, "label": "First floor corridor" },
+    { "id": "room201", "floor": "1", "x": 260, "y": 220, "kind": "destination", "type": "room", "code": "201", "label": "Room 201" },
+    { "id": "wcU", "floor": "1", "x": 120, "y": 300, "kind": "place", "category": "toilet", "label": "Toilets" }
+  ],
+  "corridors": [
+    { "path": ["door", "lobby", "hallG", "liftG"] },
+    { "from": "lobby", "to": "desk" },
+    { "from": "hallG", "to": "room101" },
+    { "from": "liftG", "to": "stairsG" },
+    { "path": ["liftU", "hallU", "wcU"] },
+    { "from": "hallU", "to": "room201" },
+    { "from": "liftU", "to": "stairsU" }
+  ],
+  "links": [
+    { "kind": "lift", "id": "clinicLift", "from": "liftG", "to": "liftU" },
+    { "kind": "stairs", "from": "stairsG", "to": "stairsU" }
+  ]
+}

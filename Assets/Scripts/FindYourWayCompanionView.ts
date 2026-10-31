@@ -6,8 +6,12 @@
 // Unlit material. Must not: decide where the companion goes (FindYourWayPet / FindYourWayPlay do).
 
 import {Boxes, whiteTexture} from "./FindYourWayStandIn"
+import {Interactable} from "SpectaclesInteractionKit.lspkg/Components/Interaction/Interactable/Interactable"
+import {InteractableManipulation} from "SpectaclesInteractionKit.lspkg/Components/Interaction/InteractableManipulation/InteractableManipulation"
 
 // A Hop obstacle: d metres ahead of the companion, h metres high.
+const GRAB_TARGET_CM = 16 // bigger than the treat, so it is easy to pinch
+
 export interface HopObstacleLike {
   d: number
   h: number
@@ -80,6 +84,8 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
   private lane: SceneObject | null = null
   private obstacles: SceneObject[] = []
   private treat: SceneObject | null = null
+  private grab: SceneObject | null = null
+  private grabHandling: InteractableManipulation | null = null
   private pointer: SceneObject | null = null
   private spin = 0
   private shown = false
@@ -100,6 +106,17 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
     this.lane.enabled = false
     this.treat = this.makeObject("Treat", [{color: COLLECTIBLE_COLOR.dog, boxes: [[0, 0, 0, 8, 8, 8]]}])
     this.treat.enabled = false
+    this.grab = this.makeObject("GrabTreat", [{color: COLLECTIBLE_COLOR.dog, boxes: [[0, 0, 0, 7, 7, 7]]}])
+    const collider = this.grab.createComponent("Physics.ColliderComponent") as ColliderComponent
+    const box = Shape.createBoxShape()
+    box.size = new vec3(GRAB_TARGET_CM, GRAB_TARGET_CM, GRAB_TARGET_CM)
+    collider.shape = box
+    collider.fitVisual = false
+    this.grab.createComponent(Interactable.getTypeName())
+    this.grabHandling = this.grab.createComponent(InteractableManipulation.getTypeName()) as InteractableManipulation
+    this.grabHandling.setCanRotate(false)
+    this.grabHandling.setCanScale(false)
+    this.grab.enabled = false
     this.pointer = this.makeObject("Pointer", [{color: CYAN, boxes: [
       [0, POINTER_HEIGHT_CM, -POINTER_LENGTH_CM / 2, 3, 3, POINTER_LENGTH_CM],
       [0, POINTER_HEIGHT_CM, -POINTER_LENGTH_CM, 9, 9, 9],
@@ -196,8 +213,9 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
 
   // The Hop lane: from `origin` (the companion's spot) away from the user along headingDeg;
   // obstacles at d metres ahead with height h metres. null hides it.
-  setLane(origin: vec3 | null, headingDeg: number, obstacles: HopObstacleLike[]): void {
+  setLane(origin: vec3 | null, headingDeg: number, obstacles: HopObstacleLike[], laneM: number = 6): void {
     if (!this.lane) return
+    this.lane.getTransform().setLocalScale(new vec3(1, 1, laneM / 6))
     this.lane.enabled = origin !== null
     if (!origin) {
       for (const o of this.obstacles) o.enabled = false
@@ -223,6 +241,22 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
       so.getTransform().setLocalScale(new vec3(1, Math.max(0.05, ob.h), 1))
     }
   }
+
+  // The treat you grab and throw by hand (Specs: pinch it near your hand), or null to hide it.
+  setGrab(worldPos: vec3 | null): void {
+    if (!this.grab) return
+    this.grab.enabled = worldPos !== null
+    if (worldPos) this.grab.getTransform().setWorldPosition(worldPos)
+  }
+
+  onGrab(started: () => void, ended: () => void): void {
+    if (!this.grabHandling) return
+    this.grabHandling.onManipulationStart.add(started)
+    this.grabHandling.onManipulationEnd.add(ended)
+  }
+
+  getGrabWorldPos(): vec3 | null { return this.grab ? this.grab.getTransform().getWorldPosition() : null }
+  isGrabShown(): boolean { return !!this.grab && this.grab.enabled }
 
   isLaneShown(): boolean { return !!this.lane && this.lane.enabled }
   laneObstacleCount(): number { return this.obstacles.filter((o) => o.enabled).length }

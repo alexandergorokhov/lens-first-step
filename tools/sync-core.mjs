@@ -23,6 +23,7 @@ export const CORE_MODULES = [
   { src: "src/core/trip.ts", lens: "Assets/Scripts/FindYourWayTrip.ts" },
   { src: "src/core/astar.ts", lens: "Assets/Scripts/FindYourWayAStar.ts" },
   { src: "src/core/freewalk.ts", lens: "Assets/Scripts/FindYourWayFreeWalk.ts" },
+  { src: "src/core/tour.ts", lens: "Assets/Scripts/FindYourWayTour.ts" },
 ];
 
 // The one list of bundled maps (key, file served/downloaded, Lens copy name).

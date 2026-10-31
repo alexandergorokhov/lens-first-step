@@ -151,14 +151,14 @@
     - "// @input string companionModel = \"dog\" {\"hint\":\"The companion's model: same logic, only the look and the collectible change\", \"widget\":\"combobox\", \"values\":[{\"label\":\"Dog (treats)\", \"value\":\"dog\"}, {\"label\":\"Robot (bolts)\", \"value\":\"robot\"}, {\"label\":\"Rover (stars)\", \"value\":\"rover\"}]}"
     - '// @input bool companionOnAtStart {"hint":"Companion on when a trip starts (it can always be turned on or off on the app panel)"}'
     - '// @input string presetPreferences = "coffee,clothes,hardware" {"hint":"The saved preferences of the demo (category ids, comma separated)"}'
-    - '// @input float companionAheadM = 2.5 {"hint":"Free walk: how far ahead the companion walks, m", "widget":"slider", "min":1.5, "max":5, "step":0.1}'
+    - '// @input float companionAheadM = 7 {"hint":"How far ahead the companion walks, m. The floor only enters the view from about 5.4 m", "widget":"slider", "min":1.5, "max":10, "step":0.1}'
     - '// @input float pointSeconds = 3 {"hint":"Free walk: seconds the companion points at a matching shop", "widget":"slider", "min":1, "max":8, "step":0.5}'
     - '// @input float pointRadiusM = 8 {"hint":"Free walk: how near a matching shop must be for the companion to stop, m", "widget":"slider", "min":2, "max":15, "step":0.5}'
     - '// @input float maxStopsPerWalk {"hint":"Free walk: most stops per walk (0 = every match); stopping everywhere may get annoying", "widget":"slider", "min":0, "max":30, "step":1}'
     - '// @input float lookRangeM = 12 {"hint":"Free walk: how far a shop front can be looked at from, m", "widget":"slider", "min":3, "max":25, "step":0.5}'
     - '// @input vec3 dotOffset = "{28,18,-100}" {"hint":"The dot, from the head (right, up, forward), cm"}'
     - '// @input vec3 offerOffset = "{24,0,-100}" {"hint":"The offer list, from the head (right, up, forward), cm"}'
-    - "// @input float dotCm = 2 {\"hint\":\"The dot's size, cm\", \"widget\":\"slider\", \"min\":1, \"max\":5, \"step\":0.5}"
+    - "// @input float dotCm = 3 {\"hint\":\"The dot's size, cm\", \"widget\":\"slider\", \"min\":1, \"max\":5, \"step\":0.5}"
     - "// @input float dotPinchCm = 8 {\"hint\":\"The dot's invisible pinch area, cm: a small target at the edge of view is hard to aim at\", \"widget\":\"slider\", \"min\":2, \"max\":14, \"step\":0.5}"
     - '// @input string multiStops = "pharmacy,iceCream,sushi" {"hint":"Multi-stop trip on maps that have these place ids (comma separated, ordered for the shortest walk); empty = off"}'
     - '// @input vec3 appPanelOffset = "{-30,-38,-55}" {"hint":"App panel offset from the head (right, up, forward), cm — waist height, to the left"}'

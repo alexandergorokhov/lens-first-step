@@ -24,6 +24,10 @@ export class FywS1StartAtSignScenario extends Scenario {
     const d = Math.sqrt((s.x - c.x) ** 2 + (s.z - c.z) ** 2)
     expect(d < 30, "the sign is under your feet (" + d.toFixed(0) + " cm)").toBe(true)
     expect(main.isScanSignVisible(), "scan panel ahead").toBe(true)
+    // The whole panel fits the ~37° tall view: its centre sits a little below eye level, not at waist height.
+    const p = main.getScanSignWorldPos()
+    const below = Math.atan2(c.y - p.y, Math.sqrt((p.x - c.x) ** 2 + (p.z - c.z) ** 2)) * 180 / Math.PI
+    expect(below > 0 && below < 10, "scan panel a little below eye level (" + below.toFixed(1) + " deg)").toBe(true)
     await startTrip(it, "walk")
     log("s1 pass")
   }

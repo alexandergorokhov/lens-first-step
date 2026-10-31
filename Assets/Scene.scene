@@ -124,7 +124,6 @@
   EnvMapRotation: 0.000000
   DiffuseEnvTexture: !<reference> 00000000-0000-0000-0000-000000000000
   SpecularEnvTexture: !<reference> 00000000-0000-0000-0000-000000000000
-  SpecularCubemapTexture: !<reference> 00000000-0000-0000-0000-000000000000
   Color: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
   ShadowColor: {x: 0.000000, y: 0.000000, z: 0.000000, w: 1.000000}
   DynamicEnvInputTexture: !<reference> 00000000-0000-0000-0000-000000000000
@@ -172,7 +171,6 @@
   EnvMapRotation: 0.000000
   DiffuseEnvTexture: !<reference> 2013a19b-93c1-4f21-b7ea-876a33550c7b
   SpecularEnvTexture: !<reference> d795fd46-e16b-4cb9-8dfb-4ef227298f7a
-  SpecularCubemapTexture: !<reference> 00000000-0000-0000-0000-000000000000
   Color: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
   ShadowColor: {x: 0.000000, y: 0.000000, z: 0.000000, w: 1.000000}
   DynamicEnvInputTexture: !<reference> 00000000-0000-0000-0000-000000000000
@@ -195,6 +193,7 @@
     groundColor: true
     pathColor: true
     wallHeightM: true
+    previewBackdrop: true
   ScriptTypesDefault:
     {}
   ScriptInputs:
@@ -207,6 +206,7 @@
       groundColor: !<Vec4> {x: 0.750000, y: 1.000000, z: 0.820000, w: 0.080000}
       pathColor: !<Vec4> {x: 1.000000, y: 0.950000, z: 0.850000, w: 0.220000}
       wallHeightM: !<float> 3.000000
+      previewBackdrop: true
   ScriptTypes:
     "":
       {}
@@ -489,7 +489,6 @@
     Grab me to pilot 
     the spaceship across 
     the galaxy
-  CustomMaterial: !<reference> 00000000-0000-0000-0000-000000000000
   Editable: false
   ShowEditingPreview: true
   TouchHandler: !<reference> 00000000-0000-0000-0000-000000000000
@@ -574,7 +573,6 @@
   ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
   ShadowDensity: 1.000000
   Text: "Pinch A "
-  CustomMaterial: !<reference> 00000000-0000-0000-0000-000000000000
   Editable: false
   ShowEditingPreview: true
   TouchHandler: !<reference> 00000000-0000-0000-0000-000000000000
@@ -2170,7 +2168,6 @@
     We recommend you to interface with these configuration via API so to keep the flow more code based instead of scene-hierarchy and inspector based (AI will pick up the edits better). 
     
     Enable Examples UIKit or Examples Interaction to start exploring in the Scene Hierarchy
-  CustomMaterial: !<reference> 00000000-0000-0000-0000-000000000000
   Editable: false
   ShowEditingPreview: true
   TouchHandler: !<reference> 00000000-0000-0000-0000-000000000000
@@ -2257,7 +2254,6 @@
   Text: |-
     Pick your interaction modes 
     and discover your powers 
-  CustomMaterial: !<reference> 00000000-0000-0000-0000-000000000000
   Editable: false
   ShowEditingPreview: true
   TouchHandler: !<reference> 00000000-0000-0000-0000-000000000000
@@ -2631,7 +2627,6 @@
   Text: |-
     Click Next and Previous to explore the examples.
     Get inspired, discovering how to interact with objects in AR.
-  CustomMaterial: !<reference> 00000000-0000-0000-0000-000000000000
   Editable: false
   ShowEditingPreview: true
   TouchHandler: !<reference> 00000000-0000-0000-0000-000000000000
@@ -2766,7 +2761,6 @@
   ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
   ShadowDensity: 1.000000
   Text: Scale with Pinch
-  CustomMaterial: !<reference> 00000000-0000-0000-0000-000000000000
   Editable: false
   ShowEditingPreview: true
   TouchHandler: !<reference> 00000000-0000-0000-0000-000000000000
@@ -3032,7 +3026,6 @@
   Text: |-
     Scale with Hand
     Distance 
-  CustomMaterial: !<reference> 00000000-0000-0000-0000-000000000000
   Editable: false
   ShowEditingPreview: true
   TouchHandler: !<reference> 00000000-0000-0000-0000-000000000000
@@ -3504,7 +3497,6 @@
   ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
   ShadowDensity: 1.000000
   Text: Name of the component here
-  CustomMaterial: !<reference> 00000000-0000-0000-0000-000000000000
   Editable: false
   ShowEditingPreview: true
   TouchHandler: !<reference> 00000000-0000-0000-0000-000000000000
@@ -3609,7 +3601,6 @@
   ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
   ShadowDensity: 1.000000
   Text: "Try grabbing one object, or this bar "
-  CustomMaterial: !<reference> 00000000-0000-0000-0000-000000000000
   Editable: false
   ShowEditingPreview: true
   TouchHandler: !<reference> 00000000-0000-0000-0000-000000000000
@@ -3825,7 +3816,6 @@
   ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
   ShadowDensity: 1.000000
   Text: Rotate with Pinch
-  CustomMaterial: !<reference> 00000000-0000-0000-0000-000000000000
   Editable: false
   ShowEditingPreview: true
   TouchHandler: !<reference> 00000000-0000-0000-0000-000000000000
@@ -4391,7 +4381,6 @@
   Text: |-
     Pick your interaction modes and discover your powers.
     On device, select the mode and test pinching or distantiate your hands, check out the geometry reacting to your motion. 
-  CustomMaterial: !<reference> 00000000-0000-0000-0000-000000000000
   Editable: false
   ShowEditingPreview: true
   TouchHandler: !<reference> 00000000-0000-0000-0000-000000000000
@@ -4844,7 +4833,6 @@
     Click Next and Previous to explore the UI examples.
     You can use these UIs in your Lens.
     The UI elements don’t trigger any actions when pressed, they’re just placeholders.
-  CustomMaterial: !<reference> 00000000-0000-0000-0000-000000000000
   Editable: false
   ShowEditingPreview: true
   TouchHandler: !<reference> 00000000-0000-0000-0000-000000000000
@@ -5510,7 +5498,6 @@
   Text: |
     Hand A 
 
-  CustomMaterial: !<reference> 00000000-0000-0000-0000-000000000000
   Editable: false
   ShowEditingPreview: true
   TouchHandler: !<reference> 00000000-0000-0000-0000-000000000000
@@ -6041,7 +6028,6 @@
   Text: |-
     Remove test mode from manager before
     building on device
-  CustomMaterial: !<reference> 00000000-0000-0000-0000-000000000000
   Editable: false
   ShowEditingPreview: true
   TouchHandler: !<reference> 00000000-0000-0000-0000-000000000000
@@ -7401,7 +7387,6 @@
   ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
   ShadowDensity: 1.000000
   Text: Name of the component here
-  CustomMaterial: !<reference> 00000000-0000-0000-0000-000000000000
   Editable: false
   ShowEditingPreview: true
   TouchHandler: !<reference> 00000000-0000-0000-0000-000000000000
@@ -7955,7 +7940,6 @@
   ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
   ShadowDensity: 1.000000
   Text: "1/9 "
-  CustomMaterial: !<reference> 00000000-0000-0000-0000-000000000000
   Editable: false
   ShowEditingPreview: true
   TouchHandler: !<reference> 00000000-0000-0000-0000-000000000000
@@ -8258,7 +8242,6 @@
   Text: |
     Pinch B
 
-  CustomMaterial: !<reference> 00000000-0000-0000-0000-000000000000
   Editable: false
   ShowEditingPreview: true
   TouchHandler: !<reference> 00000000-0000-0000-0000-000000000000
@@ -8516,8 +8499,15 @@
     halfViewDeg: true
     companionModel: true
     companionOnAtStart: true
+    presetPreferences: true
+    pointSeconds: true
+    pointRadiusM: true
+    maxStopsPerWalk: true
+    lookRangeM: true
+    dotPinchCm: true
     multiStops: true
     appPanelOffset: true
+    playPanelOffset: true
   ScriptTypesDefault:
     {}
   ScriptInputs:
@@ -8547,8 +8537,19 @@
       modePanelOffset: !<Vec3> {x: 8.000000, y: -4.000000, z: -100.000000}
       companionModel: dog
       companionOnAtStart: false
+      presetPreferences: "coffee,clothes,hardware"
+      companionAheadM: !<float> 7.000000
+      pointSeconds: !<float> 3.000000
+      pointRadiusM: !<float> 8.000000
+      maxStopsPerWalk: !<float> 0.000000
+      lookRangeM: !<float> 12.000000
+      dotOffset: !<Vec3> {x: 22.000000, y: 16.000000, z: -100.000000}
+      offerOffset: !<Vec3> {x: 15.000000, y: 0.000000, z: -100.000000}
+      dotCm: !<float> 3.000000
+      dotPinchCm: !<float> 8.000000
       multiStops: "pharmacy,iceCream,sushi"
       appPanelOffset: !<Vec3> {x: -30.000000, y: -38.000000, z: -55.000000}
+      playPanelOffset: !<Vec3> {x: -34.000000, y: -14.000000, z: -55.000000}
       demoOffset: !<Vec3> {x: -15.000000, y: -14.000000, z: -80.000000}
   ScriptTypes:
     "":
@@ -8631,7 +8632,6 @@
   ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
   ShadowDensity: 1.000000
   Text: "1/9 "
-  CustomMaterial: !<reference> 00000000-0000-0000-0000-000000000000
   Editable: false
   ShowEditingPreview: true
   TouchHandler: !<reference> 00000000-0000-0000-0000-000000000000
@@ -8763,7 +8763,6 @@
   Text: |-
     Rotate with Hand 
     Distance 
-  CustomMaterial: !<reference> 00000000-0000-0000-0000-000000000000
   Editable: false
   ShowEditingPreview: true
   TouchHandler: !<reference> 00000000-0000-0000-0000-000000000000
@@ -8934,7 +8933,6 @@
   Text: |
     Hand B
 
-  CustomMaterial: !<reference> 00000000-0000-0000-0000-000000000000
   Editable: false
   ShowEditingPreview: true
   TouchHandler: !<reference> 00000000-0000-0000-0000-000000000000

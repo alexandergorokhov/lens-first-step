@@ -14,7 +14,7 @@ Approved test scenarios and where each is tested.
   seated height and the scanned sign are simulated with test hooks on `FindYourWayMain`
   (LEAF cannot drive WASD/Q/E).
 
-Status as of the last run: Node 291 tests, all passing (offline, `OFFLINE=1`, the live gist download
+Status as of the last run: Node 327 tests, all passing (offline, `OFFLINE=1`, the live gist download
 is skipped). `src/core/tests/docs.test.ts` checks this count, the test list and every test named
 below. LEAF 19 of 19 passed before the brief-2 work. The brief-2 features below now have their Lens
 UI (type-checked) and 11 more LEAF scenarios written test-first; **those 11 have not been run yet**
@@ -236,3 +236,15 @@ Dijkstra (`shortestTree`), which the Lens still uses; A* is for big maps (a mall
   maps listed in `src/core/data/index.json` into `Assets/`.
 - E3 uses the map's `assistance` node; the route to it is returned with the ask-staff result
   so the Lens can draw it.
+
+## After brief 3: voice, the map picker, Tour, seated play, catch by hand
+
+| ID | Scenario | Test |
+|---|---|---|
+| v1 | Talk: what you say reaches the plain-code matcher; no match says so | LEAF `v1-voice-reaches-the-matcher` (words fed in; the live mic is a manual check) |
+| pm1 | "Where to?" as a map, floor by floor; a pinch picks the place | LEAF `pm1-pick-a-place-on-the-map`, Node U1-U13 |
+| tr1 | Tour: preferences, then the matching shops stop by stop | LEAF `tr1-tour-stop-by-stop`, Node U1-U13 |
+| sp1 | Seated: play moves close and short, a pinch jumps, standing up ends it | LEAF `sp1-seated-play`, Node S1-S9 |
+| gt1 | Catch by hand: pinch the treat, swing, let go; it lands within reach | LEAF `gt1-grab-and-throw`, Node G1-G3 |
+| R1-R3 | The video edit keeps the right stretches and times the captions | Node `reel-edit.test.ts` |
+| Map 5a | A floor-plan photo to a map: `npm run map:from-plan` | Node `map-from-plan.test.ts` |

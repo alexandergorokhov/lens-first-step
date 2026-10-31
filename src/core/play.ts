@@ -129,8 +129,12 @@ export class HopGame {
   private nextGap = 0;
   private rand: () => number;
 
-  constructor(rand: () => number = Math.random) {
+  // laneM: the lane length (m); the standing lane by default, SEATED_LANE when seated.
+  readonly lane: number;
+
+  constructor(rand: () => number = Math.random, laneM: number = HOP_LANE) {
     this.rand = rand;
+    this.lane = laneM;
   }
 
   get shaking(): boolean {
@@ -208,7 +212,7 @@ export class HopGame {
     if (!last) {
       this.untilFirst -= dt;
       if (this.untilFirst <= 0) this.spawn();
-    } else if (HOP_LANE - last.d >= this.nextGap) this.spawn();
+    } else if (this.lane - last.d >= this.nextGap) this.spawn();
     for (const o of this.obstacles) {
       const reach = BODY_HALF + o.w / 2;
       if (Math.abs(o.d) < reach && this.petY < o.h) {
@@ -226,7 +230,7 @@ export class HopGame {
   }
 
   private spawn(): void {
-    this.obstacles.push({ d: HOP_LANE, h: 0.2 + this.rand() * 0.15, w: OBSTACLE_WIDTH, passed: false });
+    this.obstacles.push({ d: this.lane, h: 0.2 + this.rand() * 0.15, w: OBSTACLE_WIDTH, passed: false });
     this.nextGap = this.gap();
   }
 
@@ -255,19 +259,38 @@ export function canThrow(s: { moving: boolean; nearChange: boolean; cardShowing:
 }
 
 // Where a treat released at `hand` with velocity `v` (m/s) lands on the floor at height floorY:
-// always on your floor, at most THROW_MAX away horizontally.
-export function landingSpot(hand: PlayXYZ, v: PlayXYZ, floorY: number): PlayXYZ {
+// always on your floor, at most maxM away horizontally.
+// maxM caps the distance (THROW_MAX; SEATED_THROW_MAX when seated).
+export function landingSpot(hand: PlayXYZ, v: PlayXYZ, floorY: number, maxM: number = THROW_MAX): PlayXYZ {
   const h = Math.max(0, hand.y - floorY);
   // Time to fall from h with upward speed v.y: h + v.y t - g t²/2 = 0.
   const t = (v.y + Math.sqrt(Math.max(0, v.y * v.y + 2 * THROW_GRAVITY * h))) / THROW_GRAVITY;
   let dx = v.x * t;
   let dz = v.z * t;
   const d = Math.hypot(dx, dz);
-  if (d > THROW_MAX) {
-    dx *= THROW_MAX / d;
-    dz *= THROW_MAX / d;
+  if (d > maxM) {
+    dx *= maxM / d;
+    dz *= maxM / d;
   }
   return { x: hand.x + dx, y: floorY, z: hand.z + dz };
+}
+
+// A throw by hand: the treat's velocity over the last RELEASE_WINDOW seconds of the swing. Slower
+// than THROW_MIN_SPEED (m/s) you only let go of it, so there is no throw (null).
+export const RELEASE_WINDOW = 0.15;
+export const THROW_MIN_SPEED = 0.5;
+
+export function releaseVelocity(samples: { t: number; x: number; y: number; z: number }[]): PlayXYZ | null {
+  if (samples.length < 2) return null;
+  const last = samples[samples.length - 1];
+  // The oldest sample in the window; at a low frame rate, at least the one before the last.
+  let i = samples.length - 2;
+  while (i > 0 && last.t - samples[i - 1].t <= RELEASE_WINDOW) i--;
+  const first = samples[i];
+  const dt = last.t - first.t;
+  if (dt <= 0) return null;
+  const v = { x: (last.x - first.x) / dt, y: (last.y - first.y) / dt, z: (last.z - first.z) / dt };
+  return Math.hypot(v.x, v.y, v.z) < THROW_MIN_SPEED ? null : v;
 }
 
 export type CatchPhase = "idle" | "fetch" | "return";
@@ -318,4 +341,84 @@ export class CatchGame {
     }
     return { pos: this.pos, phase: this.phase, caught };
   }
+}
+
+// ---- Seated play ----
+// Sitting down (a bench at the gate) the same games play on a small patch of floor in front of
+// the seat, all inside the ~37 degree tall view from seated eye height, so there is nothing to
+// look up at or turn for. Nothing here reads or changes the route, the distance or the destination.
+
+// Seated = the head stays SEATED_DROP below the standing height, or under SEATED_HEAD_MAX above
+// the floor, for SEATED_SECONDS. Standing up ends it on that frame.
+export const SEATED_DROP = 0.4; // m below the standing height
+export const SEATED_HEAD_MAX = 1.3; // m above the floor
+export const SEATED_SECONDS = 2;
+
+export class SeatedDetector {
+  seated = false;
+  private low = 0;
+
+  // headHeight: head above the floor (m); standingHeight: your measured standing head height (m).
+  update(headHeight: number, standingHeight: number, dt: number): boolean {
+    const isLow = headHeight <= standingHeight - SEATED_DROP || headHeight < SEATED_HEAD_MAX;
+    if (!isLow) {
+      this.low = 0;
+      this.seated = false;
+    } else {
+      this.low += dt;
+      if (this.low >= SEATED_SECONDS) this.seated = true;
+    }
+    return this.seated;
+  }
+
+  reset(): void {
+    this.low = 0;
+    this.seated = false;
+  }
+}
+
+export const SEATED_NEAR = 1.0; // the companion's spot: this far ahead of the seat, on the floor (m)
+export const SEATED_LANE = 3; // Hop lane length when seated (m)
+export const SEATED_THROW_MAX = 3; // treats land at most this far from you when seated (m)
+export const SEATED_VIEW_DEG = 37; // the tall field of view (degrees)
+export const SEATED_EYE_MAX = SEATED_HEAD_MAX; // seated eye height is at most this above the floor (m)
+
+export interface SeatedSpot {
+  start: PlayXYZ; // the companion's end of the lane, on the floor
+  far: PlayXYZ; // the far end of the lane, on the floor
+  laneM: number; // lane length for new HopGame(rand, laneM)
+  gazePitchDeg: number; // the pitch that centres the play area in the view (negative = down)
+  spanDeg: number; // vertical angle from the near end to the far end; below SEATED_VIEW_DEG
+}
+
+// Where seated play happens: SEATED_NEAR straight ahead of `head` along `facing` (x, z; any
+// length, north if it is zero), the lane running on away from you on floor height floorY.
+export function seatedPlaySpot(head: PlayXYZ, facing: { x: number; z: number }, floorY: number): SeatedSpot {
+  let fx = facing.x;
+  let fz = facing.z;
+  const len = Math.hypot(fx, fz);
+  if (len < 1e-6) {
+    fx = 0;
+    fz = 1;
+  } else {
+    fx /= len;
+    fz /= len;
+  }
+  const eye = Math.max(0.1, head.y - floorY);
+  const at = (m: number): PlayXYZ => ({ x: head.x + fx * m, y: floorY, z: head.z + fz * m });
+  const nearDown = (Math.atan2(eye, SEATED_NEAR) * 180) / Math.PI;
+  const farDown = (Math.atan2(eye, SEATED_NEAR + SEATED_LANE) * 180) / Math.PI;
+  return {
+    start: at(SEATED_NEAR),
+    far: at(SEATED_NEAR + SEATED_LANE),
+    laneM: SEATED_LANE,
+    gazePitchDeg: -(nearDown + farDown) / 2,
+    spanDeg: nearDown - farDown,
+  };
+}
+
+// Seated play runs only while you are seated with the companion on and no card showing. A card
+// (gate change, boarding, lift out) or standing up ends it, so you never miss the flight.
+export function seatedPlayAllowed(s: { seated: boolean; companionOn: boolean; cardShowing: boolean }): boolean {
+  return s.seated && s.companionOn && !s.cardShowing;
 }

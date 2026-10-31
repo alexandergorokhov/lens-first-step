@@ -53,7 +53,10 @@ import {lineOnLevel, nextTurnAlong, turnOutOfView, yawFromForward, yawTo} from "
 import {destinationFloorText, floorCueFor, tripPill} from "./FindYourWayPlace"
 import {Companion, companionOf, COMPANIONS, PetGuide, treatsResult, treatsText} from "./FindYourWayPet"
 import {Place, placesOf, placeTag, PointingCoach, POINT_SECONDS, visiblePlaces} from "./FindYourWayPlaces"
-import {CatchGame, canThrow, HopGame, hopText, landingSpot, PlayGate, RaiseDetector} from "./FindYourWayPlay"
+import {CatchGame, canThrow, HOP_LANE, HopGame, hopText, landingSpot, PlayGate, PlayXYZ, RaiseDetector, releaseVelocity, SEATED_LANE, SEATED_THROW_MAX, SeatedDetector, seatedPlaySpot, THROW_MAX} from "./FindYourWayPlay"
+import {mapLevels, tourStops} from "./FindYourWayTour"
+import {FindYourWayVoice} from "./FindYourWayVoice"
+import {FindYourWayPickMapUI} from "./FindYourWayPickMapUI"
 import {MultiStopTrip, orderStops} from "./FindYourWayTrip"
 import {mapLogLines, MappedEdgeKind, MapRecorder, MappingTag, tripAfterSaving, WalkTracer} from "./FindYourWayMapping"
 import {peekMap, peekModel} from "./FindYourWayPeek"
@@ -86,6 +89,8 @@ export type Phase = "scan" | "loading" | "choose" | "prefs" | "free" | "mode" | 
 // Heights (cm above a node's floor) of the signs placed in the building.
 const SCAN_SIGN_CM = 125
 const DEST_SIGN_CM = 330 // overhead destination signs
+const SHOP_SIGN_CM = 300 // a shop's name, on its awning
+const SHOP_SIGN_SCALE = 7
 const ASSIST_SIGN_CM = 280
 const LIFT_SIGN_CM = 290
 const CONNECTION_SIGN_CM = 260 // escalator / stairs / ramp signs
@@ -96,7 +101,9 @@ const ARRIVAL_CARD_CM = 200
 const LINE_LIFT_CM = 1 // the floor line sits 1 cm above the floor
 const CLOSED_SIGN_TEXT = "Closed — re-routing"
 const RIDE_CARD_S = 2.5
-const SCAN_PANEL_AHEAD_CM = 120
+const SCAN_PANEL_AHEAD_CM = 160
+const SCAN_PANEL_RIGHT_CM = 10 // clear of the Demo controls on the left
+const SCAN_PANEL_BELOW_EYE_CM = 15
 const DEST_NOTE_S = 3.5
 const PLACE_FACE_CM = 0 // place icons sit on the node (the shop front)
 // Hop lane: starts this far ahead of you (m), so you see the companion from behind.
@@ -104,6 +111,10 @@ const HOP_AHEAD_M = 1.3
 // Catch: the treat leaves your hand at this height above the floor (m) and speed (m/s).
 const THROW_FROM_M = 1.2
 const THROW_SPEED = 6
+// The treat you grab floats here, relative to your head (cm).
+const GRAB_OFFSET = new vec3(20, -28, -45)
+// Voice: stop listening after this long with no finished phrase (s).
+const VOICE_TIMEOUT_S = 8
 const COMPANION_IDS = ["dog", "robot", "rover"]
 const CAUGHT_LINE_S = 2.5
 // Learn this place: the saved map lives in the device's persistent storage under this key.
@@ -222,9 +233,9 @@ export class FindYourWayMain extends BaseScriptComponent {
   presetPreferences: string = "coffee,clothes,hardware"
 
   @input
-  @hint("Free walk: how far ahead the companion walks, m")
-  @widget(new SliderWidget(1.5, 5, 0.1))
-  companionAheadM: number = 2.5
+  @hint("How far ahead the companion walks, m. The floor only enters the view from about 5.4 m")
+  @widget(new SliderWidget(1.5, 10, 0.1))
+  companionAheadM: number = 7
 
   @input
   @hint("Free walk: seconds the companion points at a matching shop")
@@ -248,16 +259,16 @@ export class FindYourWayMain extends BaseScriptComponent {
 
   @input("vec3", "{28,18,-100}")
   @hint("The dot, from the head (right, up, forward), cm")
-  dotOffset: vec3 = new vec3(28, 18, -100)
+  dotOffset: vec3 = new vec3(22, 16, -100)
 
   @input("vec3", "{24,0,-100}")
   @hint("The offer list, from the head (right, up, forward), cm")
-  offerOffset: vec3 = new vec3(24, 0, -100)
+  offerOffset: vec3 = new vec3(15, 0, -100)
 
   @input
   @hint("The dot's size, cm")
   @widget(new SliderWidget(1, 5, 0.5))
-  dotCm: number = 2
+  dotCm: number = 3
 
   @input
   @hint("The dot's invisible pinch area, cm: a small target at the edge of view is hard to aim at")
@@ -340,6 +351,15 @@ export class FindYourWayMain extends BaseScriptComponent {
   private trip: TripAhead | null = null
   private gate = new PlayGate()
   private hop = new HopGame()
+  private seated = new SeatedDetector()
+  private hopSeated = false
+  private grabbing = false
+  private grabSamples: {t: number; x: number; y: number; z: number}[] = []
+  private voice = new FindYourWayVoice()
+  private voiceTry = 0
+  private tourIds: string[] | null = null
+  private tourPending = false
+  private pickMap: FindYourWayPickMapUI | null = null
   private hopOrigin: Vec3 | null = null
   private hopHeading = 0
   private raiseByHand: {[hand: string]: RaiseDetector} = {left: new RaiseDetector(), right: new RaiseDetector()}
@@ -414,6 +434,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.modePanel.onWalk.add(() => this.chooseMode("walk"))
     this.modePanel.onStepFree.add(() => this.chooseMode("stepFree"))
     this.modePanel.onSayIt.add(() => this.sayIt())
+    this.modePanel.onTalk.add(() => this.talk())
     this.modePanel.onWhereTo.add(() => this.openWhereTo())
     this.buildingUI.onScan.add(() => this.scanSign())
     this.buildingUI.onClosure.add((id) => this.closeConnection(id))
@@ -469,6 +490,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.homePanel = hp.createComponent(FindYourWayHomePanelUI.getTypeName()) as FindYourWayHomePanelUI
     this.homePanel.setup({
       onFreeWalk: () => this.chooseFreeWalk(),
+      onTour: () => this.chooseTour(),
       onGoTo: () => this.chooseGoTo(),
       onBuilder: () => this.startMapping(),
     })
@@ -490,7 +512,11 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.bubble.setup()
     const wt = global.scene.createSceneObject("WhereToPanel")
     this.whereTo = wt.createComponent(FindYourWayWhereToUI.getTypeName()) as FindYourWayWhereToUI
-    this.whereTo.setup((id) => this.pickDestination(id), () => this.closeWhereTo())
+    this.whereTo.setup((id) => this.pickDestination(id), () => this.closeWhereTo(), () => this.openPickMap())
+    const pm = global.scene.createSceneObject("PickMapPanel")
+    this.pickMap = pm.createComponent(FindYourWayPickMapUI.getTypeName()) as FindYourWayPickMapUI
+    this.pickMap.setup((id) => this.pickDestination(id), () => this.closeWhereTo())
+    if (this.view) this.view.onGrab(() => this.grabStarted(), () => this.grabEnded())
   }
 
   // ── The three modes ──────────────────────────────────────────────────────
@@ -536,6 +562,43 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.pickDestination(id)
   }
 
+  // Talk: the same matcher on what you really said (Snap's ASR module).
+  private talk(): void {
+    if (this.phase !== "mode") return
+    if (this.voice.listening) {
+      this.voice.stop()
+      this.modePanel.setNote("Say it, or try Where to?")
+      return
+    }
+    this.modePanel.setNote("Listening…")
+    this.voice.start((text, final) => this.heard(text, final), (why) => {
+      print("[FYW] voice: " + why)
+      this.modePanel.setNote("didn't catch that: try Where to?")
+    })
+    print("[FYW] voice: " + (this.voice.listening ? "listening" : "not available"))
+    const attempt = ++this.voiceTry
+    const ev = this.createEvent("DelayedCallbackEvent")
+    ev.bind(() => {
+      if (attempt !== this.voiceTry || !this.voice.listening) return
+      this.voice.stop()
+      this.modePanel.setNote("didn't catch that: try Where to?")
+    })
+    ev.reset(VOICE_TIMEOUT_S)
+  }
+
+  private heard(text: string, final: boolean): void {
+    if (this.phase !== "mode") return
+    if (!final) {
+      this.modePanel.setNote("Heard: " + text)
+      return
+    }
+    this.voice.stop()
+    const id = matchDestination(this.map, text)
+    print("[FYW] heard: " + text + " -> " + id)
+    if (id) this.pickDestination(id)
+    else this.modePanel.setNote("didn't catch that: try Where to?")
+  }
+
   private openWhereTo(): void {
     if (this.phase !== "mode" || !this.whereTo) return
     this.modePanel.hide()
@@ -543,8 +606,17 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.whereTo.open(destinationsOf(this.map))
   }
 
+  // The no-voice way, as a map: the places where they are, on the floor you're on.
+  private openPickMap(): void {
+    if (this.phase !== "mode" || !this.pickMap) return
+    if (this.whereTo) this.whereTo.show(false)
+    this.placeAhead(this.pickMap.getSceneObject())
+    this.pickMap.open(this.map, this.userPos().y)
+  }
+
   private closeWhereTo(): void {
     if (this.whereTo) this.whereTo.show(false)
+    if (this.pickMap) this.pickMap.show(false)
     if (this.phase === "mode") this.modePanel.show()
   }
 
@@ -565,12 +637,45 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (this.phase !== "choose" || !this.prefsPanel) return
     if (this.homePanel) this.homePanel.show(false)
     this.phase = "prefs"
+    this.tourPending = false
     this.placeAhead(this.prefsPanel.getSceneObject())
     this.prefsPanel.open(interestList(this.map), this.presetList(), this.companion.name, this.freeCompanion)
   }
 
+  // Tour: the same preferences, then the shops they match, stop by stop.
+  private chooseTour(): void {
+    if (this.phase !== "choose" || !this.prefsPanel) return
+    if (this.homePanel) this.homePanel.show(false)
+    this.phase = "prefs"
+    this.tourPending = true
+    this.placeAhead(this.prefsPanel.getSceneObject())
+    this.prefsPanel.open(interestList(this.map), this.presetList(), this.companion.name, this.freeCompanion)
+  }
+
+  private startTour(): void {
+    if (!this.prefsPanel) return
+    this.tourPending = false
+    this.prefsPanel.show(false)
+    this.profile = "walk"
+    const startId = this.startOverride || this.tripStart || this.place.start
+    const ids = tourStops(this.map, startId, this.prefsPanel.getPicked(), this.stopDistance(), orderStops)
+    if (ids.length === 0) {
+      this.hud.showCard("No shops here match your preferences", "info")
+      this.enterChoose()
+      return
+    }
+    this.tourIds = ids
+    print("[FYW] tour: " + ids.join(" > "))
+    this.beginTrip()
+    this.setCompanionOn(this.freeCompanion)
+  }
+
   private startFreeWalk(): void {
     if (this.phase !== "prefs" || !this.prefsPanel) return
+    if (this.tourPending) {
+      this.startTour()
+      return
+    }
     this.prefsPanel.show(false)
     this.free = new FreeWalk(this.map, this.prefsPanel.getPicked(), {
       aheadM: this.companionAheadM,
@@ -883,6 +988,10 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.tripGeneration++
     this.tripDestination = null
     this.tripStart = null
+    this.tourIds = null
+    this.tourPending = false
+    this.voice.stop()
+    if (this.pickMap) this.pickMap.show(false)
     this.standingEyeY = null
     this.downloadOverride = null
     this.downloadDelayMs = 0
@@ -921,6 +1030,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   private chooseMode(profile: Profile): void {
     if (this.phase !== "mode") return
     this.profile = profile
+    this.voice.stop()
     this.modePanel.hide()
     this.demoControls.setStatus(profile === "walk" ? "Mode: Walk" : "Mode: Step-Free")
     print("[FYW] mode " + profile)
@@ -1247,8 +1357,10 @@ export class FindYourWayMain extends BaseScriptComponent {
     ui.clear()
     const start = findNode(map, place.start)
     if (start) {
-      // Standing at the sign: the scan panel floats ~1.2 m ahead (on Specs you just look at the sign).
-      const scanAt = this.local(start, SCAN_SIGN_CM).add(this.startAtSign ? new vec3(0, 0, -SCAN_PANEL_AHEAD_CM) : new vec3(0, 0, 0))
+      // Standing at the sign: the scan panel floats ~1.6 m ahead (on Specs you just look at the sign).
+      const scanAt = this.startAtSign
+        ? this.local(start, this.eye() - SCAN_PANEL_BELOW_EYE_CM).add(new vec3(SCAN_PANEL_RIGHT_CM, 0, -SCAN_PANEL_AHEAD_CM))
+        : this.local(start, SCAN_SIGN_CM)
       ui.setScanSign(scanAt, place.scanSign.title, place.scanSign.button,
         place.scanSign.hint, place.standInLabel)
       ui.addPlaceSign("StandIn", this.local(start, PLACE_SIGN_CM).add(new vec3(-260, 0, -150)),
@@ -1259,7 +1371,7 @@ export class FindYourWayMain extends BaseScriptComponent {
         ui.addPlaceSign(n.id, this.local(n, DEST_SIGN_CM), n.label || n.id, n.type || null, n.icon || null)
       } else if (n.kind === "place" && n.front) {
         // The shop's name over its front, readable from the walkway.
-        ui.addPlaceSign(n.id, this.local(n, DEST_SIGN_CM), n.label || n.id, null, null)
+        ui.addPlaceSign(n.id, this.local(n, SHOP_SIGN_CM), n.label || n.id, null, null, SHOP_SIGN_SCALE)
       } else if (n.kind === "assistance") {
         ui.addPlaceSign(n.id, this.local(n, ASSIST_SIGN_CM), n.label || n.id, null, "info")
       } else if (n.kind === "lift") {
@@ -1454,6 +1566,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   private resetGuide(): void {
     this.guide = new PetGuide()
     this.guide.companion = this.companion
+    this.guide.lead = this.companionAheadM
     this.coach = null
     this.pointed = null
     this.travelled = 0
@@ -1462,7 +1575,10 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.stops = null
     this.stopPlay()
     this.gate.reset()
-    this.catchGame.cancel()
+    this.seated.reset()
+    this.grabbing = false
+    if (this.view) this.view.setGrab(null)
+    this.catchGame = new CatchGame()
     this.catchSpot = null
     if (this.view) {
       this.view.setVisible(false)
@@ -1510,10 +1626,12 @@ export class FindYourWayMain extends BaseScriptComponent {
     const dt = getDeltaTime()
     const now = getTime()
     this.gate.update(pos, dt, {companionOn: this.guide.on, cardShowing: this.cardShowing()})
-    if (this.hop.phase !== "idle" && !this.gate.canPlay) this.stopPlay()
+    this.seated.update(this.headAboveFloorM(pos), this.eye() / 100, dt)
+    if (this.hop.phase !== "idle" && (!this.gate.canPlay || this.hopSeated !== this.seated.seated)) this.stopPlay()
     const nearChange = !!this.trip && !!this.trip.next && this.trip.next.metres < 10
     const throwOk = canThrow({moving: !this.gate.canPlay, nearChange, cardShowing: this.cardShowing(), companionOn: this.guide.on})
     if (this.appPanel) this.appPanel.setPlay(this.gate.canPlay, this.hop.phase !== "idle", throwOk && this.catchGame.phase === "idle")
+    this.updateGrabTreat(throwOk && this.catchGame.phase === "idle" && this.hop.phase === "idle")
     if (!this.guide.on) {
       this.hud.setPlayLine(null)
       return
@@ -1522,7 +1640,7 @@ export class FindYourWayMain extends BaseScriptComponent {
       if (this.handRaised()) this.jump()
       this.hop.update(dt)
       const origin = this.hopOrigin as Vec3
-      this.view.setLane(this.local(origin), this.hopHeading, this.hop.obstacles)
+      this.view.setLane(this.local(origin), this.hopHeading, this.hop.obstacles, this.hop.lane)
       this.view.setPose(this.local(origin), this.hopHeading, this.hop.petY * 100, this.hop.shaking ? 1 : 0)
       this.hud.setPlayLine(hopText(this.hop, this.companion))
       return
@@ -1569,13 +1687,37 @@ export class FindYourWayMain extends BaseScriptComponent {
     const pos = this.userPos()
     this.hopHeading = this.userHeading()
     const r = (this.hopHeading * Math.PI) / 180
-    this.hopOrigin = {x: pos.x + Math.sin(r) * HOP_AHEAD_M, y: pos.y, z: pos.z + Math.cos(r) * HOP_AHEAD_M}
+    this.hopSeated = this.seated.seated
+    const laneM = this.hopSeated ? SEATED_LANE : HOP_LANE
+    if (this.hop.lane !== laneM) this.hop = new HopGame(Math.random, laneM)
+    const floor = this.floorUnder(pos)
+    this.hopOrigin = this.hopSeated
+      ? seatedPlaySpot({x: pos.x, y: floor + this.headAboveFloorM(pos), z: pos.z}, {x: Math.sin(r), z: Math.cos(r)}, floor).start
+      : {x: pos.x + Math.sin(r) * HOP_AHEAD_M, y: pos.y, z: pos.z + Math.cos(r) * HOP_AHEAD_M}
     this.catchGame.cancel()
     this.catchSpot = null
     this.debugRaise = false
     if (this.view) this.view.setTreat(null)
     this.hop.start()
     print("[FYW] hop: start")
+  }
+
+  // The floor you're on, and your head above it (standing or seated).
+  private floorUnder(pos: Vec3): number {
+    let floor = pos.y
+    let gap = Infinity
+    for (const l of mapLevels(this.map)) {
+      if (Math.abs(l.y - pos.y) < gap) {
+        gap = Math.abs(l.y - pos.y)
+        floor = l.y
+      }
+    }
+    return floor
+  }
+
+  private headAboveFloorM(pos: Vec3): number {
+    const drop = this.debugPose ? this.cameraDropCm / 100 : 0
+    return pos.y - this.floorUnder(pos) + this.eye() / 100 - drop
   }
 
   private stopPlay(): void {
@@ -1621,25 +1763,68 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (!canThrow({moving: !this.gate.canPlay, nearChange, cardShowing: this.cardShowing(), companionOn: this.guide.on})) return
     const pos = this.userPos()
     const r = (this.userHeading() * Math.PI) / 180
-    const v = {x: Math.sin(r) * THROW_SPEED * 0.7, y: THROW_SPEED * 0.7, z: Math.cos(r) * THROW_SPEED * 0.7}
-    this.catchSpot = landingSpot({x: pos.x, y: pos.y + THROW_FROM_M, z: pos.z}, v, pos.y)
+    this.throwWith({x: Math.sin(r) * THROW_SPEED * 0.7, y: THROW_SPEED * 0.7, z: Math.cos(r) * THROW_SPEED * 0.7})
+  }
+
+  private throwWith(v: PlayXYZ): void {
+    if (!this.guide.pet) return
+    const pos = this.userPos()
+    const reach = this.seated.seated ? SEATED_THROW_MAX : THROW_MAX
+    this.catchSpot = landingSpot({x: pos.x, y: pos.y + THROW_FROM_M, z: pos.z}, v, pos.y, reach)
     this.catchGame.throwTo(this.catchSpot, this.guide.pet.pos)
     print("[FYW] catch: thrown")
   }
 
+  // The treat by your hand: pinch it and throw. It stays by you while you may throw.
+  private updateGrabTreat(canGrab: boolean): void {
+    if (!this.view) return
+    if (this.grabbing) {
+      const p = this.view.getGrabWorldPos()
+      if (p) {
+        const local = this.building.getTransform().getInvertedWorldTransform().multiplyPoint(p)
+        this.grabSamples.push({t: getTime(), x: local.x / 100, y: local.y / 100, z: -local.z / 100})
+        if (this.grabSamples.length > 30) this.grabSamples.shift()
+      }
+      return
+    }
+    if (!canGrab) {
+      this.view.setGrab(null)
+      return
+    }
+    const t = this.camera.getTransform()
+    this.view.setGrab(t.getWorldPosition().add(this.headYaw().multiplyVec3(GRAB_OFFSET)))
+  }
+
+  private grabStarted(): void {
+    this.grabbing = true
+    this.grabSamples = []
+  }
+
+  private grabEnded(): void {
+    if (!this.grabbing) return
+    this.grabbing = false
+    const v = releaseVelocity(this.grabSamples)
+    print("[FYW] catch: let go, " + this.grabSamples.length + " samples, " + (v ? "thrown" : "no swing"))
+    if (v && this.nav && this.guide.on && this.catchGame.phase === "idle") this.throwWith(v)
+  }
+
   // Multi-stop trip: the map's places named in multiStops, ordered for the shortest walk.
   private planStops(startId: string): MultiStopTrip | null {
+    if (this.tourIds) return new MultiStopTrip(this.tourIds)
     if (this.destinationOverride || this.tripDestination) return null
     const ids = this.multiStops.split(",").map((x) => x.trim()).filter((x) => x && !!findNode(this.map, x))
     if (ids.length < 2) return null
+    const order = orderStops(startId, ids, this.stopDistance())
+    print("[FYW] stops: " + order.join(" > "))
+    return new MultiStopTrip(order)
+  }
+
+  private stopDistance(): (a: string, b: string) => number {
     const profile = this.profile as Profile
-    const dist = (a: string, b: string): number => {
+    return (a: string, b: string): number => {
       const r = new Navigator(this.map, a, b, profile).route
       return r.status === "route" || r.status === "arrived" ? (r.status === "route" ? r.length : 0) : Infinity
     }
-    const order = orderStops(startId, ids, dist)
-    print("[FYW] stops: " + order.join(" > "))
-    return new MultiStopTrip(order)
   }
 
   private arrivalWords(at: string): string {
@@ -1671,7 +1856,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   private followMappingPanel(): void {
     if (!this.mappingPanel) return
     const t = this.camera.getTransform()
-    const p = t.getWorldPosition().add(this.headYaw().multiplyVec3(new vec3(0, -18, -75)))
+    const p = t.getWorldPosition().add(this.headYaw().multiplyVec3(new vec3(0, -8, -115)))
     const so = this.mappingPanel.getSceneObject().getTransform()
     const k = this.mappingPanelPlaced ? 1 - Math.exp(-getDeltaTime() * 4) : 1
     this.mappingPanelPlaced = true
@@ -1808,6 +1993,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   getBadgeText(): string | null { return this.hud.getBadgeText() }
   getArrivalText(): string | null { return this.arrivalCard.getShownText() }
   isScanSignVisible(): boolean { return this.buildingUI.isScanSignVisible() }
+  getScanSignWorldPos(): vec3 | null { return this.buildingUI.getScanSignWorldPos() }
   isModePanelShown(): boolean { return this.modePanel.isShown() }
   getEyeHeightCm(): number { return this.eye() }
   getRideOffsetCm(): vec3 { return this.rideOffset }
@@ -1853,6 +2039,21 @@ export class FindYourWayMain extends BaseScriptComponent {
   getPlaceTag(id: string): string | null { return this.placesUI ? this.placesUI.tagOf(id) : null }
   isPlacesMuted(): boolean { return this.placesMuted }
   canPlayNow(): boolean { return this.gate.canPlay }
+  isSeatedNow(): boolean { return this.seated.seated }
+  getHopLaneM(): number { return this.hop.lane }
+  getHopOrigin(): Vec3 | null { return this.hopOrigin }
+  getCatchSpot(): Vec3 | null { return this.catchSpot }
+  isGrabTreatShown(): boolean { return !!this.view && this.view.isGrabShown() }
+  isListening(): boolean { return this.voice.listening }
+  debugHeard(text: string, final: boolean): void {
+    this.voice.listening = true
+    this.heard(text, final)
+  }
+  isPickMapShown(): boolean { return !!this.pickMap && this.pickMap.isShown() }
+  getPickMapDots(): number { return this.pickMap ? this.pickMap.getDotCount() : 0 }
+  getPickMapDotId(i: number): string | null { return this.pickMap ? this.pickMap.getDotId(i) : null }
+  getPickMapFloor(): string { return this.pickMap ? this.pickMap.getFloorText() : "" }
+  isTour(): boolean { return this.tourIds !== null }
   getHopPhase(): string { return this.hop.phase }
   getHopScore(): number { return this.hop.score }
   getHopObstacles(): number { return this.hop.obstacles.length }

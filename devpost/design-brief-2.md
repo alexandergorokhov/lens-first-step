@@ -106,7 +106,7 @@ New `mall` map; the Inspector's `multiStops` are ordered for the shortest walk a
 stop ("Stop 2 of 3: Ice Cream", Next stop). Scenarios T1–T4. A* (`src/core/astar.ts`) is built and
 proven equal to Dijkstra on every pair (A1–A3); the Lens still uses the plain Dijkstra.
 
-### 3. Voice "Take me to…" — not started
+### 3. Voice "Take me to…" — built (Talk button; the live mic still needs a person to try it)
 Spike on Nov 1 (ask first, throwaway scene): ASR in Interactive Preview, then one Gemini request
 through the Remote Service Gateway. Fallback either way: a "Where to?" panel listing destinations
 and places. Keep "Voice: none" until the spike passes.

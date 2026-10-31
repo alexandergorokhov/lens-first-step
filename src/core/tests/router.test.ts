@@ -210,7 +210,7 @@ test("S9 Lens default mapBaseUrl is the public https map copy", () => {
 });
 
 test("S9 real download: every map downloads from the public URL, matches src/core/data and loads online", { skip: !!process.env.OFFLINE }, async () => {
-  for (const file of ["map.json", "hospital.json", "campus.json", "room.json"]) {
+  for (const file of ["map.json", "hospital.json", "campus.json", "room.json", "mall.json"]) {
     const builtIn = readFileSync(new URL("../data/" + file, import.meta.url), "utf8");
     const fetchText = async (u: string) => {
       const r = await fetch(u);

@@ -76,8 +76,9 @@ export class FindYourWayBuildingUI extends BaseScriptComponent {
   }
 
   // Overhead place sign ("Gate B12", "Lift 1", "Escalator ↑"…) with an icon.
-  addPlaceSign(name: string, localPos: vec3, title: string, caption: string | null, iconName: string | null): void {
-    const so = this.root("Sign_" + name, localPos, this.placeSignScale)
+  addPlaceSign(name: string, localPos: vec3, title: string, caption: string | null, iconName: string | null,
+      scale: number = this.placeSignScale): void {
+    const so = this.root("Sign_" + name, localPos, scale)
     const width = Math.max(12, title.length * 1.4 + 7)
     const p = makePanel(so, width, 1, 0.3)
     const row = addRow(p.content, "Row", width - 2, 3.4, 0.8)
@@ -106,6 +107,10 @@ export class FindYourWayBuildingUI extends BaseScriptComponent {
 
   isScanSignVisible(): boolean {
     return this.scanSign !== null && this.scanSign.enabled
+  }
+
+  getScanSignWorldPos(): vec3 | null {
+    return this.scanSign ? this.scanSign.getTransform().getWorldPosition() : null
   }
 
   // Red sign on a lift door (or any closable connection). Pinch = mark it out of service.

@@ -5,17 +5,27 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  releaseVelocity,
   CatchGame,
   HOP_LANE,
   HopGame,
   JUMP_SPEED,
   PlayGate,
+  SEATED_DROP,
+  SEATED_EYE_MAX,
+  SEATED_LANE,
+  SEATED_SECONDS,
+  SEATED_THROW_MAX,
+  SEATED_VIEW_DEG,
+  SeatedDetector,
   RaiseDetector,
   SHAKE_SECONDS,
   THROW_MAX,
   canThrow,
   hopText,
   landingSpot,
+  seatedPlayAllowed,
+  seatedPlaySpot,
   seededRandom,
 } from "../play.ts";
 import { COMPANIONS } from "../pet.ts";
@@ -265,4 +275,159 @@ test("P9 Fetch: the companion runs to the landing spot, catches, brings it back,
   assert.equal(c.throwTo({ x: -2, y: 0, z: 2 }, pos), true);
   c.cancel();
   assert.equal(c.phase, "idle");
+});
+
+// ---- Seated play ----
+
+test("S1 Seated is detected after 2 s low, and standing up ends it at once", () => {
+  const d = new SeatedDetector();
+  // Standing (1.65 of 1.65): never.
+  for (let t = 0; t < 5; t += DT) assert.equal(d.update(1.65, 1.65, DT), false);
+  // Head 50 cm lower: not yet at 1.5 s, yes after SEATED_SECONDS.
+  let t = 0;
+  for (; t < SEATED_SECONDS - 0.5; t += DT) d.update(1.15, 1.65, DT);
+  assert.equal(d.seated, false);
+  for (; t < SEATED_SECONDS + 0.2; t += DT) d.update(1.15, 1.65, DT);
+  assert.equal(d.seated, true);
+  // Standing up ends it on that frame.
+  assert.equal(d.update(1.65, 1.65, DT), false);
+  assert.equal(d.seated, false);
+});
+
+test("S2 Either rule seats you: 40 cm below standing, or under 1.3 m", () => {
+  const a = new SeatedDetector();
+  for (let t = 0; t < 3; t += DT) a.update(1.9 - SEATED_DROP - 0.01, 1.9, DT); // tall person, 1.49 m: dropped 41 cm
+  assert.equal(a.seated, true);
+  const b = new SeatedDetector();
+  for (let t = 0; t < 3; t += DT) b.update(1.25, 1.4, DT); // only 15 cm lower but under 1.3 m
+  assert.equal(b.seated, true);
+  const c = new SeatedDetector();
+  for (let t = 0; t < 3; t += DT) c.update(1.5, 1.7, DT); // a crouch/lean of 20 cm: still standing
+  assert.equal(c.seated, false);
+});
+
+test("S3 A short dip (bending to tie a shoe) does not count; reset clears", () => {
+  const d = new SeatedDetector();
+  for (let t = 0; t < 1.5; t += DT) d.update(1.0, 1.65, DT);
+  d.update(1.65, 1.65, DT);
+  for (let t = 0; t < 1.5; t += DT) d.update(1.0, 1.65, DT);
+  assert.equal(d.seated, false, "the timer restarted");
+  for (let t = 0; t < 1; t += DT) d.update(1.0, 1.65, DT);
+  assert.equal(d.seated, true);
+  d.reset();
+  assert.equal(d.seated, false);
+});
+
+test("S4 The seated play area is in front of the seat and the far end stays in the tall view", () => {
+  for (const eye of [1.0, 1.1, 1.2, SEATED_EYE_MAX]) {
+    const head = { x: 5, y: 2 + eye, z: 7 };
+    const s = seatedPlaySpot(head, { x: 0, z: 1 }, 2);
+    assert.ok(s.start.z - head.z >= 0.8 && s.start.z - head.z <= 1.2, "play area 0.8-1.2 m ahead: " + (s.start.z - head.z));
+    assert.equal(s.start.y, 2);
+    assert.equal(s.start.x, 5, "straight ahead, no turning");
+    assert.equal(s.laneM, SEATED_LANE);
+    assert.ok(Math.abs(Math.hypot(s.far.x - s.start.x, s.far.z - s.start.z) - SEATED_LANE) < 1e-9);
+    assert.ok(s.far.z > s.start.z);
+    // Both ends are within half the view of the gaze, and the whole thing is inside the 37 degrees.
+    const down = (p: { z: number }) => (Math.atan2(eye, p.z - head.z) * 180) / Math.PI;
+    for (const p of [s.start, s.far]) assert.ok(Math.abs(down(p) - -s.gazePitchDeg) <= SEATED_VIEW_DEG / 2 + 1e-9, "eye " + eye);
+    assert.ok(s.spanDeg < SEATED_VIEW_DEG, "span " + s.spanDeg);
+    assert.ok(s.gazePitchDeg < 0, "looks down at the floor, never up");
+  }
+});
+
+test("S5 The play spot follows the facing direction and the floor of the seat", () => {
+  const s = seatedPlaySpot({ x: 0, y: 6.1, z: 0 }, { x: 3, z: 0 }, 5); // facing east (not unit)
+  assert.ok(Math.abs(s.start.x - 1.0) < 1e-9 && Math.abs(s.start.z) < 1e-9);
+  assert.equal(s.start.y, 5);
+  assert.ok(Math.abs(s.far.x - (1.0 + SEATED_LANE)) < 1e-9);
+  // A degenerate facing falls back to north instead of NaN.
+  const z = seatedPlaySpot({ x: 0, y: 1.2, z: 0 }, { x: 0, z: 0 }, 0);
+  assert.ok(Number.isFinite(z.start.z) && z.start.z > 0);
+});
+
+test("S6 Hop works on the short lane: obstacles spawn at its far end and a pinch-jump clears them", () => {
+  const g = new HopGame(seededRandom(7), SEATED_LANE);
+  g.start();
+  let maxD = 0;
+  let t = 0;
+  for (; t < 40 && g.phase !== "crashed"; t += DT) {
+    if (goodPlayer(g)) g.jump();
+    g.update(DT);
+    for (const o of g.obstacles) maxD = Math.max(maxD, o.d);
+  }
+  assert.equal(g.phase, "running", "no crash in 40 s");
+  assert.ok(g.score >= 10, "score " + g.score);
+  assert.ok(maxD <= SEATED_LANE + 1e-9 && maxD > SEATED_LANE - 0.2, "spawned at the short far end: " + maxD);
+  // And an idle player on the short lane does crash.
+  const h = new HopGame(seededRandom(7), SEATED_LANE);
+  h.start();
+  play(h, 10, () => false);
+  assert.equal(h.phase, "crashed");
+});
+
+test("S7 The standing lane is unchanged: default is HOP_LANE and the same seed plays the same game", () => {
+  const a = new HopGame(seededRandom(3));
+  const b = new HopGame(seededRandom(3), HOP_LANE);
+  a.start();
+  b.start();
+  for (let t = 0; t < 8; t += DT) {
+    a.update(DT);
+    b.update(DT);
+  }
+  assert.deepEqual(a.obstacles, b.obstacles);
+  assert.equal(a.phase, b.phase);
+  assert.ok(Math.max(...a.obstacles.map((o) => o.d)) <= HOP_LANE);
+});
+
+test("S8 A seated throw lands at most SEATED_THROW_MAX away; standing is unchanged", () => {
+  const hand = { x: 0, y: 1.0, z: 0 };
+  const hard = { x: 0, y: 3, z: 12 };
+  const seated = landingSpot(hand, hard, 0, SEATED_THROW_MAX);
+  assert.ok(Math.abs(Math.hypot(seated.x, seated.z) - SEATED_THROW_MAX) < 1e-9);
+  assert.ok(SEATED_THROW_MAX <= 3);
+  assert.equal(seated.y, 0);
+  const standing = landingSpot(hand, hard, 0);
+  assert.ok(Math.abs(Math.hypot(standing.x, standing.z) - THROW_MAX) < 1e-9);
+  // A soft throw is not stretched or shortened.
+  const soft = landingSpot(hand, { x: 0, y: 1, z: 1 }, 0, SEATED_THROW_MAX);
+  assert.deepEqual(soft, landingSpot(hand, { x: 0, y: 1, z: 1 }, 0));
+});
+
+test("S9 Seated play never makes you miss the flight: a card or standing up ends it", () => {
+  const ok = { seated: true, companionOn: true, cardShowing: false };
+  assert.equal(seatedPlayAllowed(ok), true);
+  assert.equal(seatedPlayAllowed({ ...ok, cardShowing: true }), false, "gate change, boarding, lift out");
+  assert.equal(seatedPlayAllowed({ ...ok, seated: false }), false, "standing up");
+  assert.equal(seatedPlayAllowed({ ...ok, companionOn: false }), false);
+});
+
+test("G1 releaseVelocity reads the last moments of the swing", () => {
+  const s = [];
+  for (let i = 0; i < 20; i++) s.push({ t: i * 0.02, x: i * 0.04, y: 1, z: 0 });
+  const v = releaseVelocity(s);
+  assert.ok(v && Math.abs(v.x - 2) < 1e-6 && Math.abs(v.y) < 1e-6 && Math.abs(v.z) < 1e-6);
+});
+
+test("G2 letting go without a swing is no throw", () => {
+  assert.equal(releaseVelocity([{ t: 0, x: 0, y: 1, z: 0 }, { t: 0.1, x: 0.01, y: 1, z: 0 }]), null);
+  assert.equal(releaseVelocity([{ t: 0, x: 0, y: 1, z: 0 }]), null);
+  assert.equal(releaseVelocity([]), null);
+  assert.equal(releaseVelocity([{ t: 1, x: 0, y: 0, z: 0 }, { t: 1, x: 1, y: 0, z: 0 }]), null);
+});
+
+test("G3 a throw from a swing lands within reach and on your floor", () => {
+  const s = [];
+  for (let i = 0; i < 10; i++) s.push({ t: i * 0.02, x: 0, y: 1.2, z: i * 0.2 });
+  const v = releaseVelocity(s);
+  assert.ok(v);
+  const spot = landingSpot({ x: 0, y: 1.2, z: 0 }, v, 0);
+  assert.equal(spot.y, 0);
+  assert.ok(Math.hypot(spot.x, spot.z) <= THROW_MAX + 1e-9);
+});
+
+test("G4 at a low frame rate the last two samples still make a throw", () => {
+  const s = [{ t: 0, x: 0, y: 1, z: 0 }, { t: 0.2, x: 0, y: 1, z: 0.4 }, { t: 0.4, x: 0, y: 1, z: 0.8 }];
+  const v = releaseVelocity(s);
+  assert.ok(v && Math.abs(v.z - 2) < 1e-6);
 });

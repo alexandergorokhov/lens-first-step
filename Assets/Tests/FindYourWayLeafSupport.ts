@@ -21,6 +21,9 @@ export function getMain(): FindYourWayMain {
   return main
 }
 
+// A tap on Restart rebuilds the whole place inside the tap (~3 s, more late in a long batch).
+const TAP_TIMEOUT_MS = 12000
+
 export async function tap(interactor: DefaultLeafInteractor, name: string): Promise<void> {
   // A button shown this frame gets its Interactable on its first frame: retry for ~1 s.
   let target = findInteractableByName(name, undefined, true)
@@ -32,7 +35,7 @@ export async function tap(interactor: DefaultLeafInteractor, name: string): Prom
   // LEAF's trigger waits forever on its hover/trigger events: fail instead if they never come.
   let done = false
   interactor.trigger(target).then(() => { done = true })
-  await waitFor(() => done, 3000, "tap on '" + name + "' (enabled now: " + target.getSceneObject().isEnabledInHierarchy + ")")
+  await waitFor(() => done, TAP_TIMEOUT_MS, "tap on '" + name + "' (enabled now: " + target.getSceneObject().isEnabledInHierarchy + ")")
   await sleep(250)
 }
 
@@ -69,7 +72,7 @@ export async function startTrip(interactor: DefaultLeafInteractor, profile: Prof
   await tap(interactor, "RestartButton")
   await waitFor(() => main.getPhase() === "scan" && main.isScanSignVisible(), 3000, "scan sign")
   await sleep(800) // world anchor settles
-  await waitFor(() => !main.isAnchorSettling(), 3000, "world anchor settled")
+  await waitFor(() => !main.isAnchorSettling(), 12000, "world anchor settled")
   if (beforeMode) beforeMode(main)
   const sign = findNode(main.getMapData(), main.getStartId())!
   main.debugSetPose(sign.x, footY, sign.z - 1.5, 0)

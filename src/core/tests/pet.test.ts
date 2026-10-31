@@ -72,6 +72,22 @@ test("P2 The pet trots ~2.5 m ahead of you along the route, on the route", () =>
   assert.ok(Math.abs(d3(t.at, { x: 30, y: 0, z: 9 }) - PET_LEAD) < 0.2);
 });
 
+test("P2b A longer lead puts the pet that far ahead, and it only waits past that lead", () => {
+  const map = loadMap();
+  const route = pts(map, "sign", "gateB12", "walk");
+  const feet = { x: 30, y: 0, z: 9 };
+  const g = new PetGuide();
+  g.lead = 7;
+  g.setOn(true, route, feet, "k");
+  assert.ok(Math.abs(d3(g.pet!.pos, feet) - 7) < 0.2, "starts 7 m ahead");
+  for (let i = 0; i < 30; i++) g.update(route, feet, 0.1, "k");
+  assert.equal(g.pet!.mood, "lead", "7 m ahead is not 'you fell behind'");
+  assert.ok(Math.abs(d3(g.pet!.pos, feet) - 7) < 0.2, "stays 7 m ahead");
+  g.point({ x: 30, y: 0, z: 20 }, 0, 3);
+  for (let i = 0; i < 30; i++) g.update(route, feet, 0.1, "k", false, 0);
+  assert.ok(d3(g.pet!.pos, feet) > 6, "points from its usual spot ahead, not back at 2.5 m");
+});
+
 test("P3 The pet waits at the foot of the escalator and the lift, never on another floor before you", () => {
   const map = loadMap();
   for (const profile of ["walk", "stepFree"] as Profile[]) {

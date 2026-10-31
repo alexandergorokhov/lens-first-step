@@ -56,10 +56,12 @@ export class FindYourWayModePanelUI extends BaseScriptComponent {
   private _onStepFree = new Event<void>()
   private _onSayIt = new Event<void>()
   private _onWhereTo = new Event<void>()
+  private _onTalk = new Event<void>()
   private destText: Text
   private sayIt: LabeledButton
   get onSayIt(): PublicApi<void> { return this._onSayIt.publicApi() }
   get onWhereTo(): PublicApi<void> { return this._onWhereTo.publicApi() }
+  get onTalk(): PublicApi<void> { return this._onTalk.publicApi() }
   get onWalk(): PublicApi<void> { return this._onWalk.publicApi() }
   get onStepFree(): PublicApi<void> { return this._onStepFree.publicApi() }
 
@@ -71,8 +73,10 @@ export class FindYourWayModePanelUI extends BaseScriptComponent {
       new vec4(this.textColor.x, this.textColor.y, this.textColor.z, 0.85), 100)
     this.sayIt = addButton(panel.content, "SayItButton", "Say it", this.buttonWidthCm, 4.2, null,
       () => this._onSayIt.invoke(), this.textColor, 100, "Button")
-    addText(panel.content, "SayItHint", "stand-in: on real Specs you say it", "Caption", width - 3, 1.8,
+    addText(panel.content, "SayItHint", "stand-in: a preset phrase", "Caption", width - 3, 1.8,
       new vec4(this.textColor.x, this.textColor.y, this.textColor.z, 0.85), 100)
+    addButton(panel.content, "TalkButton", "Talk: say a place", this.buttonWidthCm, 4.2, null,
+      () => this._onTalk.invoke(), this.textColor, 100, "Button")
     addButton(panel.content, "WhereToButton", "Where to?", this.buttonWidthCm, 4.2, icon("location_on"),
       () => this._onWhereTo.invoke(), this.textColor, 100, "Button")
     addButton(panel.content, "WalkButton", this.walkLabel, this.buttonWidthCm, this.buttonHeightCm - 1.5,
@@ -95,6 +99,7 @@ export class FindYourWayModePanelUI extends BaseScriptComponent {
 
   // The destination line ("To: Bolt Hardware") and the phrase on the "Say it" button.
   setDestination(label: string): void { this.destText.text = "To: " + label }
+  setNote(text: string): void { this.destText.text = text }
   getDestinationText(): string { return this.destText.text }
   setSayItPhrase(phrase: string): void { this.sayIt.label.text = phrase ? 'Say it: "' + phrase + '"' : "Say it" }
 

@@ -134,8 +134,8 @@ export function petTarget(route: XYZ[], user: XYZ, lead: number = PET_LEAD): { a
 // Where the companion stands while pointing: its usual spot ahead on the line, moved SIDE_STEP
 // sideways (square to the line there) toward the place, so it keeps pace ahead of the traveller
 // without standing on the line.
-export function sideStepSpot(route: XYZ[], user: XYZ, place: XYZ, step: number = SIDE_STEP): XYZ {
-  const on = petTarget(route, user).at;
+export function sideStepSpot(route: XYZ[], user: XYZ, place: XYZ, step: number = SIDE_STEP, lead: number = PET_LEAD): XYZ {
+  const on = petTarget(route, user, lead).at;
   let dir: { x: number; z: number } | null = null;
   let best = Infinity;
   for (let i = 0; i < route.length - 1; i++) {
@@ -160,20 +160,20 @@ export function sideStepSpot(route: XYZ[], user: XYZ, place: XYZ, step: number =
   return { x: on.x + nx * step, y: on.y, z: on.z + nz * step };
 }
 
-export function newPet(route: XYZ[], user: XYZ): PetState {
-  const t = petTarget(route, user);
+export function newPet(route: XYZ[], user: XYZ, lead: number = PET_LEAD): PetState {
+  const t = petTarget(route, user, lead);
   const h = headingOf(user, t.at);
   return { pos: t.at, heading: h === null ? 0 : h, mood: "lead" };
 }
 
 // One step of the pet: trot toward its target at up to PET_SPEED; ride along when the target is
 // on another floor (the traveller rode a lift or an escalator); stop and look back when the
-// traveller is more than PET_WAIT_DISTANCE away. `arrived` = the trip has ended.
-export function stepPet(pet: PetState, route: XYZ[], user: XYZ, dt: number, arrived: boolean = false): PetState {
-  const t = petTarget(route, user);
+// traveller is more than PET_WAIT_DISTANCE past the usual lead. `arrived` = the trip has ended.
+export function stepPet(pet: PetState, route: XYZ[], user: XYZ, dt: number, arrived: boolean = false, lead: number = PET_LEAD): PetState {
+  const t = petTarget(route, user, lead);
   const lookBack = headingOf(pet.pos, user);
   if (arrived) return { pos: pet.pos, heading: lookBack === null ? pet.heading : lookBack, mood: "arrived" };
-  if (d3(pet.pos, user) > PET_WAIT_DISTANCE && Math.abs(pet.pos.y - user.y) < LEVEL_STEP * 2) {
+  if (d3(pet.pos, user) > PET_WAIT_DISTANCE + lead - PET_LEAD && Math.abs(pet.pos.y - user.y) < LEVEL_STEP * 2) {
     return { pos: pet.pos, heading: lookBack === null ? pet.heading : lookBack, mood: "wait" };
   }
   let pos: XYZ;
@@ -292,6 +292,7 @@ export class PetGuide {
   spots: XYZ[] = [];
   got: boolean[] = [];
   found = 0;
+  lead = PET_LEAD;
   private routeKey = "";
 
   get total(): number {
@@ -310,7 +311,7 @@ export class PetGuide {
 
   setOn(on: boolean, route: XYZ[], user: XYZ, routeKey: string): void {
     this.on = on;
-    this.pet = on && route.length > 0 ? newPet(route, user) : null;
+    this.pet = on && route.length > 0 ? newPet(route, user, this.lead) : null;
     if (on) this.layTreats(route, routeKey);
   }
 
@@ -327,17 +328,17 @@ export class PetGuide {
     if (!this.on) return [];
     // At arrival the route shrinks to the destination: keep the treats as they are.
     if (!arrived) this.layTreats(route, routeKey);
-    if (!this.pet && route.length > 0) this.pet = newPet(route, user);
+    if (!this.pet && route.length > 0) this.pet = newPet(route, user, this.lead);
     if (this.pointing && (arrived || now >= this.pointing.until)) this.pointing = null;
     if (this.pet && this.pointing) {
       // A couple of steps off the line toward the place, keeping pace ahead; facing the place.
-      const spot = sideStepSpot(route, user, this.pointing.at);
+      const spot = sideStepSpot(route, user, this.pointing.at, SIDE_STEP, this.lead);
       const d = d3(this.pet.pos, spot);
       const step = PET_SPEED * dt;
       const pos = d <= step ? spot : lerp(this.pet.pos, spot, step / d);
       const h = headingOf(pos, this.pointing.at);
       this.pet = { pos, heading: h === null ? this.pet.heading : h, mood: "point" };
-    } else if (this.pet) this.pet = stepPet(this.pet, route, user, dt, arrived);
+    } else if (this.pet) this.pet = stepPet(this.pet, route, user, dt, arrived, this.lead);
     const got = collectTreats(this.spots, this.got, user);
     // Arriving (within the arrival radius) collects the destination's treat.
     const last = this.spots.length - 1;

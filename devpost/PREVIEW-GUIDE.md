@@ -75,12 +75,12 @@ Click **Map: … (switch)** on Demo controls. It cycles through the bundled maps
 
 The **mapKey** setting on `FindYourWay` (Inspector) picks the start map: Airport, Hospital, Campus or Preview room.
 
-## 8. Check these yourself (not yet confirmed by eye)
+## 8. Checks in the preview (done 2026-10-31, in the Lens Studio preview)
 
-- [ ] **Floor height:** the blue line should lie flat on the floor, not float or sink. If it's off, select `FindYourWay` in the Scene Hierarchy and change **eyeHeightCm** in the Inspector (now 180). Larger moves the line down.
-- [ ] **Start position:** the sign and the start of the line should be in open floor, not behind the sofa.
-- [ ] **Map switch:** the Map button cycles all four maps (a LEAF test checks this; confirm it by clicking).
-- [ ] **Online map:** with internet, the badge says **online map** after scanning the sign (maps download from the public gist, see section 11). Without internet it says "offline map".
+- [x] **Floor height:** the blue line should lie flat on the floor, not float or sink. If it's off, select `FindYourWay` in the Scene Hierarchy and change **eyeHeightCm** in the Inspector (now 180). Larger moves the line down.
+- [x] **Start position:** the sign and the start of the line should be in open floor, not behind the sofa.
+- [x] **Map switch:** the Map button cycles all five maps (a LEAF test checks this; confirm it by clicking).
+- [x] **Online map:** with internet, the badge says **online map** after scanning the sign (maps download from the public gist, see section 11). Without internet it says "offline map".
 
 ## 9. How to test it (no glasses needed)
 
@@ -95,7 +95,7 @@ cd C:\Sasha\Projects\Lens\first-step\first-step
 npm test
 ```
 
-It first checks the Lens copies (`npm run sync:check`). Expect `pass 291`, `fail 0` (one test downloads the maps from the public gist; with no internet set `OFFLINE=1` to skip it: `pass 289`, `skipped 1`). `docs.test.ts` keeps this number up to date: it fails if the docs quote a different count. Covers: Walk and Step-Free routes on all four maps, Step-Free never uses stairs or escalators, Walk is always shortest, closures and re-routes, destination changes, broken maps, unknown signs, the turn arrow maths, the map download URL, the local map server, the demo's beats and walking speed, and that the Lens copies of the code and maps match `src/core`.
+It first checks the Lens copies (`npm run sync:check`). Expect `pass 327`, `fail 0` (one test downloads the maps from the public gist; with no internet set `OFFLINE=1` to skip it: `pass 326`, `skipped 1`). `docs.test.ts` keeps this number up to date: it fails if the docs quote a different count. Covers: Walk and Step-Free routes on all four maps, Step-Free never uses stairs or escalators, Walk is always shortest, closures and re-routes, destination changes, broken maps, unknown signs, the turn arrow maths, the map download URL, the local map server, the demo's beats and walking speed, and that the Lens copies of the code and maps match `src/core`.
 
 After editing anything in `src/core`, run `npm run sync` to copy it into `Assets/`. `npm run hooks` (once) makes git run `npm test` before every commit.
 
@@ -183,7 +183,7 @@ The Lens tries to download each map before falling back to its built-in copy (5 
 2. In Lens Studio select **FindYourWay**, set **mapBaseUrl** in the Inspector. Leave it empty to always use the built-in map.
 3. Scan the sign. The Logger shows `[FYW] map download: …` and the badge top-left says **online map** or **offline map**.
 
-**Default: the public gist.** The repo is private, so its files can't be downloaded. **mapBaseUrl** defaults to a public gist holding the same four files as `src/core/data`:
+**Default: the public gist.** The repo is private, so its files can't be downloaded. **mapBaseUrl** defaults to a public gist holding the same five map files as `src/core/data`:
 `https://gist.githubusercontent.com/alexandergorokhov/ac59c2c8d02687651f256b320fff27b8/raw/`
 (gist: https://gist.github.com/alexandergorokhov/ac59c2c8d02687651f256b320fff27b8). The preview only allows **https**, which the gist provides, so the badge says **online map**.
 

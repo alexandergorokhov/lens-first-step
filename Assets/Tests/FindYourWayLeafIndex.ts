@@ -40,6 +40,13 @@ import {FywB3Dc3TurnScenario} from "./FywB3Dc3TurnScenario"
 import {FywB3Dc4FloorScenario} from "./FywB3Dc4FloorScenario"
 import {FywB3Dc5LookScenario} from "./FywB3Dc5LookScenario"
 import {FywB3Dc6GoToScenario} from "./FywB3Dc6GoToScenario"
+import {FywReelScenario} from "./FywReelScenario"
+import {FywV1VoiceScenario} from "./FywV1VoiceScenario"
+import {FywPm1PickMapScenario} from "./FywPm1PickMapScenario"
+import {FywTr1TourScenario} from "./FywTr1TourScenario"
+import {FywSp1SeatedPlayScenario} from "./FywSp1SeatedPlayScenario"
+import {FywGt1GrabThrowScenario} from "./FywGt1GrabThrowScenario"
+import {FywCheckPlacesScenario} from "./FywCheckPlacesScenario"
 
 // The LEAF plugin's stall after loading the list grows steeply with its length (44: ~30 s, 51: ~4 min
 // of a frozen editor), so the 13 screenshot set-ups are only listed when they are needed.
@@ -89,6 +96,14 @@ export class FindYourWayLeafIndex extends BaseScriptComponent {
     {id: "b3-dc4-another-floor", typename: FywB3Dc4FloorScenario.getTypeName()},
     {id: "b3-dc5-companion-off-dots", typename: FywB3Dc5LookScenario.getTypeName()},
     {id: "b3-dc6-go-to-a-place", typename: FywB3Dc6GoToScenario.getTypeName()},
+    // After brief 3: voice, the map picker, Tour, seated play, catch by hand.
+    {id: "v1-voice-reaches-the-matcher", typename: FywV1VoiceScenario.getTypeName()},
+    {id: "pm1-pick-a-place-on-the-map", typename: FywPm1PickMapScenario.getTypeName()},
+    {id: "tr1-tour-stop-by-stop", typename: FywTr1TourScenario.getTypeName()},
+    {id: "sp1-seated-play", typename: FywSp1SeatedPlayScenario.getTypeName()},
+    {id: "gt1-grab-and-throw", typename: FywGt1GrabThrowScenario.getTypeName()},
+    {id: "visual-reel", typename: FywReelScenario.getTypeName()},
+    {id: "visual-check-places", typename: FywCheckPlacesScenario.getTypeName()},
   ] as ScenarioMetadata[]).concat(!INCLUDE_SHOTS ? [] : [
     // Screenshot set-ups — skipped by the runner unless named in `only`.
     {id: "visual-start", typename: FywVisualScenario.getTypeName(), parameters: {shot: "start"}},

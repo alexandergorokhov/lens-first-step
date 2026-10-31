@@ -17,7 +17,7 @@ export class FindYourWayWhereToUI extends BaseScriptComponent {
   private ids: (string | null)[] = []
   private pageText: Text
 
-  setup(onPick: (id: string) => void, onClose: () => void): void {
+  setup(onPick: (id: string) => void, onClose: () => void, onMap: () => void): void {
     const panel = makePanel(this.sceneObject, WIDTH + 4, 1.8, 0.7)
     addText(panel.content, "WhereToTitle", "Where to?", "Headline1", WIDTH, 3.6, TEXT, 100)
     this.pageText = addText(panel.content, "WhereToPage", "", "Caption", WIDTH, 1.8, TEXT, 100)
@@ -29,6 +29,7 @@ export class FindYourWayWhereToUI extends BaseScriptComponent {
       this.ids.push(null)
     }
     addButton(panel.content, "WhereToMoreButton", "More", WIDTH, 3.8, null, () => this.next(), TEXT, 100, "Button")
+    addButton(panel.content, "WhereToMapButton", "Show on a map", WIDTH, 3.8, icon("map"), onMap, TEXT, 100, "Button")
     addButton(panel.content, "WhereToCloseButton", "Back", WIDTH, 3.8, null, onClose, TEXT, 100, "Button")
     this.sceneObject.enabled = false
   }
