@@ -149,3 +149,150 @@ export function lineOnLevel<T extends XYZ>(pts: T[], floorY?: number): { line: T
   }
   return { line: pts, marker: null };
 }
+
+// What stops you in the preview: the outer walls, the shop fronts, the lift shafts and the sides of
+// stairs, ramps and escalators, all worked out from the map so every building gets them. On Specs the
+// real building does this.
+
+interface WallNode extends XYZ {
+  id: string;
+  kind: string;
+  front?: unknown;
+}
+
+interface WallEdge {
+  from: string;
+  to: string;
+  kind: string;
+  open: boolean;
+}
+
+export interface WallMap {
+  nodes: WallNode[];
+  edges: WallEdge[];
+  place?: { footprint?: { minX: number; maxX: number; minZ: number; maxZ: number } };
+}
+
+const BODY_M = 1.15; // how near a wall your eyes may come: panels float 1 m ahead and must stay in front of it
+const SAME_FLOOR_M = 0.5;
+const SHOP_BACK_M = 1.7; // a shop's front stands this far behind its node (the stand-in draws it here)
+const SHOP_HALF_M = 2.8;
+const LIFT_BACK_M = 1.4;
+const LIFT_HALF_M = 1.1;
+const SLAB_HALF_M = 1.2;
+const RAIL_M = 0.3; // on a slope you stay this close to its side
+const HEADROOM_M = 2.2; // a slab higher than this above you is walked under
+const SLAB_NEAR_M = 0.5; // a slab within this of your feet is the way on, not a wall
+const PATH_HALF_M = 0.5; // the map's own walkways stay open, however tight the building
+const STEP_M = 0.2; // long moves are checked in steps this long, so a wall can't be jumped
+const JUMP_M = 3; // further than this in a frame is a ride or a reset, not walking
+
+function dirFrom(map: WallMap, n: WallNode): { x: number; z: number } | null {
+  for (const e of map.edges) {
+    if (e.kind === "lift") continue;
+    const otherId = e.from === n.id ? e.to : e.to === n.id ? e.from : null;
+    if (otherId === null) continue;
+    const o = map.nodes.filter((m) => m.id === otherId)[0];
+    if (!o || Math.abs(o.y - n.y) > SAME_FLOOR_M) continue;
+    const dx = o.x - n.x;
+    const dz = o.z - n.z;
+    const l = Math.sqrt(dx * dx + dz * dz);
+    if (l > 0.01) return { x: dx / l, z: dz / l };
+  }
+  return null;
+}
+
+// Is p too close to the wall across dir, `back` metres behind n and `half` metres each way?
+function nearWall(p: XYZ, n: WallNode, dir: { x: number; z: number }, back: number, half: number): boolean {
+  const cx = n.x - dir.x * back;
+  const cz = n.z - dir.z * back;
+  const along = (p.x - cx) * -dir.z + (p.z - cz) * dir.x;
+  const across = (p.x - cx) * dir.x + (p.z - cz) * dir.z;
+  return Math.abs(along) < half + BODY_M && Math.abs(across) < BODY_M;
+}
+
+// Where p falls along and beside a connection, and the connection's height there; null if not beside it.
+function besideSlope(map: WallMap, e: WallEdge, p: XYZ, halfM: number): { h: number; offFloor: number } | null {
+  if (e.kind !== "stairs" && e.kind !== "ramp" && e.kind !== "escalator") return null;
+  const a = map.nodes.filter((n) => n.id === e.from)[0];
+  const b = map.nodes.filter((n) => n.id === e.to)[0];
+  if (!a || !b) return null;
+  const dx = b.x - a.x;
+  const dz = b.z - a.z;
+  const len2 = dx * dx + dz * dz;
+  if (len2 === 0) return null;
+  const t = ((p.x - a.x) * dx + (p.z - a.z) * dz) / len2;
+  if (t < 0 || t > 1) return null;
+  if (Math.abs((p.x - a.x) * dz - (p.z - a.z) * dx) / Math.sqrt(len2) > halfM) return null;
+  const h = a.y + (b.y - a.y) * t;
+  return { h, offFloor: Math.min(Math.abs(h - a.y), Math.abs(h - b.y)) };
+}
+
+function onWalkway(map: WallMap, p: XYZ): boolean {
+  for (const e of map.edges) {
+    const a = map.nodes.filter((n) => n.id === e.from)[0];
+    const b = map.nodes.filter((n) => n.id === e.to)[0];
+    if (!a || !b || Math.abs(a.y - p.y) > SAME_FLOOR_M || Math.abs(b.y - p.y) > SAME_FLOOR_M) continue;
+    const dx = b.x - a.x;
+    const dz = b.z - a.z;
+    const len2 = dx * dx + dz * dz;
+    const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.z - a.z) * dz) / len2));
+    if (Math.hypot(p.x - a.x - dx * t, p.z - a.z - dz * t) < PATH_HALF_M) return true;
+  }
+  return false;
+}
+
+// True when you can stand at p.
+export function isClear(map: WallMap, p: XYZ): boolean {
+  if (onWalkway(map, p)) return true;
+  const box = map.place && map.place.footprint;
+  if (box && (p.x < box.minX + BODY_M || p.x > box.maxX - BODY_M || p.z < box.minZ + BODY_M || p.z > box.maxZ - BODY_M)) return false;
+  for (const n of map.nodes) {
+    if (Math.abs(n.y - p.y) > SAME_FLOOR_M) continue;
+    const shop = n.kind === "place" || n.kind === "destination";
+    if (!shop && n.kind !== "lift") continue;
+    const dir = dirFrom(map, n);
+    if (dir && nearWall(p, n, dir, shop ? SHOP_BACK_M : LIFT_BACK_M, shop ? SHOP_HALF_M : LIFT_HALF_M)) return false;
+  }
+  if (feetOnSlope(map, p) !== null) return true;
+  for (const e of map.edges) {
+    const s = besideSlope(map, e, p, SLAB_HALF_M + BODY_M / 2);
+    if (!s) continue;
+    const above = s.h - p.y;
+    if (Math.abs(above) > SLAB_NEAR_M && above < HEADROOM_M && above > -HEADROOM_M) return false;
+  }
+  return true;
+}
+
+// Stepping off a slope's side while up on it: the rail holds you. Near either floor you just walk off.
+function rail(map: WallMap, from: XYZ, to: XYZ): boolean {
+  if (feetOnSlope(map, from) === null || feetOnSlope(map, to) !== null || onWalkway(map, to)) return false;
+  for (const e of map.edges) {
+    const s = besideSlope(map, e, to, SLAB_HALF_M + RAIL_M);
+    if (s && s.offFloor > SLAB_NEAR_M && Math.abs(s.h - from.y) < 1) return true;
+  }
+  return false;
+}
+
+function free(map: WallMap, from: XYZ, to: XYZ): boolean {
+  return isClear(map, to) && !rail(map, from, to);
+}
+
+// Where a step from `from` towards `to` really ends: stopped at a wall, sliding along it if the step
+// goes along it too. A ride or a jump passes, and so does any step that starts inside a wall.
+export function walkStep(map: WallMap, from: XYZ, to: XYZ): XYZ {
+  const dx = to.x - from.x;
+  const dz = to.z - from.z;
+  const dist = Math.sqrt(dx * dx + dz * dz);
+  if (dist > JUMP_M || Math.abs(to.y - from.y) > 1 || !isClear(map, from)) return to;
+  const steps = Math.max(1, Math.ceil(dist / STEP_M));
+  const y = to.y;
+  let x = from.x;
+  let z = from.z;
+  // Each axis on its own, so a blocked step still slides along the wall.
+  for (let i = 0; i < steps; i++) {
+    if (free(map, { x, y, z }, { x: x + dx / steps, y, z })) x += dx / steps;
+    if (free(map, { x, y, z }, { x, y, z: z + dz / steps })) z += dz / steps;
+  }
+  return Math.abs(x - to.x) < 1e-9 && Math.abs(z - to.z) < 1e-9 ? to : { x, y, z };
+}

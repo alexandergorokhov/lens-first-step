@@ -416,3 +416,21 @@ test("S18 Every stairs, ramp and escalator in the mall can be walked from end to
     assert.ok(Math.abs(y - to.y) < 0.1, e.from + " reaches " + e.to);
   }
 });
+
+test("S10b Sitting down at a lift or stairs changes neither the distance nor the floor", () => {
+  const mall = loadMap(readFileSync(new URL("../data/mall.json", import.meta.url), "utf8"));
+  for (const [from, to, profile] of [["fBM", "supermarket", "stepFree"], ["fBM", "boltHardware", "walk"], ["fE", "glowBeauty", "walk"]] as [string, string, Profile][]) {
+    const r = route(mall, from, to, profile);
+    const pts = routePoints(mall, r);
+    const along = pts.slice(0, -1).flatMap((p, i) => {
+      const q = pts[i + 1];
+      return Math.abs(p.y - q.y) < 0.5 ? [0, 0.3, 0.7].map((t) => ({ x: p.x + (q.x - p.x) * t, y: p.y, z: p.z + (q.z - p.z) * t })) : [p];
+    });
+    for (const p of along) {
+      const standing = tripAhead(mall, r, p)!;
+      const seated = tripAhead(mall, r, { x: p.x, y: p.y - 0.6, z: p.z })!;
+      assert.ok(Math.abs(seated.metres - standing.metres) < 1e-6, from + " at " + p.x + "," + p.y + "," + p.z + ": " + seated.metres + " vs " + standing.metres);
+      assert.equal(seated.floorY, standing.floorY);
+    }
+  }
+});

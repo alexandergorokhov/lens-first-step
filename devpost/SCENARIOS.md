@@ -14,7 +14,7 @@ Every scenario and where it is tested.
   seated height and the scanned sign are simulated with test hooks on `FindYourWayMain`
   (LEAF cannot drive WASD/Q/E).
 
-Node 425 tests, all passing (with `OFFLINE=1` the live gist download is skipped).
+Node 438 tests, all passing (with `OFFLINE=1` the live gist download is skipped).
 `src/core/tests/docs.test.ts` checks this count, the test list and every test named below. LEAF
 scenarios have each passed in the preview; run them in short groups, because long batches can hit a
 tap timeout.
@@ -56,6 +56,7 @@ pill (floor badge first, bottom centre), the cue / destination note above it and
 | S15 | Down escalator | Airport has a down escalator beside the up one (`escDownTop` → `escDownFoot`); Walk going down rides it, with it closed takes the stairs; the up one is never ridden down | Node: "S15 Going down on Walk…", "S15 The up escalator is never ridden down…", "Escalators are one-way…" | Passing |
 | S16 | Going down by lift and stairs | Step-Free from Departures to the entrance takes a lift down; Departures → C pier: Walk stairs down, Step-Free ramp down | Node: "S16 Riding a lift down…", "S16 Stairs down on Walk…" | Passing |
 | S18 | Walk up in the preview | Walking along open stairs, a ramp or an escalator lifts you to its height; stepping off lands on the nearest floor; an escalator only carries its own way | Node: "S18 Walking along stairs…", "S18 Stairs also work…", "S18 Beside the stairs…", "S18 A closed connection…", "S18 An escalator only…", "S18 Every stairs…". LEAF: `walk-up-the-stairs` | Passing |
+| W1–W11 | Walls in the preview | Outer walls, shop fronts, lift shafts and the sides of stairs, ramps and escalators stop you and let you slide along them; you walk under a high escalator end; every walkway stays open; a ride or reset is never held back | Node: "W1 every node…", "W2 every walkway…", "W3 the outer wall…", "W4 a shop front…", "W5 a stairs' side…", "W6 you can walk under…", "W7 once on the stairs…", "W8 a rail stops you…", "W9 a ride or a jump…", "W10 inside a wall…", "W11 a map with no footprint…" | Passing |
 | S15b | Escalator feet and tops joined | A re-route at the foot of the up escalator never sends you back through the hall | Node: "S15 Re-routing at the foot of the up escalator…" | Passing |
 | S17 | Three levels, both directions | Ground → Departures → C pier is cued up then down; a trip from upstairs to the entrance arrives | Node: "S17 Three levels…", "S17 A trip that starts upstairs…" | Passing |
 

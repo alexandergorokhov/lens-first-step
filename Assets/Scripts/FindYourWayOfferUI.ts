@@ -7,7 +7,7 @@ import {addButton, addIcon, addRow, addText, LabeledButton, makePanel, obj} from
 import {icon, pictureFor} from "./FindYourWayIconsUI"
 
 const LIST_WIDTH = 24
-const DOT_W = 22
+const DOT_W = 28
 const DOT_H = 4.6
 const ROWS = 3
 const TEXT = new vec4(1, 1, 1, 1)

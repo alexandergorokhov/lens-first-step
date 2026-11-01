@@ -25,6 +25,7 @@ const WIDTH = 22
 const BUTTON_H = 4.2
 const TEXT = new vec4(1, 1, 1, 1)
 const PLAY_SCALE = 0.7
+const FONT = 110
 
 @component
 export class FindYourWayAppPanelUI extends BaseScriptComponent {
@@ -36,6 +37,8 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
   private throwBtn: LabeledButton
   private nextStop: LabeledButton
   private endWalk: LabeledButton
+  private model: LabeledButton
+  private baseScale = 1
   private placesOn = true
   private panel: Panel
   // Every row in order; hidden rows are taken out of the layout so they leave no gap.
@@ -48,23 +51,23 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
   setup(h: AppPanelHandlers): void {
     const panel = makePanel(this.sceneObject, WIDTH + 2, 1.2, 0.8)
     this.panel = panel
-    const title = addText(panel.content, "AppTitle", "Options", "Headline2", WIDTH, 2.4, TEXT, 70)
+    const title = addText(panel.content, "AppTitle", "Options", "Headline2", WIDTH, 2.4, TEXT, FONT)
     this.companion = addButton(panel.content, "CompanionButton", "Pet: off", WIDTH, BUTTON_H, icon("directions_walk"),
-      h.onCompanion, TEXT, 70)
-    const model = addButton(panel.content, "ModelButton", "Swap model", WIDTH, BUTTON_H, null, h.onModel, TEXT, 70)
+      h.onCompanion, TEXT, FONT)
+    this.model = addButton(panel.content, "ModelButton", "Swap model", WIDTH, BUTTON_H, null, h.onModel, TEXT, FONT)
     this.places = addButton(panel.content, "PlacesButton", "Places: on", WIDTH, BUTTON_H, icon("location_on"),
-      h.onPlaces, TEXT, 70)
-    this.seeMap = addButton(panel.content, "MiniMallButton", "See map", WIDTH, BUTTON_H, icon("location_on"), h.onMap, TEXT, 70)
-    this.play = addButton(panel.content, "PlayButton", "Play while you wait", WIDTH, BUTTON_H, null, h.onPlay, TEXT, 70)
+      h.onPlaces, TEXT, FONT)
+    this.seeMap = addButton(panel.content, "MiniMallButton", "See map", WIDTH, BUTTON_H, icon("location_on"), h.onMap, TEXT, FONT)
+    this.play = addButton(panel.content, "PlayButton", "Play while you wait", WIDTH, BUTTON_H, null, h.onPlay, TEXT, FONT)
     // On Specs you raise a hand; in the preview this button does the same.
-    this.jump = addButton(panel.content, "JumpButton", "Jump (or raise a hand)", WIDTH, BUTTON_H, null, h.onJump, TEXT, 70)
-    this.throwBtn = addButton(panel.content, "ThrowButton", "Throw a treat", WIDTH, BUTTON_H, null, h.onThrow, TEXT, 70)
+    this.jump = addButton(panel.content, "JumpButton", "Jump (or raise a hand)", WIDTH, BUTTON_H, null, h.onJump, TEXT, FONT)
+    this.throwBtn = addButton(panel.content, "ThrowButton", "Throw a treat", WIDTH, BUTTON_H, null, h.onThrow, TEXT, FONT)
     this.nextStop = addButton(panel.content, "NextStopButton", "Next stop", WIDTH, BUTTON_H, icon("location_on"),
-      h.onNextStop, TEXT, 70)
-    this.endWalk = addButton(panel.content, "EndWalkButton", "End walk", WIDTH, BUTTON_H, null, h.onEndWalk, TEXT, 70)
-    this.rows = [title.getSceneObject(), this.companion.so, model.so, this.places.so, this.seeMap.so, this.play.so, this.jump.so,
+      h.onNextStop, TEXT, FONT)
+    this.endWalk = addButton(panel.content, "EndWalkButton", "End walk", WIDTH, BUTTON_H, null, h.onEndWalk, TEXT, FONT)
+    this.rows = [title.getSceneObject(), this.companion.so, this.model.so, this.places.so, this.seeMap.so, this.play.so, this.jump.so,
       this.throwBtn.so, this.nextStop.so, this.endWalk.so]
-    this.optionRows = [title.getSceneObject(), this.companion.so, model.so, this.places.so, this.seeMap.so]
+    this.optionRows = [title.getSceneObject(), this.companion.so, this.model.so, this.places.so, this.seeMap.so]
     this.setPlay(false, false, false)
     this.setNextStop(null)
     this.setFreeWalk(false)
@@ -102,6 +105,16 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
 
   getCompanionLabel(): string { return this.companion.label.text }
 
+  setNextModel(label: string): void { this.model.label.text = "Change to " + label }
+
+  getModelLabel(): string { return this.model.label.text }
+
+  // Smaller where the panel has to sit in the view instead of at the waist.
+  setBaseScale(scale: number): void {
+    this.baseScale = scale
+    this.getTransform().setLocalScale(vec3.one().uniformScale(scale * (this.playing ? PLAY_SCALE : 1)))
+  }
+
   setMapShown(on: boolean): void { this.seeMap.label.text = on ? "Hide map" : "See map" }
 
   setPlaces(on: boolean): void { this.places.label.text = "Places: " + (on ? "on" : "off") }
@@ -116,7 +129,7 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
     if (playing !== this.playing) {
       this.playing = playing
       for (const r of this.optionRows) r.enabled = !playing
-      this.getTransform().setLocalScale(vec3.one().uniformScale(playing ? PLAY_SCALE : 1))
+      this.setBaseScale(this.baseScale)
     }
     this.relayout()
   }

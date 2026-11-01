@@ -6,7 +6,7 @@ import {log, tap, waitFor} from "./FindYourWayLeafSupport"
 import {toModes} from "./FywB3Support"
 
 // companion-pick — The preferences panel picks who walks with you. The pick is ticked, turns a
-// companion that was off back on, and is the one that walks.
+// companion that was off back on, and is the one that walks. It can change in the middle of a walk.
 @component
 export class FywCompanionPickScenario extends Scenario {
   async run(): Promise<void> {
@@ -28,6 +28,11 @@ export class FywCompanionPickScenario extends Scenario {
     await waitFor(() => main.getPhase() === "free", 2000, "free walk")
     expect(main.isCompanionShown(), "the robot walks with you").toBe(true)
     expect(main.getCompanionModel(), "still the robot").toBe("robot")
+    expect(main.getModelButtonLabel(), "the button names the next one").toBe("Change to Rover")
+    await tap(it, "ModelButton")
+    expect(main.getCompanionModel(), "changed mid-walk").toBe("rover")
+    expect(main.isCompanionShown(), "and still walking with you").toBe(true)
+    expect(main.getModelButtonLabel(), "the next one again").toBe("Change to Dog")
     await tap(it, "EndWalkButton")
     await waitFor(() => main.getPhase() === "choose" && main.isHomePanelShown(), 2000, "back at the modes")
     main.setCompanionModel("dog")

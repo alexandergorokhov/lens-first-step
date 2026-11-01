@@ -41,7 +41,7 @@ After the scan, four choices appear.
 - Pick your preferences and your companion: dog, robot or rover.
 - The companion keeps ahead of you on the walkable paths, about 7 m by default. It follows your walking direction, so glancing at a shop does not swing it round.
 - It stops at each shop that matches and points at it, once per walk.
-- Look at any shop and a gold button appears in your view: "Offers: Bolt Hardware". Open it to see up to 3 offers, or ignore it and nothing happens.
+- Look at any shop and a gold button appears in your view: "Offers: Bolt Hardware", or "Sponsored: Bean There Café" for a promoted shop. Open it to see up to 3 offers, or ignore it and nothing happens.
 - When matches are on another floor, it waits at the stairs or escalator with a bubble: "3 picks upstairs".
 
 **Tour: be shown round.** The companion leads you through the shops that match your preferences, stop by stop, in the shortest order.
@@ -73,7 +73,7 @@ After the scan, four choices appear.
 | Thing | Where |
 |---|---|
 | Route line | On the floor, 30 cm wide, Google Maps blue at 50% so the floor shows through, fading 10 m ahead |
-| Companion | On the floor ahead of you, half see-through so it never hides the floor |
+| Companion | On the floor ahead of you, see-through so it never hides the floor |
 | Distance pill and floor cue | Bottom centre of the view, a little below eye level |
 | Offers button | Right of centre in the view, gold, naming what it opens |
 | Offer list | Right side of the view, about 1 m away |

@@ -322,7 +322,7 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
     m.mainPass.baseColor = new vec4(color.x, color.y, color.z, COMPANION_ALPHA)
     m.mainPass.blendMode = BlendMode.Normal
     m.mainPass.depthWrite = true
-    m.mainPass.twoSided = true
+    m.mainPass.twoSided = false // both faces would stack up and hide what is behind it
     return m
   }
 

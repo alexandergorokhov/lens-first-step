@@ -56,6 +56,14 @@ SHALL refuse, leave the traveller where they are and show "Walk to <node label> 
 - **THEN** they are carried up 6 m
 - Verified by: C1 ride reach: seated traveller (feet −0.45 m) 0.5 m from lift2G can ride (also: 3 m away and another level refuse) | dc3b-seated-lift-ride, dc3-stepfree-seated-lift-reroute
 
+### Requirement: Walls in the preview
+The preview's keys walk through anything. In Lens Studio only, the outer walls, shop fronts, lift shafts
+and the sides of stairs, ramps and escalators SHALL stop the traveller 1.15 m away, so panels 1 m ahead
+stay in front of them, and SHALL let them slide along. All of it comes from the map. The map's own
+walkways SHALL always stay open, a ride or reset SHALL never be held back, and a step that starts inside
+a wall SHALL pass. On Specs the real building does this.
+- Verified by: W1–W11 (Node, walls.test.ts); checked with the real preview camera at Bolt Hardware's front
+
 ### Requirement: Walking up in the preview
 The preview's keys keep the traveller at one height. In Lens Studio only, walking along open stairs,
 a ramp or an escalator SHALL lift the feet to its height, and stepping off SHALL land on the nearest

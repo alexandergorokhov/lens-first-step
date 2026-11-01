@@ -14,7 +14,7 @@ No glasses needed. Everything below runs in Lens Studio's Preview panel on your 
 |---|---|
 | Move | W A S D |
 | Go down / up (seated height) | Q / E |
-| Change floors | Walk along the stairs, ramp or escalator. Lifts use the gold button. |
+| Change floors | Walk along the stairs, ramp or escalator from its foot or top. Its sides are solid, like the walls and shop fronts. Lifts use the gold button. |
 | Turn your head | Hold Shift and press A or D. Shift+W and Shift+S look up and down. With a mouse: right-drag. |
 | Pinch (press a button) | Click. If it only highlights, click again. |
 
@@ -54,10 +54,10 @@ Click **Tour**, then keep your preferences. The companion leads you through the 
 
 ## During a walk
 
-The **Options** panel sits at waist height to your left:
+The **Options** panel sits at the left of your view (on Specs, at waist height):
 
 - **Pet: on/off** shows or hides the companion. The line stays.
-- **Swap model** goes dog → robot → rover.
+- **Change to …** goes dog → robot → rover, at any point in a walk.
 - **Places: on/off** mutes the icons and pointing.
 - **See map** shows the mini mall with your route on it.
 - **Play while you wait** appears when you stand still with the companion on. Raise a hand to jump, or click **Jump**.
@@ -99,7 +99,7 @@ Write **logic proven** next to what tests and the preview show working, and **fe
 npm test
 ```
 
-Expect `pass 425`, `fail 0`. One test downloads the maps from the public gist; with no internet, set `OFFLINE=1` to skip it (`pass 424`, `skipped 1`). The run first checks that the Lens copies match `src/core`. After editing `src/core`, run `npm run sync`.
+Expect `pass 438`, `fail 0`. One test downloads the maps from the public gist; with no internet, set `OFFLINE=1` to skip it (`pass 437`, `skipped 1`). The run first checks that the Lens copies match `src/core`. After editing `src/core`, run `npm run sync`.
 
 **LEAF tests** run inside the Lens, pressing the real buttons:
 

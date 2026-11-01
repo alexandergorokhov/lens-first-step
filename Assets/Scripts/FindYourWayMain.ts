@@ -52,9 +52,9 @@ import {
   placeOf,
   rideCard,
 } from "./FindYourWayMapLibrary"
-import {feetOnSlope, lineOnLevel, nextTurnAlong, turnOutOfView, yawFromForward, yawTo} from "./FindYourWayGeometry"
+import {feetOnSlope, lineOnLevel, nextTurnAlong, turnOutOfView, walkStep, yawFromForward, yawTo} from "./FindYourWayGeometry"
 import {destinationFloorText, floorCueFor, tripPill} from "./FindYourWayPlace"
-import {Companion, companionOf, COMPANIONS, PetGuide, treatsResult, treatsText} from "./FindYourWayPet"
+import {Companion, companionChoices, companionOf, COMPANIONS, PetGuide, treatsResult, treatsText} from "./FindYourWayPet"
 import {Place, placesOf, placeTag, PointingCoach, POINT_SECONDS, visiblePlaces} from "./FindYourWayPlaces"
 import {CatchGame, canThrow, HOP_LANE, HopGame, hopText, landingSpot, PlayGate, PlayXYZ, RaiseDetector, releaseVelocity, SEATED_LANE, SEATED_THROW_MAX, SeatedDetector, seatedPlaySpot, THROW_MAX} from "./FindYourWayPlay"
 import {mapLevels, tourStops} from "./FindYourWayTour"
@@ -109,10 +109,14 @@ const RIDE_BUTTON_CM = 115
 const ARRIVAL_CARD_CM = 200
 const LINE_LIFT_CM = 1 // the floor line sits 1 cm above the floor
 const CLOSED_SIGN_TEXT = "Closed — re-routing"
+const SPONSORED_SIGN = "Sponsored"
 const RIDE_CARD_S = 2.5
 const SLOPE_MIN_RISE_M = 0.005
 // The offers button, from the head (right, up, forward), cm: inside the Specs view, clear of the panels.
 const DOT_OFFSET = new vec3(13, 4, -100)
+// The preview's keys can't reliably look down, so there the Options panel stays in view, at its left edge.
+const PREVIEW_PANEL_OFFSET = new vec3(-18, -6, -100)
+const PREVIEW_PANEL_SCALE = 0.8
 const SCAN_PANEL_AHEAD_CM = 160
 const SCAN_PANEL_RIGHT_CM = 10 // clear of the Demo controls on the left
 const SCAN_PANEL_BELOW_EYE_CM = 15
@@ -314,6 +318,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   // Building-local cm the traveller has been carried by rides (the building moves the other way).
   private rideOffset = new vec3(0, 0, 0)
   private onSlope = false
+  private lastWalked: Vec3 | null = null
   private debugPose: {pos: Vec3; heading: number} | null = null
   private viewFollowsPose = false
   private pendingSwing = false
@@ -490,6 +495,7 @@ export class FindYourWayMain extends BaseScriptComponent {
       onEndWalk: () => this.endTrip(),
       onMap: () => this.setMapShown(!this.mapShown),
     })
+    if (global.deviceInfoSystem.isEditor()) this.appPanel.setBaseScale(PREVIEW_PANEL_SCALE)
     this.setCompanionModel(this.companionModel)
     const mp = global.scene.createSceneObject("MappingPanel")
     this.mappingPanel = mp.createComponent(FindYourWayMappingPanelUI.getTypeName()) as FindYourWayMappingPanelUI
@@ -1268,11 +1274,29 @@ export class FindYourWayMain extends BaseScriptComponent {
     print("[FYW] ride " + id + " -> " + r.to)
   }
 
+  private walkingInPreview(): boolean {
+    return global.deviceInfoSystem.isEditor() && (this.phase === "free" || this.phase === "nav" || this.phase === "arrived")
+  }
+
+  // The preview's keys walk through anything, so the walls push back here. The real building does it on Specs.
+  private walkWalls(): void {
+    if (!this.walkingInPreview() || this.debugPose) {
+      this.lastWalked = null
+      return
+    }
+    const pos = this.userPos()
+    const to = this.lastWalked ? walkStep(this.nav ? this.nav.map : this.map, this.lastWalked, pos) : pos
+    if (to.x !== pos.x || to.z !== pos.z) {
+      this.rideOffset = this.rideOffset.add(new vec3((to.x - pos.x) * 100, 0, -(to.z - pos.z) * 100))
+      this.placeBuilding()
+    }
+    this.lastWalked = {x: to.x, y: to.y, z: to.z}
+  }
+
   // The preview's keys keep you at one height, so stairs, ramps and escalators lift you here as you
   // walk along them. On Specs your own climbing does this. Stepping off one lands on the nearest floor.
   private walkSlope(): void {
-    if (!global.deviceInfoSystem.isEditor()) return
-    if (this.phase !== "free" && this.phase !== "nav" && this.phase !== "arrived" && this.phase !== "mapping") return
+    if (!this.walkingInPreview() && !(global.deviceInfoSystem.isEditor() && this.phase === "mapping")) return
     const map = this.nav ? this.nav.map : this.map
     const pos = this.userPos()
     let y = feetOnSlope(map, pos)
@@ -1460,8 +1484,9 @@ export class FindYourWayMain extends BaseScriptComponent {
         else ui.addPlaceSign(n.id, this.local(n, DEST_SIGN_CM), n.label || n.id, n.type || null, n.icon || null)
       } else if (n.kind === "place" && n.front) {
         // The shop's name over its front, readable from the walkway.
-        if (this.standIn.isSolid()) ui.addPlaceSign(n.id, this.fasciaSpot(n), n.label || n.id, null, null, FASCIA_SIGN_SCALE, FASCIA_TEXT_SIZE)
-        else ui.addPlaceSign(n.id, this.local(n, SHOP_SIGN_CM), n.label || n.id, null, null, SHOP_SIGN_SCALE)
+        const tag = n.sponsored ? SPONSORED_SIGN : null
+        if (this.standIn.isSolid()) ui.addPlaceSign(n.id, this.fasciaSpot(n), n.label || n.id, tag, null, FASCIA_SIGN_SCALE, FASCIA_TEXT_SIZE)
+        else ui.addPlaceSign(n.id, this.local(n, SHOP_SIGN_CM), n.label || n.id, tag, null, SHOP_SIGN_SCALE)
       } else if (n.kind === "assistance") {
         ui.addPlaceSign(n.id, this.local(n, ASSIST_SIGN_CM), n.label || n.id, null, "info")
       } else if (n.kind === "lift") {
@@ -1532,6 +1557,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.followDemoControls()
     this.followAppPanel()
     this.updatePeek()
+    this.walkWalls()
     this.walkSlope()
     if (this.phase === "mapping") {
       this.builder.tick()
@@ -1704,7 +1730,11 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.companion = companionOf(id)
     this.guide.companion = this.companion
     if (this.view) this.view.setModel(this.companion.model)
-    if (this.appPanel) this.appPanel.setCompanion(this.companion.name, this.guide.on, this.companion.collectible.one)
+    if (this.appPanel) {
+      this.appPanel.setCompanion(this.companion.name, this.guide.on, this.companion.collectible.one)
+      const next = COMPANION_IDS[(COMPANION_IDS.indexOf(this.companion.id) + 1) % COMPANION_IDS.length]
+      this.appPanel.setNextModel(companionChoices().filter((c) => c.id === next)[0].label)
+    }
     if (this.prefsPanel) this.prefsPanel.setCompanion(this.companion.name, this.freeCompanion, this.companion.id)
   }
 
@@ -1968,7 +1998,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.appPanel.show(on)
     if (!on) return
     const t = this.camera.getTransform()
-    const offset = this.appPanel.isPlaying() ? this.playPanelOffset : this.appPanelOffset
+    const offset = this.appPanel.isPlaying() ? this.playPanelOffset : global.deviceInfoSystem.isEditor() ? PREVIEW_PANEL_OFFSET : this.appPanelOffset
     const p = t.getWorldPosition().add(this.headYaw().multiplyVec3(offset))
     const so = this.appPanel.getSceneObject().getTransform()
     so.setWorldPosition(wasOn ? vec3.lerp(so.getWorldPosition(), p, 1 - Math.exp(-getDeltaTime() * 4)) : p)
@@ -2111,6 +2141,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   }
 
   getFeetY(): number { return this.userPos().y }
+  getUserMapPos(): Vec3 { return this.userPos() }
   getHudCardTextOrEmpty(): string { return this.hud.getCardText() || "" }
   // State for the LEAF scenarios.
   getPillText(): string | null { return this.hud.getPillText() }
@@ -2122,6 +2153,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   isCompanionShown(): boolean { return !!this.view && this.view.isVisible() }
   getCompanionModel(): string { return this.view ? this.view.getModel() : "" }
   getCompanionName(): string { return this.companion.name }
+  getModelButtonLabel(): string { return this.appPanel ? this.appPanel.getModelLabel() : "" }
   getCompanionMapPos(): Vec3 | null {
     if (this.free) return this.free.pet ? this.free.pet.pos : null
     return this.guide.pet ? this.guide.pet.pos : null

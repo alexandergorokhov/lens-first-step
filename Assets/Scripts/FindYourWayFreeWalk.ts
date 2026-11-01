@@ -316,7 +316,8 @@ export function offerView(map: FwMap, id: string, prefs: string[], y: number): O
 export function dotLabel(map: FwMap, id: string, prefs: string[], y: number): string {
   const view = offerView(map, id, prefs, y);
   if (!view) return "";
-  return view.rows.length > 0 && view.rows[0].price ? "Offers: " + view.title : view.title;
+  if (view.rows.length === 0 || !view.rows[0].price) return view.title;
+  return (view.tag ? SPONSOR_TAG : "Offers") + ": " + view.title;
 }
 
 // The preference checkboxes: the map's list, or today's interests on maps without one.

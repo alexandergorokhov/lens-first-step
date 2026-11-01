@@ -29,7 +29,7 @@ front wins. The outside is the side the node's walk edge arrives from. A node wi
 dot; stairs, escalators and lifts have one. The dot SHALL show after 0.5 s of looking and hide 2 s
 after looking away; a glance under 0.5 s shows nothing. Companion on or off, matching or not, every
 front gets a dot. The dot is a gold button that says what a pinch opens ("Offers: Bolt Hardware",
-"Your picks upstairs"), so it can be seen against any shop. If it is not opened, nothing happens.
+"Your picks upstairs"), so it can be seen against any shop. A sponsored shop's button says "Sponsored: <shop>". If it is not opened, nothing happens.
 
 #### Scenario: FW2 Look, dot, open, ignore
 - **WHEN** the traveller looks across a front from outside for 0.5 s

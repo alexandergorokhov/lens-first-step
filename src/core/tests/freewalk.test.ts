@@ -398,3 +398,8 @@ test("D4 the button says what a pinch will open", () => {
   assert.equal(dotLabel(mall, "cashMachine", [], 0), "Cash machine");
   assert.equal(dotLabel(mall, "nowhere", [], 0), "");
 });
+
+test("D5 a promoted shop's button says so", () => {
+  const mall = JSON.parse(readFileSync(new URL("../data/mall.json", import.meta.url), "utf8"));
+  assert.equal(dotLabel(mall, "cafe", [], 0), "Sponsored: Bean There Café");
+});
