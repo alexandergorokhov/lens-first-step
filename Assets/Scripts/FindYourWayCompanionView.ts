@@ -6,7 +6,7 @@
 // Unlit material. Must not: decide where the companion goes (FindYourWayPet / FindYourWayPlay do).
 
 import {Boxes, shadeTexture, whiteTexture} from "./FindYourWayStandIn"
-import {RigMood, poseFor, rigOf} from "./FindYourWayAnim"
+import {RigMood, poseFor, rigOf, COMPANION_ALPHA} from "./FindYourWayAnim"
 import {LiveRig} from "./FindYourWayRigMesh"
 import {Interactable} from "SpectaclesInteractionKit.lspkg/Components/Interaction/Interactable/Interactable"
 import {InteractableManipulation} from "SpectaclesInteractionKit.lspkg/Components/Interaction/InteractableManipulation/InteractableManipulation"
@@ -15,7 +15,6 @@ import {InteractableManipulation} from "SpectaclesInteractionKit.lspkg/Component
 const GRAB_TARGET_CM = 16 // bigger than the treat, so it is easy to pinch
 const TELEPORT_MS = 8 // moved faster than this: a ride or a jump to a new place, not walking
 const SPEED_SMOOTHING = 8
-const COMPANION_ALPHA = 0.8 // a little see-through, so it never hides the way ahead
 
 export interface HopObstacleLike {
   d: number

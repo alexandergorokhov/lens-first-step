@@ -1,7 +1,7 @@
 // Companion animation: jointed rigs and the pose for each mood. Pure maths, no Lens.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { DOG_STRIDE_M, RIGS, ROBOT_STRIDE_M, WHEEL_RADIUS_CM, poseFor, rigOf, rigHeightCm } from "../anim.ts";
+import { DOG_STRIDE_M, RIGS, ROBOT_STRIDE_M, WHEEL_RADIUS_CM, poseFor, rigOf, rigHeightCm, COMPANION_ALPHA } from "../anim.ts";
 import type { RigMood } from "../anim.ts";
 
 const MOODS: RigMood[] = ["lead", "run", "sit", "wait", "point", "arrived"];
@@ -148,3 +148,7 @@ function worldY(id: string, p: { joint: string; at: number[] }): number {
   }
   return y;
 }
+
+test("A14 the companion is see-through enough to show the floor under it", () => {
+  assert.ok(COMPANION_ALPHA >= 0.4 && COMPANION_ALPHA <= 0.6, String(COMPANION_ALPHA));
+});

@@ -39,6 +39,8 @@ export interface RigPose {
 }
 
 export const WHEEL_RADIUS_CM = 9;
+// How solid the companion is drawn: half, so the floor and the way ahead show through it.
+export const COMPANION_ALPHA = 0.5;
 const EASE_IN_SPEED = 0.6; // m/s: the swing grows to full by this speed
 export const DOG_STRIDE_M = 0.4;
 export const ROBOT_STRIDE_M = 0.5;

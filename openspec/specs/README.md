@@ -37,7 +37,7 @@ Capabilities of "Find Your Way Inside" (see `../project.md` for context and conv
 
 ## Traceability
 
-Status: **Pass (auto)** = covered by a passing Node test and/or LEAF scenario (Node 414 tests, all passing / 0 todo;
+Status: **Pass (auto)** = covered by a passing Node test and/or LEAF scenario (Node 415 tests, all passing / 0 todo;
 LEAF 43 scenarios as of the last recorded run in `devpost/SCENARIOS.md`); **Partial** = logic tested but
 part of the behaviour only manual or untested; **Manual** = checked by hand in the preview only;
 **Gap** = no test.
@@ -138,7 +138,7 @@ part of the behaviour only manual or untested; **Manual** = checked by hand in t
 | X61 | Optional map fields typed | map-format | (compile) | (compile) | Pass (review) |
 | X62 | Lens copies kept identical by tooling | routing | A1 ×3; A4 no dead helpers… | — | Pass (auto) |
 | S10–S14 | Pill, floor badge, cue, line on your floor | floors-and-distance | S10–S14 | fl1-pill-shows-and-counts-down, fl2-cue-post-and-badge-after-escalator | Pass (Node); LEAF passing |
-| A1–A13 | Jointed, animated companions | companion | A1–A13 (anim.test.ts) | visual-rigs (by eye) | Pass (Node) |
+| A1–A14 | Jointed, animated, see-through companions | companion | A1–A14 (anim.test.ts) | visual-rigs (by eye) | Pass (Node) |
 | PB4 | "You are here" directory board in the place | preview-backdrop | — | s1-start-at-sign-controls-hidden | Pass (auto) |
 | FW7 | Free walk demo button, in the mall | demo-controls | D20 | fw1-free-walk-demo | Pass (auto) |
 | MB5 | Map builder demo with the mall behind it | map-builder | — | mb5-builder-in-the-mall | Pass (auto) |
