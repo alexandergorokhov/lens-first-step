@@ -51,6 +51,7 @@ import {FywFw1FreeWalkDemoScenario} from "./FywFw1FreeWalkDemoScenario"
 import {FywMb5BuilderInMallScenario} from "./FywMb5BuilderInMallScenario"
 import {FywCheckPlacesScenario} from "./FywCheckPlacesScenario"
 import {FywLookScenario} from "./FywLookScenario"
+import {FywMapLookScenario} from "./FywMapLookScenario"
 import {FywRigStageScenario} from "./FywRigStageScenario"
 
 // The LEAF plugin's stall after loading the list grows steeply with its length (44: ~30 s, 51: ~4 min
@@ -113,6 +114,7 @@ export class FindYourWayLeafIndex extends BaseScriptComponent {
     {id: "visual-reel", typename: FywReelScenario.getTypeName()},
     {id: "visual-check-places", typename: FywCheckPlacesScenario.getTypeName()},
     {id: "visual-look", typename: FywLookScenario.getTypeName()},
+    {id: "visual-map", typename: FywMapLookScenario.getTypeName()},
     {id: "visual-rigs", typename: FywRigStageScenario.getTypeName()},
   ] as ScenarioMetadata[]).concat(!INCLUDE_SHOTS ? [] : [
     // Screenshot set-ups — skipped by the runner unless named in `only`.

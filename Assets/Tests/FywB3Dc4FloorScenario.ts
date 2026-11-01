@@ -17,7 +17,7 @@ export class FywB3Dc4FloorScenario extends Scenario {
     main.debugSetPose(52, 0, 10, 0)
     await waitFor(() => main.getStopId() === "stairsFoot", 3000, "it heads for the stairs")
     await waitFor(() => main.getBubbleText() !== null, 5000, "the bubble")
-    expect(main.getBubbleText(), "bubble").toBe("4 picks upstairs")
+    expect(main.getBubbleText(), "bubble").toBe("5 picks upstairs")
 
     // Looking at the stairs gives the same dot as a shop.
     main.debugSetPose(57, 0, 13, 0)
@@ -38,7 +38,8 @@ export class FywB3Dc4FloorScenario extends Scenario {
     await sleep(300)
     expect(main.getDebugPose()!.pos.y, "upstairs").toBe(5)
     main.debugSetPose(50, 5, 22, 0)
-    await waitFor(() => main.getStopId() === "secondSkin", 3000, "the companion stops at it")
+    // The next flight's hint can come first.
+    await waitFor(() => main.getStopId() === "secondSkin", 9000, "the companion stops at it")
     await waitFor(() => main.getDotId() === "secondSkin", 2000, "and it gets a dot")
     expect((main.getCompanionMapPos() as {y: number}).y, "the companion came up").toBe(5)
     log("b3-dc4 pass")

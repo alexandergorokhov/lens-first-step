@@ -95,6 +95,11 @@ const SCAN_SIGN_CM = 125
 const DEST_SIGN_CM = 330 // overhead destination signs
 const SHOP_SIGN_CM = 300 // a shop's name, on its awning
 const SHOP_SIGN_SCALE = 7
+// In the preview the name sits on the shop's own fascia, big enough to read down the mall.
+const FASCIA_SIGN_CM = 262
+const FASCIA_SIGN_SCALE = 11
+const FASCIA_TEXT_SIZE = 200
+const FASCIA_AHEAD_CM = 150 // from the shop's front back toward the node
 const ASSIST_SIGN_CM = 280
 const LIFT_SIGN_CM = 290
 const CONNECTION_SIGN_CM = 260 // escalator / stairs / ramp signs
@@ -134,6 +139,12 @@ const MAPPED_KEY_NAME = "mine"
 // toward you (cm) to show it.
 const PEEK_AHEAD_CM = 60
 const PEEK_BELOW_CM = 45
+// See map puts the mini mall in the narrow view, as it can't be looked down at with a pinch.
+const SEE_MAP_AHEAD_CM = 115
+const SEE_MAP_RIGHT_CM = 15
+const SEE_MAP_BELOW_CM = 3
+const SEE_MAP_SIZE_M = 0.26
+const SEE_MAP_FLOOR_GAP_M = 0.075
 const PEEK_PULL_CM = 8
 // The companion's bubble floats this high above its feet (cm).
 const BUBBLE_ABOVE_CM = 115
@@ -950,7 +961,8 @@ export class FindYourWayMain extends BaseScriptComponent {
     const want = navOn && (pulled || this.peekForced)
     const now = getTime()
     if (want && (!this.peekOn || now - this.peekBuiltAt > 0.5)) {
-      this.peekView.showPlace(peekPlace(this.nav ? this.nav.map : this.map, this.routeMapPoints(), this.userPos()))
+      this.peekView.showPlace(peekPlace(this.nav ? this.nav.map : this.map, this.routeMapPoints(), this.userPos(),
+        this.mapShown ? {size: SEE_MAP_SIZE_M, gap: SEE_MAP_FLOOR_GAP_M} : undefined))
       this.peekBuiltAt = now
     } else if (!want && this.peekOn) this.peekView.showPlace(null)
     this.peekOn = want
@@ -958,7 +970,8 @@ export class FindYourWayMain extends BaseScriptComponent {
       const t = this.camera.getTransform()
       const yaw = this.headYaw()
       const so = this.peekView.getSceneObject().getTransform()
-      so.setWorldPosition(t.getWorldPosition().add(yaw.multiplyVec3(new vec3(0, -PEEK_BELOW_CM, -PEEK_AHEAD_CM))))
+      const spot = this.mapShown ? new vec3(SEE_MAP_RIGHT_CM, -SEE_MAP_BELOW_CM, -SEE_MAP_AHEAD_CM) : new vec3(0, -PEEK_BELOW_CM, -PEEK_AHEAD_CM)
+      so.setWorldPosition(t.getWorldPosition().add(yaw.multiplyVec3(spot)))
       // Map north points where the building's north points.
       so.setWorldRotation(this.building.getTransform().getWorldRotation())
     }
@@ -1396,6 +1409,11 @@ export class FindYourWayMain extends BaseScriptComponent {
     }
   }
 
+  private fasciaSpot(n: MapNode): vec3 {
+    const ad = approachDir(this.map, n.id)
+    return this.local(n, FASCIA_SIGN_CM).sub(new vec3(ad.x, 0, -ad.z).uniformScale(FASCIA_AHEAD_CM))
+  }
+
   private buildPlace(): void {
     const map = this.map
     const place = this.place
@@ -1419,10 +1437,12 @@ export class FindYourWayMain extends BaseScriptComponent {
     }
     for (const n of map.nodes) {
       if (n.kind === "destination" || n.kind === "gate") {
-        ui.addPlaceSign(n.id, this.local(n, DEST_SIGN_CM), n.label || n.id, n.type || null, n.icon || null)
+        if (this.standIn.isSolid()) ui.addPlaceSign(n.id, this.fasciaSpot(n), n.label || n.id, null, n.icon || null, FASCIA_SIGN_SCALE, FASCIA_TEXT_SIZE)
+        else ui.addPlaceSign(n.id, this.local(n, DEST_SIGN_CM), n.label || n.id, n.type || null, n.icon || null)
       } else if (n.kind === "place" && n.front) {
         // The shop's name over its front, readable from the walkway.
-        ui.addPlaceSign(n.id, this.local(n, SHOP_SIGN_CM), n.label || n.id, null, null, SHOP_SIGN_SCALE)
+        if (this.standIn.isSolid()) ui.addPlaceSign(n.id, this.fasciaSpot(n), n.label || n.id, null, null, FASCIA_SIGN_SCALE, FASCIA_TEXT_SIZE)
+        else ui.addPlaceSign(n.id, this.local(n, SHOP_SIGN_CM), n.label || n.id, null, null, SHOP_SIGN_SCALE)
       } else if (n.kind === "assistance") {
         ui.addPlaceSign(n.id, this.local(n, ASSIST_SIGN_CM), n.label || n.id, null, "info")
       } else if (n.kind === "lift") {
@@ -2174,6 +2194,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (this.mapIndex >= MAP_SOURCES.length) this.mapIndex = 0
   }
   debugPeek(on: boolean): void { this.peekForced = on }
+  debugSeeMap(on: boolean): void { this.setMapShown(on) }
   isPeekShown(): boolean { return !!this.peekView && this.peekView.isShown() }
   areDemoControlsShown(): boolean { return this.demoControls.getSceneObject().enabled }
   debugSetInterests(ids: string[]): void { this.modePanel.setInterests(ids) }

@@ -77,14 +77,14 @@ export class FindYourWayBuildingUI extends BaseScriptComponent {
 
   // Overhead place sign ("Gate B12", "Lift 1", "Escalator ↑"…) with an icon.
   addPlaceSign(name: string, localPos: vec3, title: string, caption: string | null, iconName: string | null,
-      scale: number = this.placeSignScale): void {
+      scale: number = this.placeSignScale, textSize: number = 110): void {
     const so = this.root("Sign_" + name, localPos, scale)
     const width = Math.max(12, title.length * 1.4 + 7)
     const p = makePanel(so, width, 1, 0.3)
     const row = addRow(p.content, "Row", width - 2, 3.4, 0.8)
     if (iconName) addIcon(row, "Icon", icon(iconName), 2.8, this.textColor)
     addText(row, "Title", title, "Headline1", width - (iconName ? 6 : 2), 3.4, this.textColor,
-      110, iconName ? HorizontalAlignment.Left : HorizontalAlignment.Center)
+      textSize, iconName ? HorizontalAlignment.Left : HorizontalAlignment.Center)
     if (caption) addText(p.content, "Caption", caption, "Body", width - 2, 2, this.faded(0.8))
   }
 

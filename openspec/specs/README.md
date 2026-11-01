@@ -37,7 +37,7 @@ Capabilities of "Find Your Way Inside" (see `../project.md` for context and conv
 
 ## Traceability
 
-Status: **Pass (auto)** = covered by a passing Node test and/or LEAF scenario (Node 415 tests, all passing / 0 todo;
+Status: **Pass (auto)** = covered by a passing Node test and/or LEAF scenario (Node 416 tests, all passing / 0 todo;
 LEAF 43 scenarios as of the last recorded run in `devpost/SCENARIOS.md`); **Partial** = logic tested but
 part of the behaviour only manual or untested; **Manual** = checked by hand in the preview only;
 **Gap** = no test.
@@ -145,7 +145,7 @@ part of the behaviour only manual or untested; **Manual** = checked by hand in t
 | H1–H36 | Hostile maps, floors, closures, marked shops, edge values | hardening | H1–H36 (hardening.test.ts) | — | Pass (Node) |
 | T1–T13 | Tools, ignored keys, nothing private tracked | hardening | T1–T13 (hardening.test.ts) | — | Pass (Node) |
 | E1b | End trip, without demo controls | hardening | — | e1b-end-trip | Pass (auto) |
-| PM1–PM15 | The mini mall | peek-ahead | PM1–PM15 (peek-place.test.ts) | pk1-peek-ahead-shows-and-hides | Pass (auto) |
+| PM1–PM16 | The mini mall | peek-ahead | PM1–PM16 (peek-place.test.ts) | pk1-peek-ahead-shows-and-hides | Pass (auto) |
 | BM1–BM5 | The board's map | peek-ahead | BM1–BM5 (peek-place.test.ts) | s1-start-at-sign-controls-hidden | Pass (auto) |
 | P1–P7, Q7, Q8 | Companion on/off, any model, leads/waits/collects | companion | P1–P7 | p1-companion-toggle-and-models, p3-companion-waits-at-escalator | Pass (Node); LEAF passing |
 | Q1–Q6 | Places, interests, pointing, Go here? | places | Q1–Q6 | q4-points-at-interests-and-sponsored | Pass (Node); LEAF passing |

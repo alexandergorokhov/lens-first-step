@@ -20,6 +20,7 @@ const GROUP_COLORS: {[group in PlaceGroup]: vec4} = {
   service: new vec4(0.6, 0.78, 0.92, 0.95),
   shop: new vec4(0.86, 0.8, 0.66, 0.95),
 }
+const FULL_SCALE = 0.007 // model metres per map metre at which the markers are full size
 const OPEN_LINK = new vec4(0.75, 0.82, 0.88, 0.5)
 const CLOSED_LINK = new vec4(0.86, 0.3, 0.26, 0.8)
 const cmOf = (p: {x: number; y: number; z: number}) => new vec3(p.x * 100, p.y * 100, -p.z * 100)
@@ -67,14 +68,15 @@ export class FindYourWayPeekView extends BaseScriptComponent {
       const target = i + 1 <= model.done ? done : ahead
       target.slab(cm(model.route[i]), cm(model.route[i + 1]), LINE_CM, LINE_CM)
     }
+    const dot = DOT_CM * Math.min(1, model.scale / FULL_SCALE)
     const you = new Boxes()
-    you.box(cm(model.you), new vec3(DOT_CM, DOT_CM, DOT_CM))
+    you.box(cm(model.you), new vec3(dot, dot, dot))
     this.add("PeekDone", done, new vec4(0.6, 0.75, 1, 0.3))
     this.add("PeekAhead", ahead, new vec4(0.3, 0.75, 0.95, 0.95))
     this.add("PeekYou", you, new vec4(1, 1, 1, 1))
     if (model.target) {
       const target = new Boxes()
-      target.box(cm(model.target).add(new vec3(0, DOT_CM, 0)), new vec3(DOT_CM, DOT_CM * 2, DOT_CM))
+      target.box(cm(model.target).add(new vec3(0, dot, 0)), new vec3(dot, dot * 2, dot))
       this.add("PeekTarget", target, new vec4(0.95, 0.42, 0.34, 1))
     }
   }

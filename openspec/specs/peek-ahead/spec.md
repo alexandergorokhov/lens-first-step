@@ -22,16 +22,16 @@ by group (food, fun, service, shop), the connections between floors (closed ones
 the walked route faint, the rest glowing, a dot for you and a mark at the destination. Halfway up a
 connection you are halfway between two floors. The floors SHALL not be rebuilt while only you move.
 
-#### Scenario: PM1–PM15 What the model holds
+#### Scenario: PM1–PM16 What the model holds
 - **GIVEN** the mall with a route to the Sky Garden
 - **THEN** three floors show, full of shops, with the route climbing through them
-- Verified by: PM1–PM15 (Node) | pk1-peek-ahead-shows-and-hides
+- Verified by: PM1–PM16 (Node) | pk1-peek-ahead-shows-and-hides
 
 ### Requirement: See map
 The app panel SHALL have a See map button that shows and hides the mini mall, for when a hand can't pinch
 and pull (the preview). End trip and Restart SHALL turn it off.
 
-#### Scenario: PM16 See map
+#### Scenario: PM17 See map
 - Verified by: by eye in the preview
 
 ### Requirement: The board shows your floor

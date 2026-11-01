@@ -201,8 +201,9 @@ function stackHeight(levels: number[], y: number): number {
   return levels.length - 1;
 }
 
-export function peekPlace(map: PlaceMap, route: PeekPoint[], user: PeekPoint, opts?: { size?: number }): PeekPlaceModel {
+export function peekPlace(map: PlaceMap, route: PeekPoint[], user: PeekPoint, opts?: { size?: number; gap?: number }): PeekPlaceModel {
   const size = opts && typeof opts.size === "number" && opts.size > 0 ? opts.size : PEEK_SIZE;
+  const gap = opts && typeof opts.gap === "number" && opts.gap > 0 ? opts.gap : PEEK_FLOOR_GAP;
   const levels = floorHeights(map);
   const xs = map.nodes.map((n) => n.x);
   const zs = map.nodes.map((n) => n.z);
@@ -213,10 +214,10 @@ export function peekPlace(map: PlaceMap, route: PeekPoint[], user: PeekPoint, op
   const middle = (levels.length - 1) / 2;
   const toModel = (p: PeekPoint): PeekPoint => ({
     x: (p.x - (minX + maxX) / 2) * scale,
-    y: (stackHeight(levels, p.y) - middle) * PEEK_FLOOR_GAP,
+    y: (stackHeight(levels, p.y) - middle) * gap,
     z: (p.z - (minZ + maxZ) / 2) * scale,
   });
-  const floors: PeekFloor[] = levels.map((_, i) => ({ y: (i - middle) * PEEK_FLOOR_GAP, segments: [], places: [] }));
+  const floors: PeekFloor[] = levels.map((_, i) => ({ y: (i - middle) * gap, segments: [], places: [] }));
   const at: { [id: string]: PeekPoint } = Object.create(null);
   for (const n of map.nodes) {
     at[n.id] = n;
@@ -242,7 +243,7 @@ export function peekPlace(map: PlaceMap, route: PeekPoint[], user: PeekPoint, op
     target: line.length > 0 ? line[line.length - 1] : null,
     done: route.length > 0 ? peekModel(route, user).done : 0,
     current: floorIndex(levels, user.y),
-    key: map.nodes.length + ":" + map.edges.length + ":" + levels.join(",") + ":" + (map.nodes.length > 0 ? map.nodes[0].id : "") + ":" + closed.join(","),
+    key: size + ":" + gap + ":" + map.nodes.length + ":" + map.edges.length + ":" + levels.join(",") + ":" + (map.nodes.length > 0 ? map.nodes[0].id : "") + ":" + closed.join(","),
   };
 }
 

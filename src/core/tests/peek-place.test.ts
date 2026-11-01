@@ -157,6 +157,15 @@ test("PM15 the static part keeps its key while only the route moves", () => {
   assert.notEqual(a.key, c.key);
 });
 
+test("PM16 the model can be made smaller, floors and all, and rebuilds when it is", () => {
+  const map = tower();
+  const big = peekPlace(map, [], { x: 0, y: 0, z: 0 });
+  const small = peekPlace(map, [], { x: 0, y: 0, z: 0 }, { size: 0.2, gap: 0.05 });
+  assert.ok(Math.abs(small.floors[1].y - small.floors[0].y - 0.05) < 1e-9);
+  assert.ok(small.scale < big.scale);
+  assert.notEqual(small.key, big.key);
+});
+
 // ── The "You are here" board ─────────────────────────────────────────────────
 
 test("BM1 the board shows only your floor, fitted to the panel", () => {
