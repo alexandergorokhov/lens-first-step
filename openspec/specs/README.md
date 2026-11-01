@@ -37,7 +37,7 @@ Capabilities of "Find Your Way Inside" (see `../project.md` for context and conv
 
 ## Traceability
 
-Status: **Pass (auto)** = covered by a passing Node test and/or LEAF scenario (Node 416 tests, all passing / 0 todo;
+Status: **Pass (auto)** = covered by a passing Node test and/or LEAF scenario (Node 417 tests, all passing / 0 todo;
 LEAF 43 scenarios as of the last recorded run in `devpost/SCENARIOS.md`); **Partial** = logic tested but
 part of the behaviour only manual or untested; **Manual** = checked by hand in the preview only;
 **Gap** = no test.

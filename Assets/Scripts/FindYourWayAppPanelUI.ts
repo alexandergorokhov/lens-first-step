@@ -54,7 +54,7 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
     const model = addButton(panel.content, "ModelButton", "Swap model", WIDTH, BUTTON_H, null, h.onModel, TEXT, 70)
     this.places = addButton(panel.content, "PlacesButton", "Places: on", WIDTH, BUTTON_H, icon("location_on"),
       h.onPlaces, TEXT, 70)
-    this.seeMap = addButton(panel.content, "SeeMapButton", "See map", WIDTH, BUTTON_H, icon("location_on"), h.onMap, TEXT, 70)
+    this.seeMap = addButton(panel.content, "MiniMallButton", "See map", WIDTH, BUTTON_H, icon("location_on"), h.onMap, TEXT, 70)
     this.play = addButton(panel.content, "PlayButton", "Play while you wait", WIDTH, BUTTON_H, null, h.onPlay, TEXT, 70)
     // On Specs you raise a hand; in the preview this button does the same.
     this.jump = addButton(panel.content, "JumpButton", "Jump (or raise a hand)", WIDTH, BUTTON_H, null, h.onJump, TEXT, 70)

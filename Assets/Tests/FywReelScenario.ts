@@ -234,9 +234,9 @@ export class FywReelScenario extends Scenario {
     await this.walk([{x: 30, y: 0, z: 1}, {x: 30, y: 0, z: 10}, {x: 30, y: 0, z: 18}])
     await sleep(600)
     this.cap("See the whole mall, and your way through it")
-    this.press("SeeMapButton")
+    this.press("MiniMallButton")
     await sleep(3800)
-    this.press("SeeMapButton")
+    this.press("MiniMallButton")
     await sleep(400)
   }
 

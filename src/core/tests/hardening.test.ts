@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -611,4 +611,12 @@ test("T13 what you say and what a download says are not logged raw", () => {
   const main = readFileSync(path.join(ROOT, "Assets/Scripts/FindYourWayMain.ts"), "utf8");
   assert.match(main, /downloaded map rejected: " \+ logSafe\(res\.error\)/);
   assert.match(main, /\[FYW\] heard: " \+ text\.length/);
+});
+
+test("H37 no two buttons share a name, or one would press the other's panel", () => {
+  const dir = new URL("../../../Assets/Scripts/", import.meta.url);
+  const names = readdirSync(dir).filter((f) => f.endsWith("UI.ts"))
+    .flatMap((f) => [...readFileSync(new URL(f, dir), "utf8").matchAll(/addButton\([^,]+,\s*"([^"]+)"/g)].map((m) => m[1]));
+  assert.ok(names.length > 10, "found the buttons");
+  assert.deepEqual(names.filter((n, i) => names.indexOf(n) !== i), []);
 });
