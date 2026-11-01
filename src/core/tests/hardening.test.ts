@@ -517,7 +517,8 @@ function publish(args: string[]) {
   const rec = new MapRecorder();
   rec.start({ x: 0, y: 0, z: 0 });
   writeFileSync(log, mapLogLines(rec.toJson(), "mine").join("\n"));
-  return spawnSync(process.execPath, [path.join(ROOT, "tools/map-publish.mjs"), "--log", log, ...args], { cwd: ROOT, encoding: "utf8" });
+  // No PATH, so `gh` can't be found: whatever this tool does, a test can never upload.
+  return spawnSync(process.execPath, [path.join(ROOT, "tools/map-publish.mjs"), "--log", log, ...args], { cwd: ROOT, encoding: "utf8", env: { ...process.env, PATH: "", Path: "" } });
 }
 
 test("T2 map:publish can't overwrite a bundled map", () => {
