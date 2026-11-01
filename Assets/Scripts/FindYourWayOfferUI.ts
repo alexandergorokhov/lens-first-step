@@ -1,12 +1,14 @@
-// FindYourWayOfferUI — the subtle dot in the corner of the view and the short list it opens: the
-// shop's name on top, at most 3 rows ("and more" at stairs), a Close button. The dot is ~2 cm with
-// a larger invisible pinch area. Created at runtime by FindYourWayMain, which places both every
-// frame. Must not: choose what shows (FindYourWayFreeWalk does); offers are read-only.
+// FindYourWayOfferUI — the gold button in the view, saying what it opens, and the short list: the
+// shop's name on top, at most 3 rows ("and more" at stairs), a Close button. Created at runtime by
+// FindYourWayMain, which places both every frame. Must not: choose what shows (FindYourWayFreeWalk
+// does); offers are read-only.
 
-import {addButton, addIcon, addRow, addText, makePanel, obj} from "./FindYourWayWidgetsUI"
+import {addButton, addIcon, addRow, addText, LabeledButton, makePanel, obj} from "./FindYourWayWidgetsUI"
 import {icon, pictureFor} from "./FindYourWayIconsUI"
 
 const LIST_WIDTH = 24
+const DOT_W = 22
+const DOT_H = 4.6
 const ROWS = 3
 const TEXT = new vec4(1, 1, 1, 1)
 const SOFT = new vec4(1, 1, 1, 0.85)
@@ -34,6 +36,7 @@ interface Row {
 @component
 export class FindYourWayOfferUI extends BaseScriptComponent {
   private dotRoot: SceneObject
+  private dot: LabeledButton
   private listRoot: SceneObject
   private title: Text
   private tag: Text
@@ -41,13 +44,10 @@ export class FindYourWayOfferUI extends BaseScriptComponent {
   private rows: Row[] = []
   private shown: OfferListView | null = null
 
-  // dotPinchCm: the invisible pinch area around the dot.
-  setup(onDot: () => void, onClose: () => void, dotCm: number, dotPinchCm: number): void {
+  setup(onDot: () => void, onClose: () => void): void {
     this.dotRoot = obj(this.sceneObject, "OfferDot")
     this.dotRoot.createComponent("Component.Canvas")
-    const dot = addButton(this.dotRoot, "DotButton", "", dotCm, dotCm, null, onDot, TEXT, 100, "Caption", "Primary")
-    dot.button.colliderFitElement = false
-    dot.button.colliderSize = new vec3(dotPinchCm, dotPinchCm, 1)
+    this.dot = addButton(this.dotRoot, "DotButton", "", DOT_W, DOT_H, icon("location_on"), onDot, TEXT, 100, "Headline2", "Gold")
     this.dotRoot.enabled = false
     this.listRoot = obj(this.sceneObject, "OfferList")
     const p = makePanel(this.listRoot, LIST_WIDTH, 1.2, 0.5)
@@ -66,6 +66,8 @@ export class FindYourWayOfferUI extends BaseScriptComponent {
   }
 
   showDot(on: boolean): void { this.dotRoot.enabled = on }
+  setDotText(text: string): void { if (this.dot.label.text !== text) this.dot.label.text = text }
+  getDotText(): string { return this.dot.label.text }
   isDotShown(): boolean { return this.dotRoot.enabled }
 
   placeDot(pos: vec3, rot: quat): void {

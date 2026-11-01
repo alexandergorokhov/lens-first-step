@@ -312,6 +312,13 @@ export function offerView(map: FwMap, id: string, prefs: string[], y: number): O
   return { id, title: node.label || node.id, tag: tagOf(node), rows, more: false };
 }
 
+// What the button in your view says a pinch will open.
+export function dotLabel(map: FwMap, id: string, prefs: string[], y: number): string {
+  const view = offerView(map, id, prefs, y);
+  if (!view) return "";
+  return view.rows.length > 0 && view.rows[0].price ? "Offers: " + view.title : view.title;
+}
+
 // The preference checkboxes: the map's list, or today's interests on maps without one.
 export function interestList(map: FwMap): { id: string; label: string }[] {
   const own = map.place && map.place.interests;
@@ -425,6 +432,7 @@ export class FreeWalk {
   }
 
   dot(): string | null { return this.dots.dot; }
+  dotText(pos: FwXYZ): string { return this.dots.dot === null ? "" : dotLabel(this.map, this.dots.dot, this.prefs, pos.y); }
   openId(): string | null { return this.dots.open; }
   pointingAt(): string | null { return this.stop ? this.stop.id : null; }
   // Counts as already pointed at this walk.

@@ -111,6 +111,8 @@ const LINE_LIFT_CM = 1 // the floor line sits 1 cm above the floor
 const CLOSED_SIGN_TEXT = "Closed — re-routing"
 const RIDE_CARD_S = 2.5
 const SLOPE_MIN_RISE_M = 0.005
+// The offers button, from the head (right, up, forward), cm: inside the Specs view, clear of the panels.
+const DOT_OFFSET = new vec3(13, 4, -100)
 const SCAN_PANEL_AHEAD_CM = 160
 const SCAN_PANEL_RIGHT_CM = 10 // clear of the Demo controls on the left
 const SCAN_PANEL_BELOW_EYE_CM = 15
@@ -277,23 +279,9 @@ export class FindYourWayMain extends BaseScriptComponent {
   @widget(new SliderWidget(3, 25, 0.5))
   lookRangeM: number = 12
 
-  @input("vec3", "{28,18,-100}")
-  @hint("The dot, from the head (right, up, forward), cm")
-  dotOffset: vec3 = new vec3(22, 16, -100)
-
   @input("vec3", "{24,0,-100}")
   @hint("The offer list, from the head (right, up, forward), cm")
   offerOffset: vec3 = new vec3(15, 0, -100)
-
-  @input
-  @hint("The dot's size, cm")
-  @widget(new SliderWidget(1, 5, 0.5))
-  dotCm: number = 3
-
-  @input
-  @hint("The dot's invisible pinch area, cm: a small target at the edge of view is hard to aim at")
-  @widget(new SliderWidget(2, 14, 0.5))
-  dotPinchCm: number = 8
 
   @input
   @hint("Multi-stop trip on maps that have these place ids (comma separated, ordered for the shortest walk); empty = off")
@@ -552,7 +540,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     })
     const ou = global.scene.createSceneObject("OfferUI")
     this.offerUI = ou.createComponent(FindYourWayOfferUI.getTypeName()) as FindYourWayOfferUI
-    this.offerUI.setup(() => this.openDot(), () => { if (this.free) this.free.closeList() }, this.dotCm, this.dotPinchCm)
+    this.offerUI.setup(() => this.openDot(), () => { if (this.free) this.free.closeList() })
     const bu = global.scene.createSceneObject("CompanionBubble")
     bu.setParent(this.building)
     this.bubble = bu.createComponent(FindYourWayBubbleUI.getTypeName()) as FindYourWayBubbleUI
@@ -813,7 +801,8 @@ export class FindYourWayMain extends BaseScriptComponent {
     const offer = this.offerUI
     if (offer) {
       offer.showDot(f.dot !== null)
-      if (f.dot !== null) offer.placeDot(cam.getWorldPosition().add(cam.getWorldRotation().multiplyVec3(this.dotOffset)), cam.getWorldRotation())
+      offer.setDotText(free.dotText(pos))
+      if (f.dot !== null) offer.placeDot(cam.getWorldPosition().add(cam.getWorldRotation().multiplyVec3(DOT_OFFSET)), cam.getWorldRotation())
       if (f.open !== this.shownOpen) {
         this.shownOpen = f.open
         offer.showList(free.list(pos))
@@ -2195,6 +2184,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   getFreePrefs(): string[] { return this.free ? this.free.prefs.slice() : [] }
   getDotId(): string | null { return this.free ? this.free.dot() : null }
   isDotShown(): boolean { return !!this.offerUI && this.offerUI.isDotShown() }
+  getDotText(): string { return this.offerUI ? this.offerUI.getDotText() : "" }
   isOfferShown(): boolean { return !!this.offerUI && this.offerUI.isListShown() }
   getOfferList(): {title: string; tag: string; rows: {text: string; price: string}[]; more: boolean} | null {
     return this.offerUI ? this.offerUI.getList() : null

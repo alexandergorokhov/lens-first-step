@@ -41,7 +41,7 @@ After the scan, four choices appear.
 - Pick your preferences and your companion: dog, robot or rover.
 - The companion keeps ahead of you on the walkable paths, about 7 m by default. It follows your walking direction, so glancing at a shop does not swing it round.
 - It stops at each shop that matches and points at it, once per walk.
-- Look at any shop and a small dot appears in the corner of your view. Open it to see up to 3 offers, or ignore it and nothing happens.
+- Look at any shop and a gold button appears in your view: "Offers: Bolt Hardware". Open it to see up to 3 offers, or ignore it and nothing happens.
 - When matches are on another floor, it waits at the stairs or escalator with a bubble: "3 picks upstairs".
 
 **Tour: be shown round.** The companion leads you through the shops that match your preferences, stop by stop, in the shortest order.
@@ -75,7 +75,7 @@ After the scan, four choices appear.
 | Route line | On the floor, 30 cm wide, Google Maps blue at 50% so the floor shows through, fading 10 m ahead |
 | Companion | On the floor ahead of you, half see-through so it never hides the floor |
 | Distance pill and floor cue | Bottom centre of the view, a little below eye level |
-| Offer dot | Upper-right corner of the view, small, with a larger pinch area |
+| Offers button | Right of centre in the view, gold, naming what it opens |
 | Offer list | Right side of the view, about 1 m away |
 | Panels | About 1 m ahead, a little below eye level, readable standing or seated |
 | Options panel | Waist height to the left, shown only during a walk or trip |
@@ -95,7 +95,7 @@ The Specs display is additive, so black renders as transparent. UI text stays li
 
 ## When things show
 
-- Dot: after about 0.5 s of looking at a shop, gone about 2 s after you look away.
+- Offers button: after about 0.5 s of looking at a shop, gone about 2 s after you look away.
 - Offer list: on a pinch, gone on the close pinch or when you walk about 5 m away.
 - Line: from the scan until you arrive, showing only the next 10 m.
 - Arrival card: within 3 m of the destination.
@@ -113,8 +113,8 @@ Each one can be checked in Lens Studio's preview. `SCENARIOS.md` lists the test 
 6. Map builder: walk two floors, mark shops, upload. The map passes validation and can be routed on.
 7. Free walk: the companion stops at shops that match and walks past those that do not.
 8. Turn around and the companion runs round you and carries on in front.
-9. Matches on another floor: the companion stops at the stairs with the bubble, and the dot lists the shops.
-10. With the companion off, every shop still gets a dot, and ignoring it changes nothing.
+9. Matches on another floor: the companion stops at the stairs with the bubble, and the button lists the shops.
+10. With the companion off, every shop still gets the button, and ignoring it changes nothing.
 11. Go to a place: say or pick a shop, and the line leads to it.
 
 ## Out of scope
@@ -129,7 +129,7 @@ Each one can be checked in Lens Studio's preview. `SCENARIOS.md` lists the test 
 The logic is proven by tests in the preview. These are unproven, because nothing has run on Specs hardware:
 
 - How the line and the companion feel at walking and wheeling speed, and comfort over time.
-- Whether a small dot in the corner of the view is easy to pinch.
+- Whether a button that follows your head is easy to pinch.
 - Whether stopping at every match gets annoying. The limits are Inspector settings.
 - Position drift on long walks, and whether a lift is detected, since the cabin looks still to tracking. **Next floor** is the fallback.
 - Real hand tracking, real speech and a real sign scan.

@@ -173,7 +173,7 @@ export function addButton(parent: SceneObject, name: string, label: string, widt
   const so = obj(parent, name)
   so.getTransform().setLocalPosition(new vec3(0, 0, LAYOUT_Z))
   const button = so.createComponent(Button.getTypeName()) as Button
-  button.setTheme("SnapOS2", style === "Primary" ? "PrimaryNeutral" : style) // the theme's Primary is a loud gold
+  button.setTheme("SnapOS2", style === "Gold" ? "Primary" : style === "Primary" ? "PrimaryNeutral" : style) // the theme's Primary is a loud gold
   button.size = new vec3(widthCm, heightCm, 1)
 
   const face = obj(so, "Face", new vec3(0, 0, BUTTON_LABEL_Z))

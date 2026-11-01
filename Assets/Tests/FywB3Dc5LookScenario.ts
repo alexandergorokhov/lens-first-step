@@ -20,6 +20,7 @@ export class FywB3Dc5LookScenario extends Scenario {
     main.debugSetPose(30, 0, 22, 0)
     await waitFor(() => main.getDotId() === "boltHardware", 2000, "dot on Bolt Hardware")
     expect(main.isDotShown(), "the dot shows").toBe(true)
+    expect(main.getDotText(), "it says what it opens").toBe("Offers: Bolt Hardware")
     await tap(it, "DotButton")
     await waitFor(() => main.isOfferShown(), 2000, "offer list")
     const v = main.getOfferList()!

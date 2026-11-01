@@ -30,7 +30,7 @@ Click **Scan sign**, the panel straight ahead. On real Specs you would look at t
 2. Pick **Dog**, **Robot** or **Rover**. Picking one turns the companion on. **View or change** lets you tick what you like.
 3. Click **Keep them and walk**, then walk with W.
 4. The companion walks ahead, stops at shops that match and points at them.
-5. Look at any shop for a moment: a small dot appears top right. Click it to see the shop's offers.
+5. Look at any shop for a moment: a gold button such as **Offers: Bolt Hardware** appears. Click it to see the shop's offers.
 6. Turn around: the companion runs round you to stay in front.
 7. Matches upstairs: it waits at the escalator with a bubble such as "3 picks upstairs".
 
@@ -99,7 +99,7 @@ Write **logic proven** next to what tests and the preview show working, and **fe
 npm test
 ```
 
-Expect `pass 424`, `fail 0`. One test downloads the maps from the public gist; with no internet, set `OFFLINE=1` to skip it (`pass 423`, `skipped 1`). The run first checks that the Lens copies match `src/core`. After editing `src/core`, run `npm run sync`.
+Expect `pass 425`, `fail 0`. One test downloads the maps from the public gist; with no internet, set `OFFLINE=1` to skip it (`pass 424`, `skipped 1`). The run first checks that the Lens copies match `src/core`. After editing `src/core`, run `npm run sync`.
 
 **LEAF tests** run inside the Lens, pressing the real buttons:
 

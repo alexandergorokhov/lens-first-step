@@ -28,12 +28,13 @@ outside, on the traveller's floor (within 1 m of height), within 12 m (`lookRang
 front wins. The outside is the side the node's walk edge arrives from. A node with no `front` gets no
 dot; stairs, escalators and lifts have one. The dot SHALL show after 0.5 s of looking and hide 2 s
 after looking away; a glance under 0.5 s shows nothing. Companion on or off, matching or not, every
-front gets a dot. If the dot is not opened, nothing happens.
+front gets a dot. The dot is a gold button that says what a pinch opens ("Offers: Bolt Hardware",
+"Your picks upstairs"), so it can be seen against any shop. If it is not opened, nothing happens.
 
 #### Scenario: FW2 Look, dot, open, ignore
 - **WHEN** the traveller looks across a front from outside for 0.5 s
 - **THEN** the dot shows; looking away for 2 s hides it; from inside the front, or looking away, nothing shows
-- Verified by: L1, L2, L3, D1, D2 (Node, freewalk.test.ts) | b3-dc5-companion-off-dots
+- Verified by: L1, L2, L3, D1, D2, D4 (Node, freewalk.test.ts) | b3-dc5-companion-off-dots
 
 ### Requirement: Offer list, read-only
 Opening the dot SHALL show the shop name and at most 3 offer rows (text, price, optional bundled

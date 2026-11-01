@@ -7,6 +7,7 @@ import { readFileSync } from "node:fs";
 import { parseMap } from "../router.ts";
 import type { MapData } from "../router.ts";
 import {
+  dotLabel,
   AheadTracker,
   clampToPaths,
   destinationsOf,
@@ -387,4 +388,13 @@ test("G3 'Where to?' lists the map's places and destinations by name, not lifts 
   assert.ok(names.indexOf("Bolt Hardware") >= 0 && names.indexOf("Cinema") >= 0);
   assert.ok(names.indexOf("Lift A (ground)") < 0 && names.indexOf("Centre court (ground)") < 0);
   assert.deepEqual(names, names.slice().sort((a, b) => a.localeCompare(b)));
+});
+
+test("D4 the button says what a pinch will open", () => {
+  const mall = JSON.parse(readFileSync(new URL("../data/mall.json", import.meta.url), "utf8"));
+  assert.equal(dotLabel(mall, "boltHardware", [], 0), "Offers: Bolt Hardware");
+  assert.equal(dotLabel(mall, "stairsFoot", ["clothes"], 0), "Your picks upstairs");
+  assert.equal(dotLabel(mall, "stairsFoot", [], 0), "Stairs (ground)");
+  assert.equal(dotLabel(mall, "cashMachine", [], 0), "Cash machine");
+  assert.equal(dotLabel(mall, "nowhere", [], 0), "");
 });
