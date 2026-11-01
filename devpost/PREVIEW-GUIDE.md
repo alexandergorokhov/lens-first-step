@@ -93,7 +93,7 @@ cd
 npm test
 ```
 
-It first checks the Lens copies (`npm run sync:check`). Expect `pass 417`, `fail 0` (one test downloads the maps from the public gist; with no internet set `OFFLINE=1` to skip it: `pass 416`, `skipped 1`). `docs.test.ts` keeps this number up to date: it fails if the docs quote a different count. Covers: Walk and Step-Free routes on all four maps, Step-Free never uses stairs or escalators, Walk is always shortest, closures and re-routes, destination changes, broken maps, unknown signs, the turn arrow maths, the map download URL, the local map server, the demo's beats and walking speed, and that the Lens copies of the code and maps match `src/core`.
+It first checks the Lens copies (`npm run sync:check`). Expect `pass 418`, `fail 0` (one test downloads the maps from the public gist; with no internet set `OFFLINE=1` to skip it: `pass 416`, `skipped 1`). `docs.test.ts` keeps this number up to date: it fails if the docs quote a different count. Covers: Walk and Step-Free routes on all four maps, Step-Free never uses stairs or escalators, Walk is always shortest, closures and re-routes, destination changes, broken maps, unknown signs, the turn arrow maths, the map download URL, the local map server, the demo's beats and walking speed, and that the Lens copies of the code and maps match `src/core`.
 
 After editing anything in `src/core`, run `npm run sync` to copy it into `Assets/`. `npm run hooks` (once) makes git run `npm test` before every commit.
 
@@ -124,6 +124,7 @@ Write **"logic proven"** next to what tests and the preview show working, and **
 After **Scan sign** (any map):
 
 - **Distance pill** at the bottom centre: "Ground floor · Gate B12 · 58 m · 1 floor up · 1 min". The first chip is your floor; it changes after a ride. Just above it for a few seconds: "Gate B12 is on Departures, 1 floor up", then, within 15 m of the escalator, "In 12 m: escalator up to Departures". The line stops at the escalator foot with a short glowing post.
+- **Pick your companion**: the **Your preferences** panel (Free walk and Tour) has **Dog / Robot / Rover** buttons. The chosen one is ticked, and picking one turns the companion on.
 - **App panel** (waist height, to your left, during a trip): **Pet: off/on** (the companion; the line stays), **Swap model** (dog → robot → rover), **Places: on/off** (icons and pointing), and, while you stand still with the companion on, **Play while you wait**, **Jump**, **Throw a treat**; **Next stop** on a mall trip.
 - **Companion**: walks ~2.5 m ahead on the line, sits at the escalator foot until you get there, collects treats (chip under the map badge). With an interest picked it steps aside and points at a matching or sponsored place; that place's sign shows its name, "Sponsored · demo" if sponsored, and **Go here?**.
 - **Hop (play while you wait)**: stand still ~2 s with the companion on, click **Play while you wait**. A lane appears ahead, the companion at the near end seen from behind, obstacles coming from the far end. On Specs raise a hand to jump; in the preview click **Jump**. A bump: it shakes, then Jump (or a raised hand) plays again. Walk off (W) and it stops.

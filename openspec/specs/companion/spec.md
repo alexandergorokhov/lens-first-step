@@ -29,6 +29,16 @@ the model, its name ("Pet" / "Robot" / "Rover") and its collectible (treats / bo
 - **THEN** the model is the robot ("Bolts …"), then the rover; the route is unchanged
 - Verified by: Q8 (Node) | p1-companion-toggle-and-models
 
+### Requirement: Pick the companion before you walk
+The preferences panel, shown for Free walk and Tour, SHALL offer every companion as one row of
+buttons with the chosen one ticked. Picking one SHALL also turn the companion on.
+
+#### Scenario: Q8b Pick
+- **GIVEN** the preferences panel with the companion off
+- **WHEN** "Robot" is pinched
+- **THEN** "Robot" is ticked, the toggle reads "Robot: on", and the robot walks with the traveller
+- Verified by: Q8b (Node) | companion-pick-before-walk
+
 ### Requirement: Leads, waits, collects
 It SHALL walk `companionAheadM` ahead on the route (7 m by default, so it is in view), sit at the foot of a floor change until the traveller gets
 there (never on another floor before them), stop and look back when they are > 6 m behind, hop at

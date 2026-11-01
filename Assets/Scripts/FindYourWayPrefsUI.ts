@@ -1,14 +1,17 @@
 // FindYourWayPrefsUI — the Free walk pop-up: keep the saved preset (labelled as a demo stand-in),
-// or view and change it (one checkbox per category of the map), with the companion on or off.
+// or view and change it (one checkbox per category of the map), with the companion on or off,
+// and pick which companion walks with you.
 // Created at runtime by FindYourWayMain. The list comes from the map (place.interests).
 // Must not: decide what matches (FindYourWayFreeWalk does) or remember anything between walks.
 
 import {addButton, addRow, addText, LabeledButton, makePanel, obj} from "./FindYourWayWidgetsUI"
 import {icon} from "./FindYourWayIconsUI"
+import {companionChoices} from "./FindYourWayPet"
 
 export interface PrefsHandlers {
   onStart: () => void
   onCompanion: () => void
+  onPickModel: (id: string) => void
 }
 
 const WIDTH = 30
@@ -25,11 +28,13 @@ export class FindYourWayPrefsUI extends BaseScriptComponent {
   private summary: Text
   private companionBtn: LabeledButton | null = null
   private companionAsk: LabeledButton | null = null
+  private modelBoxes: {[id: string]: LabeledButton} = {}
   private boxes: {[id: string]: LabeledButton} = {}
   private list: {id: string; label: string}[] = []
   private picked: {[id: string]: boolean} = {}
   private companionName = "Pet"
   private companionOn = true
+  private modelId = "dog"
   private listKey = ""
 
   setup(h: PrefsHandlers): void {
@@ -39,10 +44,11 @@ export class FindYourWayPrefsUI extends BaseScriptComponent {
 
   // Builds the panels for this map's list, starting from the preset. They are rebuilt only when
   // the list changes, later than the pinch that may have led here.
-  open(list: {id: string; label: string}[], preset: string[], companionName: string, companionOn: boolean): void {
+  open(list: {id: string; label: string}[], preset: string[], companionName: string, companionOn: boolean, modelId: string): void {
     this.list = list
     this.companionName = companionName
     this.companionOn = companionOn
+    this.modelId = modelId
     const key = list.map((i) => i.id + ":" + i.label).join(",")
     if (key !== this.listKey) {
       this.listKey = key
@@ -66,6 +72,7 @@ export class FindYourWayPrefsUI extends BaseScriptComponent {
       ev.reset(DESTROY_DELAY_S)
     }
     this.boxes = {}
+    this.modelBoxes = {}
     const a = obj(this.sceneObject, "PrefsAsk")
     const p = makePanel(a, WIDTH + 4, 1.8, 1)
     addText(p.content, "PrefsTitle", "Your preferences", "Headline1", WIDTH, 3.6, TEXT, 100)
@@ -74,6 +81,11 @@ export class FindYourWayPrefsUI extends BaseScriptComponent {
     addButton(p.content, "PrefsKeepButton", "Keep them and walk", WIDTH, 6, icon("directions_walk"), () => this.h.onStart(), TEXT, 100, "Headline1", "Primary")
     addButton(p.content, "PrefsViewButton", "View or change", WIDTH, 4.5, null, () => this.showStage(true), TEXT, 100, "Headline2")
     this.companionAsk = addButton(p.content, "PrefsCompanionAskButton", "Companion: on", WIDTH, 4.5, null, () => this.h.onCompanion(), TEXT, 100, "Headline2")
+    const choices = companionChoices()
+    const modelRow = addRow(p.content, "PrefsModelRow", WIDTH, 5, 0.5)
+    for (const c of choices) {
+      this.modelBoxes[c.id] = addButton(modelRow, "PrefsModel_" + c.id, c.label, (WIDTH - 1) / choices.length, 4.6, null, () => this.h.onPickModel(c.id), TEXT, 100, "Headline2")
+    }
     this.ask = a
     const c = obj(this.sceneObject, "PrefsChange")
     const q = makePanel(c, WIDTH + 4, 1.8, 0.8)
@@ -115,16 +127,23 @@ export class FindYourWayPrefsUI extends BaseScriptComponent {
     const text = this.companionName + ": " + (this.companionOn ? "on" : "off")
     if (this.companionBtn) this.companionBtn.label.text = text
     if (this.companionAsk) this.companionAsk.label.text = text
+    for (const c of companionChoices()) {
+      const b = this.modelBoxes[c.id]
+      if (b) b.label.text = (c.id === this.modelId ? "✓ " : "") + c.label
+    }
   }
 
-  setCompanion(name: string, on: boolean): void {
+  setCompanion(name: string, on: boolean, modelId: string = this.modelId): void {
     this.companionName = name
     this.companionOn = on
+    this.modelId = modelId
     this.paintCompanion()
   }
 
   getPicked(): string[] { return this.list.filter((i) => this.picked[i.id]).map((i) => i.id) }
   getSummary(): string { return this.summary ? this.summary.text : "" }
+  getCompanionLabel(): string { return this.companionAsk ? this.companionAsk.label.text : "" }
+  getModelLabel(id: string): string { return this.modelBoxes[id] ? this.modelBoxes[id].label.text : "" }
   isChanging(): boolean { return !!this.change && this.change.enabled }
   show(on: boolean): void { this.sceneObject.enabled = on }
   isShown(): boolean { return this.sceneObject.enabled }

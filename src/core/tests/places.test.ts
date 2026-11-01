@@ -15,7 +15,7 @@ import {
   placesOf,
   visiblePlaces,
 } from "../places.ts";
-import { COMPANIONS, LINE_OPACITY, PetGuide, companionOf, guideVisuals, treatsText } from "../pet.ts";
+import { COMPANIONS, LINE_OPACITY, PetGuide, companionChoices, companionOf, guideVisuals, treatsText } from "../pet.ts";
 
 const MAP_TEXT = readFileSync(new URL("../data/map.json", import.meta.url), "utf8");
 function loadMap(): MapData {
@@ -397,4 +397,13 @@ test("Q8 The companion can be a dog, a robot or a rover: same logic, its own nam
   assert.equal(treatsText(2, 5), "Treats 2 of 5");
   assert.equal(treatsText(2, 5, companionOf("robot")), "Bolts 2 of 5");
   assert.equal(treatsText(1, 4, companionOf("rover")), "Stars 1 of 4");
+});
+
+test("Q8b The picker offers every companion once, named for what you see", () => {
+  assert.deepEqual(companionChoices(), [
+    { id: "dog", label: "Dog" },
+    { id: "robot", label: "Robot" },
+    { id: "rover", label: "Rover" },
+  ]);
+  assert.deepEqual(companionChoices().map((c) => c.id), Object.keys(COMPANIONS));
 });

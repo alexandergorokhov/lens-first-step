@@ -542,6 +542,11 @@ export class FindYourWayMain extends BaseScriptComponent {
         this.freeCompanion = !this.freeCompanion
         if (this.prefsPanel) this.prefsPanel.setCompanion(this.companion.name, this.freeCompanion)
       },
+      // Picking one means you want it: a companion that stays off would change nothing you can see.
+      onPickModel: (id) => {
+        this.freeCompanion = true
+        this.setCompanionModel(id)
+      },
     })
     const ou = global.scene.createSceneObject("OfferUI")
     this.offerUI = ou.createComponent(FindYourWayOfferUI.getTypeName()) as FindYourWayOfferUI
@@ -680,7 +685,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.phase = "prefs"
     this.tourPending = false
     this.placeAhead(this.prefsPanel.getSceneObject())
-    this.prefsPanel.open(interestList(this.map), this.presetList(), this.companion.name, this.freeCompanion)
+    this.prefsPanel.open(interestList(this.map), this.presetList(), this.companion.name, this.freeCompanion, this.companion.id)
   }
 
   // Tour: the same preferences, then the shops they match, stop by stop.
@@ -690,7 +695,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.phase = "prefs"
     this.tourPending = true
     this.placeAhead(this.prefsPanel.getSceneObject())
-    this.prefsPanel.open(interestList(this.map), this.presetList(), this.companion.name, this.freeCompanion)
+    this.prefsPanel.open(interestList(this.map), this.presetList(), this.companion.name, this.freeCompanion, this.companion.id)
   }
 
   private startTour(): void {
@@ -1685,6 +1690,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.guide.companion = this.companion
     if (this.view) this.view.setModel(this.companion.model)
     if (this.appPanel) this.appPanel.setCompanion(this.companion.name, this.guide.on, this.companion.collectible.one)
+    if (this.prefsPanel) this.prefsPanel.setCompanion(this.companion.name, this.freeCompanion, this.companion.id)
   }
 
   private routeKey(): string {
@@ -2157,6 +2163,8 @@ export class FindYourWayMain extends BaseScriptComponent {
   isHomePanelShown(): boolean { return !!this.homePanel && this.homePanel.isShown() }
   isPrefsShown(): boolean { return !!this.prefsPanel && this.prefsPanel.isShown() }
   getPrefsSummary(): string { return this.prefsPanel ? this.prefsPanel.getSummary() : "" }
+  getPrefsCompanionLabel(): string { return this.prefsPanel ? this.prefsPanel.getCompanionLabel() : "" }
+  getPrefsModelLabel(id: string): string { return this.prefsPanel ? this.prefsPanel.getModelLabel(id) : "" }
   getFreePrefs(): string[] { return this.free ? this.free.prefs.slice() : [] }
   getDotId(): string | null { return this.free ? this.free.dot() : null }
   isDotShown(): boolean { return !!this.offerUI && this.offerUI.isDotShown() }

@@ -35,6 +35,7 @@ import {FywPk1PeekScenario} from "./FywPk1PeekScenario"
 import {FywS1StartAtSignScenario} from "./FywS1StartAtSignScenario"
 import {FywBg1BackdropScenario} from "./FywBg1BackdropScenario"
 import {FywB3ModesScenario} from "./FywB3ModesScenario"
+import {FywCompanionPickScenario} from "./FywCompanionPickScenario"
 import {FywB3Dc1BuilderScenario} from "./FywB3Dc1BuilderScenario"
 import {FywB3Dc2CompanionScenario} from "./FywB3Dc2CompanionScenario"
 import {FywB3Dc3TurnScenario} from "./FywB3Dc3TurnScenario"
@@ -97,6 +98,7 @@ export class FindYourWayLeafIndex extends BaseScriptComponent {
     {id: "bg1-backdrop-solid-in-preview", typename: FywBg1BackdropScenario.getTypeName()},
     // Brief 3: the three modes and its done criteria.
     {id: "b3-modes-scan-first-preset", typename: FywB3ModesScenario.getTypeName()},
+    {id: "companion-pick-before-walk", typename: FywCompanionPickScenario.getTypeName()},
     {id: "b3-dc1-map-builder-two-floors", typename: FywB3Dc1BuilderScenario.getTypeName()},
     {id: "b3-dc2-companion-stops-at-matches", typename: FywB3Dc2CompanionScenario.getTypeName()},
     {id: "b3-dc3-turn-around", typename: FywB3Dc3TurnScenario.getTypeName()},

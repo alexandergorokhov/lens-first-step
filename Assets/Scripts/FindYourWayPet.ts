@@ -34,6 +34,11 @@ export function companionOf(id: string): Companion {
   return Object.prototype.hasOwnProperty.call(COMPANIONS, id) ? COMPANIONS[id] : COMPANIONS.dog;
 }
 
+// What the picker shows. The dog's name is "Pet", its toggle label; here it is named for its look.
+export function companionChoices(): { id: string; label: string }[] {
+  return Object.keys(COMPANIONS).map((id) => ({ id, label: id === "dog" ? "Dog" : COMPANIONS[id].name }));
+}
+
 // The route line is ~50% transparent in every guide mode (line only, or companion + line), so
 // the floor and the flow of people show through it.
 export const LINE_OPACITY = 0.5;
