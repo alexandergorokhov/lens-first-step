@@ -232,7 +232,12 @@ export class FywReelScenario extends Scenario {
     this.press("CompanionButton")
     await this.soft(() => main.isCompanionOn(), 1000)
     await this.walk([{x: 30, y: 0, z: 1}, {x: 30, y: 0, z: 10}, {x: 30, y: 0, z: 18}])
-    await sleep(1000)
+    await sleep(600)
+    this.cap("See the whole mall, and your way through it")
+    this.press("SeeMapButton")
+    await sleep(3800)
+    this.press("SeeMapButton")
+    await sleep(400)
   }
 
   // Plans change: the line swings to the new place at once.
