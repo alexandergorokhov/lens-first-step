@@ -8,6 +8,7 @@
 // play while you wait (Hop: raise a hand to jump; catch: throw a treat) and multi-stop trips.
 // Owns: trip state (map, profile, Navigator, ride offset). UI modules are passive views:
 // Main pushes state via their setters and listens to their events.
+// The building's contents, play, the Free walk view and panel placement live in their own modules.
 // Inputs: authored scene objects (camera, world anchor, building) and the UI/controller
 // components; tunables for eye height, sign placement, look-ahead and panel offsets.
 // Must not: create text or UIKit widgets (those live in the *UI.ts modules).
@@ -23,8 +24,6 @@ import {
   logSafe,
   MAP_LOAD_FAILED,
   MapData,
-  MapEdge,
-  MapNode,
   Navigator,
   nearestNode,
   noticeFor,
@@ -34,12 +33,10 @@ import {
   setEdgeOpen,
   tripAhead,
   TripAhead,
-  tripSettings,
   Vec3,
   withinReach,
 } from "./FindYourWayRouter"
 import {
-  approachDir,
   arrivalText,
   closureNotice,
   levelName,
@@ -55,9 +52,8 @@ import {
 import {feetOnSlope, lineOnLevel, nextTurnAlong, turnOutOfView, walkStep, yawFromForward, yawTo} from "./FindYourWayGeometry"
 import {destinationFloorText, floorCueFor, tripPill} from "./FindYourWayPlace"
 import {Companion, companionChoices, companionOf, COMPANIONS, PetGuide, treatsResult, treatsText} from "./FindYourWayPet"
-import {Place, placesOf, placeTag, PointingCoach, POINT_SECONDS, visiblePlaces} from "./FindYourWayPlaces"
-import {CatchGame, canThrow, HOP_LANE, HopGame, hopText, landingSpot, PlayGate, PlayXYZ, RaiseDetector, releaseVelocity, SEATED_LANE, SEATED_THROW_MAX, SeatedDetector, seatedPlaySpot, THROW_MAX} from "./FindYourWayPlay"
-import {mapLevels, tourStops} from "./FindYourWayTour"
+import {Place, placeTag, PointingCoach, POINT_SECONDS, visiblePlaces} from "./FindYourWayPlaces"
+import {tourStops} from "./FindYourWayTour"
 import {FindYourWayVoice} from "./FindYourWayVoice"
 import {FindYourWayPickMapUI} from "./FindYourWayPickMapUI"
 import {MultiStopTrip, orderStops} from "./FindYourWayTrip"
@@ -84,60 +80,29 @@ import {FindYourWayBuildingUI} from "./FindYourWayBuildingUI"
 import {FindYourWayDemoControlsUI} from "./FindYourWayDemoControlsUI"
 import {FindYourWayHudUI} from "./FindYourWayHudUI"
 import {FindYourWayArrivalUI} from "./FindYourWayArrivalUI"
+import {FindYourWayFreeWalkView} from "./FindYourWayFreeWalkView"
+import {FindYourWayPanelFollow} from "./FindYourWayPanelFollow"
+import {FindYourWayPlaceBuilder, Ride} from "./FindYourWayPlaceBuilder"
+import {FindYourWayPlayTime} from "./FindYourWayPlayTime"
 
 // scan -> loading -> choose (the three modes) -> prefs -> free (Free walk)
 //                                           -> mode -> nav -> arrived (Go to a place)
 //                                           -> mapping (Map builder)
 export type Phase = "scan" | "loading" | "choose" | "prefs" | "free" | "mode" | "nav" | "arrived" | "error" | "mapping"
 
-// Heights (cm above a node's floor) of the signs placed in the building.
-const SCAN_SIGN_CM = 125
-const DEST_SIGN_CM = 330 // overhead destination signs
-const SHOP_SIGN_CM = 300 // a shop's name, on its awning
-const SHOP_SIGN_SCALE = 7
-// In the preview the name sits on the shop's own fascia, big enough to read down the mall.
-const FASCIA_SIGN_CM = 262
-const FASCIA_SIGN_SCALE = 11
-const FASCIA_TEXT_SIZE = 200
-const FASCIA_AHEAD_CM = 150 // from the shop's front back toward the node
-const ASSIST_SIGN_CM = 280
-const LIFT_SIGN_CM = 290
-const CONNECTION_SIGN_CM = 260 // escalator / stairs / ramp signs
-const PLACE_SIGN_CM = 300 // the "stand-in building" title sign
-const CLOSURE_SIGN_CM = 120 // the red out-of-service sign: ~1.2 m, readable seated or standing
-const RIDE_BUTTON_CM = 115
 const ARRIVAL_CARD_CM = 200
 const LINE_LIFT_CM = 1 // the floor line sits 1 cm above the floor
 const CLOSED_SIGN_TEXT = "Closed — re-routing"
-const SPONSORED_SIGN = "Sponsored"
 const RIDE_CARD_S = 2.5
 const SLOPE_MIN_RISE_M = 0.005
-// The offers button, from the head (right, up, forward), cm: inside the Specs view, clear of the panels.
-const DOT_OFFSET = new vec3(13, 4, -100)
 // The preview's keys can't reliably look down, so there the Options panel stays in view, at its left edge.
 const PREVIEW_PANEL_OFFSET = new vec3(-18, -6, -100)
 const PREVIEW_PANEL_SCALE = 0.8
-const SCAN_PANEL_AHEAD_CM = 160
-const SCAN_PANEL_RIGHT_CM = 10 // clear of the Demo controls on the left
-const SCAN_PANEL_BELOW_EYE_CM = 15
-// In the preview it sits on a board that stands in the place: further off, and beside the way in.
-const BOARD_AHEAD_CM = 340
-const BOARD_RIGHT_CM = 62
-const BOARD_BELOW_EYE_CM = 45
+const MAPPING_PANEL_OFFSET = new vec3(0, -8, -115)
 const DEST_NOTE_S = 3.5
-const PLACE_FACE_CM = 0 // place icons sit on the node (the shop front)
-// Hop lane: starts this far ahead of you (m), so you see the companion from behind.
-const HOP_AHEAD_M = 1.3
-// Catch: the treat leaves your hand at this height above the floor (m) and speed (m/s).
-const THROW_FROM_M = 1.2
-const THROW_SPEED = 6
-// The treat you grab floats here, relative to your head (cm).
-const GRAB_OFFSET = new vec3(20, -28, -45)
-const HOP_RUN_MS = 2.4 // Hop's lane moves under the companion: its legs run at this speed
 // Voice: stop listening after this long with no finished phrase (s).
 const VOICE_TIMEOUT_S = 8
 const COMPANION_IDS = ["dog", "robot", "rover"]
-const CAUGHT_LINE_S = 2.5
 // Learn this place: the saved map lives in the device's persistent storage under this key.
 const MAPPED_KEY = "fyw.mappedMap"
 const MAPPED_KEY_NAME = "mine"
@@ -153,22 +118,9 @@ const SEE_MAP_BELOW_CM = 3
 const SEE_MAP_SIZE_M = 0.26
 const SEE_MAP_FLOOR_GAP_M = 0.075
 const PEEK_PULL_CM = 8
-// The companion's bubble floats this high above its feet (cm).
-const BUBBLE_ABOVE_CM = 115
 // Frames after a restart during which the world keeps re-anchoring to the settling camera.
 const ANCHOR_SETTLE_FRAMES = 30
 
-
-// A ride: from one end of a lift / escalator / stairs / ramp edge to the other.
-interface Ride {
-  id: string
-  edge: MapEdge
-  at: string
-  to: string
-  label: string
-  icon: string
-  reach: number // metres (horizontal, same level) from `at` within which the button works
-}
 
 @component
 export class FindYourWayMain extends BaseScriptComponent {
@@ -271,7 +223,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   @input
   @hint("Free walk: how near a matching shop must be for the companion to stop, m")
   @widget(new SliderWidget(2, 15, 0.5))
-  pointRadiusM: number = 8
+  pointRadiusM: number = 12
 
   @input
   @hint("Free walk: most stops per walk (0 = every match); stopping everywhere may get annoying")
@@ -289,7 +241,7 @@ export class FindYourWayMain extends BaseScriptComponent {
 
   @input
   @hint("Multi-stop trip on maps that have these place ids (comma separated, ordered for the shortest walk); empty = off")
-  multiStops: string = "pharmacy,iceCream,sushi"
+  multiStops: string = ""
 
   @input("vec3", "{-30,-38,-55}")
   @hint("App panel offset from the head (right, up, forward), cm — waist height, to the left")
@@ -317,6 +269,10 @@ export class FindYourWayMain extends BaseScriptComponent {
   private rides: {[id: string]: Ride} = {}
   // Building-local cm the traveller has been carried by rides (the building moves the other way).
   private rideOffset = new vec3(0, 0, 0)
+  private placeBuilder: FindYourWayPlaceBuilder
+  private playTime: FindYourWayPlayTime
+  private freeView: FindYourWayFreeWalkView
+  private panels: FindYourWayPanelFollow
   private onSlope = false
   private lastWalked: Vec3 | null = null
   private debugPose: {pos: Vec3; heading: number} | null = null
@@ -343,6 +299,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   private downloadOverride: string | null = null
   private startOverride: string | null = null
   private destinationOverride: string | null = null
+  private stopsOverride: string | null = null
   // Trip state that survives the map (re)load at scan time: a destination change made before
   // the scan (closures are in `closed`). Cleared by restart.
   private tripDestination: string | null = null
@@ -368,26 +325,12 @@ export class FindYourWayMain extends BaseScriptComponent {
   private travelled = 0
   private lastFeet: Vec3 | null = null
   private trip: TripAhead | null = null
-  private gate = new PlayGate()
-  private hop = new HopGame()
-  private seated = new SeatedDetector()
-  private hopSeated = false
-  private grabbing = false
-  private grabSamples: {t: number; x: number; y: number; z: number}[] = []
   private voice = new FindYourWayVoice()
   private voiceTry = 0
   private tourIds: string[] | null = null
   private tourPending = false
   private pickMap: FindYourWayPickMapUI | null = null
-  private hopOrigin: Vec3 | null = null
-  private hopHeading = 0
-  private raiseByHand: {[hand: string]: RaiseDetector} = {left: new RaiseDetector(), right: new RaiseDetector()}
-  private catchGame = new CatchGame()
-  private catchSpot: Vec3 | null = null
-  private catchHeading = 0
-  private caughtUntil = 0
   private stops: MultiStopTrip | null = null
-  private debugRaise = false
   private ptsCache: {key: string; map: MapData; pts: Vec3[]} | null = null
   private mappingPanelPlaced = false
   // "Gate C3 is on C pier, 1 floor up": shown in the cue slot for DEST_NOTE_S after the scan or a
@@ -406,8 +349,8 @@ export class FindYourWayMain extends BaseScriptComponent {
   private whereTo: FindYourWayWhereToUI | null = null
   private free: FreeWalk | null = null
   private freeCompanion = true
-  private shownOpen: string | null = null
-  private offerPlaced = false
+  // What a Free walk hands on to a trip started from it: its companion and its preferences.
+  private fromWalk: {companion: boolean; prefs: string[]} | null = null
   // Peek ahead.
   private peekView: FindYourWayPeekView | null = null
   private peekPinch: {[hand: string]: number | null} = {left: null, right: null}
@@ -474,6 +417,65 @@ export class FindYourWayMain extends BaseScriptComponent {
   // The companion view and place icons live in the building (building-local cm); the app panel
   // follows the head at waist height. Built at runtime, so the scene needs no new objects.
   private createViews(): void {
+    const self = this
+    this.panels = new FindYourWayPanelFollow({
+      camera: this.camera,
+      modePanelOffset: this.modePanelOffset,
+      headYaw: () => this.headYaw(),
+    })
+    this.placeBuilder = new FindYourWayPlaceBuilder({
+      get map() { return self.map },
+      get place() { return self.place },
+      standIn: this.standIn,
+      buildingUI: this.buildingUI,
+      demoControls: this.demoControls,
+      arrivalCard: this.arrivalCard,
+      routeLine: this.routeLine,
+      turnArrow: this.turnArrow,
+      get placesUI() { return self.placesUI },
+      startAtSign: this.startAtSign,
+      local: (p, liftCm) => this.local(p, liftCm),
+      eye: () => this.eye(),
+      firstEvent: (type) => this.firstEvent(type),
+      iconOfNode: (id) => this.iconOfNode(id),
+    })
+    this.playTime = new FindYourWayPlayTime({
+      camera: this.camera,
+      building: this.building,
+      get map() { return self.map },
+      get nav() { return self.nav },
+      get trip() { return self.trip },
+      get guide() { return self.guide },
+      get companion() { return self.companion },
+      get view() { return self.view },
+      get appPanel() { return self.appPanel },
+      hud: this.hud,
+      userPos: () => this.userPos(),
+      userHeading: () => this.userHeading(),
+      local: (p, liftCm) => this.local(p, liftCm),
+      eye: () => this.eye(),
+      cameraPos: () => this.cameraPos(),
+      headYaw: () => this.headYaw(),
+      cardShowing: () => this.cardShowing(),
+      playChime: () => this.playChime(),
+      testDropM: () => (this.debugPose ? this.cameraDropCm / 100 : 0),
+    })
+    this.freeView = new FindYourWayFreeWalkView({
+      camera: this.camera,
+      get place() { return self.place },
+      hud: this.hud,
+      turnArrow: this.turnArrow,
+      get offerUI() { return self.offerUI },
+      get view() { return self.view },
+      get bubble() { return self.bubble },
+      panels: this.panels,
+      offerOffset: this.offerOffset,
+      halfViewDeg: this.halfViewDeg,
+      userPos: () => this.userPos(),
+      userHeading: () => this.userHeading(),
+      local: (p, liftCm) => this.local(p, liftCm),
+      playChime: () => this.playChime(),
+    })
     const v = global.scene.createSceneObject("CompanionView")
     v.setParent(this.building)
     this.view = v.createComponent(FindYourWayCompanionView.getTypeName()) as FindYourWayCompanionView
@@ -488,9 +490,9 @@ export class FindYourWayMain extends BaseScriptComponent {
       onCompanion: () => this.setCompanionOn(!this.guide.on),
       onModel: () => this.setCompanionModel(COMPANION_IDS[(COMPANION_IDS.indexOf(this.companion.id) + 1) % COMPANION_IDS.length]),
       onPlaces: () => this.setPlacesMuted(!this.placesMuted),
-      onPlay: () => this.togglePlay(),
-      onJump: () => this.jump(),
-      onThrow: () => this.throwTreat(),
+      onPlay: () => this.playTime.toggle(),
+      onJump: () => this.playTime.jump(),
+      onThrow: () => this.playTime.throwTreat(),
       onNextStop: () => this.nextStop(),
       onEndWalk: () => this.endTrip(),
       onMap: () => this.setMapShown(!this.mapShown),
@@ -557,25 +559,18 @@ export class FindYourWayMain extends BaseScriptComponent {
     const pm = global.scene.createSceneObject("PickMapPanel")
     this.pickMap = pm.createComponent(FindYourWayPickMapUI.getTypeName()) as FindYourWayPickMapUI
     this.pickMap.setup((id) => this.pickDestination(id), () => this.closeWhereTo())
-    if (this.view) this.view.onGrab(() => this.grabStarted(), () => this.grabEnded())
+    if (this.view) this.view.onGrab(() => this.playTime.grabStarted(), () => this.playTime.grabEnded())
   }
 
   // ── The three modes ──────────────────────────────────────────────────────
 
-  // A panel ~1 m ahead, a little below eye level, facing you.
-  private placeAhead(so: SceneObject): void {
-    const t = this.camera.getTransform()
-    const yaw = this.headYaw()
-    so.getTransform().setWorldPosition(t.getWorldPosition().add(yaw.multiplyVec3(this.modePanelOffset)))
-    so.getTransform().setWorldRotation(yaw)
-  }
 
   private enterChoose(): void {
     this.phase = "choose"
     this.modePanel.hide()
     this.demoControls.setStatus("Choose what to do")
     if (!this.homePanel) return
-    this.placeAhead(this.homePanel.getSceneObject())
+    this.panels.placeAhead(this.homePanel.getSceneObject())
     this.homePanel.show(true)
   }
 
@@ -644,7 +639,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   private openWhereTo(): void {
     if (this.phase !== "mode" || !this.whereTo) return
     this.modePanel.hide()
-    this.placeAhead(this.whereTo.getSceneObject())
+    this.panels.placeAhead(this.whereTo.getSceneObject())
     this.whereTo.open(destinationsOf(this.map))
   }
 
@@ -652,7 +647,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   private openPickMap(): void {
     if (this.phase !== "mode" || !this.pickMap) return
     if (this.whereTo) this.whereTo.show(false)
-    this.placeAhead(this.pickMap.getSceneObject())
+    this.panels.placeAhead(this.pickMap.getSceneObject())
     this.pickMap.open(this.map, this.userPos().y)
   }
 
@@ -680,7 +675,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (this.homePanel) this.homePanel.show(false)
     this.phase = "prefs"
     this.tourPending = false
-    this.placeAhead(this.prefsPanel.getSceneObject())
+    this.panels.placeAhead(this.prefsPanel.getSceneObject())
     this.prefsPanel.open(interestList(this.map), this.presetList(), this.companion.name, this.freeCompanion, this.companion.id)
   }
 
@@ -690,7 +685,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (this.homePanel) this.homePanel.show(false)
     this.phase = "prefs"
     this.tourPending = true
-    this.placeAhead(this.prefsPanel.getSceneObject())
+    this.panels.placeAhead(this.prefsPanel.getSceneObject())
     this.prefsPanel.open(interestList(this.map), this.presetList(), this.companion.name, this.freeCompanion, this.companion.id)
   }
 
@@ -727,8 +722,7 @@ export class FindYourWayMain extends BaseScriptComponent {
       lookRangeM: this.lookRangeM,
     })
     this.phase = "free"
-    this.shownOpen = null
-    this.offerPlaced = false
+    this.freeView.reset()
     this.setCompanionOn(this.freeCompanion)
     if (this.appPanel) this.appPanel.setFreeWalk(true)
     this.demoControls.setStatus("Free walk")
@@ -737,7 +731,7 @@ export class FindYourWayMain extends BaseScriptComponent {
 
   private clearFreeWalk(): void {
     this.free = null
-    this.shownOpen = null
+    this.freeView.reset()
     if (this.offerUI) {
       this.offerUI.showDot(false)
       this.offerUI.showList(null)
@@ -750,6 +744,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   // Back to the three modes, on the same map, from where you stand.
   private endFreeWalk(): void {
     if (this.phase !== "free") return
+    if (this.free) this.fromWalk = {companion: this.guide.on, prefs: this.free.prefs}
     this.setCompanionOn(false)
     this.setMapShown(false)
     this.clearFreeWalk()
@@ -795,49 +790,6 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (this.free) this.free.openDot(this.userPos())
   }
 
-  private tickFree(): void {
-    const free = this.free
-    if (!free) return
-    const pos = this.userPos()
-    const heading = this.userHeading()
-    const now = getTime()
-    const f = free.update(pos, heading, getDeltaTime(), now)
-    this.hud.setPill(levelName(this.place, pos.y) + " · Free walk")
-    const cam = this.camera.getTransform()
-    const offer = this.offerUI
-    if (offer) {
-      offer.showDot(f.dot !== null)
-      offer.setDotText(free.dotText(pos))
-      if (f.dot !== null) offer.placeDot(cam.getWorldPosition().add(cam.getWorldRotation().multiplyVec3(DOT_OFFSET)), cam.getWorldRotation())
-      if (f.open !== this.shownOpen) {
-        this.shownOpen = f.open
-        offer.showList(free.list(pos))
-        this.offerPlaced = false
-      }
-      if (f.open !== null) {
-        const so = offer.listRootObject().getTransform()
-        const target = cam.getWorldPosition().add(this.headYaw().multiplyVec3(this.offerOffset))
-        so.setWorldPosition(this.offerPlaced ? vec3.lerp(so.getWorldPosition(), target, 1 - Math.exp(-getDeltaTime() * 4)) : target)
-        so.setWorldRotation(quat.lookAt(cam.getWorldPosition().sub(so.getWorldPosition()).normalize(), vec3.up()))
-        this.offerPlaced = true
-      }
-    }
-    const pet = f.pet
-    if (this.view && pet) {
-      const pointing = pet.mood === "point"
-      this.view.setPointing(pointing)
-      this.view.setMood(pet.mood)
-      this.view.setPose(this.local(pet.pos), pet.heading)
-    }
-    if (this.bubble) this.bubble.show(f.bubble, pet ? this.local(pet.pos, BUBBLE_ABOVE_CM) : null)
-    if (f.stopped) {
-      print("[FYW] companion stops at " + f.stopped + (f.bubble ? " (" + f.bubble + ")" : ""))
-      if (this.chime) this.audio.play(1)
-    }
-    // If it is out of view at a stop, the turn arrow points to it.
-    if (pet && f.pointing && turnOutOfView(pos, heading, pet.pos, this.halfViewDeg)) this.turnArrow.show(yawTo(pos, heading, pet.pos) as number)
-    else this.turnArrow.hide()
-  }
 
   // ── Map builder ──────────────────────────────────────────────────────────
 
@@ -1012,6 +964,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.clearFreeWalk()
     this.setMapShown(false)
     this.freeCompanion = true
+    this.fromWalk = null
     this.loadBuiltIn()
     this.phase = "scan"
     this.profile = null
@@ -1178,11 +1131,11 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.nav = new Navigator(this.map, startId, dest, this.profile as Profile)
     this.destNote = null
     this.coach = new PointingCoach(this.map)
-    this.coach.interests = this.modePanel.getInterests()
+    this.coach.interests = this.modePanel.getInterests().concat(this.fromWalk ? this.fromWalk.prefs : [])
     this.coach.muted = this.placesMuted
     this.travelled = 0
     this.lastFeet = null
-    if (this.companionOnAtStart) this.setCompanionOn(true)
+    if (this.companionOnAtStart || (this.fromWalk && this.fromWalk.companion)) this.setCompanionOn(true)
     this.phase = "nav"
     this.pendingSwing = true
     this.lastLineKey = ""
@@ -1225,6 +1178,11 @@ export class FindYourWayMain extends BaseScriptComponent {
 
   // Shows every closed connection: closed sign text, red plate, "Out of service" ride buttons.
   // Also called after the place is rebuilt for a downloaded map.
+  private buildPlace(): void {
+    this.rides = this.placeBuilder.build()
+    this.showClosures()
+  }
+
   private showClosures(): void {
     for (const edgeId in this.closed) {
       this.buildingUI.setClosureClosed(edgeId, CLOSED_SIGN_TEXT)
@@ -1265,7 +1223,7 @@ export class FindYourWayMain extends BaseScriptComponent {
       print("[FYW] ride " + id + " refused: " + Math.sqrt(dx * dx + dz * dz).toFixed(1) + " m away, feet y " + user.y.toFixed(2))
       return
     }
-    this.stopPlay()
+    this.playTime.stopPlay()
     const delta = this.local(there).sub(this.local(here))
     this.rideOffset = this.rideOffset.add(delta)
     this.placeBuilding()
@@ -1325,9 +1283,13 @@ export class FindYourWayMain extends BaseScriptComponent {
     }
   }
 
+  private playChime(): void {
+    if (this.chime) this.audio.play(1)
+  }
+
   private notify(text: string, iconName: string | null): void {
     this.hud.showCard(text, iconName)
-    if (this.chime) this.audio.play(1)
+    this.playChime()
   }
 
   private firstEvent(type: string): PlaceEvent | null {
@@ -1427,123 +1389,8 @@ export class FindYourWayMain extends BaseScriptComponent {
     return this.frame.toLocal(p, liftCm)
   }
 
-  private buildRides(map: MapData): void {
-    this.rides = {}
-    const reach = tripSettings(map).rideReach
-    let i = 0
-    for (const e of map.edges) {
-      const f = findNode(map, e.from), t = findNode(map, e.to)
-      if (!f || !t) continue
-      const dy = t.y - f.y
-      if (e.kind !== "lift" && Math.abs(dy) < 0.3) continue
-      if (e.kind !== "lift" && e.kind !== "escalator" && e.kind !== "stairs" && e.kind !== "ramp") continue
-      const ends: [MapNode, MapNode][] = e.kind === "escalator" ? [[f, t]] : [[f, t], [t, f]]
-      for (const [a, b] of ends) {
-        const up = b.y > a.y
-        const lvl = levelName(this.place, b.y)
-        let label = "", ic = "elevator"
-        if (e.kind === "lift") { label = "Ride to " + lvl; ic = "elevator" }
-        else if (e.kind === "escalator") { label = "Ride escalator " + (up ? "up" : "down"); ic = "escalator" }
-        else if (e.kind === "stairs") { label = "Take stairs " + (up ? "up" : "down"); ic = "stairs" }
-        else { label = "Take ramp " + (up ? "up" : "down"); ic = "accessible" }
-        const id = "r" + i++ + "_" + a.id
-        this.rides[id] = {id, edge: e, at: a.id, to: b.id, label, icon: ic, reach: e.kind === "lift" ? reach.lift : reach.other}
-      }
-    }
-  }
 
-  private fasciaSpot(n: MapNode): vec3 {
-    const ad = approachDir(this.map, n.id)
-    return this.local(n, FASCIA_SIGN_CM).sub(new vec3(ad.x, 0, -ad.z).uniformScale(FASCIA_AHEAD_CM))
-  }
 
-  private buildPlace(): void {
-    const map = this.map
-    const place = this.place
-    this.standIn.build(map, place, (x, y, z) => this.local({x, y, z}))
-    const ui = this.buildingUI
-    ui.clear()
-    const start = findNode(map, place.start)
-    if (start) {
-      // Standing at the sign: on Specs the real sign is in front of you and the panel floats by it; in
-      // the preview the board stands in the place.
-      const board = this.standIn.isSolid()
-      const scanAt = this.startAtSign
-        ? this.local(start, this.eye() - (board ? BOARD_BELOW_EYE_CM : SCAN_PANEL_BELOW_EYE_CM))
-          .add(board ? new vec3(BOARD_RIGHT_CM, 0, -BOARD_AHEAD_CM) : new vec3(SCAN_PANEL_RIGHT_CM, 0, -SCAN_PANEL_AHEAD_CM))
-        : this.local(start, SCAN_SIGN_CM)
-      this.standIn.addDirectory(map, place.start, scanAt, this.local(start).y, (x, y, z) => this.local({x, y, z}))
-      ui.setScanSign(scanAt, place.scanSign.title, place.scanSign.button,
-        place.scanSign.hint, place.standInLabel)
-      ui.addPlaceSign("StandIn", this.local(start, PLACE_SIGN_CM).add(new vec3(-260, 0, -150)),
-        place.standInLabel, place.title, "map")
-    }
-    for (const n of map.nodes) {
-      if (n.kind === "destination" || n.kind === "gate") {
-        if (this.standIn.isSolid()) ui.addPlaceSign(n.id, this.fasciaSpot(n), n.label || n.id, null, n.icon || null, FASCIA_SIGN_SCALE, FASCIA_TEXT_SIZE)
-        else ui.addPlaceSign(n.id, this.local(n, DEST_SIGN_CM), n.label || n.id, n.type || null, n.icon || null)
-      } else if (n.kind === "place" && n.front) {
-        // The shop's name over its front, readable from the walkway.
-        const tag = n.sponsored ? SPONSORED_SIGN : null
-        if (this.standIn.isSolid()) ui.addPlaceSign(n.id, this.fasciaSpot(n), n.label || n.id, tag, null, FASCIA_SIGN_SCALE, FASCIA_TEXT_SIZE)
-        else ui.addPlaceSign(n.id, this.local(n, SHOP_SIGN_CM), n.label || n.id, tag, null, SHOP_SIGN_SCALE)
-      } else if (n.kind === "assistance") {
-        ui.addPlaceSign(n.id, this.local(n, ASSIST_SIGN_CM), n.label || n.id, null, "info")
-      } else if (n.kind === "lift") {
-        ui.addPlaceSign(n.id, this.local(n, LIFT_SIGN_CM).add(new vec3(0, 0, -60)), n.label || n.id, null, "elevator")
-      }
-    }
-    for (const e of map.edges) {
-      if (e.kind !== "escalator" && e.kind !== "stairs" && e.kind !== "ramp") continue
-      const f = findNode(map, e.from), t = findNode(map, e.to)
-      if (!f || !t) continue
-      const mid = {x: (f.x + t.x) / 2, y: Math.max(f.y, t.y), z: (f.z + t.z) / 2}
-      const dir = t.y > f.y ? " ↑" : t.y < f.y ? " ↓" : ""
-      const label = e.kind === "escalator" ? "Escalator" + dir : e.kind === "stairs" ? "Stairs" : "Ramp"
-      const ic = e.kind === "escalator" ? "escalator" : e.kind === "stairs" ? "stairs" : "accessible"
-      ui.addPlaceSign("conn_" + e.from + "_" + e.to + "_" + e.kind, this.local(mid, CONNECTION_SIGN_CM), label, null, ic)
-    }
-    this.buildRides(map)
-    for (const id in this.rides) {
-      const r = this.rides[id]
-      const a = findNode(map, r.at)!, b = findNode(map, r.to)!
-      let pos: vec3
-      if (r.edge.kind === "lift") {
-        // inside the shaft, on the side wall opposite the red out-of-service plate
-        const ad = approachDir(map, a.id)
-        const fwd = new vec3(ad.x, 0, -ad.z)
-        const side = new vec3(-fwd.z, 0, fwd.x)
-        pos = this.local(a, RIDE_BUTTON_CM).add(side.uniformScale(70)).sub(fwd.uniformScale(30))
-      } else {
-        // beside the foot of the escalator / stairs / ramp, facing the way in
-        const pa = this.local(a), pb = this.local(b)
-        let dir = new vec3(pb.x - pa.x, 0, pb.z - pa.z)
-        dir = dir.length > 1 ? dir.normalize() : new vec3(0, 0, -1)
-        const side = new vec3(-dir.z, 0, dir.x)
-        pos = pa.add(side.uniformScale(80)).add(dir.uniformScale(30)).add(new vec3(0, RIDE_BUTTON_CM, 0))
-      }
-      ui.addRideButton(id, pos, r.label, r.icon)
-    }
-    for (const ev of place.events) {
-      if (ev.type !== "connectionClosed" || !ev.at || !ev.edge) continue
-      const n = findNode(map, ev.at)
-      if (!n) continue
-      // on the red plate by the shaft opening, facing the approach
-      const ad = approachDir(map, n.id)
-      const fwd = new vec3(ad.x, 0, -ad.z)
-      const side = new vec3(-fwd.z, 0, fwd.x)
-      ui.addClosureSign(ev.edge, this.local(n, CLOSURE_SIGN_CM).sub(side.uniformScale(70)).add(fwd.uniformScale(60)), ev.sign || "Out of service")
-    }
-    const dc = this.firstEvent("destinationChanged")
-    this.demoControls.setEventLabel(dc ? dc.button || dc.card || "Change destination" : null,
-      dc && dc.to ? this.iconOfNode(dc.to) : null)
-    this.demoControls.setMapName(place.title)
-    this.arrivalCard.hide()
-    this.routeLine.clear()
-    this.turnArrow.hide()
-    this.buildPlaceIcons()
-    this.showClosures()
-  }
 
   // ── Per-frame ────────────────────────────────────────────────────────────
 
@@ -1564,7 +1411,7 @@ export class FindYourWayMain extends BaseScriptComponent {
       this.followMappingPanel()
     }
     if (this.viewFollowsPose && this.debugPose) this.placeBuildingForPose()
-    if (this.phase === "free") this.tickFree()
+    if (this.phase === "free" && this.free) this.freeView.tick(this.free)
     if ((this.phase !== "nav" && this.phase !== "arrived") || !this.nav) return
     const pos = this.userPos()
     const progress = this.nav.updatePosition(pos)
@@ -1646,21 +1493,6 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.placesUI.show(shown.map((q) => q.id), this.pointed && !this.placesMuted ? this.pointed.place.id : null)
   }
 
-  private buildPlaceIcons(): void {
-    if (!this.placesUI) return
-    this.placesUI.clear()
-    const map = this.map
-    const all = placesOf(map)
-    for (const n of map.nodes) {
-      if (n.kind === "lift") all.push({id: n.id, x: n.x, y: n.y, z: n.z, label: n.label || n.id, category: "lift", sponsored: false, sponsorTag: ""})
-    }
-    for (const p of all) {
-      const ad = approachDir(map, p.id)
-      // Face the walkway the place is approached from.
-      const yaw = Math.atan2(ad.x, -ad.z)
-      this.placesUI.addPlace(p.id, this.local(p, PLACE_FACE_CM), yaw, p.label, p.category, p.category === "lift" ? "" : placeTag(p), p.sponsored)
-    }
-  }
 
   // "Go here?" on a place: it becomes the destination (the same re-route as a gate change).
   private goHere(id: string): void {
@@ -1691,13 +1523,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.lastFeet = null
     this.trip = null
     this.stops = null
-    this.stopPlay()
-    this.gate.reset()
-    this.seated.reset()
-    this.grabbing = false
-    if (this.view) this.view.setGrab(null)
-    this.catchGame = new CatchGame()
-    this.catchSpot = null
+    this.playTime.reset()
     if (this.view) {
       this.view.setVisible(false)
       this.view.setPost(null, true)
@@ -1718,7 +1544,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     const pos = this.nav || this.free ? this.userPos() : {x: 0, y: 0, z: 0}
     this.guide.setOn(on, route, pos, this.routeKey())
     if (this.free) this.free.setCompanion(on, pos, this.userHeading())
-    if (!on) this.stopPlay()
+    if (!on) this.playTime.stopPlay()
     if (this.view) this.view.setVisible(on)
     if (this.appPanel) this.appPanel.setCompanion(this.companion.name, on, this.companion.collectible.one)
     this.hud.setScore(on && this.nav ? treatsText(this.guide.found, this.guide.total, this.companion) : null)
@@ -1747,199 +1573,39 @@ export class FindYourWayMain extends BaseScriptComponent {
 
   private updateCompanion(pos: Vec3, arrived: boolean): void {
     if (!this.view || !this.nav) return
+    if (this.playTime.update(pos)) return
     const dt = getDeltaTime()
     const now = getTime()
-    this.gate.update(pos, dt, {companionOn: this.guide.on, cardShowing: this.cardShowing()})
-    this.seated.update(this.headAboveFloorM(pos), this.eye() / 100, dt)
-    if (this.hop.phase !== "idle" && (!this.gate.canPlay || this.hopSeated !== this.seated.seated)) this.stopPlay()
-    const nearChange = !!this.trip && !!this.trip.next && this.trip.next.metres < 10
-    const throwOk = canThrow({moving: !this.gate.canPlay, nearChange, cardShowing: this.cardShowing(), companionOn: this.guide.on})
-    if (this.appPanel) this.appPanel.setPlay(this.gate.canPlay, this.hop.phase !== "idle", throwOk && this.catchGame.phase === "idle")
-    this.updateGrabTreat(throwOk && this.catchGame.phase === "idle" && this.hop.phase === "idle")
-    if (!this.guide.on) {
-      this.hud.setPlayLine(null)
-      return
-    }
-    if (this.hop.phase !== "idle") {
-      if (this.handRaised()) this.jump()
-      this.hop.update(dt)
-      const origin = this.hopOrigin as Vec3
-      this.view.setLane(this.local(origin), this.hopHeading, this.hop.obstacles, this.hop.lane)
-      this.view.setMood("run", HOP_RUN_MS)
-      this.view.setPose(this.local(origin), this.hopHeading, this.hop.petY * 100, this.hop.shaking ? 1 : 0)
-      this.hud.setPlayLine(hopText(this.hop, this.companion))
-      return
-    }
-    this.view.setLane(null, 0, [])
-    if (this.catchGame.phase !== "idle") {
-      const before = {x: this.catchGame.pos.x, y: this.catchGame.pos.y, z: this.catchGame.pos.z}
-      const r = this.catchGame.update(dt, pos)
-      if (r.caught && this.chime) this.audio.play(1)
-      // Face the way it runs.
-      const dx = r.pos.x - before.x, dz = r.pos.z - before.z
-      if (dx * dx + dz * dz > 1e-8) this.catchHeading = (Math.atan2(dx, dz) * 180) / Math.PI
-      this.view.setMood("run")
-      this.view.setPose(this.local(r.pos), this.catchHeading, r.caught ? 15 : 0)
-      this.view.setTreat(r.phase === "fetch" && this.catchSpot ? this.local(this.catchSpot) : null)
-      this.hud.setPlayLine(null)
-      if (r.phase === "idle") {
-        this.caughtUntil = now + CAUGHT_LINE_S
-        this.catchSpot = null
-        this.guide.pet = {pos: r.pos, heading: 0, mood: "lead"}
-      }
-      return
-    }
     const route = this.routeMapPoints()
     this.guide.update(route, pos, dt, this.routeKey(), arrived, now)
     const pet = this.guide.pet
     if (pet) {
+      this.view.setPointing(pet.mood === "point")
       this.view.setMood(pet.mood)
       this.view.setPose(this.local(pet.pos), pet.heading)
     }
     this.view.setCollectibles(this.guide.spots.map((q) => this.local(q)), this.guide.got)
     this.hud.setScore(arrived ? treatsResult(this.guide.found, this.guide.total, this.companion)
       : treatsText(this.guide.found, this.guide.total, this.companion))
-    this.hud.setPlayLine(now < this.caughtUntil ? "Caught! " + this.catchGame.catches + " so far"
-      : this.gate.canPlay ? hopText(this.hop, this.companion) : null)
+    this.hud.setPlayLine(this.playTime.idleLine(now))
   }
 
-  // Play while you wait (Hop): the lane starts HOP_AHEAD_M ahead of you, along where you look.
-  private togglePlay(): void {
-    if (this.hop.phase !== "idle") {
-      this.stopPlay()
-      return
-    }
-    if (!this.gate.canPlay || !this.nav) return
-    const pos = this.userPos()
-    this.hopHeading = this.userHeading()
-    const r = (this.hopHeading * Math.PI) / 180
-    this.hopSeated = this.seated.seated
-    const laneM = this.hopSeated ? SEATED_LANE : HOP_LANE
-    if (this.hop.lane !== laneM) this.hop = new HopGame(Math.random, laneM)
-    const floor = this.floorUnder(pos)
-    this.hopOrigin = this.hopSeated
-      ? seatedPlaySpot({x: pos.x, y: floor + this.headAboveFloorM(pos), z: pos.z}, {x: Math.sin(r), z: Math.cos(r)}, floor).start
-      : {x: pos.x + Math.sin(r) * HOP_AHEAD_M, y: pos.y, z: pos.z + Math.cos(r) * HOP_AHEAD_M}
-    this.catchGame.cancel()
-    this.catchSpot = null
-    this.debugRaise = false
-    if (this.view) this.view.setTreat(null)
-    this.hop.start()
-    print("[FYW] hop: start")
-  }
 
-  // The floor you're on, and your head above it (standing or seated).
-  private floorUnder(pos: Vec3): number {
-    if (this.nav) return this.nav.snapFeet(pos.y)
-    let floor = pos.y
-    let gap = Infinity
-    for (const l of mapLevels(this.map)) {
-      if (Math.abs(l.y - pos.y) < gap) {
-        gap = Math.abs(l.y - pos.y)
-        floor = l.y
-      }
-    }
-    return floor
-  }
 
-  private headAboveFloorM(pos: Vec3): number {
-    const drop = this.debugPose ? this.cameraDropCm / 100 : 0
-    return pos.y - this.floorUnder(pos) + this.eye() / 100 - drop
-  }
 
-  private stopPlay(): void {
-    if (this.hop.phase === "idle") return
-    this.hop.stop()
-    this.hopOrigin = null
-    if (this.view) this.view.setLane(null, 0, [])
-    this.hud.setPlayLine(null)
-    print("[FYW] hop: stop")
-  }
 
-  // A raised hand (or the Jump button): jump, or after a bump, play again.
-  jump(): boolean {
-    const did = this.hop.jump()
-    if (did && this.hop.phase === "running" && this.hop.score === 0 && this.hop.obstacles.length === 0) print("[FYW] hop: play again")
-    return did
-  }
 
-  // Either hand's wrist near head height counts as raised (once per raise).
-  private handRaised(): boolean {
-    let raised = false
-    if (this.debugRaise) {
-      this.debugRaise = false
-      return true
-    }
-    try {
-      const head = this.cameraPos().y
-      for (const side of ["left", "right"]) {
-        const hand = SIK.HandInputData.getHand(side as "left" | "right")
-        const h = hand && hand.isTracked() ? (hand.wrist.position.y - head) / 100 : null
-        if (this.raiseByHand[side].update(h)) raised = true
-      }
-    } catch (e) {
-      // No hand tracking (editor without SIK): only the Jump button.
-    }
-    return raised
-  }
 
-  // Catch: throw the treat ahead of you (on Specs: grab and throw; the button throws straight ahead).
-  throwTreat(): void {
-    if (!this.nav || !this.guide.on || !this.guide.pet || this.catchGame.phase !== "idle") return
-    const nearChange = !!this.trip && !!this.trip.next && this.trip.next.metres < 10
-    if (!canThrow({moving: !this.gate.canPlay, nearChange, cardShowing: this.cardShowing(), companionOn: this.guide.on})) return
-    const pos = this.userPos()
-    const r = (this.userHeading() * Math.PI) / 180
-    this.throwWith({x: Math.sin(r) * THROW_SPEED * 0.7, y: THROW_SPEED * 0.7, z: Math.cos(r) * THROW_SPEED * 0.7})
-  }
 
-  private throwWith(v: PlayXYZ): void {
-    if (!this.guide.pet) return
-    const pos = this.userPos()
-    const reach = this.seated.seated ? SEATED_THROW_MAX : THROW_MAX
-    this.catchSpot = landingSpot({x: pos.x, y: pos.y + THROW_FROM_M, z: pos.z}, v, pos.y, reach)
-    this.catchGame.throwTo(this.catchSpot, this.guide.pet.pos)
-    print("[FYW] catch: thrown")
-  }
 
-  // The treat by your hand: pinch it and throw. It stays by you while you may throw.
-  private updateGrabTreat(canGrab: boolean): void {
-    if (!this.view) return
-    if (this.grabbing) {
-      const p = this.view.getGrabWorldPos()
-      if (p) {
-        const local = this.building.getTransform().getInvertedWorldTransform().multiplyPoint(p)
-        this.grabSamples.push({t: getTime(), x: local.x / 100, y: local.y / 100, z: -local.z / 100})
-        if (this.grabSamples.length > 30) this.grabSamples.shift()
-      }
-      return
-    }
-    if (!canGrab) {
-      this.view.setGrab(null)
-      return
-    }
-    const t = this.camera.getTransform()
-    this.view.setGrab(t.getWorldPosition().add(this.headYaw().multiplyVec3(GRAB_OFFSET)))
-  }
 
-  private grabStarted(): void {
-    this.grabbing = true
-    this.grabSamples = []
-  }
 
-  private grabEnded(): void {
-    if (!this.grabbing) return
-    this.grabbing = false
-    const v = releaseVelocity(this.grabSamples)
-    print("[FYW] catch: let go, " + this.grabSamples.length + " samples, " + (v ? "thrown" : "no swing"))
-    if (v && this.nav && this.guide.on && this.catchGame.phase === "idle") this.throwWith(v)
-  }
 
   // Multi-stop trip: the map's places named in multiStops, ordered for the shortest walk.
   private planStops(startId: string): MultiStopTrip | null {
     if (this.tourIds) return new MultiStopTrip(this.tourIds)
     if (this.destinationOverride || this.tripDestination) return null
-    const ids = this.multiStops.split(",").map((x) => x.trim()).filter((x) => x && !!findNode(this.map, x))
+    const ids = (this.stopsOverride !== null ? this.stopsOverride : this.multiStops).split(",").map((x) => x.trim()).filter((x) => x && !!findNode(this.map, x))
     if (ids.length < 2) return null
     const order = orderStops(startId, ids, this.stopDistance())
     print("[FYW] stops: " + order.join(" > "))
@@ -1982,13 +1648,8 @@ export class FindYourWayMain extends BaseScriptComponent {
 
   private followMappingPanel(): void {
     if (!this.mappingPanel) return
-    const t = this.camera.getTransform()
-    const p = t.getWorldPosition().add(this.headYaw().multiplyVec3(new vec3(0, -8, -115)))
-    const so = this.mappingPanel.getSceneObject().getTransform()
-    const k = this.mappingPanelPlaced ? 1 - Math.exp(-getDeltaTime() * 4) : 1
+    this.panels.follow(this.mappingPanel.getSceneObject(), MAPPING_PANEL_OFFSET, this.mappingPanelPlaced)
     this.mappingPanelPlaced = true
-    so.setWorldPosition(vec3.lerp(so.getWorldPosition(), p, k))
-    so.setWorldRotation(quat.lookAt(t.getWorldPosition().sub(so.getWorldPosition()).normalize(), vec3.up()))
   }
 
   private followAppPanel(): void {
@@ -1997,12 +1658,8 @@ export class FindYourWayMain extends BaseScriptComponent {
     const wasOn = this.appPanel.getSceneObject().enabled
     this.appPanel.show(on)
     if (!on) return
-    const t = this.camera.getTransform()
     const offset = this.appPanel.isPlaying() ? this.playPanelOffset : global.deviceInfoSystem.isEditor() ? PREVIEW_PANEL_OFFSET : this.appPanelOffset
-    const p = t.getWorldPosition().add(this.headYaw().multiplyVec3(offset))
-    const so = this.appPanel.getSceneObject().getTransform()
-    so.setWorldPosition(wasOn ? vec3.lerp(so.getWorldPosition(), p, 1 - Math.exp(-getDeltaTime() * 4)) : p)
-    so.setWorldRotation(quat.lookAt(t.getWorldPosition().sub(so.getWorldPosition()).normalize(), vec3.up()))
+    this.panels.follow(this.appPanel.getSceneObject(), offset, wasOn)
   }
 
   private routeMapPoints(): Vec3[] {
@@ -2055,17 +1712,9 @@ export class FindYourWayMain extends BaseScriptComponent {
     const shown = this.showDemoControls || this.demoControlsForced
     const dso = this.demoControls.getSceneObject()
     if (dso.enabled !== shown) dso.enabled = shown
-    if (!shown) return
-    const t = this.camera.getTransform()
-    const yaw = this.headYaw()
-    const target = t.getWorldPosition().add(yaw.multiplyVec3(this.demoOffset))
-    const so = this.demoControls.getSceneObject().getTransform()
-    const k = this.demoInit ? 1 - Math.exp(-getDeltaTime() * 4) : 1
+    if (!shown || !this.panels) return
+    this.panels.follow(dso, this.demoOffset, this.demoInit)
     this.demoInit = true
-    const p = vec3.lerp(so.getWorldPosition(), target, k)
-    so.setWorldPosition(p)
-    // Face the eyes (yaw and pitch) so the low panel reads square-on.
-    so.setWorldRotation(quat.lookAt(t.getWorldPosition().sub(p).normalize(), vec3.up()))
   }
 
   // User position in map metres (feet), from the camera or a test override.
@@ -2167,11 +1816,14 @@ export class FindYourWayMain extends BaseScriptComponent {
   getPointedPlaceId(): string | null { return this.pointed ? this.pointed.place.id : null }
   getPlaceTag(id: string): string | null { return this.placesUI ? this.placesUI.tagOf(id) : null }
   isPlacesMuted(): boolean { return this.placesMuted }
-  canPlayNow(): boolean { return this.gate.canPlay }
-  isSeatedNow(): boolean { return this.seated.seated }
-  getHopLaneM(): number { return this.hop.lane }
-  getHopOrigin(): Vec3 | null { return this.hopOrigin }
-  getCatchSpot(): Vec3 | null { return this.catchSpot }
+  // A raised hand (or the Jump button): jump, or after a bump, play again.
+  jump(): boolean { return this.playTime.jump() }
+  throwTreat(): void { this.playTime.throwTreat() }
+  canPlayNow(): boolean { return this.playTime.gate.canPlay }
+  isSeatedNow(): boolean { return this.playTime.seated.seated }
+  getHopLaneM(): number { return this.playTime.hop.lane }
+  getHopOrigin(): Vec3 | null { return this.playTime.hopOrigin }
+  getCatchSpot(): Vec3 | null { return this.playTime.catchSpot }
   isGrabTreatShown(): boolean { return !!this.view && this.view.isGrabShown() }
   isListening(): boolean { return this.voice.listening }
   debugHeard(text: string, final: boolean): void {
@@ -2183,19 +1835,19 @@ export class FindYourWayMain extends BaseScriptComponent {
   getPickMapDotId(i: number): string | null { return this.pickMap ? this.pickMap.getDotId(i) : null }
   getPickMapFloor(): string { return this.pickMap ? this.pickMap.getFloorText() : "" }
   isTour(): boolean { return this.tourIds !== null }
-  getHopPhase(): string { return this.hop.phase }
-  getHopScore(): number { return this.hop.score }
-  getHopObstacles(): number { return this.hop.obstacles.length }
+  getHopPhase(): string { return this.playTime.hop.phase }
+  getHopScore(): number { return this.playTime.hop.score }
+  getHopObstacles(): number { return this.playTime.hop.obstacles.length }
   isHopLaneShown(): boolean { return !!this.view && this.view.isLaneShown() }
-  getCatchPhase(): string { return this.catchGame.phase }
-  getCatches(): number { return this.catchGame.catches }
+  getCatchPhase(): string { return this.playTime.catchGame.phase }
+  getCatches(): number { return this.playTime.catchGame.catches }
   getStopLabel(): string | null { return this.stops ? this.stops.label((id) => nodeLabel(this.getMapData(), id)) : null }
   getStops(): string[] { return this.stops ? this.stops.stops.slice() : [] }
   isAppPanelPlaying(): boolean { return !!this.appPanel && this.appPanel.isPlaying() }
   isBackdropSolid(): boolean { return this.standIn.isSolid() }
   isAppPanelShown(): boolean { return !!this.appPanel && this.appPanel.getSceneObject().isEnabledInHierarchy }
   // Simulates one raised hand (LEAF can't move tracked hands); used on the next frame.
-  debugRaiseHand(): void { this.debugRaise = true }
+  debugRaiseHand(): void { this.playTime.debugRaise = true }
   debugGoHere(id: string): void { this.goHere(id) }
   debugShowDemoControls(on: boolean): void {
     this.demoControlsForced = on
@@ -2288,6 +1940,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   debugSetCameraDropCm(cm: number): void { this.cameraDropCm = cm }
   debugSetStartOverride(signId: string | null): void { this.startOverride = signId }
   debugSetDestinationOverride(nodeId: string | null): void { this.destinationOverride = nodeId }
+  debugSetStops(ids: string | null): void { this.stopsOverride = ids }
   // Closes any connection by edge id, exactly as pinching its red sign would.
   debugCloseEdge(edgeId: string): void { this.closeConnection(edgeId) }
 

@@ -221,7 +221,7 @@ test("G8 The game never runs before start or after stop; stop clears it", () => 
 
 test("G9 Any companion plays: the same game, its own words", () => {
   const g = new HopGame(seededRandom(8));
-  assert.equal(hopText(g, COMPANIONS.dog), "Raise your hand: Pet jumps");
+  assert.equal(hopText(g, COMPANIONS.dog), "Raise your hand: Dog jumps");
   assert.equal(hopText(g, COMPANIONS.rover), "Raise your hand: Rover jumps");
   g.start();
   assert.equal(hopText(g, COMPANIONS.robot), "Jumps 0 · best 0");

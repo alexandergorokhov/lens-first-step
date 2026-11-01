@@ -268,8 +268,8 @@ function floorBubbles(fw: FreeWalk): number {
   let n = 0;
   let last: string | null = null;
   let t = 0;
-  fw.setCompanion(true, { x: 30, y: 0, z: 8 }, 0);
-  for (let z = 8; z < 24; z += 0.05) {
+  fw.setCompanion(true, { x: 30, y: 0, z: 1 }, 0);
+  for (let z = 1; z < 24; z += 0.05) {
     t += 0.1;
     const r = fw.update({ x: 30, y: 0, z }, 0, 0.1, t);
     if (r.bubble && r.bubble !== last && /upstairs|downstairs/.test(r.bubble)) n++;

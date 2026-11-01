@@ -63,7 +63,7 @@ export const FREE_DEFAULTS: FreeSettings = {
   speed: 2.4,
   runSpeed: 4.5,
   pointSeconds: 3,
-  pointRadiusM: 8,
+  pointRadiusM: 12,
   maxStops: 0,
   bubbleSeconds: 5,
   lookRangeM: 12,
@@ -75,7 +75,10 @@ export const FREE_DEFAULTS: FreeSettings = {
 // At most this many picks on a floor-change list; more shows "and more".
 export const MAX_PICKS = 3;
 // A shop or stairs behind you by more than this (m, along "ahead") is not stopped at.
-const BEHIND_M = 2;
+const POINT_CONE_COS = Math.cos((40 * Math.PI) / 180); // a stop this far off your walking line is still in view as it starts
+// A shop's front is drawn this far behind its node, this wide each way.
+const DRAWN_BACK_M = 1.7;
+const DRAWN_HALF_M = 2.8;
 // The companion stands this far outside a front when it stops there (m).
 const OUTSIDE_FRONT_M = 1.2;
 // It gives up reaching a stop after this long (s), or when you are this far from it (m).
@@ -135,18 +138,33 @@ export function frontTargets(map: FwMap): LookTarget[] {
   for (const n of map.nodes) {
     if (!n.front) continue;
     const t: LookTarget = { id: n.id, y: n.y, x1: n.front.x1, z1: n.front.z1, x2: n.front.x2, z2: n.front.z2, outside: 0 };
+    let from: FwNode | null = null;
     for (const e of map.edges) {
       if (e.kind !== "walk" || (e.from !== n.id && e.to !== n.id)) continue;
       const other = at[e.from === n.id ? e.to : e.from];
       const s = other ? sideOf(t, other) : 0;
       if (Math.abs(s) > 1e-6) {
         t.outside = s > 0 ? 1 : -1;
+        from = other;
         break;
       }
     }
     out.push(t);
+    if ((n.kind === "place" || n.kind === "destination") && from) out.push(drawnFront(n, from));
   }
   return out;
+}
+
+// The front as you see it: across the way in, behind the node.
+function drawnFront(n: FwNode, from: FwNode): LookTarget {
+  const l = flat(n, from);
+  const dx = (from.x - n.x) / l;
+  const dz = (from.z - n.z) / l;
+  const cx = n.x - dx * DRAWN_BACK_M;
+  const cz = n.z - dz * DRAWN_BACK_M;
+  const t: LookTarget = { id: n.id, y: n.y, x1: cx + dz * DRAWN_HALF_M, z1: cz - dx * DRAWN_HALF_M, x2: cx - dz * DRAWN_HALF_M, z2: cz + dx * DRAWN_HALF_M, outside: 0 };
+  t.outside = sideOf(t, from) > 0 ? 1 : -1;
+  return t;
 }
 
 // The id of the nearest front the head direction crosses from outside, on your floor, within range.
@@ -316,8 +334,8 @@ export function offerView(map: FwMap, id: string, prefs: string[], y: number): O
 export function dotLabel(map: FwMap, id: string, prefs: string[], y: number): string {
   const view = offerView(map, id, prefs, y);
   if (!view) return "";
-  if (view.rows.length === 0 || !view.rows[0].price) return view.title;
-  return (view.tag ? SPONSOR_TAG : "Offers") + ": " + view.title;
+  if (view.tag) return SPONSOR_TAG + ": " + view.title;
+  return view.rows.length > 0 && view.rows[0].price ? "Offers: " + view.title : view.title;
 }
 
 // The preference checkboxes: the map's list, or today's interests on maps without one.
@@ -472,7 +490,7 @@ export class FreeWalk {
     nx /= len;
     nz /= len;
     let outside = 0;
-    for (const t of this.targets) if (t.id === n.id) outside = t.outside;
+    outside = this.targets.filter((t) => t.id === n.id)[0].outside;
     if (outside === 0) outside = 1;
     // sideOf() is positive along (-ez, ex): the same normal as above.
     return { x: mid.x + nx * outside * OUTSIDE_FRONT_M, y, z: mid.z + nz * outside * OUTSIDE_FRONT_M };
@@ -482,7 +500,7 @@ export class FreeWalk {
     const s = this.settings;
     if (s.maxStops > 0 && this.stops >= s.maxStops) return null;
     const near = (n: FwNode) => Math.abs(n.y - pos.y) < SAME_FLOOR_M && flat(n, pos) <= s.pointRadiusM &&
-      (n.x - pos.x) * dir.x + (n.z - pos.z) * dir.z >= -BEHIND_M;
+      (n.x - pos.x) * dir.x + (n.z - pos.z) * dir.z >= flat(n, pos) * POINT_CONE_COS;
     let shop: FwNode | null = null;
     for (const n of this.map.nodes) {
       if (!matches(n, this.prefs) || this.done[n.id] || !near(n)) continue;

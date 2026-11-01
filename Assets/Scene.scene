@@ -8501,11 +8501,8 @@
     companionOnAtStart: true
     presetPreferences: true
     pointSeconds: true
-    pointRadiusM: true
     maxStopsPerWalk: true
     lookRangeM: true
-    dotPinchCm: true
-    multiStops: true
     appPanelOffset: true
     playPanelOffset: true
   ScriptTypesDefault:
@@ -8540,14 +8537,11 @@
       presetPreferences: "coffee,clothes,hardware"
       companionAheadM: !<float> 7.000000
       pointSeconds: !<float> 3.000000
-      pointRadiusM: !<float> 8.000000
+      pointRadiusM: !<float> 12.000000
       maxStopsPerWalk: !<float> 0.000000
       lookRangeM: !<float> 12.000000
-      dotOffset: !<Vec3> {x: 22.000000, y: 16.000000, z: -100.000000}
       offerOffset: !<Vec3> {x: 15.000000, y: 0.000000, z: -100.000000}
-      dotCm: !<float> 3.000000
-      dotPinchCm: !<float> 8.000000
-      multiStops: "pharmacy,iceCream,sushi"
+      multiStops: ""
       appPanelOffset: !<Vec3> {x: -30.000000, y: -38.000000, z: -55.000000}
       playPanelOffset: !<Vec3> {x: -34.000000, y: -14.000000, z: -55.000000}
       demoOffset: !<Vec3> {x: -15.000000, y: -14.000000, z: -80.000000}

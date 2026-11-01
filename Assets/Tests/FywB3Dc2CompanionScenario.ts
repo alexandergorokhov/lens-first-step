@@ -17,10 +17,10 @@ export class FywB3Dc2CompanionScenario extends Scenario {
     expect(main.isCompanionShown(), "companion shown").toBe(true)
     main.debugMarkPointed(["floor:0:up"])
 
-    // Along the ground floor east: Threads (clothes) matches, Bolt Hardware doesn't.
+    // Along the ground floor east, with Threads ahead: it matches, Bolt Hardware doesn't.
     const stops: string[] = []
     const y = 0
-    main.debugSetPose(32, y, 10, 90)
+    main.debugSetPose(27, y, 10, 90)
     await sleep(300)
     let stop: string | null = null
     for (let i = 0; i < 40; i++) {

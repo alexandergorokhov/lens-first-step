@@ -14,6 +14,7 @@ export class FywT1MallStopsScenario extends Scenario {
   async run(): Promise<void> {
     const it = new DefaultLeafInteractor()
     await sleep(1000)
+    getMain().debugSetStops("pharmacy,iceCream,sushi")
     for (const profile of ["walk", "stepFree"]) {
       const main = await startTrip(it, profile as "walk" | "stepFree", 0, undefined, ["nav"], "mall")
       const stops = main.getStops()
@@ -35,6 +36,7 @@ export class FywT1MallStopsScenario extends Scenario {
         }
       }
     }
+    getMain().debugSetStops(null)
     log("t1 pass")
   }
 }

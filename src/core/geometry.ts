@@ -247,6 +247,7 @@ export function isClear(map: WallMap, p: XYZ): boolean {
   if (onWalkway(map, p)) return true;
   const box = map.place && map.place.footprint;
   if (box && (p.x < box.minX + BODY_M || p.x > box.maxX - BODY_M || p.z < box.minZ + BODY_M || p.z > box.maxZ - BODY_M)) return false;
+  if (feetOnSlope(map, p) !== null) return true;
   for (const n of map.nodes) {
     if (Math.abs(n.y - p.y) > SAME_FLOOR_M) continue;
     const shop = n.kind === "place" || n.kind === "destination";
@@ -254,7 +255,6 @@ export function isClear(map: WallMap, p: XYZ): boolean {
     const dir = dirFrom(map, n);
     if (dir && nearWall(p, n, dir, shop ? SHOP_BACK_M : LIFT_BACK_M, shop ? SHOP_HALF_M : LIFT_HALF_M)) return false;
   }
-  if (feetOnSlope(map, p) !== null) return true;
   for (const e of map.edges) {
     const s = besideSlope(map, e, p, SLAB_HALF_M + BODY_M / 2);
     if (!s) continue;

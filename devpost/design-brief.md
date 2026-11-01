@@ -40,7 +40,7 @@ After the scan, four choices appear.
 **Free walk: browse with no destination.**
 - Pick your preferences and your companion: dog, robot or rover.
 - The companion keeps ahead of you on the walkable paths, about 7 m by default. It follows your walking direction, so glancing at a shop does not swing it round.
-- It stops at each shop that matches and points at it, once per walk.
+- It stops at each matching shop ahead of you and points at it, once per walk.
 - Look at any shop and a gold button appears in your view: "Offers: Bolt Hardware", or "Sponsored: Bean There Café" for a promoted shop. Open it to see up to 3 offers, or ignore it and nothing happens.
 - When matches are on another floor, it waits at the stairs or escalator with a bubble: "3 picks upstairs".
 

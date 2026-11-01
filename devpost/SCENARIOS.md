@@ -14,7 +14,7 @@ Every scenario and where it is tested.
   seated height and the scanned sign are simulated with test hooks on `FindYourWayMain`
   (LEAF cannot drive WASD/Q/E).
 
-Node 438 tests, all passing (with `OFFLINE=1` the live gist download is skipped).
+Node 441 tests, all passing (with `OFFLINE=1` the live gist download is skipped).
 `src/core/tests/docs.test.ts` checks this count, the test list and every test named below. LEAF
 scenarios have each passed in the preview; run them in short groups, because long batches can hit a
 tap timeout.
@@ -56,7 +56,7 @@ pill (floor badge first, bottom centre), the cue / destination note above it and
 | S15 | Down escalator | Airport has a down escalator beside the up one (`escDownTop` → `escDownFoot`); Walk going down rides it, with it closed takes the stairs; the up one is never ridden down | Node: "S15 Going down on Walk…", "S15 The up escalator is never ridden down…", "Escalators are one-way…" | Passing |
 | S16 | Going down by lift and stairs | Step-Free from Departures to the entrance takes a lift down; Departures → C pier: Walk stairs down, Step-Free ramp down | Node: "S16 Riding a lift down…", "S16 Stairs down on Walk…" | Passing |
 | S18 | Walk up in the preview | Walking along open stairs, a ramp or an escalator lifts you to its height; stepping off lands on the nearest floor; an escalator only carries its own way | Node: "S18 Walking along stairs…", "S18 Stairs also work…", "S18 Beside the stairs…", "S18 A closed connection…", "S18 An escalator only…", "S18 Every stairs…". LEAF: `walk-up-the-stairs` | Passing |
-| W1–W11 | Walls in the preview | Outer walls, shop fronts, lift shafts and the sides of stairs, ramps and escalators stop you and let you slide along them; you walk under a high escalator end; every walkway stays open; a ride or reset is never held back | Node: "W1 every node…", "W2 every walkway…", "W3 the outer wall…", "W4 a shop front…", "W5 a stairs' side…", "W6 you can walk under…", "W7 once on the stairs…", "W8 a rail stops you…", "W9 a ride or a jump…", "W10 inside a wall…", "W11 a map with no footprint…" | Passing |
+| W1–W11 | Walls in the preview | Outer walls, shop fronts, lift shafts and the sides of stairs, ramps and escalators stop you and let you slide along them; you walk under a high escalator end; every walkway stays open; a ride or reset is never held back | Node: "W1 every node…", "W2 every walkway…", "W2b every open stairs…", "W3 the outer wall…", "W4 a shop front…", "W5 a stairs' side…", "W6 you can walk under…", "W7 once on the stairs…", "W8 a rail stops you…", "W9 a ride or a jump…", "W10 inside a wall…", "W11 a map with no footprint…" | Passing |
 | S15b | Escalator feet and tops joined | A re-route at the foot of the up escalator never sends you back through the hall | Node: "S15 Re-routing at the foot of the up escalator…" | Passing |
 | S17 | Three levels, both directions | Ground → Departures → C pier is cued up then down; a trip from upstairs to the entrance arrives | Node: "S17 Three levels…", "S17 A trip that starts upstairs…" | Passing |
 
@@ -64,7 +64,7 @@ pill (floor badge first, bottom centre), the cue / destination note above it and
 
 Logic passing in Node (`pet.test.ts`, `places.test.ts`, `play.test.ts`); in the Lens the
 companion is a feature you turn on or off on the app panel (waist height, left: "Pet: on/off",
-"Swap model", "Places: on/off", play buttons), drawn by `FindYourWayCompanionView` (dog / robot /
+"Change to …", "Places: on/off", play buttons), drawn by `FindYourWayCompanionView` (dog / robot /
 rover from light primitives), place icons by `FindYourWayPlacesUI`, interests on the mode panel.
 LEAF passing in the preview: `p1-companion-toggle-and-models`, `p3-companion-waits-at-escalator`,
 `q4-points-at-interests-and-sponsored`, `pc1-throw-and-fetch-any-model`.
@@ -145,9 +145,9 @@ lane and obstacles in `FindYourWayCompanionView`, the line under the pill shows 
 
 ## Shopping mall, several shops
 
-New map `mall` (`src/core/data/mall.json`: 2 floors, 14 places, up and down escalators, stairs,
+New map `mall` (`src/core/data/mall.json`: 3 floors, 32 places, up and down escalators, stairs,
 two lifts, Lift A out-of-service event). The Lens orders the Inspector's `multiStops`
-("pharmacy,iceCream,sushi") for the shortest total walk and guides stop by stop ("Stop 2 of 4:
+("pharmacy,iceCream,sushi") for the shortest total walk and guides stop by stop ("Stop 2 of 3:
 Pharmacy" on the arrival card, Next stop on the app panel). Logic: `src/core/trip.ts`.
 
 | # | Scenario | Expected result | Tests | Status |
@@ -155,7 +155,7 @@ Pharmacy" on the arrival card, Next stop on the app panel). Logic: `src/core/tri
 | T1 | Best order | The order is no longer than the picked order or any other (every order up to 6 stops), Walk and Step-Free | Node: "T1 best order is no longer…". LEAF: `t1-mall-multi-stop` | Passing |
 | T2 | Step-Free legs | Every leg of a Step-Free trip avoids stairs and escalators | Node: "T2 every leg of a Step-Free trip…". LEAF: `t1-mall-multi-stop` | Passing |
 | T3 | Stop by stop | Arriving shows "Stop n of N"; Next stop draws the line to the next; then it ends | Node: "T3 arriving and pressing Next…". LEAF: `t1-mall-multi-stop` | Passing |
-| T4 | Labels | "Stop 2 of 4: Pharmacy" from the map's names | Node: "T4 labels read…" | Passing |
+| T4 | Labels | "Stop 2 of 3: Pharmacy" from the map's names | Node: "T4 labels read…" | Passing |
 
 ## A*
 
@@ -189,7 +189,7 @@ Dijkstra (`shortestTree`), which the Lens still uses; A* is for big maps (a mall
 | 7 | The companion stops at shops that match | `b3-dc2-companion-stops-at-matches` | Passing |
 | 8 | Turn around: it runs round you | `b3-dc3-turn-around` | Passing |
 | 9 | Matches on another floor | `b3-dc4-another-floor` | Passing |
-| 10 | Companion off: dots still work | `b3-dc5-companion-off-dots` | Passing |
+| 10 | Companion off: the offers button still works | `b3-dc5-companion-off-dots` | Passing |
 | 11 | Go to a place | `b3-dc6-go-to-a-place` | Passing |
 
 ## Other checks

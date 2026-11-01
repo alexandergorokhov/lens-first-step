@@ -303,14 +303,14 @@ test("H1 at a floor connection with matches on the other floor it stops, points 
   const fw = new FreeWalk(m, PRESET);
   fw.markDone(["threads", "cafe", "boltHardware"]);
   const a = { x: 52, y: 0, z: 10 };
-  fw.setCompanion(true, a, 0);
+  fw.setCompanion(true, a, 30);
   let stop: string | null = null;
   let bubble: string | null = null;
-  const t = stand(fw, a, 0, 0, 3, (f) => { if (f.stopped) stop = f.stopped; if (f.bubble) bubble = f.bubble; });
+  const t = stand(fw, a, 30, 0, 3, (f) => { if (f.stopped) stop = f.stopped; if (f.bubble) bubble = f.bubble; });
   assert.equal(stop, "stairsFoot");
   assert.equal(bubble, "5 picks upstairs");
   let end: string | null = "x";
-  stand(fw, a, 0, t, 5, (f) => { end = f.bubble; });
+  stand(fw, a, 30, t, 5, (f) => { end = f.bubble; });
   assert.equal(end, null, "the bubble hides (up to 5 s)");
 });
 
@@ -399,7 +399,48 @@ test("D4 the button says what a pinch will open", () => {
   assert.equal(dotLabel(mall, "nowhere", [], 0), "");
 });
 
+test("L4 the companion only stops for a shop ahead of you, so you can see it point", () => {
+  const map = mall();
+  const walk = new FreeWalk(map, ["clothes", "hardware", "coffee"]);
+  walk.setCompanion(true, { x: 30, y: 0, z: 1 }, 0);
+  let now = 0;
+  let first: string | null = null;
+  for (let z = 1; z <= 18 && first === null; z += 0.5) {
+    now += 0.25;
+    walk.update({ x: 30, y: 0, z }, 0, 0.25, now);
+    first = walk.pointingAt();
+    if (z === 1) assert.equal(first, null, "Threads is 60 degrees to your right at the start");
+  }
+  assert.equal(first, "escUpFoot", "the first thing ahead of you");
+});
+
+test("L5 looking at the front you can see counts, not only the map's line", () => {
+  const map = mall();
+  const targets = frontTargets(map);
+  for (const id of ["cafe", "iceCream", "secondSkin"]) {
+    const n = map.nodes.filter((m: { id: string }) => m.id === id)[0];
+    const e = map.edges.filter((k: { from: string; to: string; kind: string }) => k.kind === "walk" && (k.from === id || k.to === id))[0];
+    const o = map.nodes.filter((m: { id: string }) => m.id === (e.from === id ? e.to : e.from))[0];
+    const l = Math.hypot(o.x - n.x, o.z - n.z);
+    const d = { x: (o.x - n.x) / l, z: (o.z - n.z) / l };
+    const mid = { x: n.x - d.x * 1.7, z: n.z - d.z * 1.7 };
+    // From along the way in, looking at each part of the drawn front.
+    let hits = 0, tries = 0;
+    for (const out of [1, 3, 5, 7]) {
+      for (const along of [-2.4, -1.2, 0, 1.2, 2.4]) {
+        const at = { x: n.x + d.x * out, y: n.y, z: n.z + d.z * out };
+        const look = { x: mid.x - d.z * along, z: mid.z + d.x * along };
+        tries++;
+        if (lookTarget(targets, at, (Math.atan2(look.x - at.x, look.z - at.z) * 180) / Math.PI, 12) === id) hits++;
+      }
+    }
+    assert.ok(hits / tries >= 0.9, id + ": " + hits + " of " + tries);
+  }
+});
+
 test("D5 a promoted shop's button says so", () => {
   const mall = JSON.parse(readFileSync(new URL("../data/mall.json", import.meta.url), "utf8"));
   assert.equal(dotLabel(mall, "cafe", [], 0), "Sponsored: Bean There Café");
+  const airport = JSON.parse(readFileSync(new URL("../data/map.json", import.meta.url), "utf8"));
+  assert.equal(dotLabel(airport, "juiceG", [], 0), "Sponsored: Juice bar", "with no priced offer too");
 });

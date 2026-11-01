@@ -14,7 +14,7 @@ No glasses needed. Everything below runs in Lens Studio's Preview panel on your 
 |---|---|
 | Move | W A S D |
 | Go down / up (seated height) | Q / E |
-| Change floors | Walk along the stairs, ramp or escalator from its foot or top. Its sides are solid, like the walls and shop fronts. Lifts use the gold button. |
+| Change floors | Walk along the stairs, ramp or escalator from its foot or top. Its sides are solid, like the walls and shop fronts. Lifts use the button in the lift. |
 | Turn your head | Hold Shift and press A or D. Shift+W and Shift+S look up and down. With a mouse: right-drag. |
 | Pinch (press a button) | Click. If it only highlights, click again. |
 
@@ -43,7 +43,7 @@ Click **Tour**, then keep your preferences. The companion leads you through the 
 1. Click **Go to a place**.
 2. Say where to: **Talk** uses the microphone, **Say it** fills in a phrase, and **Where to?** gives a list, or a map with **Show on a map**.
 3. Click **Walk** or **Step-Free (wheelchair)**.
-4. Follow the blue line. The pill at the bottom shows your floor, the distance, the floors to go and the time. To change floors, walk up the stairs, ramp or escalator, or click the gold button beside it. Lifts need the button.
+4. Follow the blue line. The pill at the bottom shows your floor, the distance, the floors to go and the time. To change floors, walk up the stairs, ramp or escalator, or click the button beside it. Lifts need the button.
 
 ## Map builder
 
@@ -56,13 +56,13 @@ Click **Tour**, then keep your preferences. The companion leads you through the 
 
 The **Options** panel sits at the left of your view (on Specs, at waist height):
 
-- **Pet: on/off** shows or hides the companion. The line stays.
+- **Dog: on/off** shows or hides the companion. The line stays.
 - **Change to …** goes dog → robot → rover, at any point in a walk.
-- **Places: on/off** mutes the icons and pointing.
+- **Places: on/off** mutes the icons and pointing (Go to a place only).
 - **See map** shows the mini mall with your route on it.
-- **Play while you wait** appears when you stand still with the companion on. Raise a hand to jump, or click **Jump**.
+- **Play while you wait** appears on a trip when you stand still with the companion on. Raise a hand to jump, or click **Jump**.
 - **Throw a treat** throws for the companion to fetch.
-- **End walk** goes back to the four choices.
+- **End walk** goes back to the four choices. A trip you start next keeps the companion and your preferences.
 
 Pinching and pulling a hand toward you shows a small model of your route. That needs hand tracking, so the mouse cannot do it.
 
@@ -99,7 +99,7 @@ Write **logic proven** next to what tests and the preview show working, and **fe
 npm test
 ```
 
-Expect `pass 438`, `fail 0`. One test downloads the maps from the public gist; with no internet, set `OFFLINE=1` to skip it (`pass 437`, `skipped 1`). The run first checks that the Lens copies match `src/core`. After editing `src/core`, run `npm run sync`.
+Expect `pass 441`, `fail 0`. One test downloads the maps from the public gist; with no internet, set `OFFLINE=1` to skip it (`pass 440`, `skipped 1`). The run first checks that the Lens copies match `src/core`. After editing `src/core`, run `npm run sync`.
 
 **LEAF tests** run inside the Lens, pressing the real buttons:
 

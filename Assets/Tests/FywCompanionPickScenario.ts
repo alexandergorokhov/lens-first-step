@@ -18,7 +18,7 @@ export class FywCompanionPickScenario extends Scenario {
     await waitFor(() => main.isPrefsShown(), 2000, "the pop-up")
     expect(main.getPrefsModelLabel("dog"), "the dog starts ticked").toBe("✓ Dog")
     await tap(it, "PrefsCompanionAskButton")
-    expect(main.getPrefsCompanionLabel(), "turned off").toBe("Pet: off")
+    expect(main.getPrefsCompanionLabel(), "turned off").toBe("Dog: off")
     await tap(it, "PrefsModel_robot")
     expect(main.getCompanionModel(), "the robot is picked").toBe("robot")
     expect(main.getPrefsModelLabel("robot"), "the tick moved").toBe("✓ Robot")

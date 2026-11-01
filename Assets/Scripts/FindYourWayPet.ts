@@ -25,7 +25,7 @@ export interface Companion {
 }
 
 export const COMPANIONS: { [id: string]: Companion } = {
-  dog: { id: "dog", name: "Pet", model: "dog", collectible: { one: "treat", many: "treats" } },
+  dog: { id: "dog", name: "Dog", model: "dog", collectible: { one: "treat", many: "treats" } },
   robot: { id: "robot", name: "Robot", model: "robot", collectible: { one: "bolt", many: "bolts" } },
   rover: { id: "rover", name: "Rover", model: "rover", collectible: { one: "star", many: "stars" } },
 };

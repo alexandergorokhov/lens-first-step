@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { isClear, walkStep, type WallMap } from "../geometry.ts";
+import { feetOnSlope, isClear, walkStep, type WallMap } from "../geometry.ts";
 
 const load = (f: string): WallMap => JSON.parse(readFileSync(new URL("../data/" + f, import.meta.url), "utf8"));
 const mall = load("mall.json");
@@ -32,6 +32,27 @@ test("W2 every walkway of every map can be walked end to end", () => {
       if (!a || !b || Math.abs(a.y - b.y) > 0.01) continue;
       const end = walk(map, a, b);
       assert.ok(Math.hypot(end.x - b.x, end.z - b.z) < 1e-3, f + ": " + e.from + " -> " + e.to + " stopped at " + end.x + "," + end.z);
+    }
+  }
+});
+
+test("W2b every open stairs, ramp and escalator can be walked its way, with or against a wall beside it", () => {
+  for (const f of MAPS) {
+    const map = load(f);
+    for (const e of map.edges) {
+      if (!e.open || (e.kind !== "stairs" && e.kind !== "ramp" && e.kind !== "escalator")) continue;
+      const a = map.nodes.filter((n) => n.id === e.from)[0];
+      const b = map.nodes.filter((n) => n.id === e.to)[0];
+      for (const [from, to] of e.kind === "escalator" ? [[a, b]] : [[a, b], [b, a]]) {
+        let p = { x: from.x, y: from.y, z: from.z };
+        const n = Math.ceil(Math.hypot(to.x - from.x, to.z - from.z) / 0.05);
+        for (let i = 0; i < n; i++) {
+          p = walkStep(map, p, { x: p.x + (to.x - from.x) / n, y: p.y, z: p.z + (to.z - from.z) / n });
+          const h = feetOnSlope(map, p);
+          if (h !== null) p = { x: p.x, y: h, z: p.z };
+        }
+        assert.ok(Math.hypot(p.x - to.x, p.z - to.z) < 1e-3, f + ": " + from.id + " -> " + to.id + " stopped at " + p.x + "," + p.y + "," + p.z);
+      }
     }
   }
 });
