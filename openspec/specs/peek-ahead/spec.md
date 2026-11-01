@@ -2,8 +2,7 @@
 
 ## Purpose
 
-See the whole place as a small model in your hand space, with your route glowing in it
-. Logic: peek.ts (`peekPlace`, `boardModel`). Lens: `FindYourWayPeekView`.
+See the whole place as a small model in your hand space, with your route glowing in it. Logic: peek.ts (`peekPlace`, `boardModel`). Lens: `FindYourWayPeekView`.
 
 ## Requirements
 

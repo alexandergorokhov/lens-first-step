@@ -14,7 +14,7 @@ Every scenario and where it is tested.
   seated height and the scanned sign are simulated with test hooks on `FindYourWayMain`
   (LEAF cannot drive WASD/Q/E).
 
-Node 418 tests, all passing (with `OFFLINE=1` the live gist download is skipped).
+Node 424 tests, all passing (with `OFFLINE=1` the live gist download is skipped).
 `src/core/tests/docs.test.ts` checks this count, the test list and every test named below. LEAF
 scenarios have each passed in the preview; run them in short groups, because long batches can hit a
 tap timeout.
@@ -55,6 +55,7 @@ pill (floor badge first, bottom centre), the cue / destination note above it and
 | S14 | Line on your floor | The line ends at the foot of the next floor change with an up/down marker; drawn up an escalator/stairs/ramp once you are on it; in a lift only the marker | Node: "S14 Line on your floor…" (`lineOnLevel`). LEAF: `fl2-cue-post-and-badge-after-escalator` | Passing |
 | S15 | Down escalator | Airport has a down escalator beside the up one (`escDownTop` → `escDownFoot`); Walk going down rides it, with it closed takes the stairs; the up one is never ridden down | Node: "S15 Going down on Walk…", "S15 The up escalator is never ridden down…", "Escalators are one-way…" | Passing |
 | S16 | Going down by lift and stairs | Step-Free from Departures to the entrance takes a lift down; Departures → C pier: Walk stairs down, Step-Free ramp down | Node: "S16 Riding a lift down…", "S16 Stairs down on Walk…" | Passing |
+| S18 | Walk up in the preview | Walking along open stairs, a ramp or an escalator lifts you to its height; stepping off lands on the nearest floor; an escalator only carries its own way | Node: "S18 Walking along stairs…", "S18 Stairs also work…", "S18 Beside the stairs…", "S18 A closed connection…", "S18 An escalator only…", "S18 Every stairs…". LEAF: `walk-up-the-stairs` | Passing |
 | S15b | Escalator feet and tops joined | A re-route at the foot of the up escalator never sends you back through the hall | Node: "S15 Re-routing at the foot of the up escalator…" | Passing |
 | S17 | Three levels, both directions | Ground → Departures → C pier is cued up then down; a trip from upstairs to the entrance arrives | Node: "S17 Three levels…", "S17 A trip that starts upstairs…" | Passing |
 

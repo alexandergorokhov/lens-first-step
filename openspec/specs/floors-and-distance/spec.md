@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Tell the traveller how far, how long and which floor, and warn them before every floor change
+Tell the traveller how far, how long and which floor, and warn them before every floor change.
 Logic: `tripAhead` (router.ts), `tripPill`, `floorCueFor`,
 `destinationFloorText` (place.ts), `lineOnLevel` (geometry.ts). Lens: `FindYourWayMain.updatePill`,
 `FindYourWayHudUI` (pill, cue), `FindYourWayCompanionView.setPost`.

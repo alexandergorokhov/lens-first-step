@@ -85,6 +85,42 @@ export function yawFromForward(fx: number, fz: number, lastYaw: number): number 
   return Math.atan2(-fx, -fz) + 0;
 }
 
+// How far either side of a slope's centre line counts as on it, and how far the feet may be from
+// its surface: enough for a walking step, too little to catch someone on the floor underneath.
+const SLOPE_HALF_WIDTH_M = 1.2;
+const SLOPE_STEP_M = 0.5;
+
+// The height of the stairs, ramp or escalator under these feet, or null when they aren't on one.
+// A closed connection is not a slope, and an escalator only carries you its own way.
+export function feetOnSlope(
+  map: { nodes: (XYZ & { id: string })[]; edges: { from: string; to: string; kind: string; open: boolean }[] },
+  feet: XYZ,
+): number | null {
+  let best: number | null = null;
+  let bestGap = SLOPE_STEP_M;
+  for (const e of map.edges) {
+    if (!e.open || (e.kind !== "stairs" && e.kind !== "ramp" && e.kind !== "escalator")) continue;
+    const a = map.nodes.filter((n) => n.id === e.from)[0];
+    const b = map.nodes.filter((n) => n.id === e.to)[0];
+    if (!a || !b) continue;
+    const dx = b.x - a.x;
+    const dz = b.z - a.z;
+    const rise = b.y - a.y;
+    const len2 = dx * dx + dz * dz;
+    if (len2 === 0 || Math.abs(rise) < 0.3) continue;
+    const t = ((feet.x - a.x) * dx + (feet.z - a.z) * dz) / len2;
+    if (t < 0 || t > 1) continue;
+    if (Math.abs((feet.x - a.x) * dz - (feet.z - a.z) * dx) / Math.sqrt(len2) > SLOPE_HALF_WIDTH_M) continue;
+    const h = a.y + rise * t;
+    const gap = Math.abs(h - feet.y);
+    if (gap > bestGap) continue;
+    if (e.kind === "escalator" && (h - feet.y) * rise < 0) continue;
+    best = h;
+    bestGap = gap;
+  }
+  return best;
+}
+
 // The drawn line ends at the foot of a vertical lift segment (ridden with the floor button).
 export function stopAtLift<T extends XYZ>(pts: T[]): T[] {
   for (let i = 1; i < pts.length; i++) {

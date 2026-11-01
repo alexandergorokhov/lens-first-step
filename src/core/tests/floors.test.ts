@@ -3,6 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { feetOnSlope } from "../geometry.ts";
 import {
   FLOOR_CUE_DISTANCE,
   Navigator,
@@ -352,4 +353,66 @@ test("S17 A trip that starts upstairs and ends downstairs: the cue counts down t
   }
   assert.ok(seenDown);
   assert.equal(nav.route.status, "arrived");
+});
+
+// ---- S18: walking up stairs, ramps and escalators in the preview -----------------------------
+
+const SLOPE_MAP = {
+  nodes: [
+    { id: "a", x: 0, y: 0, z: 0 },
+    { id: "b", x: 0, y: 5, z: 10 },
+    { id: "c", x: 20, y: 5, z: 10 },
+    { id: "d", x: 20, y: 0, z: 0 },
+  ],
+  edges: [
+    { from: "a", to: "b", kind: "stairs", open: true },
+    { from: "b", to: "c", kind: "walk", open: true },
+    { from: "c", to: "d", kind: "escalator", open: true },
+  ],
+};
+
+test("S18 Walking along stairs lifts the feet to the slope's height, up to the top", () => {
+  assert.equal(feetOnSlope(SLOPE_MAP, { x: 0, y: 0, z: 0.5 }), 0.25);
+  assert.equal(feetOnSlope(SLOPE_MAP, { x: 0, y: 2.3, z: 5 }), 2.5);
+  assert.equal(feetOnSlope(SLOPE_MAP, { x: 0.8, y: 4.8, z: 10 }), 5);
+});
+
+test("S18 Stairs also work going down", () => {
+  assert.equal(feetOnSlope(SLOPE_MAP, { x: 0, y: 5, z: 9 }), 4.5);
+});
+
+test("S18 Beside the stairs, past either end or under them, nothing changes", () => {
+  assert.equal(feetOnSlope(SLOPE_MAP, { x: 3, y: 0, z: 1 }), null);
+  assert.equal(feetOnSlope(SLOPE_MAP, { x: 0, y: 0, z: -1 }), null);
+  assert.equal(feetOnSlope(SLOPE_MAP, { x: 0, y: 5, z: 11 }), null);
+  assert.equal(feetOnSlope(SLOPE_MAP, { x: 0, y: 0, z: 5 }), null, "walking underneath stays on the floor below");
+});
+
+test("S18 A closed connection and a flat walk edge are not slopes", () => {
+  const closed = { nodes: SLOPE_MAP.nodes, edges: [{ from: "a", to: "b", kind: "stairs", open: false }] };
+  assert.equal(feetOnSlope(closed, { x: 0, y: 0, z: 0.5 }), null);
+  const flat = { nodes: SLOPE_MAP.nodes, edges: [{ from: "a", to: "b", kind: "walk", open: true }] };
+  assert.equal(feetOnSlope(flat, { x: 0, y: 0, z: 0.5 }), null);
+});
+
+test("S18 An escalator only carries you its own way", () => {
+  assert.equal(feetOnSlope(SLOPE_MAP, { x: 20, y: 5, z: 9.5 }), 4.75, "the down escalator takes you down");
+  assert.equal(feetOnSlope(SLOPE_MAP, { x: 20, y: 0, z: 0.5 }), null, "and never up");
+});
+
+test("S18 Every stairs, ramp and escalator in the mall can be walked from end to end", () => {
+  const map = JSON.parse(readFileSync(new URL("../data/mall.json", import.meta.url), "utf8"));
+  const slopes = map.edges.filter((e: any) => ["stairs", "ramp", "escalator"].includes(e.kind));
+  assert.ok(slopes.length >= 6);
+  for (const e of slopes) {
+    const from = map.nodes.find((n: any) => n.id === e.from), to = map.nodes.find((n: any) => n.id === e.to);
+    let y = from.y;
+    for (let i = 1; i < 100; i++) {
+      const t = i / 100;
+      const next = feetOnSlope(map, { x: from.x + (to.x - from.x) * t, y, z: from.z + (to.z - from.z) * t });
+      assert.notEqual(next, null, e.from + " to " + e.to + " at " + t);
+      y = next as number;
+    }
+    assert.ok(Math.abs(y - to.y) < 0.1, e.from + " reaches " + e.to);
+  }
 });

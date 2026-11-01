@@ -52,7 +52,7 @@ import {
   placeOf,
   rideCard,
 } from "./FindYourWayMapLibrary"
-import {lineOnLevel, nextTurnAlong, turnOutOfView, yawFromForward, yawTo} from "./FindYourWayGeometry"
+import {feetOnSlope, lineOnLevel, nextTurnAlong, turnOutOfView, yawFromForward, yawTo} from "./FindYourWayGeometry"
 import {destinationFloorText, floorCueFor, tripPill} from "./FindYourWayPlace"
 import {Companion, companionOf, COMPANIONS, PetGuide, treatsResult, treatsText} from "./FindYourWayPet"
 import {Place, placesOf, placeTag, PointingCoach, POINT_SECONDS, visiblePlaces} from "./FindYourWayPlaces"
@@ -110,6 +110,7 @@ const ARRIVAL_CARD_CM = 200
 const LINE_LIFT_CM = 1 // the floor line sits 1 cm above the floor
 const CLOSED_SIGN_TEXT = "Closed — re-routing"
 const RIDE_CARD_S = 2.5
+const SLOPE_MIN_RISE_M = 0.005
 const SCAN_PANEL_AHEAD_CM = 160
 const SCAN_PANEL_RIGHT_CM = 10 // clear of the Demo controls on the left
 const SCAN_PANEL_BELOW_EYE_CM = 15
@@ -324,6 +325,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   private rides: {[id: string]: Ride} = {}
   // Building-local cm the traveller has been carried by rides (the building moves the other way).
   private rideOffset = new vec3(0, 0, 0)
+  private onSlope = false
   private debugPose: {pos: Vec3; heading: number} | null = null
   private viewFollowsPose = false
   private pendingSwing = false
@@ -1021,6 +1023,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.nav = null
     this.closed = {}
     this.rideOffset = new vec3(0, 0, 0)
+    this.onSlope = false
     this.mapSource = null
     this.debugPose = null
     this.viewFollowsPose = false
@@ -1276,6 +1279,28 @@ export class FindYourWayMain extends BaseScriptComponent {
     print("[FYW] ride " + id + " -> " + r.to)
   }
 
+  // The preview's keys keep you at one height, so stairs, ramps and escalators lift you here as you
+  // walk along them. On Specs your own climbing does this. Stepping off one lands on the nearest floor.
+  private walkSlope(): void {
+    if (!global.deviceInfoSystem.isEditor()) return
+    if (this.phase !== "free" && this.phase !== "nav" && this.phase !== "arrived" && this.phase !== "mapping") return
+    const map = this.nav ? this.nav.map : this.map
+    const pos = this.userPos()
+    let y = feetOnSlope(map, pos)
+    if (y === null) {
+      if (!this.onSlope) return
+      this.onSlope = false
+      y = levelsOf(map).reduce((best, l) => (Math.abs(l - pos.y) < Math.abs(best - pos.y) ? l : best), pos.y + 1000)
+    } else {
+      this.onSlope = true
+    }
+    const rise = y - pos.y
+    if (Math.abs(rise) < SLOPE_MIN_RISE_M) return
+    this.rideOffset = this.rideOffset.add(new vec3(0, rise * 100, 0))
+    this.placeBuilding()
+    if (this.debugPose) this.debugPose.pos.y = y
+  }
+
   // newTarget: the destination changed, so an arrival counts again even if you are already there.
   private afterRouteChange(newTarget: boolean = false): void {
     this.destNote = null
@@ -1518,6 +1543,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.followDemoControls()
     this.followAppPanel()
     this.updatePeek()
+    this.walkSlope()
     if (this.phase === "mapping") {
       this.builder.tick()
       this.followMappingPanel()
@@ -2095,6 +2121,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.debugPose = {pos: {x, y, z}, heading: headingDeg}
   }
 
+  getFeetY(): number { return this.userPos().y }
   getHudCardTextOrEmpty(): string { return this.hud.getCardText() || "" }
   // State for the LEAF scenarios.
   getPillText(): string | null { return this.hud.getPillText() }

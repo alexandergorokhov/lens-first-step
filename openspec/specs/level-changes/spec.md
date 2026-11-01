@@ -56,6 +56,17 @@ SHALL refuse, leave the traveller where they are and show "Walk to <node label> 
 - **THEN** they are carried up 6 m
 - Verified by: C1 ride reach: seated traveller (feet −0.45 m) 0.5 m from lift2G can ride (also: 3 m away and another level refuse) | dc3b-seated-lift-ride, dc3-stepfree-seated-lift-reroute
 
+### Requirement: Walking up in the preview
+The preview's keys keep the traveller at one height. In Lens Studio only, walking along open stairs,
+a ramp or an escalator SHALL lift the feet to its height, and stepping off SHALL land on the nearest
+floor. An escalator SHALL only carry its own way. On Specs the traveller's own climbing does this.
+
+#### Scenario: S18 Walk up the stairs
+- **GIVEN** Free walk at the foot of the stairs
+- **WHEN** the traveller walks along them to the top
+- **THEN** they are on the next floor, and walking back brings them down
+- Verified by: S18 (Node) | walk-up-the-stairs
+
 ### Requirement: Closed connections cannot be ridden
 If the ride's edge is closed, pinching its button SHALL do nothing but show "<node label> is out of
 service" for 3 s (e.g. "Lift 1 (ground) is out of service"), and the button label SHALL read

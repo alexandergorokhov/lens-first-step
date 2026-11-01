@@ -14,6 +14,7 @@ No glasses needed. Everything below runs in Lens Studio's Preview panel on your 
 |---|---|
 | Move | W A S D |
 | Go down / up (seated height) | Q / E |
+| Change floors | Walk along the stairs, ramp or escalator. Lifts use the gold button. |
 | Turn your head | Hold Shift and press A or D. Shift+W and Shift+S look up and down. With a mouse: right-drag. |
 | Pinch (press a button) | Click. If it only highlights, click again. |
 
@@ -42,7 +43,7 @@ Click **Tour**, then keep your preferences. The companion leads you through the 
 1. Click **Go to a place**.
 2. Say where to: **Talk** uses the microphone, **Say it** fills in a phrase, and **Where to?** gives a list, or a map with **Show on a map**.
 3. Click **Walk** or **Step-Free (wheelchair)**.
-4. Follow the blue line. The pill at the bottom shows your floor, the distance, the floors to go and the time. Click the gold ride button at each floor change.
+4. Follow the blue line. The pill at the bottom shows your floor, the distance, the floors to go and the time. To change floors, walk up the stairs, ramp or escalator, or click the gold button beside it. Lifts need the button.
 
 ## Map builder
 
@@ -98,7 +99,7 @@ Write **logic proven** next to what tests and the preview show working, and **fe
 npm test
 ```
 
-Expect `pass 418`, `fail 0`. One test downloads the maps from the public gist; with no internet, set `OFFLINE=1` to skip it (`pass 417`, `skipped 1`). The run first checks that the Lens copies match `src/core`. After editing `src/core`, run `npm run sync`.
+Expect `pass 424`, `fail 0`. One test downloads the maps from the public gist; with no internet, set `OFFLINE=1` to skip it (`pass 423`, `skipped 1`). The run first checks that the Lens copies match `src/core`. After editing `src/core`, run `npm run sync`.
 
 **LEAF tests** run inside the Lens, pressing the real buttons:
 
