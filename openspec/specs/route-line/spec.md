@@ -100,5 +100,5 @@ map north along −Z (`mapToLocalCm`), and the camera position back to map metre
 
 - Floor height in the preview depends on `eyeHeightCm = 180` (the preview room returns no floor
   hit); whether the line lies exactly on the preview floor is "not yet confirmed by eye"
-  (PREVIEW-GUIDE section 8).
+  (PREVIEW-GUIDE "Checks by hand").
 - "Soft glow, smooth fades" polish is judged only by eye.

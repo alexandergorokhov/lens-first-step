@@ -1,4 +1,4 @@
-// Free walk (design-brief-3): browsing with no destination. Looking at a node's "front" line from
+// Free walk: browsing with no destination. Looking at a node's "front" line from
 // outside gives a dot; opening it lists what the shop shows (at most 3 items), or, at stairs, an
 // escalator or a lift, your picks on the other floor. The companion walks ahead with no route:
 // along your walking direction, or your head direction once you stand still; it runs around you

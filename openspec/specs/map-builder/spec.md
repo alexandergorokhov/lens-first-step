@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Walk a place and get a map (design-brief-3). Unlike the older "Learn this place" in `mapping-mode`,
+Walk a place and get a map. Unlike the older "Learn this place" in `mapping-mode`,
 the traveller names nothing: the path, the floors and the shops are recorded as they walk. Logic:
 mapping.ts (`WalkTracer`, `MapRecorder`, `guessConnection`, `mapLogLines`, `parseMapLog`). Lens:
 `FindYourWayMain` (`mapMarkShop`, `mapUndo`, `saveMapping`). Laptop: `tools/map-publish.mjs`

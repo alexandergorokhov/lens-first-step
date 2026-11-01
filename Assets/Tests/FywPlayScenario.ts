@@ -1,4 +1,4 @@
-// Brief 2, play while you wait (G1-G9, P8-P10 in devpost/SCENARIOS.md). Raising a hand is
+// Play while you wait (G1-G9, P8-P10 in devpost/SCENARIOS.md). Raising a hand is
 // simulated with debugRaiseHand() (LEAF can't move tracked hands); the Jump button does the same.
 import {Scenario} from "Leaf.lspkg/Scenarios/scenario/Scenario"
 import {DefaultLeafInteractor} from "Leaf.lspkg/Interactors/interactor/DefaultLeafInteractor"

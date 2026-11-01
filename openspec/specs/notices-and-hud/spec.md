@@ -20,7 +20,7 @@ point.", "Map couldn't load", "This sign isn't in the map", "Walk to <place> fir
 #### Scenario: X40 Gate-change card shows top-right
 - **WHEN** the gate changes
 - **THEN** the card "Gate change B12 → C3" shows in the top-right corner of the view
-- Verified by: dc4-gate-change-stairs-and-ramp (text); manual (preview) for position — PREVIEW-GUIDE 9c
+- Verified by: dc4-gate-change-stairs-and-ramp (text); manual (preview) for position — PREVIEW-GUIDE "Checks by hand"
 
 #### Scenario: X41 Card hides after about 5 s
 - **GIVEN** the gate-change card is showing
@@ -35,7 +35,7 @@ A short chime SHALL play with the destination-change card and the connection-clo
 #### Scenario: X42 Chime with the gate-change card
 - **WHEN** the user pinches "Gate change B12 → C3"
 - **THEN** a chime plays together with the card
-- Verified by: manual (preview) — PREVIEW-GUIDE 9c "gate-change card and chime are noticeable"
+- Verified by: manual (preview) — PREVIEW-GUIDE "Checks by hand" "gate-change card and chime are noticeable"
 
 ### Requirement: Map badge
 A small badge SHALL show top-left in the view (−8, 8, −70 cm): "loading map…" during the load, then

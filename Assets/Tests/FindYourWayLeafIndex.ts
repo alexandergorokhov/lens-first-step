@@ -83,7 +83,7 @@ export class FindYourWayLeafIndex extends BaseScriptComponent {
     {id: "e3b-no-step-free-at-scan", typename: FywE3bNoStepFreeAtScanScenario.getTypeName()},
     {id: "c12-stale-load-and-closures-kept", typename: FywStaleLoadScenario.getTypeName()},
     {id: "closure-card-signs-and-5s-hide", typename: FywClosureCardScenario.getTypeName()},
-    // Brief 2 (devpost/SCENARIOS.md S10-S14, P1-P10, Q2-Q8, G1-G9, T1-T3, M1-M5, Z1-Z3).
+    // Floors, companion, places, play, trips (devpost/SCENARIOS.md S10-S14, P1-P10, Q2-Q8, G1-G9, T1-T3, M1-M5, Z1-Z3).
     {id: "s1-start-at-sign-controls-hidden", typename: FywS1StartAtSignScenario.getTypeName()},
     {id: "fl1-pill-shows-and-counts-down", typename: FywFl1PillScenario.getTypeName()},
     {id: "fl2-cue-post-and-badge-after-escalator", typename: FywFl2CueBadgeScenario.getTypeName()},
@@ -96,7 +96,7 @@ export class FindYourWayLeafIndex extends BaseScriptComponent {
     {id: "m5-learn-this-place-save-route", typename: FywM5LearnThisPlaceScenario.getTypeName()},
     {id: "pk1-peek-ahead-shows-and-hides", typename: FywPk1PeekScenario.getTypeName()},
     {id: "bg1-backdrop-solid-in-preview", typename: FywBg1BackdropScenario.getTypeName()},
-    // Brief 3: the three modes and its done criteria.
+    // The walking modes and the map builder.
     {id: "b3-modes-scan-first-preset", typename: FywB3ModesScenario.getTypeName()},
     {id: "companion-pick-before-walk", typename: FywCompanionPickScenario.getTypeName()},
     {id: "b3-dc1-map-builder-two-floors", typename: FywB3Dc1BuilderScenario.getTypeName()},
@@ -105,7 +105,7 @@ export class FindYourWayLeafIndex extends BaseScriptComponent {
     {id: "b3-dc4-another-floor", typename: FywB3Dc4FloorScenario.getTypeName()},
     {id: "b3-dc5-companion-off-dots", typename: FywB3Dc5LookScenario.getTypeName()},
     {id: "b3-dc6-go-to-a-place", typename: FywB3Dc6GoToScenario.getTypeName()},
-    // After brief 3: voice, the map picker, Tour, seated play, catch by hand.
+    // Voice, the map picker, Tour, seated play, catch by hand.
     {id: "v1-voice-reaches-the-matcher", typename: FywV1VoiceScenario.getTypeName()},
     {id: "pm1-pick-a-place-on-the-map", typename: FywPm1PickMapScenario.getTypeName()},
     {id: "tr1-tour-stop-by-stop", typename: FywTr1TourScenario.getTypeName()},

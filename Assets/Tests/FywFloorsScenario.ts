@@ -1,4 +1,4 @@
-// Brief 2, floors and distance (S10-S14 in devpost/SCENARIOS.md).
+// Floors and distance (S10-S14 in devpost/SCENARIOS.md).
 import {Scenario} from "Leaf.lspkg/Scenarios/scenario/Scenario"
 import {DefaultLeafInteractor} from "Leaf.lspkg/Interactors/interactor/DefaultLeafInteractor"
 import {expect} from "Leaf.lspkg/Utils/common/Expect"

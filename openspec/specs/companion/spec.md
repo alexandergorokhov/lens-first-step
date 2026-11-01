@@ -3,7 +3,7 @@
 ## Purpose
 
 A small companion that walks ahead on the route: a feature the traveller turns on or off, any model
-(dog, robot, rover), never changing the route (brief 2, feature 6; addendum B). Logic: pet.ts
+(dog, robot, rover), never changing the route. Logic: pet.ts
 (`PetGuide`). Lens: `FindYourWayCompanionView`, app panel `FindYourWayAppPanelUI`.
 
 ## Requirements

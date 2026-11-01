@@ -2,7 +2,7 @@
 // timeout, else built-in) -> the three modes (Free walk, Go to a place, Map builder) -> for
 // Go to a place, live routing with the floor line, turn arrow,
 // notice card, arrival card, rides (lift / escalator / stairs / ramp), closures and
-// destination changes. Brief 2: the distance pill with the floor badge and the floor-change cue,
+// destination changes. Also the distance pill with the floor badge and the floor-change cue,
 // the line only on your floor with an up/down post, place icons ("Places on/off", "Go here?"),
 // the companion (a feature you turn on or off; any model) with its collectibles and pointing,
 // play while you wait (Hop: raise a hand to jump; catch: throw a treat) and multi-stop trips.
@@ -361,7 +361,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   private lastYaw = 0
   private downloadDelayMs = 0
   private cameraDropCm = 0
-  // Brief 2: companion, places, play, multi-stop. Views are created at runtime in onStart.
+  // Companion, places, play, multi-stop. Views are created at runtime in onStart.
   private view: FindYourWayCompanionView | null = null
   private appPanel: FindYourWayAppPanelUI | null = null
   private placesUI: FindYourWayPlacesUI | null = null
@@ -1564,7 +1564,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.updateCompanion(pos, false)
   }
 
-  // ── Brief 2: pill, places, companion, play, stops ────────────────────────
+  // ── Pill, places, companion, play, stops ────────────────────────
 
   private updatePill(): void {
     if (!this.nav) return
@@ -2096,7 +2096,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   }
 
   getHudCardTextOrEmpty(): string { return this.hud.getCardText() || "" }
-  // Brief 2 state for the LEAF scenarios.
+  // State for the LEAF scenarios.
   getPillText(): string | null { return this.hud.getPillText() }
   getCueText(): string | null { return this.hud.getCueText() }
   getScoreText(): string | null { return this.hud.getScoreText() }

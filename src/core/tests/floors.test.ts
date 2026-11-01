@@ -1,5 +1,5 @@
-// Floors and distance (design-brief-2: floors a-d and g, feature 1 "Distance"). Scenario ids
-// S10+ are listed under "Proposed" in devpost/SCENARIOS.md.
+// Floors and distance. Scenario ids
+// S10+ are in devpost/SCENARIOS.md.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

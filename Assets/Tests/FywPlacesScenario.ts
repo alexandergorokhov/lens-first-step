@@ -1,4 +1,4 @@
-// Brief 2, places (Q2, Q4-Q6 in devpost/SCENARIOS.md): icons near the route, the companion points
+// Places (Q2, Q4-Q6 in devpost/SCENARIOS.md): icons near the route, the companion points
 // only at your interests and sponsored places (always tagged "Sponsored"), mute stops it, "Go
 // here?" re-routes. Pointing never changes the route, distance or destination.
 import {Scenario} from "Leaf.lspkg/Scenarios/scenario/Scenario"

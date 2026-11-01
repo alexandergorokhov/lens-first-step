@@ -86,7 +86,7 @@ done criteria are in `devpost/SCENARIOS.md`; how to try it by hand is in `devpos
 ## How tests map to specs
 
 - Every scenario ends with `- Verified by: <Node test name(s)> | <LEAF scenario id>`, or
-  `manual (preview)` (checked by hand per `devpost/PREVIEW-GUIDE.md` section 9c), or
+  `manual (preview)` (checked by hand per `devpost/PREVIEW-GUIDE.md` "Checks by hand"), or
   `none (gap)`.
 - **Node tests** (`npm test`) verify pure logic: routing rules, map validity, download fallback,
   Navigator behaviour, guidance maths. Node test names begin with the scenario ID where one exists.

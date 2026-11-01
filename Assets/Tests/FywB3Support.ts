@@ -1,4 +1,4 @@
-// Shared helpers for the design-brief-3 LEAF scenarios: to the three modes on the mall, the shipped
+// Shared helpers for the LEAF scenarios: to the three modes on the mall, the shipped
 // mall map (a test download, so a stale online copy can't change the result), and into Free walk.
 import {DefaultLeafInteractor} from "Leaf.lspkg/Interactors/interactor/DefaultLeafInteractor"
 import {sleep} from "Leaf.lspkg/Utils/common/Utils"

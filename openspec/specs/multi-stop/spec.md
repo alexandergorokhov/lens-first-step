@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Visit several shops in one trip (handoff item 12). Logic: trip.ts (`orderStops`, `MultiStopTrip`).
+Visit several shops in one trip. Logic: trip.ts (`orderStops`, `MultiStopTrip`).
 Map: `mall` (2 floors, 14 places, escalators up and down, stairs, two lifts).
 
 ## Requirements

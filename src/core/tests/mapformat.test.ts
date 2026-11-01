@@ -1,4 +1,4 @@
-// Brief 3 map format: "front", "offer", place.interests and place.sayIt, checked by parseMap; the
+// Map format: "front", "offer", place.interests and place.sayIt, checked by parseMap; the
 // mall's shops, and a stale online copy never replacing a newer built-in map.
 import { test } from "node:test";
 import assert from "node:assert/strict";

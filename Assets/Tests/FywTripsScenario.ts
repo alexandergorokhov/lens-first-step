@@ -1,5 +1,5 @@
-// Brief 2: multi-stop mall trip (T1-T3), Learn this place (M1-M5), peek ahead (Z1-Z3), and the
-// start at the entrance sign with the demo controls hidden (handoff items 1-2).
+// Multi-stop mall trip (T1-T3), Learn this place (M1-M5), peek ahead (Z1-Z3), and the
+// start at the entrance sign with the demo controls hidden.
 import {Scenario} from "Leaf.lspkg/Scenarios/scenario/Scenario"
 import {DefaultLeafInteractor} from "Leaf.lspkg/Interactors/interactor/DefaultLeafInteractor"
 import {expect} from "Leaf.lspkg/Utils/common/Expect"

@@ -1,4 +1,4 @@
-// Brief 2, the companion (P1-P7, Q7, Q8 in devpost/SCENARIOS.md): a feature you turn on or off,
+// The companion (P1-P7, Q7, Q8 in devpost/SCENARIOS.md): a feature you turn on or off,
 // any model, waits at floor changes, never changes the route.
 import {Scenario} from "Leaf.lspkg/Scenarios/scenario/Scenario"
 import {DefaultLeafInteractor} from "Leaf.lspkg/Interactors/interactor/DefaultLeafInteractor"

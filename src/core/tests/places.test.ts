@@ -1,5 +1,5 @@
-// Places along the way + the companion pointing them out (feature 2 + addendum C), the line at
-// 50% in every guide mode (addendum B) and swappable companions. Proposed Q1-Q8 in
+// Places along the way + the companion pointing them out, the line at
+// 50% in every guide mode and swappable companions. Q1-Q8 in
 // devpost/SCENARIOS.md. Written before the code (TDD).
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -364,7 +364,7 @@ test("Q6 'Go here?' makes the place the destination (same re-route as a gate cha
   }
 });
 
-// ---- Q7 (addendum B): the line stays at 50% in every guide mode ---------------------------------
+// ---- Q7: the line stays at 50% in every guide mode ---------------------------------
 
 test("Q7 The route line is 50% transparent with the pet off and on (Pet + line)", () => {
   assert.equal(LINE_OPACITY, 0.5);

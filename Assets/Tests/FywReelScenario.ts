@@ -10,7 +10,7 @@ import {nodePos, standStill} from "./FywBrief2Support"
 
 const WALK_MS = 2.2 // walking pace of the reel (m/s)
 
-// visual-reel — the 3-minute video from design-brief-4, played on the real app. Not a test: "visual-"
+// visual-reel — the 3-minute video, played on the real app. Not a test: "visual-"
 // keeps it out of the runner's "all". [REEL] lines mark each beat and what to cut in the edit.
 @component
 export class FywReelScenario extends Scenario {

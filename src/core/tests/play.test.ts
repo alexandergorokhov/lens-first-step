@@ -1,4 +1,4 @@
-// Play mode (proposed G1-G9 in devpost/SCENARIOS.md): while you stand still, the companion plays a
+// Play mode (G1-G9 in devpost/SCENARIOS.md): while you stand still, the companion plays a
 // jump game on a short lane in front of you, seen from behind: obstacles come from the far end and
 // raising a hand makes it jump; a hit makes it shake, then you can play again. And play catch
 // (P8-P9): throw a treat, it fetches. Neither ever touches the route.

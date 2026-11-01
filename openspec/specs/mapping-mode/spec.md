@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Who makes the map? The traveller, by walking it (brief 2, feature 5). Logic: mapping.ts
+Who makes the map? The traveller, by walking it. Logic: mapping.ts
 (`MapRecorder`). Lens: `FindYourWayMappingPanelUI`, `FindYourWayMain.startMapping/saveMapping`.
 
 ## Requirements

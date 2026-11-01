@@ -50,7 +50,7 @@ the eyes unless a downward hit test finds the real floor (accepted eye heights 9
 - **GIVEN** the user has walked into open floor
 - **WHEN** they pinch a mode
 - **THEN** the "You are here" sign appears about 2.5 m ahead, its button about 1.25 m above the floor
-- Verified by: manual (preview) — PREVIEW-GUIDE section 8 "Start position" and "Floor height"
+- Verified by: manual (preview) — PREVIEW-GUIDE "Checks by hand" "Start position" and "Floor height"
 
 ### Requirement: Simulated sign scan
 The scan sign SHALL show the map's `scanSign` texts: title "You are here", the stand-in label (e.g.

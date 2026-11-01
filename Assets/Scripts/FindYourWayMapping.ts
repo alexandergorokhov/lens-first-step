@@ -68,7 +68,7 @@ export const MAP_FORMAT_VERSION = 1;
 // Two heights closer than this are the same level (router.ts SAME_LEVEL).
 const SAME_LEVEL = 0.5;
 const EDGE_KINDS: MappedEdgeKind[] = ["walk", "stairs", "escalator", "lift", "ramp"];
-// Map builder defaults (design-brief-3): samples every SAMPLE_GAP m, corners kept past
+// Map builder defaults: samples every SAMPLE_GAP m, corners kept past
 // CORNER_TOLERANCE m, crossings joined within JOIN_RADIUS m. A height change of FLOOR_RISE m held
 // FLOOR_HOLD s starts a floor; heights within LEVEL_BAND m of a floor are on it. "Next floor"
 // assumes MANUAL_FLOOR_RISE m. A shop's front is SHOP_WIDTH m wide, SHOP_AHEAD m ahead of you;

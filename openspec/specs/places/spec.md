@@ -3,7 +3,7 @@
 ## Purpose
 
 Shops, cafés, toilets and lifts along the way, and the companion pointing out what the traveller
-cares about — never changing the route (brief 2, feature 2; addendum C). Logic: places.ts. Lens:
+cares about — never changing the route. Logic: places.ts. Lens:
 `FindYourWayPlacesUI`, interests on `FindYourWayModePanelUI`.
 
 ## Requirements

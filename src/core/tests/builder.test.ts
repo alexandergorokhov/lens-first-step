@@ -1,4 +1,4 @@
-// Map builder (design-brief-3): the walk is traced by itself, floors are detected and confirmed,
+// Map builder: the walk is traced by itself, floors are detected and confirmed,
 // one pinch marks a shop, and the map is handed to a laptop through the log.
 import { test } from "node:test";
 import assert from "node:assert/strict";

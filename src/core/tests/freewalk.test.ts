@@ -1,4 +1,4 @@
-// Free walk (design-brief-3): looking at a shop's front, the dot and the offer list, the companion
+// Free walk: looking at a shop's front, the dot and the offer list, the companion
 // walking ahead with no route, turning around, stopping at matches, the floor hint, and the
 // "Say it" / "Where to?" matcher of Go to a place.
 import { test } from "node:test";

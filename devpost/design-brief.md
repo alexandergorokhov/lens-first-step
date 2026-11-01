@@ -4,127 +4,138 @@ status: approved
 
 # Design brief: Find Your Way Inside
 
+A Lens for Snap Specs. You walk through a big building with a small companion that knows what you like, and it can guide you anywhere inside.
+
 ## The one spatial moment
-You stand at the "you are here" sign at the airport entrance, choose Walk or wheelchair (Step-Free) once, and a semi-transparent Google Maps blue line on the floor leads you through the building to your gate. Walking, it takes you up the escalator (or the stairs when they're quicker). In a wheelchair, the same trip goes round the corner to the lift. When "Gate change B12 → C3" comes up, the line swings round to the new gate.
+
+You scan the "You are here" sign at the entrance of a shopping mall. Your dog, robot or rover walks ahead of you on the floor. It stops at the shops you would like and points at them, and if you turn around it runs round you to stay in front. When you know where you want to go, say the place: a blue line appears on the floor and leads you there, floor by floor.
 
 ## Why it belongs on glasses
-- Uses: draws in the world (the line is on the real floor) and leaves your body free (hands on the wheelchair, the luggage or the stroller, eyes up).
-- Why it's better than the phone or laptop version: indoors there's no GPS and a phone map makes you look down and work out which way you're facing. Here the route is on the floor in front of you, so a wheelchair user never has to hold a phone.
+
+- **It draws in the world.** The line and the companion are on the real floor, where you are going.
+- **It leaves your body free.** Hands stay on a wheelchair, a stroller or your bags, and eyes stay up.
+- **It beats a phone.** There is no GPS indoors, and a phone map makes you look down and work out which way you are facing. Here the shops stay in front of you, and information only comes when you look at one.
 
 ## Product or overlay
-- Type: overlay. The line responds to a real building.
-- What the real version would sense: the "you are here" sign at the entrance. Its code says where you stand, and its web address downloads that building's map.
-- Stand-in for the preview: the sign scan is simulated. A sign in the stand-in building with a pinch button labelled "on real Specs: look at the sign" places you at the `sign` node. Everything after it is real: routing, the line, re-routing.
-- Stand-in building: a simple box model of one airport floor (60 x 40 m, ground level and departures level 6 m up, C pier at 5 m), labelled "stand-in building", built from `map.json`. Never claim it finds you in a real airport.
-- Map: the Lens tries to download a small `map.json` from a web address (5 s timeout). If that fails, it uses the built-in map. A small badge says "online map" or "offline map".
+
+An overlay on a real building, using a map rather than recognition.
+
+- **What the real version senses:** the "You are here" sign, your position and your head direction. The sign's code says where you stand, and its web address downloads that building's map. Shops are never recognised with the camera. "Looking at a shop" means your head direction crosses that shop's front line.
+- **Maps:** every building is a small JSON file of nodes and edges. The Lens downloads it, with a 5 s timeout, and falls back to a copy inside the Lens. A badge says "online map" or "offline map".
+- **Any place:** everything building-specific comes from the map, never from code: shops, offers, categories, floors, the stand-in model and the card texts. The Lens ships an airport, a hospital, a campus, a room and a shopping mall.
+
+**Stand-ins in the preview.** The Lens is built and shown in Lens Studio's preview. No Specs device was available.
+
+| Real version | In the preview |
+|---|---|
+| Look at the sign | A button labelled "on real Specs: look at the sign" |
+| The building around you | A stand-in model built from the map, shown in Lens Studio only |
+| Your saved preferences | A preset labelled "Saved preset (demo)" |
+| Speech | **Talk** uses Snap's speech module; **Say it** fills in a phrase and runs the same matcher |
+
+## How it works
+
+After the scan, four choices appear.
+
+**Free walk: browse with no destination.**
+- Pick your preferences and your companion: dog, robot or rover.
+- The companion keeps ahead of you on the walkable paths, about 7 m by default. It follows your walking direction, so glancing at a shop does not swing it round.
+- It stops at each shop that matches and points at it, once per walk.
+- Look at any shop and a small dot appears in the corner of your view. Open it to see up to 3 offers, or ignore it and nothing happens.
+- When matches are on another floor, it waits at the stairs or escalator with a bubble: "3 picks upstairs".
+
+**Tour: be shown round.** The companion leads you through the shops that match your preferences, stop by stop, in the shortest order.
+
+**Go to a place: you know where you are going.** Say it, or pick from a list or a map. Choose Walk or Step-Free once. The blue line leads you there and re-routes when plans change.
+- **Walk** takes the shortest route, escalators included.
+- **Step-Free** is for wheelchairs, strollers and crutches. It never uses stairs or escalators.
+- A distance pill shows your floor, the distance, the floors to go and the time. A cue warns you before each floor change.
+- If a lift is out of service, or the destination changes, the line swings to the new route. If no step-free route is left, the line leads to the assistance point.
+
+**Map builder: walk a place and it becomes a map.** This answers who makes the maps.
+- Your path records itself as you walk.
+- A height change starts a new floor, and one pinch confirms stairs, escalator, lift or ramp.
+- **Mark shop** stores the shop you are facing and its front line.
+- **See my map** shows it as a small model, and **Upload** hands it to a laptop tool that checks and publishes it. A Lens never holds a publishing token.
+
+**While you wait.** When you stand still with the companion on, you can play. In Hop it jumps obstacles when you raise a hand. In catch you grab a treat, throw it, and the companion brings it back. Seated play moves closer and shorter. Play never changes your route.
+
+## Rules that hold everywhere
+
+- Step-Free never uses stairs or an escalator.
+- The companion and play never change the route, the distance or the destination.
+- Paying never changes a route and never makes the companion stop at a shop. In Free walk it only lists a matching shop first on the other-floor list. Sponsored places always show their tag.
+- Offers are read-only.
+- The Lens does not record, identify or follow people.
 
 ## Where things live
-- Where the user is looking during the main task: down and ahead, at the floor 2 to 10 m in front.
-- Mode panel: shows first, before the sign scan. About 1 m in front, a little below eye level, so it's readable standing or seated (default). Two big buttons: "Walk" and "Step-Free (wheelchair)". The choice holds for the whole trip.
-- Sign scan button: on the "you are here" sign at the entrance, about 1.2 m off the floor (default).
-- Route line: on the floor, about 1 cm above it, 30 cm wide (default). Semi-transparent Google Maps blue (about #4285F4 at 50% opacity, default) so the floor shows through. Same look in both modes (default). It fades out 10 m ahead.
-- Turn arrow: a small arrow at the edge of the view pointing to the next turn when it's out of view (default: lower edge, toward the turn).
-- Gate-change card: top-right corner of the view (learner's choice), short text "Gate change B12 → C3".
-- Out-of-service sign: a red sign on the lift door, at eye level for a seated user (about 1.2 m, default).
-- Arrival card: over the gate, within 3 m: "Gate C3. Boarding in 6 min."
-- Demo controls panel: labelled "Demo controls", waist height, to the user's left, follows as they walk (default). Holds the "Gate change B12 → C3" button. Clearly not part of the real app.
-- Also show the line on the sample room's real floor (a short route in the preview room).
-- Look: the learner wants it pretty. Clean and polished, like modern airport signage (default): rounded panels, light text, soft glow on the line, smooth fades and a gentle swing animation when the line re-routes. Stand-in building in light, simple materials so the blue line stands out.
+
+| Thing | Where |
+|---|---|
+| Route line | On the floor, 30 cm wide, Google Maps blue at 50% so the floor shows through, fading 10 m ahead |
+| Companion | On the floor ahead of you, half see-through so it never hides the floor |
+| Distance pill and floor cue | Bottom centre of the view, a little below eye level |
+| Offer dot | Upper-right corner of the view, small, with a larger pinch area |
+| Offer list | Right side of the view, about 1 m away |
+| Panels | About 1 m ahead, a little below eye level, readable standing or seated |
+| Options panel | Waist height to the left, shown only during a walk or trip |
+| Mini mall | A small 3D model of the place, with your route on it |
+| Turn arrow | Edge of the view, only when the next turn is out of view |
+| Red sign on a lift | About 1.2 m up, readable seated |
+
+The Specs display is additive, so black renders as transparent. UI text stays light, and nothing depends on dark colours to be seen.
 
 ## Hands and input
-- Choose mode: pinch Walk or Step-Free on the mode panel, once.
-- Scan the sign: pinch the sign button (simulated scan).
-- Lift out of service: pinch the red sign on the lift. The lift closes and the route re-plans.
-- Gate change: pinch the button on the Demo controls panel.
-- Lift ride: step into the lift and pinch the floor button to move up a level (default; the preview can't ride a moving lift).
-- Targets are big and highlight when aimed at.
-- Voice: none.
+
+- Everything is a pinch on a large target that highlights when aimed at.
+- Raise a hand to jump in Hop.
+- Grab and throw a treat in catch.
+- Pinch and pull toward you to peek at a small model of your route.
+- Say a place with **Talk**. A list and a map do the same job with no voice.
 
 ## When things show
-- Mode panel: shows at start, hides once a mode is picked.
-- Sign button: shows after the mode is picked, hides after the scan.
-- Line: shows after the scan, shows only the next 10 m, hides on arrival.
-- Turn arrow: shows only when the next turn is out of view.
-- Gate-change card: shows when the gate changes, hides after about 5 s (default).
-- Arrival card: shows within 3 m of the gate.
-- If something needs attention out of view: the turn arrow, plus a short chime with the gate-change card (default).
+
+- Dot: after about 0.5 s of looking at a shop, gone about 2 s after you look away.
+- Offer list: on a pinch, gone on the close pinch or when you walk about 5 m away.
+- Line: from the scan until you arrive, showing only the next 10 m.
+- Arrival card: within 3 m of the destination.
+- Change cards: when a route changes, with a chime, for about 5 s.
 
 ## Done criteria
-Each one can be checked in Lens Studio's preview.
-1. Scanning the start: after choosing a mode, pinching the "you are here" sign places you at the entrance and a blue line appears on the floor toward gate B12.
-2. Walking through the building: in Walk mode, following the line takes you through the hall and up the escalator to B12, and the line goes round corners with an arrow when the next turn is out of view.
-3. Wheelchair: in Step-Free mode, at seated height (Q), the line goes round the corner to the lift and never uses stairs or an escalator. Pinching the red sign on Lift 1 re-routes to Lift 2.
-4. Stairs when the lift is far: in Walk mode, after "Gate change B12 → C3" (pinched on Demo controls), the line swings round and takes the stairs down to the C pier. In Step-Free mode the same gate change takes the ramp.
-5. Arrival: within 3 m of the gate the line stops and "Gate C3. Boarding in 6 min." shows.
 
-## Video beats (default, to iterate later)
-1. 0:00–0:20: the problem. No GPS indoors; wheelchair users get sent to stairs. "Stand-in building" label shown.
-2. 0:20–0:40: the sign. Choose Walk, pinch the sign ("on real Specs: look at the sign"), the map loads (online/offline badge).
-3. 0:40–1:15: Walk run. Follow the line up the escalator toward B12.
-4. 1:15–1:30: gate change. "Gate change B12 → C3" top right, the line swings round, down the stairs to C3, arrival card.
-5. 1:30–2:20: wheelchair run. Restart, choose Step-Free, Q to seated height. Same sign, same gate: the line goes to the lift instead. Pinch the red sign on Lift 1: re-routes to Lift 2. Gate change: the line takes the ramp.
-6. 2:20–2:40: the line on the sample room's real floor.
-7. 2:40–3:00: how it was built. The agent turned a floor-plan image into the route graph and the stand-in model; LEAF tests pass (Step-Free never uses stairs or escalators; Walk is the shortest).
+Each one can be checked in Lens Studio's preview. `SCENARIOS.md` lists the test behind each.
 
-## Any building, not just an airport
-The learner wants it ready to navigate any indoor or open place: a random building, a hospital, a university campus.
-- The structure is the same for every place (same map format, same router, same UI); only the map changes.
-- Everything building-specific comes from the map file, never from code: node and edge positions, labels, destinations, the stand-in model, the card texts.
-- Destinations are generic (`kind: "destination"` with a type such as gate, ward, lecture hall, room). "Gate" is just the airport map's word.
-- Events are generic: "destination changed" (gate change, room change) and "connection closed" (lift out, door locked, path closed).
-- Maps can mix indoor and outdoor edges (a campus path between buildings) and several levels.
-- The stand-in model is built from the map at load, so a new map gives a new building with no code change.
-- The demo stays the airport. Ship a second small sample map (a hospital or campus wing, default: hospital) to prove a map swap works.
+1. Scanning the sign places you at the entrance and the line appears.
+2. In Walk, the line goes round corners and up the escalator, with an arrow when the next turn is out of view.
+3. In Step-Free at seated height, the line uses the lift, and closing a lift re-routes to another.
+4. A destination change swings the line: stairs in Walk, ramp in Step-Free.
+5. Within 3 m of the destination the line stops and the arrival card shows.
+6. Map builder: walk two floors, mark shops, upload. The map passes validation and can be routed on.
+7. Free walk: the companion stops at shops that match and walks past those that do not.
+8. Turn around and the companion runs round you and carries on in front.
+9. Matches on another floor: the companion stops at the stairs with the bubble, and the dot lists the shops.
+10. With the companion off, every shop still gets a dot, and ignoring it changes nothing.
+11. Go to a place: say or pick a shop, and the line leads to it.
 
 ## Out of scope
-- Switching mode mid-trip (mode is chosen once).
-- Real sign recognition, real positioning, real airports.
-- Staff/porter mode (stretch). A full hospital or campus experience; only a small sample map proves the swap.
-- Voice.
 
-## What to cut first if behind (default order)
-1. Staff/porter mode, then the second sample map (keep the code generic anyway).
-2. The line on the sample room's floor.
-3. The live map download (keep the built-in map and the offline badge).
-4. The 10 m fade (show the whole line).
-5. The turn arrow (keep the line on the corners).
+- Camera recognition of shops or signs, eye tracking and real indoor positioning.
+- Acting on an offer: buying, booking or "go here" from an offer.
+- A map editor. Shop names and offers are edited in the map file.
+- Publishing a map directly from the Lens.
 
-## Risks and open questions
-- Gate-change card in the top-right corner of the view: kept by the learner so it doesn't block the view. Risk: SPECS' view is narrow (about 32° wide), so a corner card may be missed while looking down at the line. The chime helps.
-- Riding the lift and escalator in the preview: the user moves up with E or a floor button; real movement feel is unproven.
-- Map download may fail in the preview; the built-in map must work on its own.
-- Feel unproven: following a floor line at walking and wheeling speed, readability at seated height on real glasses.
+## What only real glasses can tell
 
-## Existing work to reuse
-- The route engine already exists in `` (the Lens Studio project): `src/core/router.ts` (Dijkstra with Walk and Step-Free rules, re-route, arrival, off-route, `loadMapWithTimeout`) and `src/core/data/map.json`.
-- Route-graph format: nodes + edges JSON (`map.json`). Nodes have `kind` (sign, junction, lift, gate, assistance); edges have `kind` (walk, escalator, stairs, lift, ramp) and `open`.
-- Approved scenarios S1–S9 and E1–E6 are in `devpost/SCENARIOS.md`. S3 (switch mode mid-route) is dropped from the Lens.
+The logic is proven by tests in the preview. These are unproven, because nothing has run on Specs hardware:
 
-## Build notes for CLAD
-- Build for SPECS so it runs and can be demonstrated in Lens Studio's preview. No SPECS device is available.
-- Use Spectacles Interaction Kit (SIK) and UI Kit for all interactions, so they work with the mouse in Interactive Preview and with LEAF.
-- Build any stand-in exactly as described above, and keep it obvious in the scene.
-- Use real-world scale in centimeters. Keep content inside the user's view during the main task.
-- The display is additive: black renders as transparent. Don't rely on black or very dark content to be seen; keep text light and readable from where the user stands.
-- Get the basic flow working first, then add detail.
-- Write LEAF scenarios for each done criterion, run them in preview, and report which pass. Say which criteria have no test.
-- Don't record, identify, or follow people.
+- How the line and the companion feel at walking and wheeling speed, and comfort over time.
+- Whether a small dot in the corner of the view is easy to pinch.
+- Whether stopping at every match gets annoying. The limits are Inspector settings.
+- Position drift on long walks, and whether a lift is detected, since the cabin looks still to tracking. **Next floor** is the fallback.
+- Real hand tracking, real speech and a real sign scan.
 
-## After the build: judge it
-This part is for you, after CLAD finishes.
+## Built with
 
-1. **Does it work?** Ask your agent which LEAF tests passed and which done criteria have no test.
-2. **Walk around it.** Open the preview in Interactive Preview. Use WASD to move, Q and E to go down and up, and right-drag (or hold Shift) to look around. Clicking acts as a pinch. Stand where a user would and look at the task.
-3. **Ask the three questions.**
-   - Does it use what I'm looking at?
-   - Does it put something in my space, where it belongs?
-   - Does it free my hands or let me keep my eyes up?
-   - Would it be just as good on a phone? If so, what would make it need the glasses?
-4. **Check comfort.**
-   - Everything I need is in view while I do the task. Nothing sits at the edges, behind me, or stuck to my face.
-   - Every control is within reach of someone standing there.
-   - Text reads easily from where I stand. No dark UI disappearing.
-   - Things show when needed and get out of the way.
-5. **Label what you know.** Write "logic proven" next to anything the tests and preview show working, and "feel unproven" next to anything only real glasses could tell you (comfort over time, real hand tracking, real recognition).
-6. **Fix with design notes, not code.** Tell your agent what to change in design terms, for example: "Move the step card 15 cm lower and next to the pan. Make the Next button twice as big. Re-run the tests." If a fix takes under a minute, like nudging a panel, do it yourself in the scene.
-7. **Submit.** Record a video under 3 minutes of your Lens in the preview, public on YouTube. Make your repo public with your Lens Studio project and this `devpost/` folder. Details are on the hackathon site: https://learn-specs.devpost.com/resources
+- Lens Studio, Spectacles Interaction Kit and UI Kit, in TypeScript.
+- A shared core in `src/core` that runs in the Lens and in Node, tested first. `SCENARIOS.md` lists the scenarios and their tests, and `openspec/specs` holds the full requirements.
+- `PREVIEW-GUIDE.md` shows how to try it, with no glasses needed.

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Browse a place with no destination (design-brief-3). Logic: freewalk.ts (`FreeWalk`, `DotTracker`,
+Browse a place with no destination. Logic: freewalk.ts (`FreeWalk`, `DotTracker`,
 `lookTarget`, `offerView`, `AheadTracker`). Lens: `FindYourWayMain` (`chooseFreeWalk`, `tickFree`),
 the offer dot and list, and the floor-change bubble. Shop names, categories, fronts and offers all
 come from the map. There is no route, no distance pill and no Step-Free choice in Free walk.
@@ -87,5 +87,5 @@ the companion off.
 
 - Comfort of the corner dot, and whether the traveller can tell which shop a dot belongs to: feel unproven.
 - Real head direction and position drift on Specs: nothing has run on real hardware.
-- The light chime when it stops at a match (brief 3, default) and the turn arrow pointing to an
+- The light chime when it stops at a match and the turn arrow pointing to an
   out-of-view companion: no test for this in Free walk.

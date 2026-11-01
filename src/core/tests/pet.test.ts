@@ -1,4 +1,4 @@
-// Pet guide (proposed P1-P7 in devpost/SCENARIOS.md): a feature the traveller turns on or off;
+// Pet guide (P1-P7 in devpost/SCENARIOS.md): a feature the traveller turns on or off;
 // the pet walks the same route as the line, waits at floor changes, and the treats game.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -42,7 +42,7 @@ function distToRoute(route: Vec3[], p: Vec3): number {
   return best;
 }
 
-test("P1 Pet on/off: the line shows either way (addendum B: Pet + line at 50%); toggling never changes the route", () => {
+test("P1 Pet on/off: the line shows either way at 50%; toggling never changes the route", () => {
   const map = loadMap();
   const nav = new Navigator(map, "sign", "gateB12", "walk");
   const before = nav.route.status === "route" ? nav.route.nodes.join(">") : "";

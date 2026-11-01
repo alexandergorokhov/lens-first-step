@@ -47,7 +47,7 @@ and rotated to point toward it (rotation clamped to ±150°), drawn on top of ev
 #### Scenario: X22 Arrow sits at the lower edge pointing toward the turn
 - **WHEN** the arrow shows for a turn to the right
 - **THEN** it appears at the lower edge of the view, nudged right, pointing right
-- Verified by: manual (preview) — PREVIEW-GUIDE section 4 step 8
+- Verified by: manual (preview) — PREVIEW-GUIDE "Checks by hand"
 
 ## Known gaps
 

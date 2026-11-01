@@ -2,7 +2,7 @@
 
 ## Purpose
 
-A faster search for big maps, kept beside the plain Dijkstra the Lens uses (handoff item 11).
+A faster search for big maps, kept beside the plain Dijkstra the Lens uses.
 
 ## Requirements
 
