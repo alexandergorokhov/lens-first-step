@@ -246,3 +246,11 @@ export function tripPill(destination: string, trip: TripLike | null): string | n
   if (!trip || trip.metres <= 0) return null;
   return distancePill(destination, trip.metres, trip.floors, trip.seconds);
 }
+
+// A card's clock: one long frame (a rebuild, a hitch) counts as CARD_MAX_STEP seconds at most, so
+// it can't use up a card nobody has seen yet.
+export const CARD_MAX_STEP = 0.1;
+
+export function cardClock(t: number, dt: number): number {
+  return dt > 0 ? t + Math.min(dt, CARD_MAX_STEP) : t;
+}

@@ -1,6 +1,7 @@
 // Zero-dependency local map server for Find Your Way Inside.
 //   npm run maps            -> http://localhost:8787/<name>.json  (e.g. map.json, campus.json)
 //   PORT=9000 npm run maps  -> another port
+//   npm run maps -- --lan   -> also reachable from other devices on this network
 // Serves only the *.json files in src/core/data, with CORS headers so a Lens (or a browser)
 // can download them. Set the Lens's `mapBaseUrl` to http://localhost:8787/ to use it.
 import { createServer } from "node:http";
@@ -16,7 +17,7 @@ const CORS = {
   "Access-Control-Allow-Headers": "*",
 };
 
-export async function startMapServer({ port = 8787, host = "0.0.0.0", dir = DEFAULT_DIR, log = false } = {}) {
+export async function startMapServer({ port = 8787, host = "127.0.0.1", dir = DEFAULT_DIR, log = false } = {}) {
   const server = createServer(async (req, res) => {
     if (req.method === "OPTIONS") {
       res.writeHead(204, CORS);
@@ -44,6 +45,7 @@ export async function startMapServer({ port = 8787, host = "0.0.0.0", dir = DEFA
   const actual = server.address().port;
   return {
     port: actual,
+    host,
     close: () => new Promise((resolve) => server.close(() => resolve())),
   };
 }
@@ -56,7 +58,7 @@ function notFound(res, req, log) {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const port = Number(process.env.PORT || 8787);
-  const { port: p } = await startMapServer({ port, log: true });
+  const { port: p } = await startMapServer({ port, log: true, host: process.argv.includes("--lan") ? "0.0.0.0" : "127.0.0.1" });
   // The bundled maps, from the one maps index (src/core/data/index.json).
   const { maps } = JSON.parse(await readFile(path.join(DEFAULT_DIR, "index.json"), "utf8"));
   console.log(`Find Your Way map server: http://localhost:${p}/`);

@@ -124,3 +124,154 @@ export function peekMap(
   for (const e of map.edges) if (at[e.from] && at[e.to]) segments.push({ a: toModel(at[e.from]), b: toModel(at[e.to]) });
   return { scale, segments, shops: map.nodes.filter((n) => n.kind === "place").map(toModel), you: toModel(user) };
 }
+
+// The whole place as a small model you can look into: every floor a plate, stacked evenly apart
+// (real floors would sit almost on top of each other at this scale), its corridors and shops, the
+// connections between floors, and your route and dot on top.
+export type PlaceGroup = "food" | "fun" | "service" | "shop";
+
+export interface PeekPlaceSpot {
+  id: string;
+  at: PeekPoint;
+  group: PlaceGroup;
+}
+
+export interface PeekFloor {
+  y: number;
+  segments: { a: PeekPoint; b: PeekPoint }[];
+  places: PeekPlaceSpot[];
+}
+
+export interface PeekPlaceModel {
+  scale: number;
+  floors: PeekFloor[];
+  links: { a: PeekPoint; b: PeekPoint; kind: string; open: boolean }[];
+  route: PeekPoint[];
+  you: PeekPoint;
+  target: PeekPoint | null;
+  // As in PeekModel: route[0..done) is walked.
+  done: number;
+  // Index of your floor.
+  current: number;
+  // Stays the same while only the route and your dot move, so the floors need no rebuilding.
+  key: string;
+}
+
+interface PlaceMap {
+  nodes: (PeekPoint & { id: string; kind: string; category?: string })[];
+  edges: { from: string; to: string; kind: string; open?: boolean }[];
+}
+
+// Model metres between two floors of the stack.
+export const PEEK_FLOOR_GAP = 0.13;
+const SAME_FLOOR = 0.5;
+
+const GROUPS: { [category: string]: PlaceGroup } = Object.create(null);
+for (const c of ["coffee", "food"]) GROUPS[c] = "food";
+for (const c of ["kids", "sport", "books"]) GROUPS[c] = "fun";
+for (const c of ["toilet", "accessibleToilet", "pharmacy", "cash"]) GROUPS[c] = "service";
+
+// The colour family of a place.
+export function placeGroup(category: string | undefined): PlaceGroup {
+  return (category && GROUPS[category]) || "shop";
+}
+
+const isPlace = (n: { kind: string }) => n.kind === "place" || n.kind === "destination";
+
+function floorHeights(map: PlaceMap): number[] {
+  const out: number[] = [];
+  for (const y of map.nodes.map((n) => n.y).sort((a, b) => a - b)) {
+    if (out.every((o) => Math.abs(o - y) >= SAME_FLOOR)) out.push(y);
+  }
+  return out;
+}
+
+function floorIndex(levels: number[], y: number): number {
+  let best = 0;
+  for (let i = 1; i < levels.length; i++) if (Math.abs(levels[i] - y) < Math.abs(levels[best] - y)) best = i;
+  return best;
+}
+
+// Where a height sits in the stack, in floors: 1.5 is halfway between floors 1 and 2.
+function stackHeight(levels: number[], y: number): number {
+  if (levels.length === 0 || y <= levels[0]) return 0;
+  for (let i = 0; i < levels.length - 1; i++) {
+    if (y <= levels[i + 1]) return i + (y - levels[i]) / (levels[i + 1] - levels[i]);
+  }
+  return levels.length - 1;
+}
+
+export function peekPlace(map: PlaceMap, route: PeekPoint[], user: PeekPoint, opts?: { size?: number }): PeekPlaceModel {
+  const size = opts && typeof opts.size === "number" && opts.size > 0 ? opts.size : PEEK_SIZE;
+  const levels = floorHeights(map);
+  const xs = map.nodes.map((n) => n.x);
+  const zs = map.nodes.map((n) => n.z);
+  const minX = Math.min.apply(null, xs), maxX = Math.max.apply(null, xs);
+  const minZ = Math.min.apply(null, zs), maxZ = Math.max.apply(null, zs);
+  const extent = Math.max(maxX - minX, maxZ - minZ);
+  const scale = extent > 1e-9 ? size / extent : 1;
+  const middle = (levels.length - 1) / 2;
+  const toModel = (p: PeekPoint): PeekPoint => ({
+    x: (p.x - (minX + maxX) / 2) * scale,
+    y: (stackHeight(levels, p.y) - middle) * PEEK_FLOOR_GAP,
+    z: (p.z - (minZ + maxZ) / 2) * scale,
+  });
+  const floors: PeekFloor[] = levels.map((_, i) => ({ y: (i - middle) * PEEK_FLOOR_GAP, segments: [], places: [] }));
+  const at: { [id: string]: PeekPoint } = Object.create(null);
+  for (const n of map.nodes) {
+    at[n.id] = n;
+    if (isPlace(n)) floors[floorIndex(levels, n.y)].places.push({ id: n.id, at: toModel(n), group: placeGroup(n.category) });
+  }
+  const links: PeekPlaceModel["links"] = [];
+  const closed: string[] = [];
+  for (const e of map.edges) {
+    const a = at[e.from], b = at[e.to];
+    if (!a || !b) continue;
+    if (e.open === false) closed.push(e.from + ">" + e.to);
+    const from = floorIndex(levels, a.y), to = floorIndex(levels, b.y);
+    if (from === to) floors[from].segments.push({ a: toModel(a), b: toModel(b) });
+    else links.push({ a: toModel(a), b: toModel(b), kind: e.kind, open: e.open !== false });
+  }
+  const line = route.map(toModel);
+  return {
+    scale,
+    floors,
+    links,
+    route: line,
+    you: toModel(user),
+    target: line.length > 0 ? line[line.length - 1] : null,
+    done: route.length > 0 ? peekModel(route, user).done : 0,
+    current: floorIndex(levels, user.y),
+    key: map.nodes.length + ":" + map.edges.length + ":" + levels.join(",") + ":" + (map.nodes.length > 0 ? map.nodes[0].id : "") + ":" + closed.join(","),
+  };
+}
+
+// The "You are here" board: one floor drawn flat, north up, centred, in the units of width/height.
+export interface BoardModel {
+  paths: { a: { x: number; y: number }; b: { x: number; y: number } }[];
+  places: { id: string; at: { x: number; y: number }; group: PlaceGroup }[];
+  you: { x: number; y: number };
+}
+
+export function boardModel(map: PlaceMap, startId: string, width: number, height: number): BoardModel | null {
+  const start = map.nodes.filter((n) => n.id === startId)[0];
+  if (!start) return null;
+  const ns = map.nodes.filter((n) => Math.abs(n.y - start.y) < SAME_FLOOR);
+  const xs = ns.map((n) => n.x), zs = ns.map((n) => n.z);
+  const minX = Math.min.apply(null, xs), maxX = Math.max.apply(null, xs);
+  const minZ = Math.min.apply(null, zs), maxZ = Math.max.apply(null, zs);
+  const k = Math.min(width / Math.max(1, maxX - minX), height / Math.max(1, maxZ - minZ));
+  const spot = (n: PeekPoint) => ({ x: (n.x - (minX + maxX) / 2) * k, y: (n.z - (minZ + maxZ) / 2) * k });
+  const on: { [id: string]: PeekPoint } = Object.create(null);
+  for (const n of ns) on[n.id] = n;
+  const paths: BoardModel["paths"] = [];
+  for (const e of map.edges) {
+    const a = on[e.from], b = on[e.to];
+    if (a && b && (a.x !== b.x || a.z !== b.z)) paths.push({ a: spot(a), b: spot(b) });
+  }
+  return {
+    paths,
+    places: ns.filter(isPlace).map((n) => ({ id: n.id, at: spot(n), group: placeGroup(n.category) })),
+    you: spot(start),
+  };
+}

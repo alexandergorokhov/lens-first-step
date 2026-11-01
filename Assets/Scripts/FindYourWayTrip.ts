@@ -39,6 +39,12 @@ export function orderStops(start: string, stops: string[], dist: StopDistance): 
     return cache[key];
   };
 
+  // A stop you can't reach goes last, so it never holds up the others.
+  const stuck = unique.filter((s) => d(start, s) === Infinity);
+  if (stuck.length > 0 && stuck.length < unique.length) {
+    return orderStops(start, unique.filter((s) => stuck.indexOf(s) < 0), dist).concat(stuck);
+  }
+
   if (unique.length > MAX_EXACT_STOPS) {
     const left = unique.slice();
     const out: string[] = [];

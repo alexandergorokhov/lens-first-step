@@ -56,7 +56,7 @@ export class FindYourWayPlacesUI extends BaseScriptComponent {
     for (const so of objs) if (!isNull(so)) so.enabled = false
     if (objs.length === 0) return
     const ev = this.createEvent("DelayedCallbackEvent")
-    ev.bind(() => { for (const so of objs) if (!isNull(so)) so.destroy() })
+    ev.bind(() => { this.removeEvent(ev); for (const so of objs) if (!isNull(so)) so.destroy() })
     ev.reset(DESTROY_DELAY_S)
   }
 

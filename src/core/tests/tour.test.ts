@@ -32,7 +32,7 @@ test("U1 the cap is trip.ts's MAX_EXACT_STOPS", () => {
 
 test("U2 tour stops are the places whose category is picked, ordered by orderStops", () => {
   const dist = distFor("mall.json");
-  const prefs = ["coffee", "books", "hardware"];
+  const prefs = ["books", "hardware"];
   const stops = tourStops(mall, "sign", prefs, dist, orderStops);
   assert.deepEqual([...stops].sort(), idsOf(mall, "place", prefs).sort());
   assert.ok(stops.length >= 2);
@@ -175,6 +175,7 @@ test("U13 mapLevels lists the floors with labels, lowest first", () => {
   assert.deepEqual(mapLevels(mall), [
     { y: 0, label: "Ground floor", floor: 0 },
     { y: 5, label: "First floor", floor: 1 },
+    { y: 10, label: "Top floor", floor: 2 },
   ]);
   assert.deepEqual(mapLevels(airport).map((l) => l.label), ["Ground floor", "C pier", "Departures", "Sky Lounge"]);
   const bare = mapLevels({

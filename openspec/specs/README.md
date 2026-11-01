@@ -25,7 +25,8 @@ Capabilities of "Find Your Way Inside" (see `../project.md` for context and conv
 | Multi-stop trips (mall) | [multi-stop/spec.md](multi-stop/spec.md) |
 | A* beside Dijkstra | [route-search/spec.md](route-search/spec.md) |
 | Learn this place (mapping by walking) | [mapping-mode/spec.md](mapping-mode/spec.md) |
-| Peek ahead | [peek-ahead/spec.md](peek-ahead/spec.md) |
+| Peek ahead, the mini mall, See map | [peek-ahead/spec.md](peek-ahead/spec.md) |
+| Untrusted maps, floors, edge values, tools | [hardening/spec.md](hardening/spec.md) |
 | Free walk: dots, offers, companion with no route | [free-walk/spec.md](free-walk/spec.md) |
 | Map builder: walk, floors, Mark shop, upload | [map-builder/spec.md](map-builder/spec.md) |
 | Go to a place: Say it, Talk, Where to? list and map | [go-to-a-place/spec.md](go-to-a-place/spec.md) |
@@ -36,7 +37,7 @@ Capabilities of "Find Your Way Inside" (see `../project.md` for context and conv
 
 ## Traceability
 
-Status: **Pass (auto)** = covered by a passing Node test and/or LEAF scenario (Node 342 tests, all passing / 0 todo;
+Status: **Pass (auto)** = covered by a passing Node test and/or LEAF scenario (Node 414 tests, all passing / 0 todo;
 LEAF 43 scenarios as of the last recorded run in `devpost/SCENARIOS.md`); **Partial** = logic tested but
 part of the behaviour only manual or untested; **Manual** = checked by hand in the preview only;
 **Gap** = no test.
@@ -141,11 +142,12 @@ part of the behaviour only manual or untested; **Manual** = checked by hand in t
 | PB4 | "You are here" directory board in the place | preview-backdrop | — | s1-start-at-sign-controls-hidden | Pass (auto) |
 | FW7 | Free walk demo button, in the mall | demo-controls | D20 | fw1-free-walk-demo | Pass (auto) |
 | MB5 | Map builder demo with the mall behind it | map-builder | — | mb5-builder-in-the-mall | Pass (auto) |
-| P1–P7, Q7, Q8 | Companion on/off, any model, leads/waits/collects | companion | A1–A13 | Jointed, animated companions | companion | A1–A13 (anim.test.ts) | visual-rigs (by eye) | Pass (Node) |
-| PB4 | "You are here" directory board in the place | preview-backdrop | — | s1-start-at-sign-controls-hidden | Pass (auto) |
-| FW7 | Free walk demo button, in the mall | demo-controls | D20 | fw1-free-walk-demo | Pass (auto) |
-| MB5 | Map builder demo with the mall behind it | map-builder | — | mb5-builder-in-the-mall | Pass (auto) |
-| P1–P7, Q7, Q8 | p1-companion-toggle-and-models, p3-companion-waits-at-escalator | Pass (Node); LEAF passing |
+| H1–H36 | Hostile maps, floors, closures, marked shops, edge values | hardening | H1–H36 (hardening.test.ts) | — | Pass (Node) |
+| T1–T13 | Tools, ignored keys, nothing private tracked | hardening | T1–T13 (hardening.test.ts) | — | Pass (Node) |
+| E1b | End trip, without demo controls | hardening | — | e1b-end-trip | Pass (auto) |
+| PM1–PM15 | The mini mall | peek-ahead | PM1–PM15 (peek-place.test.ts) | pk1-peek-ahead-shows-and-hides | Pass (auto) |
+| BM1–BM5 | The board's map | peek-ahead | BM1–BM5 (peek-place.test.ts) | s1-start-at-sign-controls-hidden | Pass (auto) |
+| P1–P7, Q7, Q8 | Companion on/off, any model, leads/waits/collects | companion | P1–P7 | p1-companion-toggle-and-models, p3-companion-waits-at-escalator | Pass (Node); LEAF passing |
 | Q1–Q6 | Places, interests, pointing, Go here? | places | Q1–Q6 | q4-points-at-interests-and-sponsored | Pass (Node); LEAF passing |
 | G1–G9, P8–P10 | Hop and catch | play | G1–G9, P8, P9 | g1-hop-jump-bump-restart, pc1-throw-and-fetch-any-model | Pass (Node); LEAF passing |
 | T1–T4 | Multi-stop mall trip | multi-stop | T1–T4 | t1-mall-multi-stop | Pass (Node); LEAF passing |

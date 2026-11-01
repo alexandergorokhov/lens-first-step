@@ -13,6 +13,7 @@ export interface AppPanelHandlers {
   onCompanion: () => void
   onModel: () => void
   onPlaces: () => void
+  onMap: () => void
   onPlay: () => void
   onJump: () => void
   onThrow: () => void
@@ -29,6 +30,7 @@ const PLAY_SCALE = 0.7
 export class FindYourWayAppPanelUI extends BaseScriptComponent {
   private companion: LabeledButton
   private places: LabeledButton
+  private seeMap: LabeledButton
   private play: LabeledButton
   private jump: LabeledButton
   private throwBtn: LabeledButton
@@ -52,6 +54,7 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
     const model = addButton(panel.content, "ModelButton", "Swap model", WIDTH, BUTTON_H, null, h.onModel, TEXT, 70)
     this.places = addButton(panel.content, "PlacesButton", "Places: on", WIDTH, BUTTON_H, icon("location_on"),
       h.onPlaces, TEXT, 70)
+    this.seeMap = addButton(panel.content, "SeeMapButton", "See map", WIDTH, BUTTON_H, icon("location_on"), h.onMap, TEXT, 70)
     this.play = addButton(panel.content, "PlayButton", "Play while you wait", WIDTH, BUTTON_H, null, h.onPlay, TEXT, 70)
     // On Specs you raise a hand; in the preview this button does the same.
     this.jump = addButton(panel.content, "JumpButton", "Jump (or raise a hand)", WIDTH, BUTTON_H, null, h.onJump, TEXT, 70)
@@ -59,18 +62,18 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
     this.nextStop = addButton(panel.content, "NextStopButton", "Next stop", WIDTH, BUTTON_H, icon("location_on"),
       h.onNextStop, TEXT, 70)
     this.endWalk = addButton(panel.content, "EndWalkButton", "End walk", WIDTH, BUTTON_H, null, h.onEndWalk, TEXT, 70)
-    this.rows = [title.getSceneObject(), this.companion.so, model.so, this.places.so, this.play.so, this.jump.so,
+    this.rows = [title.getSceneObject(), this.companion.so, model.so, this.places.so, this.seeMap.so, this.play.so, this.jump.so,
       this.throwBtn.so, this.nextStop.so, this.endWalk.so]
-    this.optionRows = [title.getSceneObject(), this.companion.so, model.so, this.places.so]
+    this.optionRows = [title.getSceneObject(), this.companion.so, model.so, this.places.so, this.seeMap.so]
     this.setPlay(false, false, false)
     this.setNextStop(null)
     this.setFreeWalk(false)
   }
 
-  // Free walk: no place icons to mute, and a way back to the three modes.
+  // Free walk has no place icons to mute. Every walk has a way back to the three modes.
   setFreeWalk(on: boolean): void {
     this.places.so.enabled = !on
-    this.endWalk.so.enabled = on
+    this.endWalk.label.text = on ? "End walk" : "End trip"
     this.relayout()
   }
 
@@ -98,6 +101,8 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
   }
 
   getCompanionLabel(): string { return this.companion.label.text }
+
+  setMapShown(on: boolean): void { this.seeMap.label.text = on ? "Hide map" : "See map" }
 
   setPlaces(on: boolean): void { this.places.label.text = "Places: " + (on ? "on" : "off") }
 

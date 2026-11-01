@@ -126,9 +126,10 @@ test("O2 a shop with no offer still opens, with no rows", () => {
 
 test("F1 other-floor picks: matching shops only, paid ones first", () => {
   const picks = otherFloorPicks(mall(), PRESET, 0, true);
-  assert.deepEqual(picks.map((p) => p.id).sort(), ["anvilTools", "coffeeF", "fashion", "secondSkin"]);
+  assert.deepEqual(picks.map((p) => p.id).sort(), ["anvilTools", "coffeeF", "fashion", "secondSkin", "terrace"]);
   assert.equal(picks[0].id, "secondSkin");
-  assert.deepEqual(otherFloorPicks(mall(), PRESET, 5, true), []);
+  assert.deepEqual(otherFloorPicks(mall(), PRESET, 5, true).map((p) => p.id), ["terrace"]);
+  assert.deepEqual(otherFloorPicks(mall(), PRESET, 10, true), []);
   assert.ok(otherFloorPicks(mall(), PRESET, 5, false).length >= 3);
 });
 
@@ -306,7 +307,7 @@ test("H1 at a floor connection with matches on the other floor it stops, points 
   let bubble: string | null = null;
   const t = stand(fw, a, 0, 0, 3, (f) => { if (f.stopped) stop = f.stopped; if (f.bubble) bubble = f.bubble; });
   assert.equal(stop, "stairsFoot");
-  assert.equal(bubble, "4 picks upstairs");
+  assert.equal(bubble, "5 picks upstairs");
   let end: string | null = "x";
   stand(fw, a, 0, t, 5, (f) => { end = f.bubble; });
   assert.equal(end, null, "the bubble hides (up to 5 s)");
@@ -322,15 +323,16 @@ test("H1b arriving on a floor, it never hints back the way you came, and the nex
   const top = { x: 57, y: 5, z: 24 };
   const seen: (string | null)[] = [];
   t = stand(fw, top, 0, t, 1, (f) => { seen.push(f.pointing); });
-  assert.deepEqual(seen.filter((s) => s !== null), [], "no 'picks downstairs' at the top of the stairs");
-  let stop: string | null = null;
-  stand(fw, { x: 50, y: 5, z: 22 }, 0, t, 3, (f) => { if (f.stopped) stop = f.stopped; });
-  assert.equal(stop, "secondSkin");
+  // The next flight up may hint; the flight you came up never does.
+  assert.ok(!seen.includes("stairsTop"), "no 'picks downstairs' at the top of the stairs");
+  const stops: string[] = [];
+  stand(fw, { x: 50, y: 5, z: 22 }, 0, t, 8, (f) => { if (f.stopped) stops.push(f.stopped); });
+  assert.ok(stops.includes("secondSkin"), stops.join());
 });
 
 test("H2 no bubble and no stop with no matches on the other floor; or at a down-only escalator", () => {
   const m = mall();
-  const fw = new FreeWalk(m, ["sport"]);
+  const fw = new FreeWalk(m, ["beauty"]);
   const a = { x: 52, y: 0, z: 10 };
   fw.setCompanion(true, a, 0);
   stand(fw, a, 0, 0, 3, (f) => { assert.equal(f.bubble, null); assert.equal(f.stopped, null); });
@@ -354,7 +356,7 @@ test("H3 the stairs dot and list also work with the companion off", () => {
 });
 
 test("I1 the checkbox list comes from the map; maps without one keep today's interests", () => {
-  assert.deepEqual(interestList(mall()).map((i) => i.id), ["coffee", "food", "clothes", "sport", "hardware", "books"]);
+  assert.deepEqual(interestList(mall()).map((i) => i.id), ["coffee", "food", "clothes", "sport", "hardware", "books", "kids", "beauty"]);
   const plain = interestList({ nodes: [], edges: [] });
   assert.deepEqual(plain.map((i) => i.id), ["coffee", "food", "shopping", "toilet", "pharmacy"]);
 });

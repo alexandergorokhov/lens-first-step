@@ -30,6 +30,7 @@ export interface FwEdge {
   from: string;
   to: string;
   kind: string;
+  open?: boolean;
 }
 
 export interface FwMap {
@@ -275,7 +276,7 @@ function connection(map: FwMap, id: string): { up: boolean; usable: boolean } | 
   if (!here) return null;
   let found: { up: boolean; usable: boolean } | null = null;
   for (const e of map.edges) {
-    if (e.kind === "walk" || (e.from !== id && e.to !== id)) continue;
+    if (e.kind === "walk" || e.open === false || (e.from !== id && e.to !== id)) continue;
     const other = at[e.from === id ? e.to : e.from];
     if (!other || Math.abs(other.y - here.y) < SAME_FLOOR_M) continue;
     const usable = e.kind !== "escalator" || e.from === id;
@@ -290,8 +291,8 @@ export function offerView(map: FwMap, id: string, prefs: string[], y: number): O
   for (const n of map.nodes) if (n.id === id) node = n;
   if (!node) return null;
   const conn = connection(map, id);
-  if (conn) {
-    const picks = otherFloorPicks(map, prefs, y, conn.up);
+  const picks = conn ? otherFloorPicks(map, prefs, y, conn.up) : [];
+  if (conn && picks.length > 0) {
     return {
       id,
       title: "Your picks " + (conn.up ? "upstairs" : "downstairs"),
@@ -483,11 +484,12 @@ export class FreeWalk {
       return { id: shop.id, at: shop, spot: this.stopSpot(shop, pos.y), seconds: s.pointSeconds, bubble: null, giveUp: now + STOP_TIMEOUT_S, until: null };
     }
     // Picks on the other floor: the first usable connection each way, once per walk per floor.
+    const floor = levelOf(this.map, pos.y);
     let best: FwNode | null = null;
     let bestUp = true;
     for (const n of this.map.nodes) {
       const conn = near(n) ? connection(this.map, n.id) : null;
-      if (!conn || !conn.usable || this.done[floorKey(pos.y, conn.up)]) continue;
+      if (!conn || !conn.usable || this.done[floorKey(floor, conn.up)]) continue;
       if (otherFloorPicks(this.map, this.prefs, pos.y, conn.up).length === 0) continue;
       if (!best || flat(n, pos) < flat(best, pos)) {
         best = n;
@@ -495,7 +497,7 @@ export class FreeWalk {
       }
     }
     if (!best) return null;
-    this.done[floorKey(pos.y, bestUp)] = true;
+    this.done[floorKey(floor, bestUp)] = true;
     const count = otherFloorPicks(this.map, this.prefs, pos.y, bestUp).length;
     return { id: best.id, at: best, spot: this.stopSpot(best, pos.y), seconds: s.bubbleSeconds, bubble: floorBubble(count, bestUp), giveUp: now + STOP_TIMEOUT_S, until: null };
   }
@@ -541,6 +543,12 @@ export class FreeWalk {
     return { pos: next, heading: h === null ? pet.heading : h, mood: running ? "run" : "lead" };
   }
 
+  // The same place with a change (a connection closed): what is ahead changes, the walk doesn't.
+  setMap(map: FwMap): void {
+    this.map = map;
+    this.targets = frontTargets(map);
+  }
+
   update(pos: FwXYZ, heading: number, dt: number, now: number): FreeFrame {
     this.dots.update(lookTarget(this.targets, pos, heading, this.settings.lookRangeM), now, pos);
     const dir = this.ahead.update(pos, heading, dt);
@@ -549,7 +557,7 @@ export class FreeWalk {
     if (pet) {
       if (Math.abs(pet.pos.y - pos.y) >= SAME_FLOOR_M) {
         // It comes along on a floor change, and never hints back the way you came.
-        this.done[floorKey(pos.y, pet.pos.y > pos.y)] = true;
+        this.done[floorKey(levelOf(this.map, pos.y), pet.pos.y > pos.y)] = true;
         this.stop = null;
         pet = { pos: this.spotAhead(pos, dir), heading: pet.heading, mood: "lead" };
       }
@@ -592,7 +600,21 @@ export class FreeWalk {
 }
 
 function floorKey(y: number, up: boolean): string {
-  return "floor:" + Math.round(y) + (up ? ":up" : ":down");
+  return "floor:" + y + (up ? ":up" : ":down");
+}
+
+// The height of the map's floor closest to these feet, so swaying feet are always one floor.
+function levelOf(map: FwMap, y: number): number {
+  let best = y;
+  let bestD = Infinity;
+  for (const n of map.nodes) {
+    const d = Math.abs(n.y - y);
+    if (d < bestD) {
+      bestD = d;
+      best = n.y;
+    }
+  }
+  return best;
 }
 
 // ── Go to a place ────────────────────────────────────────────────────────────
@@ -621,10 +643,28 @@ function words(text: string): string[] {
   return plain.split(" ").filter((w) => w !== "");
 }
 
-// The plain-code matcher: drops filler words, then a name matches when all the words left are in
-// it. Exact names win, then the shortest name. Null when nothing matches.
+// A name said in full at the end of the phrase ("take me to the show"), the longest such name.
+function saidInFull(map: FwMap, heard: string[]): string | null {
+  let best: string | null = null;
+  let bestLength = 0;
+  for (const d of destinationsOf(map)) {
+    const name = words(d.label);
+    if (name.length <= bestLength || name.length > heard.length) continue;
+    if (name.join(" ") === heard.slice(heard.length - name.length).join(" ")) {
+      bestLength = name.length;
+      best = d.id;
+    }
+  }
+  return best;
+}
+
+// The plain-code matcher: a name said in full wins; otherwise it drops filler words and a name
+// matches when all the words left are in it, shortest name first. Null when nothing matches.
 export function matchDestination(map: FwMap, phrase: string): string | null {
-  const said = words(phrase).filter((w) => FILLER.indexOf(w) < 0);
+  const heard = words(phrase);
+  const full = saidInFull(map, heard);
+  if (full !== null) return full;
+  const said = heard.filter((w) => FILLER.indexOf(w) < 0);
   if (said.length === 0) return null;
   let best: string | null = null;
   let bestExtra = Infinity;

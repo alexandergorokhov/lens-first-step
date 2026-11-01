@@ -54,7 +54,7 @@ export class FindYourWayBuildingUI extends BaseScriptComponent {
     for (const so of old) so.enabled = false
     if (old.length > 0) {
       const ev = this.createEvent("DelayedCallbackEvent")
-      ev.bind(() => { for (const so of old) if (!isNull(so)) so.destroy() })
+      ev.bind(() => { this.removeEvent(ev); for (const so of old) if (!isNull(so)) so.destroy() })
       ev.reset(DESTROY_DELAY_S)
     }
     this.items = []

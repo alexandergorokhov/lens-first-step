@@ -1,9 +1,9 @@
 /plan-lens
 
 SETUP FIRST (do this yourself before planning, no questions):
-1. Create the folder C:\Sasha\Projects\specs\find-your-way-inside (and its "devpost" subfolder) if it doesn't exist. Use that folder for everything in this session.
-2. Save this whole prompt as C:\Sasha\Projects\specs\find-your-way-inside\devpost\IDEA.md.
-3. Write the design brief to C:\Sasha\Projects\specs\find-your-way-inside\devpost\design-brief.md. If the plan-lens skill writes it anywhere else (for example the folder this session started in), move it there. If a design-brief.md already exists in that folder, don't overwrite it: save the new one as design-brief-2.md (then -3, and so on).
+1. Create the folder  (and its "devpost" subfolder) if it doesn't exist. Use that folder for everything in this session.
+2. Save this whole prompt as devpost\IDEA.md.
+3. Write the design brief to devpost\design-brief.md. If the plan-lens skill writes it anywhere else (for example the folder this session started in), move it there. If a design-brief.md already exists in that folder, don't overwrite it: save the new one as design-brief-2.md (then -3, and so on).
 4. When you finish, tell me the full path of the brief.
 
 I'm entering Learn AR with SPECS (Devpost, due Nov 9 22:00 UTC). Plan this Lens with me.

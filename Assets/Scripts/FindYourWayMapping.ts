@@ -84,6 +84,7 @@ export const SHOP_AHEAD = 1.5;
 export const SHOP_WIDTH = 6;
 export const SHOP_REPLACE = 2;
 const SHOP_CATEGORY = "shop";
+const SHOP_INTEREST = { id: SHOP_CATEGORY, label: "Shops" };
 // A map goes through the log in lines this long at most (characters of map text).
 export const LOG_CHUNK = 700;
 const LOG_TAG = "[FYW-MAP]";
@@ -244,6 +245,10 @@ export class MapRecorder {
     return this.edges.some((e) => e.id === id);
   }
 
+  stepCount(): number {
+    return this.history.length;
+  }
+
   canUndo(): boolean {
     return this.history.length > 1;
   }
@@ -350,7 +355,7 @@ export class MapRecorder {
       old.z = at.z;
       old.front = front;
       edge.to = old.id;
-      this.edges.splice(index, 1);
+      if (index >= 0) this.edges.splice(index, 1);
       this.edges.push(edge);
       this.history.push({ node: null, edge: edge.id, level: false, prevLast: this.last, replaced });
       return { id: old.id, label: old.label || old.id, replaced: true };
@@ -412,7 +417,7 @@ export class MapRecorder {
     if (step.replaced) {
       const back = step.replaced;
       this.nodes = this.nodes.map((n) => (n.id === back.node.id ? back.node : n));
-      this.edges.splice(back.index, 0, back.edge);
+      if (back.edge) this.edges.splice(back.index, 0, back.edge);
     }
     if (step.node !== null) {
       this.nodes = this.nodes.filter((n) => n.id !== step.node);
@@ -429,7 +434,10 @@ export class MapRecorder {
     const ys = this.levels.map((l) => l.y).sort((a, b) => a - b);
     const place: MappedMap["place"] = { title: this.title, levels: ys.map((y, i) => ({ y, name: "Floor " + i })) };
     if (this.node("sign")) place.start = "sign";
-    if (this.interests) place.interests = this.interests.map((i) => ({ id: i.id, label: i.label }));
+    const interests = (this.interests || []).map((i) => ({ id: i.id, label: i.label }));
+    // Shops marked on the walk are this map's own interest, or nothing could ever pick them.
+    if (this.nodes.some((n) => n.category === SHOP_CATEGORY) && !interests.some((i) => i.id === SHOP_CATEGORY)) interests.push(SHOP_INTEREST);
+    if (interests.length > 0) place.interests = interests;
     if (this.sayIt) place.sayIt = this.sayIt;
     return {
       version: MAP_FORMAT_VERSION,
@@ -462,6 +470,8 @@ export class MapRecorder {
       if (!n || typeof n.id !== "string" || typeof n.kind !== "string" || ids[n.id] === true) return null;
       for (const k of ["x", "y", "z"]) if (typeof n[k] !== "number" || !isFinite(n[k])) return null;
       if (n.label !== undefined && typeof n.label !== "string") return null;
+      if (n.front !== undefined && (!n.front || typeof n.front !== "object")) return null;
+      if (n.offer !== undefined && !Array.isArray(n.offer)) return null;
       ids[n.id] = true;
     }
     if (ids["sign"] !== true) return null;
@@ -558,6 +568,8 @@ export class WalkTracer {
   private lastOn: MapPoint | null = null;
   private base = 0;
   private yOffset = 0;
+  // Manual floor rises, newest last: the step count after each, and the offset to go back to.
+  private rises: { steps: number; offset: number }[] = [];
   private climb: { from: MapPoint; since: number; ys: { t: number; y: number }[] } | null = null;
   private holdY = 0;
   private holdSince = 0;
@@ -575,6 +587,7 @@ export class WalkTracer {
     this.rec.start(feet);
     this.pending = [];
     this.yOffset = 0;
+    this.rises = [];
     this.climb = null;
     this.floor = null;
     this.lastSample = this.lastOn = this.lift(feet);
@@ -582,6 +595,11 @@ export class WalkTracer {
   }
 
   // The guess waiting for its one-pinch confirmation, or null.
+  // Metres added by "Next floor" so far: the height the tracking itself never saw.
+  floorOffset(): number {
+    return this.yOffset;
+  }
+
   floorPending(): MappedEdgeKind | null {
     return this.floor ? this.floor.guess : null;
   }
@@ -694,8 +712,10 @@ export class WalkTracer {
   nextFloor(raw: MapPoint, _now: number): boolean {
     if (!this.lastSample) return false;
     this.flushTo(this.lift(raw));
+    const offset = this.yOffset;
     this.yOffset += MANUAL_FLOOR_RISE;
     this.startFloor(this.lift(raw), "lift", MANUAL_FLOOR_RISE);
+    this.rises.push({ steps: this.rec.stepCount(), offset });
     return true;
   }
 
@@ -714,6 +734,9 @@ export class WalkTracer {
   undo(): boolean {
     if (!this.rec.canUndo()) return false;
     this.rec.undo();
+    while (this.rises.length > 0 && this.rises[this.rises.length - 1].steps > this.rec.stepCount()) {
+      this.yOffset = (this.rises.pop() as { offset: number }).offset;
+    }
     const at = this.rec.lastPoint() as MapPoint;
     this.pending = [];
     this.climb = null;
@@ -737,7 +760,7 @@ function checksum(text: string): string {
 // tools/map-publish.mjs reads it back with parseMapLog.
 export function mapLogLines(text: string, name: string): string[] {
   const parts: string[] = [];
-  for (let i = 0; i < text.length; i += LOG_CHUNK) parts.push(text.slice(i, i + LOG_CHUNK));
+  for (let i = 0; i < text.length; i += LOG_CHUNK) parts.push(text.slice(i, i + LOG_CHUNK).replace(/\\/g, "\\\\").replace(/\n/g, "\\n"));
   const out = [LOG_TAG + " BEGIN " + name + " " + parts.length + " " + checksum(text)];
   for (let i = 0; i < parts.length; i++) out.push(LOG_TAG + " " + i + " " + parts[i]);
   out.push(LOG_TAG + " END");
@@ -764,7 +787,7 @@ export function parseMapLog(log: string): { name: string; text: string } | null 
   let text = "";
   for (let i = 0; i < found.count; i++) {
     if (found.parts[i] === undefined) throw new Error("map block in the log: part " + i + " of " + found.count + " is missing (cut off?)");
-    text += found.parts[i];
+    text += found.parts[i].replace(/\\(.)/g, (_, c) => (c === "n" ? "\n" : c));
   }
   if (checksum(text) !== found.sum) throw new Error("map block in the log: checksum differs (cut off or changed)");
   return { name: found.name, text };

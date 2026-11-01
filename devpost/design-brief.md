@@ -96,7 +96,7 @@ The learner wants it ready to navigate any indoor or open place: a random buildi
 - Feel unproven: following a floor line at walking and wheeling speed, readability at seated height on real glasses.
 
 ## Existing work to reuse
-- The route engine already exists in `C:\Sasha\Projects\Lens\first-step\first-step` (the Lens Studio project): `src/core/router.ts` (Dijkstra with Walk and Step-Free rules, re-route, arrival, off-route, `loadMapWithTimeout`) and `src/core/data/map.json`.
+- The route engine already exists in `` (the Lens Studio project): `src/core/router.ts` (Dijkstra with Walk and Step-Free rules, re-route, arrival, off-route, `loadMapWithTimeout`) and `src/core/data/map.json`.
 - Route-graph format: nodes + edges JSON (`map.json`). Nodes have `kind` (sign, junction, lift, gate, assistance); edges have `kind` (walk, escalator, stairs, lift, ramp) and `open`.
 - Approved scenarios S1–S9 and E1–E6 are in `devpost/SCENARIOS.md`. S3 (switch mode mid-route) is dropped from the Lens.
 

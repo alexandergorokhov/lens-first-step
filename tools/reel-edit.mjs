@@ -14,6 +14,7 @@ const WIDTH = 1920;
 const HEIGHT = 1080;
 const COLUMN = 800;
 const FONT = "C\\:/Windows/Fonts/arialbd.ttf";
+const HALF_DAY_S = 12 * 3600;
 const MUSIC_LEVEL = 0.8;
 const MUSIC_FADE_S = 3;
 
@@ -33,11 +34,13 @@ export function plan(logText, startClock, duration) {
   for (const line of logText.split("\n")) {
     const m = /^(\d\d:\d\d:\d\d\.\d+) ([\d.]+) (.+)$/.exec(line.trim());
     if (!m) continue;
-    const at = clock(m[1]) - startClock - CAPTURE_LAG_S;
+    let at = clock(m[1]) - startClock - CAPTURE_LAG_S;
+    if (at < -HALF_DAY_S) at += 2 * HALF_DAY_S; // the log crossed midnight
     if (m[3] === "CUT-FROM") {
       if (!cutting && at > from) kept.push([from, at]);
       cutting = true;
     } else if (m[3] === "CUT-TO") {
+      if (!cutting && at > from) kept.push([from, at]);
       cutting = false;
       from = at + CUT_MARGIN_S;
     } else {
@@ -47,7 +50,7 @@ export function plan(logText, startClock, duration) {
       if (last) caps.push(last);
     }
   }
-  if (!cutting) kept.push([from, end]);
+  if (!cutting && end > from) kept.push([from, end]);
   const toOut = (t) => {
     let out = 0;
     for (const [a, b] of kept) {

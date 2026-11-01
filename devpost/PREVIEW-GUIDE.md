@@ -4,7 +4,7 @@ No glasses needed. Everything below runs in Lens Studio's Preview panel on your 
 
 ## 1. Open it
 
-1. Open `C:\Sasha\Projects\Lens\first-step\first-step\first-step.esproj` in Lens Studio.
+1. Open `first-step.esproj` in Lens Studio.
 2. In the **Preview** panel, check the settings: device **SPECS 27**, mode **Interactive**, scene **Plane**. The Specs preview adds the Lens's light on top of the scene, so an empty scene is what lets the solid stand-in building (`previewBackdrop` on FindYourWayStandIn, Lens Studio only, never on Specs) read as a place you walk through. Use **Sunlit Room** for the see-through look real glasses give.
 3. Click the **reset preview** button (circular arrow) so the Lens starts fresh.
 
@@ -89,11 +89,11 @@ Three layers, fastest first.
 In a terminal:
 
 ```
-cd C:\Sasha\Projects\Lens\first-step\first-step
+cd 
 npm test
 ```
 
-It first checks the Lens copies (`npm run sync:check`). Expect `pass 342`, `fail 0` (one test downloads the maps from the public gist; with no internet set `OFFLINE=1` to skip it: `pass 341`, `skipped 1`). `docs.test.ts` keeps this number up to date: it fails if the docs quote a different count. Covers: Walk and Step-Free routes on all four maps, Step-Free never uses stairs or escalators, Walk is always shortest, closures and re-routes, destination changes, broken maps, unknown signs, the turn arrow maths, the map download URL, the local map server, the demo's beats and walking speed, and that the Lens copies of the code and maps match `src/core`.
+It first checks the Lens copies (`npm run sync:check`). Expect `pass 414`, `fail 0` (one test downloads the maps from the public gist; with no internet set `OFFLINE=1` to skip it: `pass 413`, `skipped 1`). `docs.test.ts` keeps this number up to date: it fails if the docs quote a different count. Covers: Walk and Step-Free routes on all four maps, Step-Free never uses stairs or escalators, Walk is always shortest, closures and re-routes, destination changes, broken maps, unknown signs, the turn arrow maths, the map download URL, the local map server, the demo's beats and walking speed, and that the Lens copies of the code and maps match `src/core`.
 
 After editing anything in `src/core`, run `npm run sync` to copy it into `Assets/`. `npm run hooks` (once) makes git run `npm test` before every commit.
 

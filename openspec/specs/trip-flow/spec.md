@@ -9,8 +9,9 @@ stand-in building in the world.
 ## Requirements
 
 ### Requirement: Trip phases
-A trip SHALL move through the phases `mode → scan → loading → nav → arrived`, with `error` when the
-scanned sign is not in the map. Restart trip or a map switch SHALL return to `mode`.
+A trip SHALL move through the phases `scan → loading → choose → mode → nav → arrived` (Free walk and Map
+builder leave from `choose`), with `error` when the scanned sign is not in the map; the sign stays up
+to scan again. Restart trip or a map switch SHALL return to `scan`. End trip SHALL return to `choose`.
 
 #### Scenario: X10 Phases advance in order on the happy path
 - **GIVEN** a fresh start on the airport map
@@ -93,7 +94,7 @@ panel SHALL float ~1.2 m ahead (on real Specs: looking at the sign). Off: the ol
 #### Scenario: H1 Start at the sign
 - **WHEN** a mode is chosen
 - **THEN** the start sign's foot is within 30 cm (horizontally) of the head
-- Verified by: s1-start-at-sign-controls-hidden (LEAF written, not run yet)
+- Verified by: s1-start-at-sign-controls-hidden
 
 ## Known gaps
 

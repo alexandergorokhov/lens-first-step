@@ -19,10 +19,11 @@ export function headingOf(a: XYZ, b: XYZ): number | null {
 }
 
 export function wrap(deg: number): number {
-  let d = deg;
-  while (d > 180) d -= 360;
-  while (d < -180) d += 360;
-  return d;
+  if (!isFinite(deg)) return 0;
+  if (deg >= -180 && deg <= 180) return deg;
+  const d = (deg + 180) % 360;
+  const out = (d <= 0 ? d + 360 : d) - 180;
+  return deg < 0 && out === 180 ? -180 : out;
 }
 
 // Signed yaw from the viewer's heading to the target (+ = to the right).

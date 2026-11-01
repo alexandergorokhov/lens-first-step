@@ -118,6 +118,7 @@ export class FindYourWayDemoRunner extends BaseScriptComponent {
     this.running = false
     this.finished = this.reached.length === this.beats.length
     this.resetLabels()
+    this.main.debugClearPose() // the view is yours again
     print("[FYW-DEMO] finished: " + this.reached.length + "/" + this.beats.length + " beats; arrivals: " + this.arrivals.join(" | "))
   }
 

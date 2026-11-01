@@ -91,6 +91,10 @@ export class FindYourWayMapBuilder {
   }
 
   // Ends the walk and hands back the map, or null with the reason on the panel.
+  // How far up the map's floors are from the feet the camera reports: "Next floor" adds height
+  // the tracking never saw, so a saved map needs the traveller lifted by this much (m).
+  getFloorOffset(): number { return this.tracer ? this.tracer.floorOffset() : 0 }
+
   finish(valid: (text: string) => string | null): {map: MappedMap; text: string} | null {
     if (!this.recorder) return null
     if (this.tracer) this.tracer.finish(this.host.userPos())

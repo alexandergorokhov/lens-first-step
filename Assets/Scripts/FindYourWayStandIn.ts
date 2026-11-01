@@ -6,6 +6,7 @@
 // on Specs the display only adds light, so it stays see-through. Must not: route or draw the line.
 // Positions arrive as building-local cm through the `toLocal` callback.
 
+import {boardModel, PlaceGroup} from "./FindYourWayPeek"
 import {MapData, MapNode, findNode} from "./FindYourWayRouter"
 import {approachDir, PlaceInfo} from "./FindYourWayMapLibrary"
 
@@ -270,28 +271,26 @@ export class FindYourWayStandIn extends BaseScriptComponent {
     board.box(new vec3(at.x, floorY + 33, front - 4), new vec3(12, 66, 8))
     board.box(new vec3(at.x, floorY + 3, front - 4), new vec3(60, 6, 40))
     plate.box(new vec3(at.x, floorY + MAP_Y_CM, front + 1), new vec3(MAP_W_CM + 6, MAP_H_CM + 6, 2))
-    const ns = map.nodes.filter((n) => Math.abs(n.y - start.y) < 0.01)
-    const minX = Math.min.apply(null, ns.map((n) => n.x)), maxX = Math.max.apply(null, ns.map((n) => n.x))
-    const minZ = Math.min.apply(null, ns.map((n) => n.z)), maxZ = Math.max.apply(null, ns.map((n) => n.z))
-    const k = Math.min(MAP_W_CM / Math.max(1, maxX - minX), MAP_H_CM / Math.max(1, maxZ - minZ))
-    const spot = (n: MapNode, z: number): vec3 => new vec3(at.x + (n.x - (minX + maxX) / 2) * k,
-      floorY + MAP_Y_CM + (n.z - (minZ + maxZ) / 2) * k, front + z)
-    for (const e of map.edges) {
-      const f = findNode(map, e.from), t = findNode(map, e.to)
-      if (f && t && Math.abs(f.y - start.y) < 0.01 && Math.abs(t.y - start.y) < 0.01) {
-        const a = spot(f, 2.5), b = spot(t, 2.5)
-        const along = b.sub(a).uniformScale(0.5)
-        if (along.length < 0.1) continue
-        const across = new vec3(-along.y, along.x, 0).normalize().uniformScale(MAP_LINE_CM)
-        paths.boxAxes(a.add(along), along, across, new vec3(0, 0, 0.5))
-      }
+    const model = boardModel(map, startId, MAP_W_CM, MAP_H_CM)
+    if (!model) return
+    const spot = (p: {x: number; y: number}, z: number): vec3 => new vec3(at.x + p.x, floorY + MAP_Y_CM + p.y, front + z)
+    for (const s of model.paths) {
+      const a = spot(s.a, 2.5), b = spot(s.b, 2.5)
+      const along = b.sub(a).uniformScale(0.5)
+      if (along.length < 0.1) continue
+      const across = new vec3(-along.y, along.x, 0).normalize().uniformScale(MAP_LINE_CM)
+      paths.boxAxes(a.add(along), along, across, new vec3(0, 0, 0.5))
     }
-    for (const n of ns) if (n.kind === "place" || n.kind === "destination") shops.box(spot(n, 3), new vec3(2.6, 2.6, 1))
-    you.box(spot(start, 4), new vec3(4, 4, 1))
+    const groups: {[group in PlaceGroup]: Boxes} = {food: new Boxes(), fun: new Boxes(), service: new Boxes(), shop: shops}
+    for (const p of model.places) groups[p.group].box(spot(p.at, 3), new vec3(2.6, 2.6, 1))
+    you.box(spot(model.you, 4), new vec3(4, 4, 1))
     this.addMesh("DirectoryBoard", board, this.wallColor, new vec4(0.14, 0.24, 0.27, 1))
     this.addMesh("DirectoryPlate", plate, this.wallColor, new vec4(0.93, 0.9, 0.82, 1))
     this.addMesh("DirectoryPaths", paths, this.wallColor, new vec4(0.55, 0.62, 0.64, 1))
     this.addMesh("DirectoryShops", shops, this.wallColor, new vec4(0.16, 0.45, 0.38, 1))
+    this.addMesh("DirectoryFood", groups.food, this.wallColor, new vec4(0.8, 0.45, 0.18, 1))
+    this.addMesh("DirectoryFun", groups.fun, this.wallColor, new vec4(0.42, 0.55, 0.2, 1))
+    this.addMesh("DirectoryService", groups.service, this.wallColor, new vec4(0.2, 0.42, 0.62, 1))
     this.addMesh("DirectoryYou", you, this.wallColor, new vec4(0.86, 0.22, 0.2, 1))
     this.directory = true
   }

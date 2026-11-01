@@ -31,7 +31,7 @@ export const COMPANIONS: { [id: string]: Companion } = {
 };
 
 export function companionOf(id: string): Companion {
-  return COMPANIONS[id] || COMPANIONS.dog;
+  return Object.prototype.hasOwnProperty.call(COMPANIONS, id) ? COMPANIONS[id] : COMPANIONS.dog;
 }
 
 // The route line is ~50% transparent in every guide mode (line only, or companion + line), so
@@ -312,7 +312,7 @@ export class PetGuide {
   setOn(on: boolean, route: XYZ[], user: XYZ, routeKey: string): void {
     this.on = on;
     this.pet = on && route.length > 0 ? newPet(route, user, this.lead) : null;
-    if (on) this.layTreats(route, routeKey);
+    if (on && route.length > 0) this.layTreats(route, routeKey);
   }
 
   private layTreats(route: XYZ[], routeKey: string): void {

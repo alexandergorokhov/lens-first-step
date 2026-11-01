@@ -1,9 +1,9 @@
 {
   "version": 1,
   "name": "Stand-in shopping mall",
-  "revision": 2,
+  "revision": 3,
   "units": "m",
-  "axes": "x east, y up, z north; mall 60 x 30 m; ground floor y=0, first floor y=5",
+  "axes": "x east, y up, z north; mall 60 x 30 m; ground floor y=0, first floor y=5, top floor y=10",
   "place": {
     "title": "Shopping mall",
     "standInLabel": "Stand-in mall",
@@ -12,12 +12,38 @@
     "destination": "cinema",
     "sayIt": "Take me to Bolt Hardware",
     "interests": [
-      {"id": "coffee", "label": "Café"},
-      {"id": "food", "label": "Food"},
-      {"id": "clothes", "label": "Clothes"},
-      {"id": "sport", "label": "Sport"},
-      {"id": "hardware", "label": "Hardware"},
-      {"id": "books", "label": "Books"}
+      {
+        "id": "coffee",
+        "label": "Café"
+      },
+      {
+        "id": "food",
+        "label": "Food"
+      },
+      {
+        "id": "clothes",
+        "label": "Clothes"
+      },
+      {
+        "id": "sport",
+        "label": "Sport"
+      },
+      {
+        "id": "hardware",
+        "label": "Hardware"
+      },
+      {
+        "id": "books",
+        "label": "Books"
+      },
+      {
+        "id": "kids",
+        "label": "Kids"
+      },
+      {
+        "id": "beauty",
+        "label": "Beauty"
+      }
     ],
     "levels": [
       {
@@ -29,6 +55,11 @@
         "y": 5,
         "name": "First floor",
         "floor": 1
+      },
+      {
+        "y": 10,
+        "name": "Top floor",
+        "floor": 2
       }
     ],
     "footprint": {
@@ -57,6 +88,13 @@
         "at": "liftAG",
         "sign": "Lift A out of service",
         "card": "Lift A out of service. Re-routing."
+      },
+      {
+        "id": "gardenMeet",
+        "type": "destinationChanged",
+        "to": "skyGarden",
+        "button": "Meet at the Sky Garden instead",
+        "card": "Plan change: meet at the Sky Garden"
       }
     ]
   },
@@ -81,8 +119,8 @@
     {"id": "bakery", "x": 15, "y": 0, "z": 27, "kind": "place", "label": "Bakery", "category": "food", "front": {"x1": 12, "z1": 25, "x2": 18, "z2": 25}, "offer": [{"text": "Sourdough loaf", "price": "$5"}]},
     {"id": "toiletG", "x": 58, "y": 0, "z": 22, "kind": "place", "label": "Toilets (ground)", "category": "toilet"},
     {"id": "accToiletG", "x": 3, "y": 0, "z": 22, "kind": "place", "label": "Accessible toilet (ground)", "category": "accessibleToilet"},
-    {"id": "boltHardware", "x": 30, "y": 0, "z": 27, "kind": "place", "label": "Bolt Hardware", "category": "hardware", "front": {"x1": 27, "z1": 26, "x2": 33, "z2": 26}, "offer": [{"image": "drill", "text": "Cordless drill", "price": "$59"}, {"text": "Paint weekend", "price": "-20%"}]},
-    {"id": "threads", "x": 36, "y": 0, "z": 4, "kind": "place", "label": "Threads", "category": "clothes", "front": {"x1": 33, "z1": 6, "x2": 39, "z2": 6}, "offer": [{"image": "coat", "text": "Winter jackets", "price": "-30%"}, {"text": "Denim days", "price": "2 for $60"}]},
+    {"id": "boltHardware", "x": 30, "y": 0, "z": 27, "kind": "place", "label": "Bolt Hardware", "category": "hardware", "front": {"x1": 27, "z1": 26, "x2": 33, "z2": 26}, "offer": [{"image": "drill", "text": "Cordless drill", "price": "$59"},{"text": "Paint weekend", "price": "-20%"}]},
+    {"id": "threads", "x": 36, "y": 0, "z": 4, "kind": "place", "label": "Threads", "category": "clothes", "front": {"x1": 33, "z1": 6, "x2": 39, "z2": 6}, "offer": [{"image": "coat", "text": "Winter jackets", "price": "-30%"},{"text": "Denim days", "price": "2 for $60"}]},
     {"id": "auroraSport", "x": 38, "y": 0, "z": 27, "kind": "place", "label": "Aurora Sport", "category": "sport", "front": {"x1": 35, "z1": 26, "x2": 41, "z2": 26}, "offer": [{"image": "sport", "text": "Running shoes", "price": "$79"}]},
     {"id": "parking", "x": 58, "y": 0, "z": 28, "kind": "destination", "label": "Car park exit", "type": "spot", "code": "P", "icon": "local_parking", "arrivalCard": "Car park exit. Pay at the machine."},
     {"id": "fW", "x": 8, "y": 5, "z": 10, "kind": "junction", "label": "West mall (first)"},
@@ -103,27 +141,56 @@
     {"id": "coffeeF", "x": 40, "y": 5, "z": 28, "kind": "place", "label": "Upstairs Coffee", "category": "coffee", "front": {"x1": 37, "z1": 26, "x2": 43, "z2": 26}, "offer": [{"image": "coffee", "text": "Cold brew", "price": "$4"}]},
     {"id": "toiletF", "x": 58, "y": 5, "z": 18, "kind": "place", "label": "Toilets (first)", "category": "toilet"},
     {"id": "accToiletF", "x": 3, "y": 5, "z": 26, "kind": "place", "label": "Accessible toilet (first)", "category": "accessibleToilet"},
-    {"id": "anvilTools", "x": 32, "y": 5, "z": 4, "kind": "place", "label": "Anvil Tools", "category": "hardware", "front": {"x1": 29, "z1": 6, "x2": 35, "z2": 6}, "offer": [{"image": "drill", "text": "Tool set", "price": "$120"}, {"text": "Free key cutting", "price": "Free"}, {"text": "Ladder hire", "price": "$15"}]},
-    {"id": "secondSkin", "x": 50, "y": 5, "z": 28, "kind": "place", "label": "Second Skin", "category": "clothes", "sponsored": true, "sponsorTag": "demo", "front": {"x1": 47, "z1": 26, "x2": 53, "z2": 26}, "offer": [{"image": "coat", "text": "Vintage coats", "price": "from $40"}, {"text": "Repairs while you wait", "price": "$10"}]},
+    {"id": "anvilTools", "x": 32, "y": 5, "z": 4, "kind": "place", "label": "Anvil Tools", "category": "hardware", "front": {"x1": 29, "z1": 6, "x2": 35, "z2": 6}, "offer": [{"image": "drill", "text": "Tool set", "price": "$120"},{"text": "Free key cutting", "price": "Free"},{"text": "Ladder hire", "price": "$15"}]},
+    {"id": "secondSkin", "x": 50, "y": 5, "z": 28, "kind": "place", "label": "Second Skin", "category": "clothes", "sponsored": true, "sponsorTag": "demo", "front": {"x1": 47, "z1": 26, "x2": 53, "z2": 26}, "offer": [{"image": "coat", "text": "Vintage coats", "price": "from $40"},{"text": "Repairs while you wait", "price": "$10"}]},
     {"id": "cinema", "x": 30, "y": 5, "z": 29, "kind": "destination", "label": "Cinema", "type": "spot", "code": "CIN", "icon": "movie", "arrivalCard": "Cinema. Doors open in 10 min."},
-    {"id": "foodCourt", "x": 24, "y": 5, "z": 4, "kind": "destination", "label": "Food court", "type": "spot", "code": "FC", "icon": "restaurant", "arrivalCard": "Food court. Find a table."}
+    {"id": "foodCourt", "x": 24, "y": 5, "z": 4, "kind": "destination", "label": "Food court", "type": "spot", "code": "FC", "icon": "restaurant", "arrivalCard": "Food court. Find a table."},
+    {"id": "toyBox", "x": 22, "y": 0, "z": 27, "kind": "place", "label": "Toy Box", "category": "kids", "front": {"x1": 19, "z1": 25, "x2": 25, "z2": 25}, "offer": [{"text": "Building blocks", "price": "$18"}]},
+    {"id": "glowBeauty", "x": 53, "y": 0, "z": 27, "kind": "place", "label": "Glow Beauty", "category": "beauty", "front": {"x1": 50, "z1": 25, "x2": 56, "z2": 25}, "offer": [{"text": "Hand cream", "price": "$9"},{"text": "Free skin check", "price": "Free"}]},
+    {"id": "cashMachine", "x": 47.5, "y": 0, "z": 4, "kind": "place", "label": "Cash machine", "category": "cash", "front": {"x1": 46, "z1": 6, "x2": 49, "z2": 6}},
+    {"id": "taxiRank", "x": 1, "y": 0, "z": 10, "kind": "destination", "label": "Taxi rank", "type": "spot", "code": "TX", "icon": "local_taxi", "arrivalCard": "Taxi rank. Next cab in 2 min."},
+    {"id": "lumaOptics", "x": 18, "y": 5, "z": 4, "kind": "place", "label": "Luma Optics", "category": "shopping", "front": {"x1": 15, "z1": 6, "x2": 21, "z2": 6}, "offer": [{"image": "health", "text": "Sunglasses", "price": "-15%"}]},
+    {"id": "levelUp", "x": 57, "y": 5, "z": 4, "kind": "place", "label": "Level Up Games", "category": "kids", "front": {"x1": 54, "z1": 6, "x2": 60, "z2": 6}, "offer": [{"text": "Retro console", "price": "$49"}]},
+    {"id": "pixelArcade", "x": 8, "y": 5, "z": 28, "kind": "place", "label": "Pixel Arcade", "category": "kids", "front": {"x1": 5, "z1": 26, "x2": 11, "z2": 26}, "offer": [{"text": "Ten tokens", "price": "$5"}]},
+    {"id": "tW", "x": 8, "y": 10, "z": 10, "kind": "junction", "label": "West mall (top)"},
+    {"id": "tM", "x": 30, "y": 10, "z": 10, "kind": "junction", "label": "Centre court (top)"},
+    {"id": "tE", "x": 52, "y": 10, "z": 10, "kind": "junction", "label": "East mall (top)"},
+    {"id": "tBW", "x": 8, "y": 10, "z": 22, "kind": "junction", "label": "West back mall (top)"},
+    {"id": "tBM", "x": 30, "y": 10, "z": 22, "kind": "junction", "label": "Back court (top)"},
+    {"id": "tBE", "x": 52, "y": 10, "z": 22, "kind": "junction", "label": "East back mall (top)"},
+    {"id": "esc2UpFoot", "x": 20, "y": 5, "z": 23, "kind": "junction", "label": "Up escalator 2 (bottom)", "front": {"x1": 17, "z1": 22, "x2": 23, "z2": 22}},
+    {"id": "esc2UpTop", "x": 20, "y": 10, "z": 13, "kind": "junction", "label": "Up escalator 2 (top)", "front": {"x1": 17, "z1": 12, "x2": 23, "z2": 12}},
+    {"id": "esc2DownTop", "x": 40, "y": 10, "z": 13, "kind": "junction", "label": "Down escalator 2 (top)", "front": {"x1": 37, "z1": 12, "x2": 43, "z2": 12}},
+    {"id": "esc2DownFoot", "x": 40, "y": 5, "z": 23, "kind": "junction", "label": "Down escalator 2 (bottom)", "front": {"x1": 37, "z1": 22, "x2": 43, "z2": 22}},
+    {"id": "stairs2Foot", "x": 53, "y": 5, "z": 24, "kind": "junction", "label": "Stairs 2 (first)", "front": {"x1": 50, "z1": 23, "x2": 56, "z2": 23}},
+    {"id": "stairs2Top", "x": 53, "y": 10, "z": 15, "kind": "junction", "label": "Stairs (top)", "front": {"x1": 50, "z1": 14, "x2": 56, "z2": 14}},
+    {"id": "liftAT", "x": 3, "y": 10, "z": 16, "kind": "lift", "label": "Lift A (top)", "front": {"x1": 2, "z1": 13, "x2": 2, "z2": 19}},
+    {"id": "liftBT", "x": 46, "y": 10, "z": 27, "kind": "lift", "label": "Lift B (top)", "front": {"x1": 43, "z1": 26, "x2": 49, "z2": 26}},
+    {"id": "skyGarden", "x": 30, "y": 10, "z": 29, "kind": "destination", "label": "Sky Garden", "type": "spot", "code": "SKY", "icon": "park", "arrivalCard": "Sky Garden. Best view in town."},
+    {"id": "grill", "x": 10, "y": 10, "z": 4, "kind": "place", "label": "Rooftop Grill", "category": "food", "front": {"x1": 7, "z1": 6, "x2": 13, "z2": 6}, "offer": [{"text": "Grill plate", "price": "$16"}]},
+    {"id": "terrace", "x": 20, "y": 10, "z": 28, "kind": "place", "label": "Terrace Coffee", "category": "coffee", "front": {"x1": 17, "z1": 26, "x2": 23, "z2": 26}, "offer": [{"image": "coffee", "text": "Iced latte", "price": "$4.50"}]},
+    {"id": "noodles", "x": 50, "y": 10, "z": 4, "kind": "place", "label": "Noodle House", "category": "food", "front": {"x1": 47, "z1": 6, "x2": 53, "z2": 6}, "offer": [{"text": "Ramen bowl", "price": "$11"}]},
+    {"id": "yoga", "x": 40, "y": 10, "z": 4, "kind": "place", "label": "Calm Yoga", "category": "sport", "front": {"x1": 37, "z1": 6, "x2": 43, "z2": 6}, "offer": [{"text": "Drop-in class", "price": "$12"}]},
+    {"id": "gallery", "x": 50, "y": 10, "z": 28, "kind": "place", "label": "Little Gallery", "category": "books", "front": {"x1": 47, "z1": 26, "x2": 53, "z2": 26}, "offer": [{"text": "Art prints", "price": "from $20"}]},
+    {"id": "toiletT", "x": 58, "y": 10, "z": 18, "kind": "place", "label": "Toilets (top)", "category": "toilet"},
+    {"id": "accToiletT", "x": 3, "y": 10, "z": 26, "kind": "place", "label": "Accessible toilet (top)", "category": "accessibleToilet"}
   ],
   "edges": [
-    {"from": "gW", "to": "gM", "length": 22.0, "kind": "walk", "open": true},
-    {"from": "gM", "to": "gE", "length": 22.0, "kind": "walk", "open": true},
-    {"from": "gBW", "to": "gBM", "length": 22.0, "kind": "walk", "open": true},
-    {"from": "gBM", "to": "gBE", "length": 22.0, "kind": "walk", "open": true},
-    {"from": "gW", "to": "gBW", "length": 12.0, "kind": "walk", "open": true},
-    {"from": "gM", "to": "gBM", "length": 12.0, "kind": "walk", "open": true},
-    {"from": "gE", "to": "gBE", "length": 12.0, "kind": "walk", "open": true},
-    {"from": "fW", "to": "fM", "length": 22.0, "kind": "walk", "open": true},
-    {"from": "fM", "to": "fE", "length": 22.0, "kind": "walk", "open": true},
-    {"from": "fBW", "to": "fBM", "length": 22.0, "kind": "walk", "open": true},
-    {"from": "fBM", "to": "fBE", "length": 22.0, "kind": "walk", "open": true},
-    {"from": "fW", "to": "fBW", "length": 12.0, "kind": "walk", "open": true},
-    {"from": "fM", "to": "fBM", "length": 12.0, "kind": "walk", "open": true},
-    {"from": "fE", "to": "fBE", "length": 12.0, "kind": "walk", "open": true},
-    {"from": "sign", "to": "gM", "length": 9.0, "kind": "walk", "open": true},
+    {"from": "gW", "to": "gM", "length": 22, "kind": "walk", "open": true},
+    {"from": "gM", "to": "gE", "length": 22, "kind": "walk", "open": true},
+    {"from": "gBW", "to": "gBM", "length": 22, "kind": "walk", "open": true},
+    {"from": "gBM", "to": "gBE", "length": 22, "kind": "walk", "open": true},
+    {"from": "gW", "to": "gBW", "length": 12, "kind": "walk", "open": true},
+    {"from": "gM", "to": "gBM", "length": 12, "kind": "walk", "open": true},
+    {"from": "gE", "to": "gBE", "length": 12, "kind": "walk", "open": true},
+    {"from": "fW", "to": "fM", "length": 22, "kind": "walk", "open": true},
+    {"from": "fM", "to": "fE", "length": 22, "kind": "walk", "open": true},
+    {"from": "fBW", "to": "fBM", "length": 22, "kind": "walk", "open": true},
+    {"from": "fBM", "to": "fBE", "length": 22, "kind": "walk", "open": true},
+    {"from": "fW", "to": "fBW", "length": 12, "kind": "walk", "open": true},
+    {"from": "fM", "to": "fBM", "length": 12, "kind": "walk", "open": true},
+    {"from": "fE", "to": "fBE", "length": 12, "kind": "walk", "open": true},
+    {"from": "sign", "to": "gM", "length": 9, "kind": "walk", "open": true},
     {"from": "sign", "to": "info", "length": 5.4, "kind": "walk", "open": true},
     {"from": "info", "to": "gM", "length": 8.7, "kind": "walk", "open": true},
     {"from": "gM", "to": "escUpFoot", "length": 7.3, "kind": "walk", "open": true},
@@ -136,18 +203,18 @@
     {"from": "stairsFoot", "to": "stairsTop", "length": 10.3, "kind": "stairs", "open": true},
     {"from": "stairsTop", "to": "fBE", "length": 5.4, "kind": "walk", "open": true},
     {"from": "gW", "to": "liftAG", "length": 7.9, "kind": "walk", "open": true},
-    {"id": "liftA", "from": "liftAG", "to": "liftAU", "length": 5.0, "kind": "lift", "open": true},
+    {"id": "liftA", "from": "liftAG", "to": "liftAU", "length": 5, "kind": "lift", "open": true},
     {"from": "liftAU", "to": "fW", "length": 7.9, "kind": "walk", "open": true},
     {"from": "gBM", "to": "liftBG", "length": 16.8, "kind": "walk", "open": true},
-    {"id": "liftB", "from": "liftBG", "to": "liftBU", "length": 5.0, "kind": "lift", "open": true},
+    {"id": "liftB", "from": "liftBG", "to": "liftBU", "length": 5, "kind": "lift", "open": true},
     {"from": "liftBU", "to": "fBM", "length": 16.8, "kind": "walk", "open": true},
     {"from": "pharmacy", "to": "gW", "length": 6.4, "kind": "walk", "open": true},
     {"from": "cafe", "to": "gW", "length": 9.5, "kind": "walk", "open": true},
     {"from": "supermarket", "to": "gE", "length": 11.7, "kind": "walk", "open": true},
     {"from": "phoneShop", "to": "gE", "length": 6.1, "kind": "walk", "open": true},
     {"from": "bakery", "to": "gBW", "length": 8.7, "kind": "walk", "open": true},
-    {"from": "toiletG", "to": "gBE", "length": 6.0, "kind": "walk", "open": true},
-    {"from": "accToiletG", "to": "gBW", "length": 5.0, "kind": "walk", "open": true},
+    {"from": "toiletG", "to": "gBE", "length": 6, "kind": "walk", "open": true},
+    {"from": "accToiletG", "to": "gBW", "length": 5, "kind": "walk", "open": true},
     {"from": "parking", "to": "gBE", "length": 8.5, "kind": "walk", "open": true},
     {"from": "bookshop", "to": "fW", "length": 6.4, "kind": "walk", "open": true},
     {"from": "fashion", "to": "fE", "length": 13.5, "kind": "walk", "open": true},
@@ -156,12 +223,47 @@
     {"from": "coffeeF", "to": "fBM", "length": 11.7, "kind": "walk", "open": true},
     {"from": "toiletF", "to": "fBE", "length": 7.3, "kind": "walk", "open": true},
     {"from": "accToiletF", "to": "fBW", "length": 6.5, "kind": "walk", "open": true},
-    {"from": "cinema", "to": "fBM", "length": 7.0, "kind": "walk", "open": true},
+    {"from": "cinema", "to": "fBM", "length": 7, "kind": "walk", "open": true},
     {"from": "foodCourt", "to": "fM", "length": 8.5, "kind": "walk", "open": true},
-    {"from": "boltHardware", "to": "gBM", "length": 5.0, "kind": "walk", "open": true},
+    {"from": "boltHardware", "to": "gBM", "length": 5, "kind": "walk", "open": true},
     {"from": "threads", "to": "gM", "length": 8.5, "kind": "walk", "open": true},
     {"from": "auroraSport", "to": "gBM", "length": 9.5, "kind": "walk", "open": true},
     {"from": "anvilTools", "to": "fM", "length": 6.4, "kind": "walk", "open": true},
-    {"from": "secondSkin", "to": "fBE", "length": 6.4, "kind": "walk", "open": true}
+    {"from": "secondSkin", "to": "fBE", "length": 6.4, "kind": "walk", "open": true},
+    {"from": "toyBox", "to": "gBM", "length": 9.4, "kind": "walk", "open": true},
+    {"from": "glowBeauty", "to": "gBE", "length": 5.1, "kind": "walk", "open": true},
+    {"from": "cashMachine", "to": "gE", "length": 7.5, "kind": "walk", "open": true},
+    {"from": "taxiRank", "to": "gW", "length": 7, "kind": "walk", "open": true},
+    {"from": "lumaOptics", "to": "fW", "length": 11.7, "kind": "walk", "open": true},
+    {"from": "levelUp", "to": "fE", "length": 7.8, "kind": "walk", "open": true},
+    {"from": "pixelArcade", "to": "fBW", "length": 6, "kind": "walk", "open": true},
+    {"from": "tW", "to": "tM", "length": 22, "kind": "walk", "open": true},
+    {"from": "tM", "to": "tE", "length": 22, "kind": "walk", "open": true},
+    {"from": "tBW", "to": "tBM", "length": 22, "kind": "walk", "open": true},
+    {"from": "tBM", "to": "tBE", "length": 22, "kind": "walk", "open": true},
+    {"from": "tW", "to": "tBW", "length": 12, "kind": "walk", "open": true},
+    {"from": "tM", "to": "tBM", "length": 12, "kind": "walk", "open": true},
+    {"from": "tE", "to": "tBE", "length": 12, "kind": "walk", "open": true},
+    {"from": "fBM", "to": "esc2UpFoot", "length": 10, "kind": "walk", "open": true},
+    {"from": "esc2UpFoot", "to": "esc2UpTop", "length": 11.2, "kind": "escalator", "open": true},
+    {"from": "esc2UpTop", "to": "tM", "length": 10.4, "kind": "walk", "open": true},
+    {"from": "tM", "to": "esc2DownTop", "length": 10.4, "kind": "walk", "open": true},
+    {"from": "esc2DownTop", "to": "esc2DownFoot", "length": 11.2, "kind": "escalator", "open": true},
+    {"from": "esc2DownFoot", "to": "fBM", "length": 10, "kind": "walk", "open": true},
+    {"from": "stairsTop", "to": "stairs2Foot", "length": 4, "kind": "walk", "open": true},
+    {"from": "stairs2Foot", "to": "stairs2Top", "length": 10.3, "kind": "stairs", "open": true},
+    {"from": "stairs2Top", "to": "tE", "length": 5.1, "kind": "walk", "open": true},
+    {"id": "liftA2", "from": "liftAU", "to": "liftAT", "length": 5, "kind": "lift", "open": true},
+    {"from": "liftAT", "to": "tW", "length": 7.8, "kind": "walk", "open": true},
+    {"id": "liftB2", "from": "liftBU", "to": "liftBT", "length": 5, "kind": "lift", "open": true},
+    {"from": "liftBT", "to": "tBM", "length": 16.8, "kind": "walk", "open": true},
+    {"from": "skyGarden", "to": "tBM", "length": 7, "kind": "walk", "open": true},
+    {"from": "grill", "to": "tW", "length": 6.3, "kind": "walk", "open": true},
+    {"from": "terrace", "to": "tBW", "length": 13.4, "kind": "walk", "open": true},
+    {"from": "noodles", "to": "tE", "length": 6.3, "kind": "walk", "open": true},
+    {"from": "yoga", "to": "tM", "length": 11.7, "kind": "walk", "open": true},
+    {"from": "gallery", "to": "tBE", "length": 6.3, "kind": "walk", "open": true},
+    {"from": "toiletT", "to": "tBE", "length": 7.2, "kind": "walk", "open": true},
+    {"from": "accToiletT", "to": "tBW", "length": 6.4, "kind": "walk", "open": true}
   ]
 }

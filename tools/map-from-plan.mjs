@@ -13,6 +13,7 @@ const ROOT = fileURLToPath(new URL("../", import.meta.url));
 const LINK_KINDS = ["lift", "stairs", "escalator", "ramp"];
 const POINT_KINDS = ["sign", "junction", "destination", "assistance", "lift", "place"];
 const FLOOR_HEIGHT = 4; // metres per floor when a floor gives no height
+const MIN_FLOOR_GAP = 0.5;
 const PAD = 2;
 const r1 = (n) => Math.round(n * 10) / 10;
 const up1 = (n) => Math.ceil(n * 10 - 1e-9) / 10; // never shorter than the straight line
@@ -41,6 +42,11 @@ export function buildMap(draft, opts = {}) {
       if (floors.has(f.id)) return err(`Floor id "${f.id}" is used twice. Fix: floor ids must be unique.`);
       if (f.height !== undefined && !isNum(f.height)) return err(`Floor "${f.id}" has a bad height. Fix: use a number of metres, or leave it out (floors default to ${FLOOR_HEIGHT} m apart).`);
       floors.set(f.id, { id: f.id, name: typeof f.name === "string" && f.name ? f.name : "Floor " + f.id, y: f.height ?? i * FLOOR_HEIGHT, index: i });
+    });
+    // Storeys count by height, whatever order the draft lists them.
+    [...floors.values()].sort((a, b) => a.y - b.y).forEach((f, i, all) => {
+      f.index = i;
+      if (i > 0 && f.y - all[i - 1].y < MIN_FLOOR_GAP) err(`Floors "${all[i - 1].id}" and "${f.id}" are under ${MIN_FLOOR_GAP} m apart. Fix: floors that close count as one level; merge them or correct the heights.`);
     });
   }
 

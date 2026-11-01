@@ -90,7 +90,7 @@ export function polylineLength(pts: XYZ[]): number {
 export function pointAt(pts: XYZ[], distance: number): Pose {
   if (pts.length === 0) return { x: 0, y: 0, z: 0, heading: 0 };
   let heading = 0;
-  let left = Math.max(0, distance);
+  let left = distance > 0 ? distance : 0;
   for (let i = 1; i < pts.length; i++) {
     const a = pts[i - 1];
     const b = pts[i];

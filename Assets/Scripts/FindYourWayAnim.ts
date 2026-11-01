@@ -146,7 +146,7 @@ export const RIGS: { [id: string]: Rig } = {
 };
 
 export function rigOf(id: string): Rig {
-  return RIGS[id] || RIGS.dog;
+  return Object.prototype.hasOwnProperty.call(RIGS, id) ? RIGS[id] : RIGS.dog;
 }
 
 function jointY(rig: Rig, name: string): number {

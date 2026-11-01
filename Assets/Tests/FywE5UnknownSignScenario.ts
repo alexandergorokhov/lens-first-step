@@ -17,6 +17,7 @@ export class FywE5UnknownSignScenario extends Scenario {
     expect(main.getHudCardTextOrEmpty(), "card").toBe("This sign isn't in the map")
     expect(main.isLineVisible(), "nothing drawn").toBe(false)
     expect(main.getRouteStatus(), "no route").toBe("none")
+    expect(main.isScanSignVisible(), "the sign stays, to scan again").toBe(true)
     await shot(main, "e5-unknown-sign-1")
     log("E5 pass")
   }

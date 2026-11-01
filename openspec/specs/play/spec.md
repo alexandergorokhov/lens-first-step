@@ -14,6 +14,11 @@ Play SHALL be offered (the "Play while you wait" button, a hint under the pill) 
 still (sway ≤ 0.6 m) with the companion on and no card showing. Walking off, a ride, or turning the
 companion off SHALL end it at once.
 
+#### Scenario: G0 Offered when still
+- **WHEN** you stand still for 2 s with the companion on and no card
+- **THEN** Play shows, and walking off ends it
+- Verified by: G1–G9 (Node) | g1-hop-jump-bump-restart
+
 ### Requirement: Hop
 The lane SHALL start ~1.3 m ahead along where the traveller looked, the companion at its near end
 seen from behind. Obstacles appear at the far end (6 m) and come toward it, speeding up slightly per
@@ -30,7 +35,7 @@ play again".
 - **THEN** an obstacle comes, the companion is bumped and shakes, the line reads "Bump! …"
 - **AND** a raised hand after the shake starts a new game at score 0
 - **AND** walking 2 m ends play and hides the lane; the route never changed
-- Verified by: G1–G9 (Node) | g1-hop-jump-bump-restart (LEAF written, not run yet)
+- Verified by: G1–G9 (Node) | g1-hop-jump-bump-restart
 
 ### Requirement: Catch
 "Throw a <collectible>" SHALL throw it ahead (lands on your floor, ≤ 5 m); the companion runs to it,
@@ -42,4 +47,4 @@ The button throws straight ahead; grab-and-throw by hand, and seated play, are i
 #### Scenario: P9 Fetch
 - **WHEN** the treat is thrown while standing still
 - **THEN** the companion fetches it and the catch count goes up; the rover does the same
-- Verified by: P8, P9 (Node) | pc1-throw-and-fetch-any-model (LEAF written, not run yet)
+- Verified by: P8, P9 (Node) | pc1-throw-and-fetch-any-model

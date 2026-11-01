@@ -19,4 +19,4 @@ ends the multi-stop trip.
 - **GIVEN** the mall, Walk or Step-Free
 - **THEN** three stops in the best order; arriving at each shows "Stop i of 3: …"; Next stop goes on
 - **AND** on Step-Free no leg uses stairs or an escalator
-- Verified by: T1–T4 (Node) | t1-mall-multi-stop (LEAF written, not run yet)
+- Verified by: T1–T4 (Node) | t1-mall-multi-stop

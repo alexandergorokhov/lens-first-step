@@ -153,6 +153,8 @@ export const RIDE_REACH_LIFT = 2.5;
 export const RIDE_REACH_OTHER = 3.5;
 // Feet within this many metres of a level count as on it (a seated traveller, a crouch).
 export const LEVEL_SNAP = 1;
+// Feet this close to another level mean you are really on it (LevelTracker), not just sitting.
+export const LEVEL_CLEAR = 0.25;
 // Two heights closer than this are the same level.
 export const SAME_LEVEL = 0.5;
 export const MAP_VERSION = 1;
@@ -166,6 +168,8 @@ export const MAX_MAP_EDGES = 5000;
 export const MAX_MAP_BYTES = 256 * 1024;
 export const MAX_OFFER_ITEMS = 3;
 export const MAX_INTERESTS = 12;
+export const MAX_LEVELS = 64;
+export const MAX_BUILDINGS = 64;
 // How much shorter than the straight line an edge may be (rounding in hand-made maps), metres.
 export const EDGE_SLACK = 0.5;
 
@@ -174,6 +178,12 @@ export const EDGE_SLACK = 0.5;
 // their seconds per floor on top of walking them; ramps are just walked.
 export const WALK_SPEED = 1.3;
 export const STEP_FREE_SPEED = 1.0;
+// A map's own arrival and off-route distances stay within these (m), so no file can make every
+// frame a re-plan or every trip an instant arrival.
+const ARRIVAL_LIMITS = { min: 0.5, max: 50 };
+const OFF_ROUTE_LIMITS = { min: 1, max: 100 };
+// Re-planning tries this many of the nearest nodes for one with a way through.
+const START_CANDIDATES = 8;
 export const RIDE_SECONDS = { lift: 45, escalator: 20, stairs: 15, ramp: 0 };
 // How far ahead (metres) of a floor change its cue shows.
 export const FLOOR_CUE_DISTANCE = 15;
@@ -190,6 +200,10 @@ function positive(v: unknown, fallback: number): number {
   return typeof v === "number" && v > 0 && isFinite(v) ? v : fallback;
 }
 
+function within(v: number, limits: { min: number; max: number }): number {
+  return Math.max(limits.min, Math.min(limits.max, v));
+}
+
 function atLeastZero(v: unknown, fallback: number): number {
   return typeof v === "number" && v >= 0 && isFinite(v) ? v : fallback;
 }
@@ -202,8 +216,8 @@ export function tripSettings(map: MapData): TripSettings {
   const sp = p.speeds || {};
   const rt = p.rideTimes || {};
   return {
-    arrivalRadius: positive(p.arrivalRadius, ARRIVAL_RADIUS),
-    offRouteDistance: positive(p.offRouteDistance, OFF_ROUTE_DISTANCE),
+    arrivalRadius: within(typeof p.arrivalRadius === "number" && p.arrivalRadius > 0 ? p.arrivalRadius : ARRIVAL_RADIUS, ARRIVAL_LIMITS),
+    offRouteDistance: within(typeof p.offRouteDistance === "number" && p.offRouteDistance > 0 ? p.offRouteDistance : OFF_ROUTE_DISTANCE, OFF_ROUTE_LIMITS),
     rideReach: { lift: positive(lift, RIDE_REACH_LIFT), other: positive(other, RIDE_REACH_OTHER) },
     speeds: { walk: positive(sp.walk, WALK_SPEED), stepFree: positive(sp.stepFree, STEP_FREE_SPEED) },
     rideTimes: {
@@ -240,6 +254,28 @@ export function snapToLevel(y: number, levels: number[]): number {
   return best;
 }
 
+// Which floor you are on, frame by frame. Feet alone can't say: sitting down drops them most of a
+// metre, which on floors a metre apart is nearer the floor below. So you stay on your level until
+// your feet are within LEVEL_CLEAR of another one, or further than LEVEL_SNAP from any.
+export class LevelTracker {
+  private levels: number[];
+  private level: number | null;
+
+  constructor(levels: number[], startY: number) {
+    this.levels = levels;
+    this.level = null;
+    this.snap(startY);
+  }
+
+  snap(y: number): number {
+    const near = snapToLevel(y, this.levels);
+    const onOne = this.levels.some((l) => Math.abs(l - y) <= LEVEL_SNAP);
+    if (this.level !== null && Math.abs(y - this.level) <= LEVEL_SNAP && Math.abs(near - y) > LEVEL_CLEAR) return this.level;
+    this.level = onOne ? near : null;
+    return near;
+  }
+}
+
 // Can the traveller ride from `node`? Same level and within `reach` metres horizontally.
 export function withinReach(user: Vec3, node: Vec3, reach: number, levels: number[]): boolean {
   if (Math.abs(snapToLevel(user.y, levels) - node.y) > SAME_LEVEL) return false;
@@ -265,6 +301,12 @@ export function edgeAllowed(edge: MapEdge, profile: Profile): boolean {
 // Validates untrusted JSON text (downloaded or bundled) and returns a map or a readable error.
 // Ids that would clash with object internals in plain lookups (the Lens's own tables).
 const RESERVED_IDS = ["__proto__", "constructor", "prototype"];
+
+// Names plain objects already have: fine as a node id (those tables have no prototype), but not as
+// a key into the Lens's plain tables of icons and closures.
+function objectName(v: unknown): boolean {
+  return typeof v === "string" && v in {};
+}
 
 // A short text the Lens shows: absent, or a string of at most MAX_LABEL_LENGTH characters.
 function badText(v: unknown): boolean {
@@ -292,7 +334,16 @@ function badOffer(o: any): string | null {
   return null;
 }
 
+// Never throws: a value that can't even be turned into text is one more bad map.
 export function parseMap(text: string): ParseResult {
+  try {
+    return checkMap(text);
+  } catch (e) {
+    return { ok: false, error: "map.json has a value that can't be read" };
+  }
+}
+
+function checkMap(text: string): ParseResult {
   if (typeof text === "string" && text.length > MAX_MAP_BYTES) return { ok: false, error: "map.json is too big (over " + MAX_MAP_BYTES + " bytes)" };
   let raw: any;
   try {
@@ -301,6 +352,7 @@ export function parseMap(text: string): ParseResult {
     return { ok: false, error: "map.json is not valid JSON" };
   }
   if (!raw || typeof raw !== "object") return { ok: false, error: "map.json must be an object" };
+  if (badText(raw.name)) return { ok: false, error: "map name must be text up to " + MAX_LABEL_LENGTH + " characters" };
   if (!Array.isArray(raw.nodes) || raw.nodes.length === 0) return { ok: false, error: "map.json has no nodes" };
   if (!Array.isArray(raw.edges)) return { ok: false, error: "map.json has no edges" };
   if (raw.nodes.length > MAX_MAP_NODES) return { ok: false, error: "map.json has more than " + MAX_MAP_NODES + " nodes" };
@@ -318,7 +370,8 @@ export function parseMap(text: string): ParseResult {
       }
     }
     if (typeof n.kind !== "string") return { ok: false, error: "node " + n.id + " has no kind" };
-    for (const key of ["id", "label", "arrivalCard", "sponsorTag", "category", "type", "code", "icon"]) {
+    if (objectName(n.icon)) return { ok: false, error: "node " + n.id + " has a bad icon" };
+    for (const key of ["id", "kind", "label", "arrivalCard", "sponsorTag", "category", "type", "code", "icon"]) {
       if (badText(n[key])) {
         return { ok: false, error: "node " + n.id.slice(0, MAX_LABEL_LENGTH) + " has a bad " + key + " (text up to " + MAX_LABEL_LENGTH + " characters)" };
       }
@@ -329,7 +382,7 @@ export function parseMap(text: string): ParseResult {
     ids[n.id] = true;
   }
   for (const e of raw.edges) {
-    if (!e || ids[e.from] !== true || ids[e.to] !== true) {
+    if (!e || typeof e.from !== "string" || typeof e.to !== "string" || ids[e.from] !== true || ids[e.to] !== true) {
       return { ok: false, error: "edge " + (e && e.from) + " -> " + (e && e.to) + " points at an unknown node" };
     }
     if (EDGE_KINDS.indexOf(e.kind) < 0) return { ok: false, error: "edge " + e.from + " -> " + e.to + " has unknown kind " + e.kind };
@@ -337,7 +390,7 @@ export function parseMap(text: string): ParseResult {
       return { ok: false, error: "edge " + e.from + " -> " + e.to + " needs a positive length" };
     }
     if (typeof e.open !== "boolean") return { ok: false, error: "edge " + e.from + " -> " + e.to + " needs open true/false" };
-    if (e.id !== undefined && (typeof e.id !== "string" || RESERVED_IDS.indexOf(e.id) >= 0)) return { ok: false, error: "edge id " + e.id + " is reserved or not text" };
+    if (e.id !== undefined && (typeof e.id !== "string" || badText(e.id) || RESERVED_IDS.indexOf(e.id) >= 0 || objectName(e.id))) return { ok: false, error: "edge id " + e.id + " is reserved or not text" };
   }
   // Checked after the shape, so a broken file says what is broken first.
   if (raw.version !== MAP_VERSION) return { ok: false, error: "unsupported map version " + raw.version + " (expected " + MAP_VERSION + ")" };
@@ -372,6 +425,17 @@ export function validateMap(map: MapData): string | null {
   if (p === undefined) return null;
   if (!p || typeof p !== "object") return "place must be an object";
   const isNode = (id: unknown) => typeof id === "string" && nodeKind[id] !== undefined;
+  const isArea = (a: any) => !!a && typeof a === "object" && ["minX", "maxX", "minZ", "maxZ"].every((k) => typeof a[k] === "number" && isFinite(a[k]));
+  if (badText(p.standInLabel)) return "place standInLabel must be text up to " + MAX_LABEL_LENGTH + " characters";
+  if (p.footprint !== undefined && !isArea(p.footprint)) return "place footprint needs minX, maxX, minZ and maxZ";
+  if (p.buildings !== undefined) {
+    if (!Array.isArray(p.buildings) || p.buildings.length > MAX_BUILDINGS) return "place buildings must be a list of up to " + MAX_BUILDINGS;
+    for (const b of p.buildings) {
+      if (!isArea(b) || badText((b as any).name)) return "a place building needs an area and a short name";
+      const ys = (b as any).levels;
+      if (!Array.isArray(ys) || ys.length > MAX_LEVELS || !ys.every((y: unknown) => typeof y === "number" && isFinite(y))) return "a place building needs up to " + MAX_LEVELS + " levels";
+    }
+  }
   if (p.start !== undefined && (!isNode(p.start) || nodeKind[p.start as string] !== "sign")) return "place start " + p.start + " is not a sign node";
   if (p.destination !== undefined && !isNode(p.destination)) return "place destination " + p.destination + " is not a node";
   for (const key of ["arrivalRadius", "offRouteDistance"]) {
@@ -386,7 +450,7 @@ export function validateMap(map: MapData): string | null {
       if (!i || typeof i.id !== "string" || i.id === "" || typeof i.label !== "string" || i.label === "" || badText(i.id) || badText(i.label)) return "place interests need an id and a label";
     }
   }
-  if (p.levels !== undefined && !Array.isArray(p.levels)) return "place levels must be a list";
+  if (p.levels !== undefined && (!Array.isArray(p.levels) || p.levels.length > MAX_LEVELS)) return "place levels must be a list of up to " + MAX_LEVELS;
   for (const l of p.levels || []) {
     if (!l || typeof l.y !== "number" || !isFinite(l.y) || typeof l.name !== "string" || badText(l.name)) return "a place level needs a height and a name (text)";
   }
@@ -397,7 +461,7 @@ export function validateMap(map: MapData): string | null {
   if (p.events !== undefined && !Array.isArray(p.events)) return "place events must be a list";
   for (const ev of p.events || []) {
     const name = "event " + (ev && ev.id);
-    if (!ev || typeof ev.id !== "string") return "an event is missing its id";
+    if (!ev || typeof ev.id !== "string" || badText(ev.id)) return "an event is missing its id";
     for (const k of ["button", "sign", "card"]) if (badText((ev as any)[k])) return name + " " + k + " must be short text";
     if (ev.type === "destinationChanged") {
       if (!isNode(ev.to)) return name + " changes to unknown node " + ev.to;
@@ -539,11 +603,20 @@ export function chooseMap(downloaded: string | null, builtIn: string): { map: Ma
 
 export const DOWNLOAD_TIMEOUT_MS = 5000;
 
+// Maps come over https, or from this computer (npm run maps).
+const TRUSTED_URL = /^(https:\/\/|http:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$))/i;
+
+// Text from a download on its way to the log: one short line, and never a map block marker,
+// because map:publish trusts blocks it finds in the log.
+export function logSafe(text: string): string {
+  return String(text).replace(/[\u0000-\u001f\u007f]+/g, " ").split("[FYW-MAP").join("[map").slice(0, 200);
+}
+
 // Where a map is downloaded from: the map server base folder + the map file name, e.g.
 // http://localhost:8787/ + map.json (npm run maps). An empty base means no download.
 export function mapDownloadUrl(baseUrl: string, file: string): string {
   const base = (baseUrl || "").trim();
-  if (!base) return "";
+  if (!base || !file || !TRUSTED_URL.test(base)) return "";
   return (base.endsWith("/") ? base : base + "/") + file;
 }
 
@@ -557,13 +630,17 @@ export function loadMapWithTimeout(
   builtIn: string,
   timeoutMs: number = DOWNLOAD_TIMEOUT_MS,
 ): Promise<{ map: MapData; source: MapSource; notice: string | null; error: string | null }> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     let settled = false;
     const finish = (downloaded: string | null) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      resolve(chooseMap(downloaded, builtIn));
+      try {
+        resolve(chooseMap(downloaded, builtIn));
+      } catch (e) {
+        reject(e);
+      }
     };
     const timer = setTimeout(() => finish(null), timeoutMs);
     let request: Promise<string>;
@@ -573,7 +650,7 @@ export function loadMapWithTimeout(
       finish(null);
       return;
     }
-    request.then(
+    Promise.resolve(request).then(
       (text) => finish(typeof text === "string" ? text : null),
       () => finish(null),
     );
@@ -671,11 +748,13 @@ export function nearestNode(map: MapData, pos: Vec3): MapNode {
   return best;
 }
 
+// How far from the line, with height counting as in levelDistance: walking the floor above the
+// route is being off it, however close the line is straight down.
 export function distanceToLine(points: Vec3[], pos: Vec3): number {
   if (points.length === 0) return Infinity;
-  if (points.length === 1) return dist3(points[0], pos);
+  if (points.length === 1) return levelDistance(points[0], pos);
   const clipped = lineAhead(points, pos, 0);
-  return dist3(clipped[0], pos);
+  return levelDistance(clipped[0], pos);
 }
 
 export type Progress = "onRoute" | "rerouted" | "arrived";
@@ -745,9 +824,11 @@ export function tripAhead(map: MapData, route: RouteResult, user: Vec3): TripAhe
     const a = pts[i];
     const b = pts[i + 1];
     const len2 = (b.x - a.x) ** 2 + (b.y - a.y) ** 2 + (b.z - a.z) ** 2;
-    let t = len2 === 0 ? 0 : ((here.x - a.x) * (b.x - a.x) + (here.y - a.y) * (b.y - a.y) + (here.z - a.z) * (b.z - a.z)) / len2;
+    // On a slope your real height says how far up you are; snapped to the floor it would jump ahead.
+    const p = Math.abs(b.y - a.y) >= SAME_LEVEL ? user : here;
+    let t = len2 === 0 ? 0 : ((p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y) + (p.z - a.z) * (b.z - a.z)) / len2;
     t = Math.max(0, Math.min(1, t));
-    const d = levelDistance(here, lerp(a, b, t));
+    const d = levelDistance(p, lerp(a, b, t));
     if (d < bestD - 1e-9) {
       bestD = d;
       seg = i;
@@ -798,6 +879,7 @@ export class Navigator {
   position: Vec3 | null = null;
   settings: TripSettings;
   levels: number[];
+  private floor: LevelTracker;
 
   constructor(map: MapData, from: string, to: string, profile: Profile) {
     this.map = map;
@@ -806,7 +888,14 @@ export class Navigator {
     this.profile = profile;
     this.settings = tripSettings(map);
     this.levels = levelsOf(map);
+    const start = findNode(map, from);
+    this.floor = new LevelTracker(this.levels, start ? start.y : 0);
     this.route = findRoute(map, from, to, profile);
+  }
+
+  // Where the traveller's feet put them on this map's floors.
+  snapFeet(y: number): number {
+    return this.floor.snap(y);
   }
 
   private arrivedAt(id: string): RouteResult {
@@ -819,20 +908,20 @@ export class Navigator {
     return !!n && withinReach(pos, n, this.settings.arrivalRadius, this.levels);
   }
 
-  // The node to plan from: the nearest one, but never the destination itself (the traveller
-  // is not at it, or they would have arrived), so walking away from it gives a way back.
+  // The node to plan from: the nearest on your floor with a way through, but never the destination itself (the
+  // traveller is not at it, or they would have arrived), so walking away from it gives a way back.
+  // With no way through from any close node, the nearest.
   private startNode(pos: Vec3): string {
-    let best: string | null = null;
-    let bestD = Infinity;
-    for (const n of this.map.nodes) {
-      if (n.id === this.to) continue;
-      const d = levelDistance(n, pos);
-      if (d < bestD) {
-        bestD = d;
-        best = n.id;
-      }
+    const near = this.map.nodes
+      .filter((n) => n.id !== this.to)
+      .map((n) => ({ id: n.id, d: levelDistance(n, pos) }))
+      .sort((a, b) => a.d - b.d);
+    if (near.length === 0) return this.to;
+    const here = near.filter((n) => Math.abs((findNode(this.map, n.id) as MapNode).y - pos.y) < SAME_LEVEL);
+    for (const n of here.slice(0, START_CANDIDATES)) {
+      if (findRoute(this.map, n.id, this.to, this.profile).status === "route") return n.id;
     }
-    return best === null ? this.to : best;
+    return near[0].id;
   }
 
   private recompute(): boolean {
@@ -869,7 +958,7 @@ export class Navigator {
   // way, and reaching the assistance point counts as arrival. "rerouted" is only reported
   // when the plan actually changes, so standing still never re-triggers it.
   updatePosition(feet: Vec3): Progress {
-    const pos = { x: feet.x, y: snapToLevel(feet.y, this.levels), z: feet.z };
+    const pos = { x: feet.x, y: this.snapFeet(feet.y), z: feet.z };
     this.position = pos;
     const off = this.settings.offRouteDistance;
     if (this.isAt(this.to, pos)) {
@@ -892,6 +981,11 @@ export class Navigator {
       }
       const pts = r.assistance.nodes.map((id) => findNode(this.map, id) as MapNode);
       if (distanceToLine(pts, pos) > off) return this.recompute() ? "rerouted" : "onRoute";
+      return "onRoute";
+    }
+    if (r.status === "askStaff") {
+      const at = findNode(this.map, this.from);
+      if (at && distanceToLine([at], pos) > off) return this.recompute() ? "rerouted" : "onRoute";
       return "onRoute";
     }
     if (r.status === "route" && distanceToLine(routePoints(this.map, r), pos) > off) {

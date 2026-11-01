@@ -246,6 +246,7 @@ test("Q4 Never within 10 m of a turn or a floor change, and never while a card i
 
 test("Q4 Never points at a place behind you (more than 2 m back along the route)", () => {
   const map = loadMap();
+  let pointed = 0;
   for (const [from, to] of [["sign", "gateB12"], ["sign", "gateC3"], ["gateB12", "sign"], ["sign", "gateB12"]]) {
     const route = routeOf(map, from, to, "walk");
     const coach = new PointingCoach(map);
@@ -253,6 +254,7 @@ test("Q4 Never points at a place behind you (more than 2 m back along the route)
     walk(route, (feet, now, travelled) => {
       const p = coach.check(route, feet, now, travelled, false);
       if (!p) return;
+      pointed++;
       // Direction of travel here: the end of the route segment the traveller is on.
       let seg = 0;
       for (let i = 0; i < route.length - 1; i++) {
@@ -266,6 +268,7 @@ test("Q4 Never points at a place behind you (more than 2 m back along the route)
       assert.ok(along >= -2, p.id + " is " + (-along).toFixed(1) + " m behind");
     });
   }
+  assert.ok(pointed > 0, "the coach did point");
 });
 
 test("Q4 Pointing never changes the route points, distance or destination", () => {

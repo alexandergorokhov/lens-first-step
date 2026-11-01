@@ -4,7 +4,7 @@ import {Scenario} from "Leaf.lspkg/Scenarios/scenario/Scenario"
 import {DefaultLeafInteractor} from "Leaf.lspkg/Interactors/interactor/DefaultLeafInteractor"
 import {expect} from "Leaf.lspkg/Utils/common/Expect"
 import {sleep} from "Leaf.lspkg/Utils/common/Utils"
-import {log, startTrip, tap, shot, SHOT} from "./FindYourWayLeafSupport"
+import {waitFor, log, startTrip, tap, shot, SHOT} from "./FindYourWayLeafSupport"
 
 // closure-card-and-signs — the Step-Free route uses Lift 1. Pinching Lift 2's own red sign says
 // only that Lift 2 is out of service (the route did not use it, nothing re-routes); both red
@@ -31,8 +31,8 @@ export class FywClosureCardScenario extends Scenario {
     }
     await sleep(3500)
     expect(main.getHudCardTextOrEmpty(), "card still up at ~4 s").toBe("Lift 2 out of service")
-    await sleep(1600)
-    expect(main.getHudCardText(), "card gone after 5 s").toBe(null)
+    // One long frame counts for little on the card's clock, so wall time can run ahead of it.
+    await waitFor(() => main.getHudCardText() === null, 4000, "card gone after 5 s")
     log("closure-card pass")
   }
 }

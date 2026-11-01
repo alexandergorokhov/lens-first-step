@@ -4,6 +4,7 @@
 // cue just above it, the companion's score chip under the map badge and the play line (Hop /
 // catch hints and score). Must not: decide when a gate changes or which map is used.
 
+import {cardClock} from "./FindYourWayPlace"
 import {addIcon, addRow, addText, easeOutCubic, makePanel, obj, Panel} from "./FindYourWayWidgetsUI"
 import {icon} from "./FindYourWayIconsUI"
 
@@ -67,6 +68,7 @@ export class FindYourWayHudUI extends BaseScriptComponent {
   private play: SceneObject
   private playText: Text
   private cardTime = -1
+  private cardFresh = false
   private cardDuration = 5
 
   onAwake() {
@@ -133,6 +135,7 @@ export class FindYourWayHudUI extends BaseScriptComponent {
     if (m) m.mainPass.baseTex = icon(iconName || "info")
     this.cardDuration = seconds !== undefined ? seconds : this.cardSeconds
     this.cardTime = 0
+    this.cardFresh = true
     this.card.root.enabled = true
   }
 
@@ -173,7 +176,9 @@ export class FindYourWayHudUI extends BaseScriptComponent {
 
   private tick(): void {
     if (this.cardTime < 0) return
-    this.cardTime += getDeltaTime()
+    // The first tick's delta is the frame before the card existed.
+    if (!this.cardFresh) this.cardTime = cardClock(this.cardTime, getDeltaTime())
+    this.cardFresh = false
     // Gentle pop-in, then hide after cardDuration.
     const s = 0.85 + 0.15 * easeOutCubic(this.cardTime / 0.35)
     this.card.root.getTransform().setLocalScale(new vec3(s, s, s))

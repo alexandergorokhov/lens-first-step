@@ -8,6 +8,8 @@ Who makes the map? The traveller, by walking it (brief 2, feature 5). Logic: map
 ## Requirements
 
 ### Requirement: Map by walking
+Verified by the M1–M5 scenarios below.
+
 "Learn this place" on the mode panel SHALL start mapping where the traveller stands (that spot is
 the entrance sign). "Point here" adds a point at the feet joined to the previous one (length = the
 distance walked, never less than the straight line; < 0.5 m apart is ignored). Stairs / Lift / Ramp
@@ -24,4 +26,4 @@ named point as the destination.
 #### Scenario: M1–M5 Four points in the room
 - **WHEN** the traveller maps 3 points after the sign, tags one stretch, names the last "Room", saves
 - **THEN** the map key is "mine", the mode panel shows, and after Walk + scan there is a route and a line
-- Verified by: M1–M5 (Node) | m5-learn-this-place-save-route (LEAF written, not run yet); the reload: manual
+- Verified by: M1–M5 (Node) | m5-learn-this-place-save-route; the reload: manual

@@ -21,6 +21,11 @@ and 20 m; not within 10 m of a turn or floor change; not while a card shows; nev
 pointed place's sign brightens with its name, tag and a "Go here?" button; the companion steps
 ~1.2 m off the line toward it for 3 s.
 
+#### Scenario: Q0 Icons and pointing
+- **WHEN** a picked place comes near the route
+- **THEN** its icon shows, the companion points, and Places: off stops both
+- Verified by: Q1–Q6 (Node) | q4-points-at-interests-and-sponsored
+
 ### Requirement: Go here?
 "Go here?" SHALL make the place the destination: the same re-route as a gate change, Step-Free rules
 kept; a multi-stop trip ends.
@@ -30,4 +35,4 @@ kept; a multi-stop trip ends.
 - **THEN** every place pointed at is coffee or sponsored; sponsored ones show "Sponsored"
 - **AND** the route, its length and the destination never change; muting shows no icons
 - **AND** "Go here?" on a pointed place makes it the destination
-- Verified by: Q1–Q6 (Node) | q4-points-at-interests-and-sponsored (LEAF written, not run yet)
+- Verified by: Q1–Q6 (Node) | q4-points-at-interests-and-sponsored

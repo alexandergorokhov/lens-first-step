@@ -18,7 +18,7 @@ const KIND_COLOR = { sign: "#d9480f", destination: "#c2255c", lift: "#5f3dc4", a
 const EDGE_DASH = { walk: "", ramp: "6 3", stairs: "2 3", escalator: "8 3 2 3", lift: "1 4" };
 const WALK = "#1c7ed6";
 const STEP_FREE = "#2f9e44";
-const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+export const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
 function levelOf(levels, y) {
   let best = 0;

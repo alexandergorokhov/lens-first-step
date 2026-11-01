@@ -21,7 +21,7 @@ hide at arrival.
 - **WHEN** the sign is scanned
 - **THEN** the pill reads "<Ground level> · Gate B12 · <route length> m · 1 floor up · <n> min"
 - **AND** after walking to the hall the metres are lower; at arrival the pill is hidden
-- Verified by: S10 (Node) | fl1-pill-shows-and-counts-down (LEAF written, not run yet)
+- Verified by: S10 (Node) | fl1-pill-shows-and-counts-down
 
 ### Requirement: Floor-change cue and destination note
 Within 15 m of a lift, escalator, stairs or ramp on the route the Lens SHALL show "In <n> m: <kind>
@@ -32,7 +32,7 @@ up|down" (or "is on this floor").
 #### Scenario: S13 Cue before the escalator
 - **GIVEN** the traveller 8 m before the escalator foot
 - **THEN** the cue reads "In 8 m: escalator up to Departures"
-- Verified by: S13 (Node) | fl2-cue-post-and-badge-after-escalator (LEAF written, not run yet)
+- Verified by: S13 (Node) | fl2-cue-post-and-badge-after-escalator
 
 ### Requirement: The line stays on your floor
 The drawn line SHALL end at the foot of the next floor change, where an up/down post stands; once
@@ -42,4 +42,4 @@ the traveller is on an escalator, stairs or ramp it SHALL be drawn up it; in a l
 - **GIVEN** the traveller approaching the escalator
 - **THEN** every drawn line point is on the ground floor and the up post shows
 - **AND** after riding, the pill's badge names the upper floor
-- Verified by: S14 (Node) | fl2-cue-post-and-badge-after-escalator (LEAF written, not run yet)
+- Verified by: S14 (Node) | fl2-cue-post-and-badge-after-escalator

@@ -220,16 +220,19 @@ test("S13 Cue texts say up or down and name the floor: 'In 15 m: lift down to Gr
 
 test("S13 Step-Free cues are only ever a lift or a ramp", () => {
   const map = loadMap();
+  let cues = 0;
   for (const to of ["gateB12", "gateC3", "sign"]) {
     for (const from of ["sign", "concourse", "gateC3", "gateB12"]) {
       if (from === to) continue;
       const r = findRoute(map, from, to, "stepFree");
       if (r.status !== "route") continue;
       for (const c of tripAhead(map, r, at(map, from))!.changes) {
+        cues++;
         assert.ok(c.edge.kind === "lift" || c.edge.kind === "ramp", from + " -> " + to + " cue " + c.edge.kind);
       }
     }
   }
+  assert.ok(cues > 0, "some cue was checked");
 });
 
 // ---- c: the line stays on your floor ------------------------------------------------------
@@ -299,6 +302,11 @@ test("S15 The up escalator is never ridden down and the down one never up", () =
     const up = at(map, e.to).y > at(map, e.from).y;
     const r = route(map, up ? "sign" : "concourse", up ? "concourse" : "sign", "walk");
     assert.ok(r.edges.includes(e), (up ? "up" : "down") + " escalator " + e.from + " used going " + (up ? "up" : "down"));
+    // And against its direction no route rides it: the way back is another connection.
+    const back = findRoute(map, e.to, e.from, "walk");
+    if (back.status === "route") {
+      back.edges.forEach((x, i) => assert.ok(!(x === e && back.nodes[i] === e.to), "rode " + e.from + " backwards"));
+    }
   }
 });
 

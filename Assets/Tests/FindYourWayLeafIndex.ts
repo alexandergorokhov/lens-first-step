@@ -13,6 +13,7 @@ import {FywE2BrokenMapScenario} from "./FywE2BrokenMapScenario"
 import {FywE3NoStepFreeScenario} from "./FywE3NoStepFreeScenario"
 import {FywE4AtDestinationScenario} from "./FywE4AtDestinationScenario"
 import {FywE5UnknownSignScenario} from "./FywE5UnknownSignScenario"
+import {FywE1EndTripScenario} from "./FywE1EndTripScenario"
 import {FywMapSwitchScenario} from "./FywMapSwitchScenario"
 import {FywRestartScenario} from "./FywRestartScenario"
 import {FywDemoAutoplayScenario} from "./FywDemoAutoplayScenario"
@@ -71,6 +72,7 @@ export class FindYourWayLeafIndex extends BaseScriptComponent {
     {id: "e3-no-step-free-ask-staff", typename: FywE3NoStepFreeScenario.getTypeName()},
     {id: "e4-already-at-destination", typename: FywE4AtDestinationScenario.getTypeName()},
     {id: "e5-unknown-sign", typename: FywE5UnknownSignScenario.getTypeName()},
+    {id: "e1b-end-trip", typename: FywE1EndTripScenario.getTypeName()},
     {id: "map-switch-cycle", typename: FywMapSwitchScenario.getTypeName()},
     {id: "restart-resets-trip", typename: FywRestartScenario.getTypeName()},
     {id: "demo-autoplay-completes", typename: FywDemoAutoplayScenario.getTypeName()},

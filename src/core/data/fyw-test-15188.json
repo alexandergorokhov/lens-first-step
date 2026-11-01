@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "name": "My place",
+  "units": "m",
+  "nodes": [
+    {
+      "id": "sign",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "kind": "sign",
+      "label": "Entrance sign"
+    }
+  ],
+  "edges": [],
+  "place": {
+    "title": "My place",
+    "levels": [
+      {
+        "y": 0,
+        "name": "Floor 0"
+      }
+    ],
+    "start": "sign"
+  }
+}

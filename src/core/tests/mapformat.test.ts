@@ -56,9 +56,9 @@ test("MF3 place.interests is the checkbox list; place.sayIt is short text", () =
   bad(small({}, { sayIt: 4 }), "sayIt");
 });
 
-test("MF4 the mall offers the 6 categories of the brief, from the map", () => {
+test("MF4 the mall offers its 8 categories, from the map", () => {
   const p = mall().place!;
-  assert.deepEqual(p.interests!.map((i) => i.label), ["Café", "Food", "Clothes", "Sport", "Hardware", "Books"]);
+  assert.deepEqual(p.interests!.map((i) => i.label), ["Café", "Food", "Clothes", "Sport", "Hardware", "Books", "Kids", "Beauty"]);
   assert.equal(p.sayIt, "Take me to Bolt Hardware");
 });
 

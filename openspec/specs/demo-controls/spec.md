@@ -60,7 +60,7 @@ The demo controls SHALL be hidden unless `showDemoControls` (Inspector) is on; t
 them on with a test hook. The ride buttons in the building stay (the preview can't change floors).
 
 #### Scenario: H2 Hidden
-- Verified by: s1-start-at-sign-controls-hidden (LEAF written, not run yet)
+- Verified by: s1-start-at-sign-controls-hidden
 
 ### Requirement: Free walk demo
 Demo controls SHALL have a **Free walk demo** button that plays Free walk in the mall with the companion

@@ -15,15 +15,18 @@
 
 import {
   findNode,
+  chooseMap,
   levelsOf,
   lineAhead,
   loadMapWithTimeout,
   locateSign,
-  mapDownloadUrl,
+  logSafe,
+  MAP_LOAD_FAILED,
   MapData,
   MapEdge,
   MapNode,
   Navigator,
+  nearestNode,
   noticeFor,
   parseMap,
   Profile,
@@ -59,7 +62,7 @@ import {FindYourWayVoice} from "./FindYourWayVoice"
 import {FindYourWayPickMapUI} from "./FindYourWayPickMapUI"
 import {MultiStopTrip, orderStops} from "./FindYourWayTrip"
 import {mapLogLines, tripAfterSaving} from "./FindYourWayMapping"
-import {peekModel} from "./FindYourWayPeek"
+import {peekPlace} from "./FindYourWayPeek"
 import {destinationsOf, FreeWalk, interestList, matchDestination, sayItPhrase} from "./FindYourWayFreeWalk"
 import {FindYourWayHomePanelUI} from "./FindYourWayHomePanelUI"
 import {FindYourWayPrefsUI} from "./FindYourWayPrefsUI"
@@ -127,7 +130,6 @@ const CAUGHT_LINE_S = 2.5
 const MAPPED_KEY = "fyw.mappedMap"
 const MAPPED_KEY_NAME = "mine"
 // The published copy of the saved map on the map server (npm run map:publish).
-const MAPPED_FILE = "mine.json"
 // Peek ahead: the model floats this far ahead and below the eyes (cm); pull a pinch this far
 // toward you (cm) to show it.
 const PEEK_AHEAD_CM = 60
@@ -324,6 +326,11 @@ export class FindYourWayMain extends BaseScriptComponent {
   // Eye height measured by a downward hit test against the real floor; null = use eyeHeightCm.
   private measuredEyeCm: number | null = null
   private hitSession: HitTestSession | null = null
+  private hitRunning = false
+  // The mini mall, on the panel's See map button (no pinch and pull needed).
+  private mapShown = false
+  // The world as it stood before Map builder, for Cancel.
+  private beforeMapping: {pos: vec3; rot: quat; offset: vec3} | null = null
   private floorProbeFrames = 0
   // Test overrides (cleared on restart): text returned by the "download", the scanned sign id,
   // and the destination.
@@ -375,7 +382,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   private caughtUntil = 0
   private stops: MultiStopTrip | null = null
   private debugRaise = false
-  private ptsCache: {key: string; frame: number; map: MapData; pts: Vec3[]} | null = null
+  private ptsCache: {key: string; map: MapData; pts: Vec3[]} | null = null
   private mappingPanelPlaced = false
   // "Gate C3 is on C pier, 1 floor up": shown in the cue slot for DEST_NOTE_S after the scan or a
   // destination change (null = work it out on the next frame).
@@ -420,12 +427,20 @@ export class FindYourWayMain extends BaseScriptComponent {
     try {
       const wq = require("LensStudio:WorldQueryModule") as WorldQueryModule
       this.hitSession = wq.createHitTestSession()
-      this.hitSession.start()
+      this.setFloorProbe(true)
     } catch (e) {
       print("[FYW] world query unavailable, using eyeHeightCm")
     }
     this.createEvent("OnStartEvent").bind(() => this.onStart())
     this.createEvent("UpdateEvent").bind(() => this.tick())
+  }
+
+  // Depth runs for as long as a session does, so only while the floor is being found.
+  private setFloorProbe(on: boolean): void {
+    if (!this.hitSession || this.hitRunning === on) return
+    this.hitRunning = on
+    if (on) this.hitSession.start()
+    else this.hitSession.stop()
   }
 
   private onStart(): void {
@@ -471,7 +486,8 @@ export class FindYourWayMain extends BaseScriptComponent {
       onJump: () => this.jump(),
       onThrow: () => this.throwTreat(),
       onNextStop: () => this.nextStop(),
-      onEndWalk: () => this.endFreeWalk(),
+      onEndWalk: () => this.endTrip(),
+      onMap: () => this.setMapShown(!this.mapShown),
     })
     this.setCompanionModel(this.companionModel)
     const mp = global.scene.createSceneObject("MappingPanel")
@@ -592,6 +608,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     const attempt = ++this.voiceTry
     const ev = this.createEvent("DelayedCallbackEvent")
     ev.bind(() => {
+      this.removeEvent(ev)
       if (attempt !== this.voiceTry || !this.voice.listening) return
       this.voice.stop()
       this.modePanel.setNote("didn't catch that: try Where to?")
@@ -607,7 +624,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     }
     this.voice.stop()
     const id = matchDestination(this.map, text)
-    print("[FYW] heard: " + text + " -> " + id)
+    print("[FYW] heard: " + text.length + " characters -> " + id) // never what was said
     if (id) this.pickDestination(id)
     else this.modePanel.setNote("didn't catch that: try Where to?")
   }
@@ -718,14 +735,48 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (this.view) this.view.setPointing(false)
   }
 
-  // Back to the three modes, on the same map.
+  // Back to the three modes, on the same map, from where you stand.
   private endFreeWalk(): void {
     if (this.phase !== "free") return
     this.setCompanionOn(false)
+    this.setMapShown(false)
     this.clearFreeWalk()
     this.hud.setPill(null)
     this.turnArrow.hide()
+    this.tripStart = nearestNode(this.map, this.userPos()).id
     this.enterChoose()
+  }
+
+  // The panel's End button. Without demo controls it is the only way out of a trip.
+  endTrip(): void {
+    if (this.phase === "free") {
+      this.endFreeWalk()
+      return
+    }
+    if (this.phase !== "nav" && this.phase !== "arrived") return
+    this.setCompanionOn(false)
+    this.setMapShown(false)
+    this.tripStart = nearestNode(this.map, this.userPos()).id
+    this.tripDestination = null
+    this.destinationOverride = null
+    this.endStops()
+    this.tourIds = null
+    this.nav = null
+    this.profile = null
+    this.coach = null
+    this.lastLineKey = ""
+    this.lineMapPoints = []
+    this.resetGuide()
+    this.arrivalCard.hide()
+    this.routeLine.clear()
+    this.turnArrow.hide()
+    this.hud.hideCard()
+    this.hud.setPill(null)
+    this.hud.setCue(null)
+    this.hud.setScore(null)
+    this.hud.setPlayLine(null)
+    this.enterChoose()
+    print("[FYW] trip ended")
   }
 
   private openDot(): void {
@@ -782,6 +833,8 @@ export class FindYourWayMain extends BaseScriptComponent {
   startMapping(): void {
     if (this.phase !== "choose") return
     if (this.homePanel) this.homePanel.show(false)
+    const world = this.world.getTransform()
+    this.beforeMapping = {pos: world.getWorldPosition(), rot: world.getWorldRotation(), offset: this.rideOffset}
     this.anchorFrames = 0
     this.anchorWorld()
     this.phase = "mapping"
@@ -824,10 +877,12 @@ export class FindYourWayMain extends BaseScriptComponent {
     // Keep the world where the walk was mapped: the new map's origin is its sign (where mapping
     // started), so shift the building by that point and stand the traveller where they are now.
     const signAt = this.local(m.nodes[0])
+    const lifted = this.builder.getFloorOffset() // "Next floor" height the tracking never saw
     const worldPos = this.world.getTransform().getWorldPosition()
     const worldRot = this.world.getTransform().getWorldRotation()
-    const offset = this.rideOffset.sub(signAt)
-    const here = this.userPos()
+    const offset = this.rideOffset.sub(signAt).add(new vec3(0, lifted * 100, 0))
+    const feet = this.userPos()
+    const here = {x: feet.x, y: feet.y + lifted, z: feet.z}
     this.endMapping(false)
     this.mapIndex = MAP_SOURCES.length
     this.restart()
@@ -849,6 +904,13 @@ export class FindYourWayMain extends BaseScriptComponent {
   private endMapping(backToChoose: boolean): void {
     this.builder.end()
     if (this.phase === "mapping" && backToChoose) {
+      // Cancel puts the place back exactly where it stood: mapping re-anchored it to your feet.
+      if (this.beforeMapping) {
+        this.world.getTransform().setWorldPosition(this.beforeMapping.pos)
+        this.world.getTransform().setWorldRotation(this.beforeMapping.rot)
+        this.rideOffset = this.beforeMapping.offset
+        this.placeBuilding()
+      }
       this.buildPlace()
       this.buildingUI.setScanSignVisible(false)
       this.enterChoose()
@@ -857,12 +919,17 @@ export class FindYourWayMain extends BaseScriptComponent {
 
   // ── Peek ahead ───────────────────────────────────────────────────────────
 
-  // Pinch and pull toward you: the model shows; let go: it hides. Never changes the route.
+  private setMapShown(on: boolean): void {
+    this.mapShown = on
+    if (this.appPanel) this.appPanel.setMapShown(on)
+  }
+
+  // Pinch and pull toward you, or See map: the mini mall shows. Never changes the route.
   private updatePeek(): void {
     if (!this.peekView) return
     if (this.builder.isSeeingMap()) return
-    const navOn = (this.phase === "nav" || this.phase === "arrived") && !!this.nav
-    let pulled = false
+    const navOn = ((this.phase === "nav" || this.phase === "arrived") && !!this.nav) || this.phase === "free"
+    let pulled = this.mapShown
     try {
       const head = this.cameraPos()
       for (const side of ["left", "right"]) {
@@ -883,9 +950,9 @@ export class FindYourWayMain extends BaseScriptComponent {
     const want = navOn && (pulled || this.peekForced)
     const now = getTime()
     if (want && (!this.peekOn || now - this.peekBuiltAt > 0.5)) {
-      this.peekView.show(peekModel(this.routeMapPoints(), this.userPos()))
+      this.peekView.showPlace(peekPlace(this.nav ? this.nav.map : this.map, this.routeMapPoints(), this.userPos()))
       this.peekBuiltAt = now
-    } else if (!want && this.peekOn) this.peekView.show(null)
+    } else if (!want && this.peekOn) this.peekView.showPlace(null)
     this.peekOn = want
     if (want) {
       const t = this.camera.getTransform()
@@ -928,6 +995,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   restart(): void {
     this.endMapping(false)
     this.clearFreeWalk()
+    this.setMapShown(false)
     this.freeCompanion = true
     this.loadBuiltIn()
     this.phase = "scan"
@@ -956,6 +1024,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.resetGuide()
     this.anchorFrames = ANCHOR_SETTLE_FRAMES
     this.floorProbeFrames = 120
+    this.setFloorProbe(true)
     this.anchorWorld(true)
     this.buildPlace()
     this.hud.hideCard()
@@ -991,7 +1060,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   }
 
   private scanSign(): void {
-    if (this.phase !== "scan") return
+    if (this.phase !== "scan" && this.phase !== "error") return
     // The building is laid out from where the user stands now: the scan ends the settling.
     this.anchorFrames = 0
     this.anchorWorld()
@@ -999,7 +1068,8 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.buildingUI.setScanSignVisible(false)
     this.hud.setBadge("loading map…")
     const src = this.source()
-    const url = !this.tryOnlineMap ? "" : src ? mapUrl(this.mapBaseUrl, src) : mapDownloadUrl(this.mapBaseUrl, MAPPED_FILE)
+    // A place you walked yourself stays yours: no download ever replaces it.
+    const url = !this.tryOnlineMap || !src ? "" : mapUrl(this.mapBaseUrl, src)
     print("[FYW] map download: " + (url || "(none, built-in map)"))
     const override = this.downloadOverride
     const delay = this.downloadDelayMs
@@ -1033,10 +1103,33 @@ export class FindYourWayMain extends BaseScriptComponent {
     }
     const generation = this.tripGeneration
     loadMapWithTimeout(fetchText, url, this.builtInText).then((res) => {
-      if (res.error) print("[FYW] downloaded map rejected: " + res.error)
+      if (res.error) print("[FYW] downloaded map rejected: " + logSafe(res.error))
       if (this.phase !== "loading" || generation !== this.tripGeneration) return
       this.mapLoaded(res.map, res.source, res.notice)
+    }).catch((e) => {
+      if (this.phase !== "loading" || generation !== this.tripGeneration) return
+      this.useBuiltInMap(e)
     })
+  }
+
+  // The map couldn't be used after all: the one in the Lens, or if even that fails, try again.
+  private useBuiltInMap(why: unknown): void {
+    print("[FYW] map failed: " + logSafe(String(why)))
+    try {
+      const res = chooseMap(null, this.builtInText)
+      this.mapLoaded(res.map, res.source, MAP_LOAD_FAILED)
+    } catch (e) {
+      this.scanFailed(MAP_LOAD_FAILED)
+    }
+  }
+
+  // The sign stays, so you can scan again: without demo controls it is the only way on.
+  private scanFailed(message: string): void {
+    this.phase = "error"
+    this.routeLine.clear()
+    this.hud.showCard(message, "info")
+    this.buildingUI.setScanSignVisible(true)
+    print("[FYW] scan failed: " + logSafe(message))
   }
 
   // The map is in: the sign must be on it, then the three modes.
@@ -1045,20 +1138,14 @@ export class FindYourWayMain extends BaseScriptComponent {
     for (const id in this.closed) m = setEdgeOpen(m, id, false)
     const changed = JSON.stringify(m) !== JSON.stringify(this.map)
     this.setMap(m)
-    if (changed) {
-      this.buildPlace()
-      this.showClosures()
-    }
+    if (changed) this.buildPlace()
     this.mapSource = source
     this.hud.setBadge(source === "online" ? "online map" : "offline map")
     if (notice) this.hud.showCard(notice, "info")
     // A just-mapped place starts where you stand, which need not be a sign.
     const located = this.tripStart ? null : locateSign(this.map, this.startOverride || this.place.start)
     if (located && !located.ok) {
-      this.phase = "error"
-      this.routeLine.clear()
-      this.hud.showCard((located as {ok: false; message: string}).message, "info")
-      print("[FYW] scan failed: " + (located as {ok: false; message: string}).message)
+      this.scanFailed((located as {ok: false; message: string}).message)
       return
     }
     this.enterChoose()
@@ -1070,7 +1157,8 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.demoControls.setStatus((this.profile === "walk" ? "Walk" : "Step-Free") + " · " +
       (this.mapSource === "online" ? "online map" : "offline map"))
     this.stops = this.planStops(startId)
-    const dest = this.destinationOverride || this.tripDestination || (this.stops ? this.stops.current() as string : this.place.destination)
+    const tourStop = this.tourIds && this.stops ? this.stops.current() as string : null
+    const dest = this.destinationOverride || tourStop || this.tripDestination || (this.stops ? this.stops.current() as string : this.place.destination)
     this.nav = new Navigator(this.map, startId, dest, this.profile as Profile)
     this.destNote = null
     this.coach = new PointingCoach(this.map)
@@ -1093,7 +1181,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.tripDestination = ev.to
     if (this.nav) {
       if (this.nav.to !== ev.to) this.nav.setDestination(ev.to)
-      this.afterRouteChange()
+      this.afterRouteChange(true)
     }
     this.announce(ev.card || ev.button || "Destination changed", this.iconOfNode(ev.to))
     this.reportRoute("destination changed")
@@ -1112,6 +1200,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     } else {
       this.setMap(setEdgeOpen(this.map, edgeId, false))
     }
+    if (this.free) this.free.setMap(this.map)
     this.showClosures()
     const text = ev ? closureNotice(ev, usedIt) : usedIt ? "Connection closed. Re-routing." : "Connection closed"
     this.announce(text, "block")
@@ -1153,7 +1242,8 @@ export class FindYourWayMain extends BaseScriptComponent {
       return
     }
     const user = this.userPos()
-    if (!withinReach(user, here, r.reach, levelsOf(map))) {
+    const feet = this.nav ? {x: user.x, y: this.nav.snapFeet(user.y), z: user.z} : user
+    if (!withinReach(feet, here, r.reach, levelsOf(map))) {
       this.hud.showCard("Walk to " + nodeLabel(map, r.at) + " first", "info", 3)
       const dx = user.x - here.x, dz = user.z - here.z
       print("[FYW] ride " + id + " refused: " + Math.sqrt(dx * dx + dz * dz).toFixed(1) + " m away, feet y " + user.y.toFixed(2))
@@ -1168,11 +1258,12 @@ export class FindYourWayMain extends BaseScriptComponent {
     print("[FYW] ride " + id + " -> " + r.to)
   }
 
-  private afterRouteChange(): void {
+  // newTarget: the destination changed, so an arrival counts again even if you are already there.
+  private afterRouteChange(newTarget: boolean = false): void {
     this.destNote = null
     this.pendingSwing = true
     this.lastLineKey = ""
-    if (this.phase === "arrived" && this.nav && this.nav.route.status !== "arrived") {
+    if (this.phase === "arrived" && this.nav && (newTarget || this.nav.route.status !== "arrived")) {
       this.phase = "nav"
       this.arrivalCard.hide()
     }
@@ -1246,7 +1337,10 @@ export class FindYourWayMain extends BaseScriptComponent {
   // Casts a ray straight down just in front of the user to find the floor (on Specs; the
   // Interactive Preview room returns no hit, so eyeHeightCm is used there).
   private probeFloor(): void {
-    if (!this.hitSession || this.floorProbeFrames <= 0 || this.phase !== "scan") return
+    if (!this.hitSession || this.floorProbeFrames <= 0 || this.phase !== "scan") {
+      if (this.floorProbeFrames <= 0 || this.phase !== "scan") this.setFloorProbe(false)
+      return
+    }
     this.floorProbeFrames--
     if (this.floorProbeFrames % 10 !== 0) return
     const cam = this.camera.getTransform().getWorldPosition()
@@ -1384,6 +1478,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.routeLine.clear()
     this.turnArrow.hide()
     this.buildPlaceIcons()
+    this.showClosures()
   }
 
   // ── Per-frame ────────────────────────────────────────────────────────────
@@ -1575,7 +1670,8 @@ export class FindYourWayMain extends BaseScriptComponent {
   private routeKey(): string {
     if (!this.nav) return ""
     const r = this.nav.route
-    return r.status === "route" ? r.nodes.join(">") : r.status
+    if (r.status === "route") return r.nodes.join(">")
+    return r.status === "askStaff" && r.assistance ? "askStaff:" + r.assistance.nodes.join(">") : r.status
   }
 
   private updateCompanion(pos: Vec3, arrived: boolean): void {
@@ -1663,6 +1759,7 @@ export class FindYourWayMain extends BaseScriptComponent {
 
   // The floor you're on, and your head above it (standing or seated).
   private floorUnder(pos: Vec3): number {
+    if (this.nav) return this.nav.snapFeet(pos.y)
     let floor = pos.y
     let gap = Infinity
     for (const l of mapLevels(this.map)) {
@@ -1806,7 +1903,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (!this.nav || !this.stops || this.stops.index >= this.stops.total - 1 || !this.stops.next()) return
     const to = this.stops.current() as string
     this.nav.setDestination(to)
-    this.afterRouteChange()
+    this.afterRouteChange(true)
     if (this.appPanel) this.appPanel.setNextStop(null)
     this.announce(this.stops.label((id) => nodeLabel(this.nav!.map, id)), "location_on")
     this.reportRoute("next stop " + to)
@@ -1840,10 +1937,9 @@ export class FindYourWayMain extends BaseScriptComponent {
   private routeMapPoints(): Vec3[] {
     if (!this.nav) return []
     const key = this.routeKey()
-    const frame = getTime()
-    if (this.ptsCache && this.ptsCache.key === key && this.ptsCache.frame === frame && this.ptsCache.map === this.nav.map) return this.ptsCache.pts
+    if (this.ptsCache && this.ptsCache.key === key && this.ptsCache.map === this.nav.map) return this.ptsCache.pts
     const pts = this.computeRoutePoints()
-    this.ptsCache = {key, frame, map: this.nav.map, pts}
+    this.ptsCache = {key, map: this.nav.map, pts}
     return pts
   }
 

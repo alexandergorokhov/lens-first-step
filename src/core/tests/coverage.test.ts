@@ -30,7 +30,7 @@ import { PetGuide, sideStepSpot } from "../pet.ts";
 import { PointingCoach, interestOptions, placesOf, visiblePlaces } from "../places.ts";
 
 const DATA = new URL("../data/", import.meta.url);
-const FILES = ["map.json", "hospital.json", "campus.json", "room.json"];
+const FILES: string[] = JSON.parse(readFileSync(new URL("index.json", DATA), "utf8")).maps.map((m: { file: string }) => m.file);
 const text = (f: string) => readFileSync(new URL(f, DATA), "utf8");
 function load(f: string): MapData {
   const r = parseMap(text(f));

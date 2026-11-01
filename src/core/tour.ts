@@ -112,12 +112,17 @@ export function pickMapLayout(map: TourMap, y: number, widthCm: number, heightCm
   return nodes.map((n, i) => ({ id: n.id, label: n.label as string, x: pts[i].x, y: pts[i].y }));
 }
 
+const MAX_SEPARATE_PASSES = 500;
+const MAX_SEPARATE_PAIRS = 500000;
+
 // Pushes close dots apart, each pair half the shortfall (plus a hair), then back inside the box;
 // repeated until nothing is too close (or the box is too small for that). Dots on exactly the same
 // spot are pushed in different fixed directions by their order, so the result never varies.
 function separate(pts: { x: number; y: number }[], halfW: number, halfH: number): void {
   const need = MAP_DOT_MIN_CM + 1e-6;
-  for (let pass = 0; pass < 500; pass++) {
+  // Each pass compares every pair, so a crowded map gets fewer passes: one frame's work at most.
+  const passes = Math.min(MAX_SEPARATE_PASSES, Math.floor((2 * MAX_SEPARATE_PAIRS) / Math.max(1, pts.length * pts.length)));
+  for (let pass = 0; pass < passes; pass++) {
     let moved = false;
     for (let i = 0; i < pts.length; i++) {
       for (let j = i + 1; j < pts.length; j++) {
@@ -163,11 +168,13 @@ export function mapLevels(map: TourMap): MapLevel[] {
   const given = map.place && map.place.levels;
   if (given && given.length > 0) {
     return given
-      .map((l, i) => ({ y: l.y, label: l.name, floor: typeof l.floor === "number" ? l.floor : i }))
-      .sort((a, b) => a.y - b.y);
+      .slice()
+      .sort((a, b) => a.y - b.y)
+      .map((l, i) => ({ y: l.y, label: l.name, floor: typeof l.floor === "number" ? l.floor : i }));
   }
   const ys: number[] = [];
-  for (const n of map.nodes) if (ys.indexOf(n.y) < 0) ys.push(n.y);
-  ys.sort((a, b) => a - b);
+  for (const y of map.nodes.map((n) => n.y).sort((a, b) => a - b)) {
+    if (ys.every((o) => Math.abs(o - y) >= SAME_FLOOR_M)) ys.push(y);
+  }
   return ys.map((y, i) => ({ y, label: "Level " + (i + 1), floor: i }));
 }
