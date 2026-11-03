@@ -37,19 +37,20 @@ The target is under 2:50 on YouTube. Every frame comes from the real Lens in the
 
 ## The plan
 
-Re-record `visual-reel` on today's code. It's the same script, so it's quick. Then add three short preview captures, and record the voice-over last.
+The video follows the same order as the judges' showing (REVIEW-FIXES.md section 0). Most of it is a new airport capture made with the **showing preset**; only the companion and Learn this place can reuse reel footage. Build and test the preset first, then record. The voice-over goes on last.
 
-| Time | Shot | Source | How to capture it in Lens Studio |
+| Time | Beat | Source | How to capture it in Lens Studio |
 |---|---|---|---|
-| 0:00–0:15 | **Hook:** the mall, the sign, "Scan sign" | Reel beat 1 | Comes from the reel. The caption on screen must stay: "on real Specs: look at the sign". |
-| 0:15–0:40 | **Go to a place in the mall:** Say it, then the line leads up the escalator, with the floor cue and pill | Reel beat 5, trimmed | From the reel. Keep the moment the pill changes floor. |
-| 0:40–1:05 | **Walk vs Step-Free, lift out, re-route** at the airport | **New capture** | Demo controls on (FindYourWay > showDemoControls). Map → Airport, then Restart trip and Scan sign. Go to a place (the airport's default destination is Gate B12; pick it if asked) → **Step-Free**. Press **Q** (seated height). Walk with W to the lift, then click the red sign on the lift: the line swings to the other lift. Then click **Gate change B12 → C3**: the card and chime show and the line swings. |
-| 1:05–1:15 | **Arrival** | **New capture** | Same session: walk to within 3 m of C3 and the arrival card shows. Or use the Tour's arrival from reel beat 9. |
-| 1:15–1:45 | **Free walk with the companion:** walks ahead, points at a matching shop, "3 picks upstairs", runs round when you turn, and the gold Offers button | Re-recorded reel beats 2–4 | Re-record `visual-reel`. Keep the gold button naming the shop. |
-| 1:45–2:00 | **While you wait:** catch by hand, then dog, robot, rover | Reel beats 6 and 7 | From the reel. Seated play only with a caption, "Seated play: tested; the preview view can't sit down", or leave it out. |
-| 2:00–2:25 | **Map builder:** walk, mark a shop, take the stairs, See my map, Upload | Reel beat 10 | From the reel. |
-| 2:25–2:38 | **How it was built:** the agent at work, the Lens Studio MCP connected, and the Logger showing `[FYW-LEAF] SUMMARY` | **New capture** | Screen-record the terminal with Claude Code and CLAD for 3 s, and `/mcp` showing lens-studio for 2 s. Then LeafIndex > autoRun on, **only** = 4 or 5 quick ids (for example `s1-start-at-sign-controls-hidden,fl1-pill-shows-and-counts-down,p1-companion-toggle-and-models`), reset the preview, and record the Logger as the RESULT lines and SUMMARY appear. Untick autoRun afterwards. |
-| 2:38–2:48 | **Close:** title card | Reel beat 11 | "Find Your Way Inside", with the pitch line. |
+| 0:00–0:12 | **1. Pitch** | New | The airport sign in view, with the showing preset on. Voice-over only. |
+| 0:12–0:20 | **2. Scan sign** | New | Click **Scan sign**. The caption must stay on screen: "on real Specs: look at the sign". Then **Go to a place**. |
+| 0:20–0:50 | **3. Walk vs Step-Free, same sign** | New | Walk (preselected): walk with W until the line goes up the escalator. **Restart showing** → Scan sign → Go to a place → **Step-Free**: the line goes to the lift. Cut between the two. |
+| 0:50–1:05 | **4. Distance and floor cue** | New | Walk toward the lift with W. Keep the pill (floor, metres, floors to go, time) and the "next: lift up" cue in frame. |
+| 1:05–1:30 | **5. Lift 1 out, then gate change B12 → C3** | New | Click the red sign on Lift 1: the card and chime show and the line swings to the other lift. Then **Gate change B12 → C3**: the card shows and the line swings. Use the preset's gate-change button if one is added; otherwise turn on showDemoControls just for this shot. |
+| 1:30–1:50 | **6. Companion** | New, or reel beat 2 | Dog on (preset): it leads and waits at the foot of the ride. A 3 s swap to robot and rover can come from reel beat 7. |
+| 1:50–2:10 | **7. Arrival, then 10 s of seated play** | New | Walk to within 3 m of C3: arrival card. Press **Q**, stand still for 2 s, click **Play while you wait**, then click to jump. Caption: "Seated play: the preview view can't sit down". |
+| 2:10–2:32 | **8. Learn this place on the room map** | New, or reel beat 10 | Map switch → **Preview room** → Scan sign → **Map builder**: walk, **Mark shop**, **See my map**. Then route on it if it fits in time. |
+| 2:32–2:45 | **9. Tests: LEAF SUMMARY** | New | LeafIndex autoRun on, **only** = 4 or 5 quick ids (for example `sh1-showing-preset,s1-start-at-sign-controls-hidden,fl1-pill-shows-and-counts-down`), reset the preview, and record the Logger as the RESULT lines and SUMMARY appear. Add 3 s of Claude Code with CLAD and `/mcp` showing lens-studio. Then untick autoRun. |
+| 2:45–2:49 | Close | New | Title card: "Find Your Way Inside: any building, mapped by walking." |
 
 **Recording tips** (from NEXT-SESSION.md):
 - Start right after an OAuth token refresh, because the preview resets about every 50 minutes.
@@ -58,27 +59,27 @@ Re-record `visual-reel` on today's code. It's the same script, so it's quick. Th
 
 ## Voice-over script
 
-About 330 words, roughly 2:30 at a calm pace. Read it over the cut; it needs no music.
+About 320 words, roughly 2:30 at a calm pace. Read it over the cut; it needs no music.
 
-> **(0:00)** Indoors there's no GPS. In a big airport or mall your phone makes you stop, look down and guess which way you're facing.
+> **(0:00)** Indoors there's no GPS. In a big airport, your phone makes you stop, look down and guess which way you're facing.
 >
-> **(0:10)** With Find Your Way Inside, you look at the "You are here" sign. Its code says where you stand, and it downloads this building's map. Here in the preview, a button stands in for the scan.
+> **(0:12)** With Find Your Way Inside, you look at the "You are here" sign. Its code says where you stand, and it downloads this building's map. Here in the preview, a button stands in for the scan.
 >
-> **(0:17)** Say where you're going, and a line on the floor leads you there, floor by floor. The pill shows your floor, the distance and the time.
+> **(0:20)** From the same sign, Walk takes the shortest way, up the escalator. Step-Free never uses stairs or escalators, so the line goes to the lift instead.
 >
-> **(0:40)** At the airport, I choose Step-Free: it never uses stairs or escalators. I'm seated. The lift is out of service, so I pinch its red sign, and the line swings to the other lift. Then my gate changes, and the route changes with me.
+> **(0:50)** The pill shows my floor, the distance and the time, and a cue warns me before every floor change.
 >
-> **(1:05)** Within three metres of the gate, I've arrived.
+> **(1:05)** Lift 1 is out of service. One pinch on its red sign, and the line swings to the other lift. Then my gate changes from B12 to C3, and the route changes with me, from where I'm standing.
 >
-> **(1:15)** In Free walk there's no destination. My companion walks ahead, stops at shops I'd like and points at them. If there are matches upstairs, it waits at the escalator and tells me. Turn around, and it runs round to stay in front. Look at any shop and its offers are one pinch away. Sponsored shops are always labelled, and they never change a route.
+> **(1:30)** I can turn on a companion. It walks ahead, waits for me at the lift, and never changes my route.
 >
-> **(1:45)** While I wait, I can play catch. It's a dog, a robot or a rover, and play never changes my route.
+> **(1:50)** Within three metres of the gate, I've arrived. And while I wait, seated at the gate, I can play with it.
 >
-> **(2:00)** So who makes the maps? Anyone, by walking. My path records itself, I mark the shops I face, the stairs start a new floor, and I upload it. The same Lens runs an airport, a hospital, a campus and a mall from one small map file.
+> **(2:10)** So who makes the maps? Anyone, by walking. Here I map this room: my path records itself, I mark what I face, and it becomes a map I can route on. The same Lens runs an airport, a hospital, a campus and a mall from one small map file.
 >
-> **(2:25)** I planned it with the Learn skill pack, then built it with an AI coding agent, Snap's CLAD and the Lens Studio MCP, test-first. Routing is plain Dijkstra, with over four hundred unit tests plus LEAF tests that press the real buttons inside the Lens.
+> **(2:32)** I planned it with the Learn skill pack and built it with an AI coding agent, Snap's CLAD and the Lens Studio MCP, test-first: over four hundred unit tests, plus LEAF tests that press the real buttons inside the Lens.
 >
-> **(2:38)** Find Your Way Inside. Any building, mapped by walking.
+> **(2:45)** Find Your Way Inside. Any building, mapped by walking.
 
 ## Before you upload
 
