@@ -73,4 +73,7 @@ test("docs: the test counts quoted in the docs match a real run", { skip: !!proc
   const spec = read("openspec/specs/README.md").match(/Node (\d+) tests/);
   assert.ok(spec);
   assert.equal(Number(spec[1]), expected, "openspec/specs/README.md count");
+  const readme = read("README.md").match(/There are (\d+) tests/);
+  assert.ok(readme, "README.md states the Node test count as 'There are <n> tests'");
+  assert.equal(Number(readme[1]), expected, "README.md count");
 });
