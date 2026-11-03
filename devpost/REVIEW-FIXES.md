@@ -26,13 +26,15 @@ Alex shows the project to the judges on Thursday. One switch should put the Lens
 | 2 | Scan sign | Click **Scan sign** ("on real Specs: look at the sign") |
 | 3 | Walk vs Step-Free, same sign | Walk: the line goes up the escalator. **Restart showing**, then Step-Free: the line goes to the lift |
 | 4 | Distance and floor cue | Walk toward the escalator or lift; the pill and the "next: …" cue show |
-| 5 | Lift 1 out, then gate change | In Step-Free, click the red sign on Lift 1: the line swings to the other lift. Then click **Gate change B12 → C3**, which needs the demo controls, or a hidden hotkey if one is added |
+| 5 | Lift 1 out, then gate change | In Step-Free, click the red sign on Lift 1: the line swings to the other lift. Then click **Demo: gate change** (shown under the preset) |
 | 6 | Companion | Already on (dog); show it leading and waiting at the ride |
 | 7 | Arrival, then 10 s of seated play | Within 3 m of C3 the arrival card shows. Press **Q**, stand still, then **Play while you wait**: pinch to jump. Say that the preview view doesn't lower when seated |
 | 8 | Learn this place | Map switch to **Preview room**, Scan sign, then **Map builder**: walk, Mark shop, See my map |
 | 9 | Tests | The Logger with `[FYW-LEAF] SUMMARY` from a short LEAF run |
 
-**Open question for step 5:** the gate change is a demo control, but the preset hides the demo controls. Choose one: a **Gate change** button that shows only under the preset (labelled "Demo: gate change"), or turning demo controls on just for that beat. The first is cleaner for the judges.
+**Decided for step 5:** add a small button labelled **"Demo: gate change"** that shows only under the showing preset. It goes on the airport route panel, not in the full demo controls, which stay hidden. It fires the map's `gateChange` event. Add it to `sh1-showing-preset`: present with the preset on, absent with it off, and pressing it swings the route to C3 with the card.
+
+**Decided for step 7:** seated play gets a caption, "Seated play: the preview view can't sit down", because the preview view doesn't lower on Q.
 
 I made these suggestions on 2026-11-03 without Lens Studio. None of them is applied, because each needs the preview to verify. Do them in a session started in this folder with Lens Studio open, writing a failing LEAF test first wherever behaviour changes.
 
