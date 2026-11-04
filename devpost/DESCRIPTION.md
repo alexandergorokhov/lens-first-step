@@ -22,7 +22,7 @@ You look at the "You are here" sign at the entrance. Its code tells the Lens whe
   - If your gate changes, the line swings to the new one from where you're standing.
 - **Free walk.** No destination, just browsing. A small companion (a dog, a robot or a rover) walks ahead of you. It stops at the shops that match your preferences and points at them, and when there are matches on another floor it waits at the escalator and says "3 picks upstairs". Look at any shop to see up to three offers, or ignore it. Sponsored shops are always labelled, and paying never changes a route.
 - **Tour.** You're shown round the shops you like, stop by stop, in the shortest order.
-- **Map builder.** Who makes the maps? You do, by walking. Your path records itself, a height change starts a new floor, and one pinch marks the shop you're facing. Upload hands the map to a laptop tool that checks and publishes it, so the Lens never holds a publishing token.
+- **Map builder (Learn this place).** Who makes the maps? You do, by walking. Your path records itself, a height change starts a new floor, and the **Mark shop** button marks the shop you're facing. Upload hands the map to a laptop tool that checks and publishes it, so the Lens never holds a publishing token.
 - **While you wait,** play with the companion: Hop (raise a hand and it jumps obstacles), catch (grab a treat, throw it, and it brings it back) and a seated version for the gate lounge. Play never changes your route, and a gate-change card ends it at once.
 
 The same Lens runs an airport, a hospital, a campus, a room and a two-floor shopping mall. Everything building-specific comes from one small JSON map file, never from code.
@@ -53,11 +53,11 @@ The "phone indoor AR navigation" column is Google Maps Indoor Live View, and the
 ## How I built it
 
 - **Planned before building.** The Devpost Learn `/plan-lens` interview turned the idea into an approved design brief, and two more briefs added floors, the companion and the three modes.
-- **Built with an AI coding agent** using Snap's CLAD plugin and the Lens Studio MCP server. I made the design calls, and the agent wrote the code test-first.
-- **A shared TypeScript core** (routing, maps, floors, companion, play) runs both in Node, with 441 unit tests, and inside the Lens, as byte-identical copies.
+- **Built with an AI coding agent** using Snap's CLAD plugin and the Lens Studio MCP server. I made the design calls, and the agent wrote the code test-first. Through the MCP, the agent ran the LEAF scenarios in the preview and read their results from the log, captured preview screenshots for review, and generated the companion models and the chime with CLAD's generators.
+- **A shared TypeScript core** (routing, maps, floors, companion, play) runs both in Node, with 460 unit tests (offline: 459 pass, 1 skipped), and inside the Lens, as byte-identical copies.
 - **Routing** is a plain Dijkstra search over the map graph. Step-Free is the same search with stairs and escalators left out, and a test checks that Walk is the shortest route between every pair of points. A* for big buildings is tested to give exactly the same routes.
-- **LEAF tests** run inside the Lens and press the real buttons. The last full run (2026-11-03) passed all 48 scenarios, with the timing failures of long batches passing when rerun.
-- **The demo video** was recorded from the Lens Studio preview by a scripted LEAF scenario, so every shot is the real Lens.
+- **LEAF tests** run inside the Lens and press the real buttons. In the last full run (2026-11-03), 39 of 48 scenarios passed first time. The 8 that failed on timing in the long batches passed when rerun, and 1 test's own path check was too slow for Lens Studio and was fixed, after which it passed.
+- **The demo video** is recorded from the Lens Studio preview, so every shot is the real Lens.
 
 ## What's simulated
 
