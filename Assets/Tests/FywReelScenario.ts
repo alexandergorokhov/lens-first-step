@@ -175,7 +175,7 @@ export class FywReelScenario extends Scenario {
     const main = this.main
     main.debugMarkPointed(["threads", "cafe", "boltHardware"])
     await this.walk([main.getDebugPose()!.pos, {x: 30, y: 0, z: 10}, {x: 52, y: 0, z: 10}])
-    this.cap("Look at the stairs: a dot shows what's up there")
+    this.cap("Look at the stairs: a button shows what's up there")
     await this.walk([{x: 52, y: 0, z: 10}, {x: 57, y: 0, z: 13}])
     await this.turn(0, 0.5)
     await this.soft(() => main.getDotId() === "stairsFoot", 3000)
@@ -184,11 +184,14 @@ export class FywReelScenario extends Scenario {
     await sleep(3500)
     this.press("OfferCloseButton")
     await sleep(500)
+    // Since 88a8df7 you can walk up: the feet follow the steps (as the preview's keys would).
     main.debugSetPose(57, 0, 15, 0)
     await sleep(300)
-    this.press("RideButton_" + main.getRideIdFor("stairsFoot", "stairs"))
-    await sleep(600)
-    await this.walk([{x: 57, y: 5, z: 24}, {x: 50, y: 5, z: 22}])
+    for (let z = 15.25; z <= 25; z += 0.25) {
+      main.debugSetPose(57, main.getFeetY(), z, 0)
+      await sleep(70)
+    }
+    await this.walk([{x: 57, y: 5, z: 25}, {x: 57, y: 5, z: 24}, {x: 50, y: 5, z: 22}])
     await this.turn(0, 0.5)
     await sleep(2500)
   }
@@ -203,10 +206,12 @@ export class FywReelScenario extends Scenario {
     await sleep(200)
     this.press("PrefsStartButton")
     await waitFor(() => main.getPhase() === "free", 3000, "free walk")
+    // Since a973e9e the companion is picked before walking; the preferences' toggle turns it off.
+    if (main.isCompanionShown()) print("[FYW-REEL] WARNING: the companion is still on in 'Companion off'")
     this.cap("Companion off: just look at a shop")
     await this.walk([{x: 30, y: 0, z: 1}, {x: 30, y: 0, z: 22}])
     await waitFor(() => main.isDotShown(), 3000, "a dot")
-    this.cap("A subtle dot. Open it, or ignore it")
+    this.cap("Look at a shop. Open its offers, or ignore them")
     await sleep(1800)
     this.press("DotButton")
     await sleep(4000)
