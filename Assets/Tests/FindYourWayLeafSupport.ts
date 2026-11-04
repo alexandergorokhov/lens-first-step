@@ -39,6 +39,13 @@ export async function tap(interactor: DefaultLeafInteractor, name: string): Prom
   await sleep(250)
 }
 
+// Put the companion on or off whatever companionOnAtStart says: tap its button only when needed.
+export async function setCompanion(interactor: DefaultLeafInteractor, main: FindYourWayMain, on: boolean): Promise<void> {
+  if (main.isCompanionOn() === on) return
+  await tap(interactor, "CompanionButton")
+  await waitFor(() => main.isCompanionOn() === on, 2000, "companion " + (on ? "on" : "off"))
+}
+
 export async function waitFor(cond: () => boolean, ms: number, what: string): Promise<void> {
   const t0 = getTime()
   while (!cond()) {

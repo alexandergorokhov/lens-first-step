@@ -2,7 +2,7 @@ import {Scenario} from "Leaf.lspkg/Scenarios/scenario/Scenario"
 import {DefaultLeafInteractor} from "Leaf.lspkg/Interactors/interactor/DefaultLeafInteractor"
 import {expect} from "Leaf.lspkg/Utils/common/Expect"
 import {sleep} from "Leaf.lspkg/Utils/common/Utils"
-import {log, startTrip, tap, waitFor} from "./FindYourWayLeafSupport"
+import {log, setCompanion, startTrip, tap, waitFor} from "./FindYourWayLeafSupport"
 import {nodePos, standStill} from "./FywBrief2Support"
 
 // sp1 — sitting down: play moves close and short, a pinch jumps, standing up or a card ends it.
@@ -14,7 +14,7 @@ export class FywSp1SeatedPlayScenario extends Scenario {
     const main = await startTrip(it, "walk")
     const route = main.getRouteNodes().join(">")
     const spot = nodePos(main, "sign")
-    await tap(it, "CompanionButton")
+    await setCompanion(it, main, true) // on at start or not
     await standStill(main, spot)
     expect(main.isSeatedNow(), "standing").toBe(false)
     main.debugSetCameraDropCm(60)
