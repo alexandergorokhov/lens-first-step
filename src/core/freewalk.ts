@@ -48,12 +48,15 @@ export interface FreeSettings {
   runSpeed: number; // catching up / running around you (m/s)
   pointSeconds: number; // how long it points at a shop
   pointRadiusM: number; // how near a matching shop must be for it to stop
+  hintRadiusM: number; // how near a floor connection must be for the "picks upstairs" hint
   maxStops: number; // stops per walk; 0 = no limit
   bubbleSeconds: number; // how long it waits at a floor change with its bubble
   lookRangeM: number; // how far a front can be looked at from
   dotShowSeconds: number;
   dotHideSeconds: number;
   listAwayM: number; // walking this far from where it was opened closes the list
+  cooldownSeconds: number; // at least this long between two stops
+  asideM: number; // at a stop it steps at most this far from its lead spot toward the shop
 }
 
 export const FREE_DEFAULTS: FreeSettings = {
@@ -63,13 +66,16 @@ export const FREE_DEFAULTS: FreeSettings = {
   speed: 2.4,
   runSpeed: 4.5,
   pointSeconds: 3,
-  pointRadiusM: 12,
+  pointRadiusM: 8,
+  hintRadiusM: 12,
   maxStops: 0,
   bubbleSeconds: 5,
   lookRangeM: 12,
   dotShowSeconds: 0.5,
   dotHideSeconds: 2,
   listAwayM: 5,
+  cooldownSeconds: 10,
+  asideM: 1.2,
 };
 
 // At most this many picks on a floor-change list; more shows "and more".
@@ -439,6 +445,11 @@ export class FreeWalk {
   private stop: Stop | null = null;
   private done: { [id: string]: boolean } = Object.create(null);
   private stops = 0;
+  private lastStopAt = -Infinity;
+  // How a stop's spot is kept in the view you look along (view.ts's clampToView); null: not moved.
+  keepInView: ((spot: FwXYZ, user: FwXYZ, look: number) => FwXYZ) | null = null;
+  // lead → aside (stepping toward the shop) → point → return (to its lead spot) → lead.
+  pointState: "lead" | "aside" | "point" | "return" = "lead";
 
   constructor(map: FwMap, prefs: string[], settings?: Partial<FreeSettings>) {
     this.map = map;
@@ -499,12 +510,18 @@ export class FreeWalk {
   private nextStop(pos: FwXYZ, dir: { x: number; z: number }, now: number): Stop | null {
     const s = this.settings;
     if (s.maxStops > 0 && this.stops >= s.maxStops) return null;
-    const near = (n: FwNode) => Math.abs(n.y - pos.y) < SAME_FLOOR_M && flat(n, pos) <= s.pointRadiusM &&
-      (n.x - pos.x) * dir.x + (n.z - pos.z) * dir.z >= flat(n, pos) * POINT_CONE_COS;
+    if (now - this.lastStopAt < s.cooldownSeconds) return null;
+    // Measured to the shop's front (what you see), or the node with no front.
+    const ref = (n: FwNode) => (n.front ? { x: (n.front.x1 + n.front.x2) / 2, z: (n.front.z1 + n.front.z2) / 2 } : n);
+    const near = (n: FwNode, radius: number = s.pointRadiusM) => {
+      const r = ref(n);
+      return Math.abs(n.y - pos.y) < SAME_FLOOR_M && flat(r, pos) <= radius &&
+        (r.x - pos.x) * dir.x + (r.z - pos.z) * dir.z >= flat(r, pos) * POINT_CONE_COS;
+    };
     let shop: FwNode | null = null;
     for (const n of this.map.nodes) {
       if (!matches(n, this.prefs) || this.done[n.id] || !near(n)) continue;
-      if (!shop || flat(n, pos) < flat(shop, pos)) shop = n;
+      if (!shop || flat(ref(n), pos) < flat(ref(shop), pos)) shop = n;
     }
     if (shop) {
       this.done[shop.id] = true;
@@ -515,7 +532,7 @@ export class FreeWalk {
     let best: FwNode | null = null;
     let bestUp = true;
     for (const n of this.map.nodes) {
-      const conn = near(n) ? connection(this.map, n.id) : null;
+      const conn = near(n, s.hintRadiusM) ? connection(this.map, n.id) : null;
       if (!conn || !conn.usable || this.done[floorKey(floor, conn.up)]) continue;
       if (otherFloorPicks(this.map, this.prefs, pos.y, conn.up).length === 0) continue;
       if (!best || flat(n, pos) < flat(best, pos)) {
@@ -576,6 +593,17 @@ export class FreeWalk {
     this.targets = frontTargets(map);
   }
 
+  // Where it stands at a stop: from its lead spot, at most asideM toward the stop's front, kept in view.
+  private asideSpot(st: Stop, pos: FwXYZ, dir: { x: number; z: number }, heading: number): FwXYZ {
+    const lead = this.spotAhead(pos, dir);
+    const dx = st.spot.x - lead.x;
+    const dz = st.spot.z - lead.z;
+    const d = Math.sqrt(dx * dx + dz * dz);
+    const k = d <= this.settings.asideM || d < 1e-6 ? 1 : this.settings.asideM / d;
+    const spot = { x: lead.x + dx * k, y: pos.y, z: lead.z + dz * k };
+    return this.keepInView ? this.keepInView(spot, pos, heading) : spot;
+  }
+
   update(pos: FwXYZ, heading: number, dt: number, now: number): FreeFrame {
     this.dots.update(lookTarget(this.targets, pos, heading, this.settings.lookRangeM), now, pos);
     const dir = this.ahead.update(pos, heading, dt);
@@ -590,27 +618,40 @@ export class FreeWalk {
       }
       if (this.stop) {
         const st = this.stop;
-        if ((st.until !== null && now >= st.until) || flat(st.spot, pos) > STOP_LEAVE_M) this.stop = null;
+        if ((st.until !== null && now >= st.until) || flat(st.spot, pos) > STOP_LEAVE_M) {
+          this.stop = null;
+          this.pointState = "return";
+        }
       }
-      if (!this.stop) {
+      if (!this.stop && this.pointState === "lead") {
         this.stop = this.nextStop(pos, dir, now);
-        if (this.stop) this.stops++;
+        if (this.stop) {
+          this.stops++;
+          this.lastStopAt = now;
+          this.pointState = "aside";
+        }
       }
       if (this.stop) {
         const st = this.stop;
+        const spot = this.asideSpot(st, pos, dir, heading);
         if (st.until === null) {
-          const stepped = this.move(pet, st.spot, pos, dt, true);
+          const stepped = this.move(pet, spot, pos, dt, true);
           pet = { pos: stepped.pos, heading: stepped.heading, mood: "point" };
-          if (flat(pet.pos, st.spot) < 0.15 || flat(st.spot, pos) < this.settings.clearM || now >= st.giveUp) {
+          if (flat(pet.pos, spot) < 0.15 || flat(spot, pos) < this.settings.clearM || now >= st.giveUp) {
             st.until = now + st.seconds;
             stopped = st.id;
+            this.pointState = "point";
           }
         } else {
-          const h = headingTo(pet.pos, st.at);
-          pet = { pos: pet.pos, heading: h === null ? pet.heading : h, mood: "point" };
+          // It keeps pace beside you while it points, facing the shop.
+          const stepped = this.move(pet, spot, pos, dt, false);
+          const h = headingTo(stepped.pos, st.at);
+          pet = { pos: stepped.pos, heading: h === null ? pet.heading : h, mood: "point" };
         }
       } else {
-        pet = this.move(pet, this.spotAhead(pos, dir), pos, dt, false);
+        const lead = this.spotAhead(pos, dir);
+        pet = this.move(pet, lead, pos, dt, false);
+        if (this.pointState === "return" && flat(pet.pos, lead) < 0.3) this.pointState = "lead";
       }
       this.pet = pet;
     }

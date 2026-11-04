@@ -179,3 +179,31 @@ export class PolylineWalker {
     return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, z: a.z + (b.z - a.z) * t };
   }
 }
+
+// ── The showing preset (REVIEW-FIXES.md section 0) ─────────────────────────────────────────────
+
+// What the Lens starts with (FindYourWayMain's Inspector inputs) and which mode is preselected.
+export interface StartSettings {
+  mapKey: string;
+  startAtSign: boolean;
+  showDemoControls: boolean;
+  companionModel: string;
+  companionOnAtStart: boolean;
+  preselect: "walk" | "stepFree" | null;
+}
+
+// The state shown to the judges: the airport at its entrance sign, demo controls hidden, the dog
+// on, Walk preselected (Step-Free one pinch away).
+export const SHOWING: StartSettings = {
+  mapKey: "airport",
+  startAtSign: true,
+  showDemoControls: false,
+  companionModel: "dog",
+  companionOnAtStart: true,
+  preselect: "walk",
+};
+
+// The settings to start with: the preset when on, else the Inspector's own (always a copy).
+export function showingSettings(authored: StartSettings, showingPreset: boolean): StartSettings {
+  return { ...(showingPreset ? SHOWING : authored) };
+}

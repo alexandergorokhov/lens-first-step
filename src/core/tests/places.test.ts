@@ -203,20 +203,20 @@ test("Q4 Muted: no points at all", () => {
   assert.equal(pointsOnWalk(map, routeOf(map, "sign", "gateB12", "walk"), coach).length, 0);
 });
 
-test("Q4 At most one point per 30 s and per 20 m; never twice for the same place", () => {
+test("Q4 At most one point per 10 s; never twice for the same place", () => {
   const map = loadMap();
   for (const [from, to] of [["sign", "gateB12"], ["sign", "gateC3"], ["gateB12", "sign"]]) {
     const coach = new PointingCoach(map);
     coach.interests = interestOptions("stepFree");
     const pts = pointsOnWalk(map, routeOf(map, from, to, "walk"), coach);
     for (let i = 1; i < pts.length; i++) {
-      assert.ok(pts[i].now - pts[i - 1].now >= POINT_GAP_SECONDS, "two points within 30 s");
-      assert.ok(pts[i].travelled - pts[i - 1].travelled >= POINT_GAP_METRES, "two points within 20 m");
+      assert.ok(pts[i].now - pts[i - 1].now >= POINT_GAP_SECONDS, "two points within 10 s");
+      assert.ok(pts[i].travelled - pts[i - 1].travelled >= POINT_GAP_METRES, "the metres gap");
     }
     assert.equal(new Set(pts.map((p) => p.id)).size, pts.length);
   }
-  assert.equal(POINT_GAP_SECONDS, 30);
-  assert.equal(POINT_GAP_METRES, 20);
+  assert.equal(POINT_GAP_SECONDS, 10);
+  assert.equal(POINT_GAP_METRES, 0);
 });
 
 test("Q4 Never within 10 m of a turn or a floor change, and never while a card is showing", () => {

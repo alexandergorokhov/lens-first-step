@@ -8,6 +8,7 @@
 import {Boxes, shadeTexture, whiteTexture} from "./FindYourWayStandIn"
 import {RigMood, poseFor, rigOf, COMPANION_ALPHA} from "./FindYourWayAnim"
 import {LiveRig} from "./FindYourWayRigMesh"
+import {ARROW_OPACITY} from "./FindYourWayView"
 import {Interactable} from "SpectaclesInteractionKit.lspkg/Components/Interaction/Interactable/Interactable"
 import {InteractableManipulation} from "SpectaclesInteractionKit.lspkg/Components/Interaction/InteractableManipulation/InteractableManipulation"
 
@@ -45,6 +46,9 @@ const SHAKE_CM = 4
 // While it points: a thin bar from its chest, forward.
 const POINTER_HEIGHT_CM = 55
 const POINTER_LENGTH_CM = 110
+// The floor arrow near your feet toward the companion when it is out of view.
+const FLOOR_ARROW_CM = 34
+const FLOOR_ARROW_COLOR = new vec4(0.4, 0.85, 1, ARROW_OPACITY)
 
 @component
 export class FindYourWayCompanionView extends BaseScriptComponent {
@@ -67,6 +71,7 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
   private grab: SceneObject | null = null
   private grabHandling: InteractableManipulation | null = null
   private pointer: SceneObject | null = null
+  private floorArrow: SceneObject | null = null
   private spin = 0
   private shown = false
 
@@ -102,6 +107,12 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
       [0, POINTER_HEIGHT_CM, -POINTER_LENGTH_CM, 9, 9, 9],
     ]}])
     this.pointer.enabled = false
+    this.floorArrow = global.scene.createSceneObject("FloorArrow")
+    this.floorArrow.setParent(this.sceneObject)
+    const arrowVisual = this.floorArrow.createComponent("Component.RenderMeshVisual") as RenderMeshVisual
+    arrowVisual.mesh = this.flatChevron(FLOOR_ARROW_CM)
+    arrowVisual.mainMaterial = this.makeMaterial(FLOOR_ARROW_COLOR)
+    this.floorArrow.enabled = false
     this.setModel("dog")
     this.createEvent("UpdateEvent").bind(() => this.tick())
   }
@@ -226,6 +237,38 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
   }
 
   isPostShown(): boolean { return !!this.post && this.post.enabled }
+
+  // The small floor arrow (building-local cm on the floor) pointing along headingDeg (clockwise
+  // from map north, as setPose); null hides it.
+  setFloorArrow(pos: vec3 | null, headingDeg: number = 0): void {
+    if (!this.floorArrow) return
+    this.floorArrow.enabled = pos !== null
+    if (!pos) return
+    const t = this.floorArrow.getTransform()
+    t.setLocalPosition(pos.add(new vec3(0, 1, 0)))
+    t.setLocalRotation(quat.angleAxis((-headingDeg * Math.PI) / 180, vec3.up()))
+  }
+
+  isFloorArrowShown(): boolean { return !!this.floorArrow && this.floorArrow.enabled }
+
+  // A flat chevron on the floor (XZ plane) pointing toward -Z, the way the models face.
+  private flatChevron(s: number): RenderMesh {
+    const mb = new MeshBuilder([
+      {name: "position", components: 3},
+      {name: "normal", components: 3},
+      {name: "texture0", components: 2},
+    ])
+    mb.topology = MeshTopology.Triangles
+    mb.indexType = MeshIndexType.UInt16
+    const h = s / 2, t = s * 0.28
+    const pts = [[0, h], [h, 0], [h - t, 0], [0, h - t * 1.2], [-(h - t), 0], [-h, 0]]
+    const v: number[] = []
+    for (const p of pts) v.push(p[0], 0, -(p[1] - h / 3), 0, 1, 0, 0, 0)
+    mb.appendVerticesInterleaved(v)
+    mb.appendIndices([0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5])
+    mb.updateMesh()
+    return mb.getMesh()
+  }
 
   // The Hop lane: from `origin` (the companion's spot) away from the user along headingDeg;
   // obstacles at d metres ahead with height h metres. null hides it.

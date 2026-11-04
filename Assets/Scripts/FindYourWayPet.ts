@@ -298,6 +298,12 @@ export class PetGuide {
   got: boolean[] = [];
   found = 0;
   lead = PET_LEAD;
+  // Where the traveller looks (degrees, 0 = +z; set every frame by the Lens) and how a pointing
+  // spot is kept in that view (view.ts's clampToView). Either null: the spot is not moved.
+  look: number | null = null;
+  keepInView: ((spot: XYZ, user: XYZ, look: number) => XYZ) | null = null;
+  // lead → aside (stepping off toward the place) → point → return (to its lead spot) → lead.
+  pointState: "lead" | "aside" | "point" | "return" = "lead";
   private routeKey = "";
 
   get total(): number {
@@ -311,7 +317,9 @@ export class PetGuide {
 
   // Stop, turn and point at a place for POINT_SECONDS (from places.ts's PointingCoach).
   point(place: XYZ, now: number, seconds: number = POINT_SECONDS): void {
-    if (this.on) this.pointing = { at: { x: place.x, y: place.y, z: place.z }, until: now + seconds };
+    if (!this.on) return;
+    this.pointing = { at: { x: place.x, y: place.y, z: place.z }, until: now + seconds };
+    this.pointState = "aside";
   }
 
   setOn(on: boolean, route: XYZ[], user: XYZ, routeKey: string): void {
@@ -334,16 +342,26 @@ export class PetGuide {
     // At arrival the route shrinks to the destination: keep the treats as they are.
     if (!arrived) this.layTreats(route, routeKey);
     if (!this.pet && route.length > 0) this.pet = newPet(route, user, this.lead);
-    if (this.pointing && (arrived || now >= this.pointing.until)) this.pointing = null;
+    if (this.pointing && (arrived || now >= this.pointing.until)) {
+      this.pointing = null;
+      this.pointState = "return";
+    }
     if (this.pet && this.pointing) {
-      // A couple of steps off the line toward the place, keeping pace ahead; facing the place.
-      const spot = sideStepSpot(route, user, this.pointing.at, SIDE_STEP, this.lead);
+      // A couple of steps off the line toward the place, keeping pace ahead, in view; facing the place.
+      let spot = sideStepSpot(route, user, this.pointing.at, SIDE_STEP, this.lead);
+      if (this.keepInView && this.look !== null && Math.abs(spot.y - user.y) < LEVEL_STEP) spot = this.keepInView(spot, user, this.look);
       const d = d3(this.pet.pos, spot);
       const step = PET_SPEED * dt;
       const pos = d <= step ? spot : lerp(this.pet.pos, spot, step / d);
       const h = headingOf(pos, this.pointing.at);
       this.pet = { pos, heading: h === null ? this.pet.heading : h, mood: "point" };
-    } else if (this.pet) this.pet = stepPet(this.pet, route, user, dt, arrived, this.lead);
+      if (d <= step) this.pointState = "point";
+      else if (this.pointState !== "point") this.pointState = "aside";
+    } else if (this.pet) {
+      this.pet = stepPet(this.pet, route, user, dt, arrived, this.lead);
+      if (this.pointState === "return" && d3(this.pet.pos, petTarget(route, user, this.lead).at) < 0.3) this.pointState = "lead";
+    }
+    if (!this.pet) this.pointState = "lead";
     const got = collectTreats(this.spots, this.got, user);
     // Arriving (within the arrival radius) collects the destination's treat.
     const last = this.spots.length - 1;

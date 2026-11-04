@@ -51,6 +51,9 @@ import {FywSp1SeatedPlayScenario} from "./FywSp1SeatedPlayScenario"
 import {FywGt1GrabThrowScenario} from "./FywGt1GrabThrowScenario"
 import {FywFw1FreeWalkDemoScenario} from "./FywFw1FreeWalkDemoScenario"
 import {FywMb5BuilderInMallScenario} from "./FywMb5BuilderInMallScenario"
+import {FywVw1GuidedInViewScenario} from "./FywVw1GuidedInViewScenario"
+import {FywVw2FreeWalkInViewScenario} from "./FywVw2FreeWalkInViewScenario"
+import {FywVw3TourInViewScenario} from "./FywVw3TourInViewScenario"
 import {FywCheckPlacesScenario} from "./FywCheckPlacesScenario"
 import {FywLookScenario} from "./FywLookScenario"
 import {FywMapLookScenario} from "./FywMapLookScenario"
@@ -115,6 +118,9 @@ export class FindYourWayLeafIndex extends BaseScriptComponent {
     {id: "gt1-grab-and-throw", typename: FywGt1GrabThrowScenario.getTypeName()},
     {id: "fw1-free-walk-demo", typename: FywFw1FreeWalkDemoScenario.getTypeName()},
     {id: "mb5-builder-in-the-mall", typename: FywMb5BuilderInMallScenario.getTypeName()},
+    {id: "vw1-guided-points-in-view", typename: FywVw1GuidedInViewScenario.getTypeName()},
+    {id: "vw2-free-walk-points-in-view", typename: FywVw2FreeWalkInViewScenario.getTypeName()},
+    {id: "vw3-tour-points-in-view", typename: FywVw3TourInViewScenario.getTypeName()},
     {id: "visual-reel", typename: FywReelScenario.getTypeName()},
     {id: "visual-check-places", typename: FywCheckPlacesScenario.getTypeName()},
     {id: "visual-look", typename: FywLookScenario.getTypeName()},

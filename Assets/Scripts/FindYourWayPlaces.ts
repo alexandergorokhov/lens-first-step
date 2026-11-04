@@ -38,11 +38,13 @@ export const ICON_RADIUS = 15;
 export const MAX_ICONS = 3;
 // A place counts as "along the way" within this distance of the route (m).
 export const NEAR_ROUTE = 10;
-// Pointing: from this close (m), at most once per POINT_GAP_SECONDS and per POINT_GAP_METRES
-// walked, never within POINT_CLEAR metres of a turn or a floor change; a point lasts POINT_SECONDS.
-export const POINT_RADIUS = 10;
-export const POINT_GAP_SECONDS = 30;
-export const POINT_GAP_METRES = 20;
+// Pointing: from this close (m), within POINT_NEAR_ROUTE of the route, at most once per
+// POINT_GAP_SECONDS (and POINT_GAP_METRES walked; 0 = no limit), never within POINT_CLEAR metres
+// of a turn or a floor change; a point lasts POINT_SECONDS.
+export const POINT_RADIUS = 8;
+export const POINT_NEAR_ROUTE = 6;
+export const POINT_GAP_SECONDS = 10;
+export const POINT_GAP_METRES = 0;
 export const POINT_CLEAR = 10;
 export const POINT_SECONDS = 3;
 export const TURN_DEG = 25;
@@ -194,7 +196,7 @@ export class PointingCoach {
     for (const p of this.places) {
       if (dir && (p.x - user.x) * dir.x + (p.z - user.z) * dir.z < -POINT_BEHIND) continue;
       if (this.done[p.id] || !(p.sponsored || this.interests.indexOf(p.category) >= 0)) continue;
-      if (!sameFloor(p, user) || flat(p, user) > POINT_RADIUS || distanceToRouteOnFloor(route, p) > NEAR_ROUTE) continue;
+      if (!sameFloor(p, user) || flat(p, user) > POINT_RADIUS || distanceToRouteOnFloor(route, p) > POINT_NEAR_ROUTE) continue;
       if (!best || flat(p, user) < flat(best, user)) best = p;
     }
     if (!best) return null;

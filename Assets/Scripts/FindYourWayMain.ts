@@ -54,6 +54,7 @@ import {destinationFloorText, floorCueFor, tripPill} from "./FindYourWayPlace"
 import {Companion, companionChoices, companionOf, COMPANIONS, PetGuide, treatsResult, treatsText} from "./FindYourWayPet"
 import {Place, placeTag, PointingCoach, POINT_SECONDS, visiblePlaces} from "./FindYourWayPlaces"
 import {tourStops} from "./FindYourWayTour"
+import {clampToView, FOV_HALF_DEG, inView, OutOfViewTimer, VIEW_FAR_M, VIEW_HALF_DEG} from "./FindYourWayView"
 import {FindYourWayVoice} from "./FindYourWayVoice"
 import {FindYourWayPickMapUI} from "./FindYourWayPickMapUI"
 import {MultiStopTrip, orderStops} from "./FindYourWayTrip"
@@ -348,6 +349,9 @@ export class FindYourWayMain extends BaseScriptComponent {
   private bubble: FindYourWayBubbleUI | null = null
   private whereTo: FindYourWayWhereToUI | null = null
   private free: FreeWalk | null = null
+  // The floor arrow: shown once the companion has been out of view for ~2 s.
+  private outOfView = new OutOfViewTimer()
+  private floorArrowOn = false
   private freeCompanion = true
   // What a Free walk hands on to a trip started from it: its companion and its preferences.
   private fromWalk: {companion: boolean; prefs: string[]} | null = null
@@ -721,6 +725,7 @@ export class FindYourWayMain extends BaseScriptComponent {
       maxStops: this.maxStopsPerWalk,
       lookRangeM: this.lookRangeM,
     })
+    this.free.keepInView = (spot, user, look) => this.keepInView(spot, user, look)
     this.phase = "free"
     this.freeView.reset()
     this.setCompanionOn(this.freeCompanion)
@@ -1411,7 +1416,10 @@ export class FindYourWayMain extends BaseScriptComponent {
       this.followMappingPanel()
     }
     if (this.viewFollowsPose && this.debugPose) this.placeBuildingForPose()
-    if (this.phase === "free" && this.free) this.freeView.tick(this.free)
+    if (this.phase === "free" && this.free) {
+      this.freeView.tick(this.free)
+      this.updateFloorArrow(this.userPos(), this.free.pet ? this.free.pet.pos : null)
+    }
     if ((this.phase !== "nav" && this.phase !== "arrived") || !this.nav) return
     const pos = this.userPos()
     const progress = this.nav.updatePosition(pos)
@@ -1564,6 +1572,28 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (this.prefsPanel) this.prefsPanel.setCompanion(this.companion.name, this.freeCompanion, this.companion.id)
   }
 
+  // A pointing spot kept in the cone you look along (out to the companion's lead, + an aside step).
+  private keepInView(spot: Vec3, user: Vec3, look: number): Vec3 {
+    return clampToView(user, look, spot, VIEW_HALF_DEG, Math.max(VIEW_FAR_M, this.companionAheadM + 1.5))
+  }
+
+  // The small floor arrow near your feet toward the companion, after ~2 s out of view.
+  private updateFloorArrow(pos: Vec3, pet: Vec3 | null): void {
+    if (!this.view) return
+    const heading = this.userHeading()
+    if (!pet || !this.view.isVisible()) this.outOfView.reset()
+    const show = !!pet && this.view.isVisible() && this.outOfView.update(inView(pos, heading, pet, FOV_HALF_DEG), getDeltaTime())
+    if (show !== this.floorArrowOn) print("[FYW] floor arrow " + (show ? "on" : "off"))
+    this.floorArrowOn = show
+    if (!show || !pet) {
+      this.view.setFloorArrow(null)
+      return
+    }
+    const yaw = (Math.atan2(pet.x - pos.x, pet.z - pos.z) * 180) / Math.PI
+    const r = (yaw * Math.PI) / 180
+    this.view.setFloorArrow(this.local({x: pos.x + Math.sin(r) * 0.8, y: pos.y, z: pos.z + Math.cos(r) * 0.8}), yaw)
+  }
+
   private routeKey(): string {
     if (!this.nav) return ""
     const r = this.nav.route
@@ -1577,8 +1607,11 @@ export class FindYourWayMain extends BaseScriptComponent {
     const dt = getDeltaTime()
     const now = getTime()
     const route = this.routeMapPoints()
+    if (!this.guide.keepInView) this.guide.keepInView = (spot, user, look) => this.keepInView(spot, user, look)
+    this.guide.look = this.userHeading()
     this.guide.update(route, pos, dt, this.routeKey(), arrived, now)
     const pet = this.guide.pet
+    this.updateFloorArrow(pos, pet && this.guide.on ? pet.pos : null)
     if (pet) {
       this.view.setPointing(pet.mood === "point")
       this.view.setMood(pet.mood)
@@ -1808,6 +1841,10 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (this.free) return this.free.pet ? this.free.pet.pos : null
     return this.guide.pet ? this.guide.pet.pos : null
   }
+  isFloorArrowShown(): boolean { return !!this.view && this.view.isFloorArrowShown() }
+  getPointState(): string { return this.free ? this.free.pointState : this.guide.pointState }
+  getUserHeading(): number { return this.userHeading() }
+  getUserPos(): Vec3 { return this.userPos() }
   getCompanionMood(): string {
     if (this.free) return this.free.pet ? this.free.pet.mood : "none"
     return this.guide.pet ? this.guide.pet.mood : "none"

@@ -20,7 +20,8 @@ export class FywB3Dc2CompanionScenario extends Scenario {
     // Along the ground floor east, with Threads ahead: it matches, Bolt Hardware doesn't.
     const stops: string[] = []
     const y = 0
-    main.debugSetPose(27, y, 10, 90)
+    // Within the 8 m stop radius of Threads' front (36, 6).
+    main.debugSetPose(30, y, 10, 90)
     await sleep(300)
     let stop: string | null = null
     for (let i = 0; i < 40; i++) {
