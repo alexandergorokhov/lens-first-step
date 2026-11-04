@@ -14,7 +14,7 @@ Find Your Way Inside puts the route on the floor in front of you. You scan the "
 
 ### Verified in the Lens Studio preview
 
-Each feature below passed its LEAF test, run inside the Lens and pressing the real buttons, in the full run of **2026-10-31** (43 of 45 in one batch; the 2 timing failures pass when run alone). **Re-verify after the Nov 1 commits:** the companion picker, walking up stairs in the preview, the gold offers button, the in-view Options panel and the preview walls came after that run.
+Each feature below passed its LEAF test, run inside the Lens and pressing the real buttons, in the full run of **2026-11-03** (48 scenarios in batches of about 24: 39 passed first time, the 8 timing failures passed when rerun, and one test's own path check was too slow for Lens Studio and was fixed). That run includes the companion picker, walking up stairs in the preview and the gold offers button. The new scenarios for the companion pointing in view, the floor arrow and the showing preset, plus the 14 scenarios those changes touch, passed on the final code the same night.
 
 - **Route line on the floor:** shows the next 10 m only, goes round corners, and has an arrow at the edge of the view when the next turn is out of view.
 - **Walk and Step-Free.** Walk takes the shortest route, escalators included. Step-Free never uses stairs or escalators.
@@ -23,8 +23,11 @@ Each feature below passed its LEAF test, run inside the Lens and pressing the re
 - **Floors:** a distance pill with your floor, the distance, the floors to go and the time, plus a cue before each floor change.
 - **Arrival** card within 3 m of the destination.
 - **Any building from one map file:** an airport, a hospital, a campus, a room and a two-floor shopping mall all run with no code change. Maps download with a 5 s timeout and fall back to the copy in the Lens; a badge says "online map" or "offline map".
+- **Walk up stairs, ramps and escalators** in the preview: the feet follow the steps.
 - **Map builder:** walk a place and it becomes a map. Your path records itself, a height change starts a new floor, and **Mark shop** stores the shop you face. Upload hands the map to a laptop tool that checks and publishes it. A saved map survives a reload.
-- **Companion (dog, robot or rover):** walks ahead, waits at the foot of stairs, escalators and lifts, and never changes the route.
+- **Companion (dog, robot or rover):** walks ahead, waits at the foot of stairs, escalators and lifts, and never changes the route. Pick it before a walk.
+- **Pointing that stays in view:** at a matching shop within about 8 m the companion steps about a metre aside, points for a few seconds in the view you look along (never behind you) and goes back to the lead, about 10 s apart, in Free walk, Go to a place and Tour. If it has been out of view for 2 s, a faint arrow on the floor near your feet points to it.
+- **Showing preset:** one Inspector switch starts at the airport sign with the dog on and Walk preselected; Restart showing and Demo: gate change on the Options panel.
 - **Free walk:** browse with no destination. The companion stops at shops matching your preferences, stays in front when you turn around, and says when there are "3 picks upstairs". Look at any shop to see up to 3 offers. Sponsored shops are always labelled, and paying never changes a route.
 - **Tour:** visit the shops you like, stop by stop. **Multi-stop:** pick several shops and they're visited in the shortest order.
 - **Go to a place:** say it, or pick from a list or a floor-by-floor map.

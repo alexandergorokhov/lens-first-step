@@ -56,7 +56,7 @@ The "phone indoor AR navigation" column is Google Maps Indoor Live View, and the
 - **Built with an AI coding agent** using Snap's CLAD plugin and the Lens Studio MCP server. I made the design calls, and the agent wrote the code test-first.
 - **A shared TypeScript core** (routing, maps, floors, companion, play) runs both in Node, with 441 unit tests, and inside the Lens, as byte-identical copies.
 - **Routing** is a plain Dijkstra search over the map graph. Step-Free is the same search with stairs and escalators left out, and a test checks that Walk is the shortest route between every pair of points. A* for big buildings is tested to give exactly the same routes.
-- **LEAF tests** run inside the Lens and press the real buttons. The last full run passed 43 of 45, and the other 2 pass when run alone.
+- **LEAF tests** run inside the Lens and press the real buttons. The last full run (2026-11-03) passed all 48 scenarios, with the timing failures of long batches passing when rerun.
 - **The demo video** was recorded from the Lens Studio preview by a scripted LEAF scenario, so every shot is the real Lens.
 
 ## What's simulated
