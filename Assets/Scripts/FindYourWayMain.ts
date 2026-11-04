@@ -60,6 +60,7 @@ import {FindYourWayPickMapUI} from "./FindYourWayPickMapUI"
 import {MultiStopTrip, orderStops} from "./FindYourWayTrip"
 import {mapLogLines, tripAfterSaving} from "./FindYourWayMapping"
 import {peekPlace} from "./FindYourWayPeek"
+import {showingSettings, StartSettings} from "./FindYourWayDemo"
 import {destinationsOf, FreeWalk, interestList, matchDestination, sayItPhrase} from "./FindYourWayFreeWalk"
 import {FindYourWayHomePanelUI} from "./FindYourWayHomePanelUI"
 import {FindYourWayPrefsUI} from "./FindYourWayPrefsUI"
@@ -206,6 +207,10 @@ export class FindYourWayMain extends BaseScriptComponent {
   @input
   @hint("Companion on when a trip starts (it can always be turned on or off on the app panel)")
   companionOnAtStart: boolean = false
+
+  @input
+  @hint("Showing preset (for the judges): overrides map, start at sign, demo controls, companion model and on at start; preselects Walk; adds Restart showing, Demo: gate change and an Airport/Preview room map switch to the Options panel")
+  showingPreset: boolean = false
 
   @input
   @hint("The saved preferences of the demo (category ids, comma separated)")
@@ -363,6 +368,9 @@ export class FindYourWayMain extends BaseScriptComponent {
   private peekBuiltAt = -1
   // The LEAF scenarios and the autoplay demo show the demo controls even when they're off.
   private demoControlsForced = false
+  // The Inspector's own start settings (before the showing preset overrides them).
+  private authored: StartSettings | null = null
+  private preselect: string | null = null
 
   onAwake() {
     try {
@@ -371,6 +379,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     } catch (e) {
       print("[FYW] no persistent storage: " + e)
     }
+    this.applyShowing()
     const idx = MAP_SOURCES.map((m) => m.key).indexOf(this.mapKey)
     this.mapIndex = idx >= 0 ? idx : 0
     this.loadBuiltIn()
@@ -500,6 +509,9 @@ export class FindYourWayMain extends BaseScriptComponent {
       onNextStop: () => this.nextStop(),
       onEndWalk: () => this.endTrip(),
       onMap: () => this.setMapShown(!this.mapShown),
+      onRestartShowing: () => this.restartShowing(),
+      onShowingMap: () => this.nextMap(),
+      onShowingGate: () => this.changeDestination(),
     })
     if (global.deviceInfoSystem.isEditor()) this.appPanel.setBaseScale(PREVIEW_PANEL_SCALE)
     this.setCompanionModel(this.companionModel)
@@ -586,6 +598,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.placeModePanel()
     this.modePanel.setSayItPhrase(sayItPhrase(this.map))
     this.modePanel.setDestination(nodeLabel(this.map, this.tripDestination || this.place.destination))
+    this.modePanel.setPreselected(this.showingPreset ? this.preselect : null)
     this.modePanel.show()
   }
 
@@ -1018,9 +1031,45 @@ export class FindYourWayMain extends BaseScriptComponent {
   }
 
   private nextMap(): void {
-    // The saved map (Learn this place) comes after the bundled ones.
-    this.mapIndex = (this.mapIndex + 1) % (MAP_SOURCES.length + (this.mappedText ? 1 : 0))
+    this.mapIndex = this.nextMapIndex()
     this.restart()
+  }
+
+  // The saved map (Learn this place) comes after the bundled ones. Under the showing preset the
+  // switch goes between the airport and the preview room (for Learn this place), one press each way.
+  private nextMapIndex(): number {
+    if (this.showingPreset) {
+      const keys = MAP_SOURCES.map((m) => m.key)
+      return this.getMapKey() === "airport" ? keys.indexOf("room") : keys.indexOf("airport")
+    }
+    return (this.mapIndex + 1) % (MAP_SOURCES.length + (this.mappedText ? 1 : 0))
+  }
+
+  // The showing preset over the Inspector's settings (or the Inspector's own when it is off).
+  private applyShowing(): void {
+    if (!this.authored) {
+      this.authored = {mapKey: this.mapKey, startAtSign: this.startAtSign, showDemoControls: this.showDemoControls,
+        companionModel: this.companionModel, companionOnAtStart: this.companionOnAtStart, preselect: null}
+    }
+    const s = showingSettings(this.authored, this.showingPreset)
+    this.mapKey = s.mapKey
+    this.startAtSign = s.startAtSign
+    this.showDemoControls = s.showDemoControls
+    this.companionModel = s.companionModel
+    this.companionOnAtStart = s.companionOnAtStart
+    this.preselect = s.preselect
+  }
+
+  // Restart showing: the airport at its sign, closures cleared, the destination back to the map's
+  // own, the dog; the demo controls follow the preset.
+  restartShowing(): void {
+    this.applyShowing()
+    const idx = MAP_SOURCES.map((m) => m.key).indexOf(this.mapKey)
+    this.mapIndex = idx >= 0 ? idx : 0
+    this.setCompanionModel(this.companionModel)
+    this.restart()
+    this.demoControls.getSceneObject().enabled = this.showDemoControls || this.demoControlsForced
+    print("[FYW] restart showing")
   }
 
   private chooseMode(profile: Profile): void {
@@ -1691,6 +1740,9 @@ export class FindYourWayMain extends BaseScriptComponent {
     const wasOn = this.appPanel.getSceneObject().enabled
     this.appPanel.show(on)
     if (!on) return
+    const airport = this.getMapKey() === "airport"
+    this.appPanel.setShowing(this.showingPreset, this.showingPreset && airport && !!this.nav && this.getDestinationId() !== "gateC3",
+      this.showingPreset ? (airport ? "Map: Preview room" : "Map: Airport") : null)
     const offset = this.appPanel.isPlaying() ? this.playPanelOffset : global.deviceInfoSystem.isEditor() ? PREVIEW_PANEL_OFFSET : this.appPanelOffset
     this.panels.follow(this.appPanel.getSceneObject(), offset, wasOn)
   }
@@ -1943,6 +1995,16 @@ export class FindYourWayMain extends BaseScriptComponent {
   debugPeek(on: boolean): void { this.peekForced = on }
   debugSeeMap(on: boolean): void { this.setMapShown(on) }
   isPeekShown(): boolean { return !!this.peekView && this.peekView.isShown() }
+  isShowingPreset(): boolean { return this.showingPreset }
+  debugSetShowingPreset(on: boolean): void { this.showingPreset = on }
+  getStartSettings(): StartSettings {
+    return {mapKey: this.mapKey, startAtSign: this.startAtSign, showDemoControls: this.showDemoControls,
+      companionModel: this.companionModel, companionOnAtStart: this.companionOnAtStart, preselect: this.preselect as StartSettings["preselect"]}
+  }
+  getPreselectedMode(): string | null { return this.modePanel.getPreselected() }
+  getWalkButtonLabel(): string { return this.modePanel.getWalkLabel() }
+  getNextMapKey(): string { const i = this.nextMapIndex(); return i < MAP_SOURCES.length ? MAP_SOURCES[i].key : MAPPED_KEY_NAME }
+  getClosedEdges(): string[] { return Object.keys(this.closed).filter((k) => this.closed[k]) }
   areDemoControlsShown(): boolean { return this.demoControls.getSceneObject().enabled }
   debugSetInterests(ids: string[]): void { this.modePanel.setInterests(ids) }
   isEdgeOpen(edgeId: string): boolean {

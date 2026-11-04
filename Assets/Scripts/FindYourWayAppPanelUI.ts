@@ -19,6 +19,10 @@ export interface AppPanelHandlers {
   onThrow: () => void
   onNextStop: () => void
   onEndWalk: () => void
+  // The showing preset only: back to the showing state, the airport/room map switch, the gate change.
+  onRestartShowing?: () => void
+  onShowingMap?: () => void
+  onShowingGate?: () => void
 }
 
 const WIDTH = 22
@@ -38,6 +42,9 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
   private nextStop: LabeledButton
   private endWalk: LabeledButton
   private model: LabeledButton
+  private restartShowing: LabeledButton
+  private showingMap: LabeledButton
+  private showingGate: LabeledButton
   private baseScale = 1
   private placesOn = true
   private panel: Panel
@@ -65,9 +72,17 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
     this.nextStop = addButton(panel.content, "NextStopButton", "Next stop", WIDTH, BUTTON_H, icon("location_on"),
       h.onNextStop, TEXT, FONT)
     this.endWalk = addButton(panel.content, "EndWalkButton", "End walk", WIDTH, BUTTON_H, null, h.onEndWalk, TEXT, FONT)
+    const none = () => {}
+    this.showingGate = addButton(panel.content, "ShowingGateChangeButton", "Demo: gate change", WIDTH, BUTTON_H, null,
+      h.onShowingGate || none, TEXT, FONT)
+    this.showingMap = addButton(panel.content, "ShowingMapButton", "Map: Preview room", WIDTH, BUTTON_H, icon("map"),
+      h.onShowingMap || none, TEXT, FONT)
+    this.restartShowing = addButton(panel.content, "RestartShowingButton", "Restart showing", WIDTH, BUTTON_H, icon("restart_alt"),
+      h.onRestartShowing || none, TEXT, FONT)
     this.rows = [title.getSceneObject(), this.companion.so, this.model.so, this.places.so, this.seeMap.so, this.play.so, this.jump.so,
-      this.throwBtn.so, this.nextStop.so, this.endWalk.so]
+      this.throwBtn.so, this.nextStop.so, this.endWalk.so, this.showingGate.so, this.showingMap.so, this.restartShowing.so]
     this.optionRows = [title.getSceneObject(), this.companion.so, this.model.so, this.places.so, this.seeMap.so]
+    this.setShowing(false, false, null)
     this.setPlay(false, false, false)
     this.setNextStop(null)
     this.setFreeWalk(false)
@@ -131,6 +146,19 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
       for (const r of this.optionRows) r.enabled = !playing
       this.setBaseScale(this.baseScale)
     }
+    this.relayout()
+  }
+
+  // The showing preset's rows: Restart showing, Demo: gate change (airport trips only) and the map
+  // switch (its label names the map it goes to; null hides it). Not demo controls: they stay with
+  // the demo controls hidden.
+  setShowing(restart: boolean, gate: boolean, mapLabel: string | null): void {
+    if (!this.restartShowing) return
+    const show = (b: LabeledButton, on: boolean) => { if (b.so.enabled !== on) b.so.enabled = on }
+    show(this.restartShowing, restart && !this.playing)
+    show(this.showingGate, gate && !this.playing)
+    show(this.showingMap, mapLabel !== null && !this.playing)
+    if (mapLabel !== null && this.showingMap.label.text !== mapLabel) this.showingMap.label.text = mapLabel
     this.relayout()
   }
 

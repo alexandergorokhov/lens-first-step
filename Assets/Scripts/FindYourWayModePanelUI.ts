@@ -59,6 +59,9 @@ export class FindYourWayModePanelUI extends BaseScriptComponent {
   private _onTalk = new Event<void>()
   private destText: Text
   private sayIt: LabeledButton
+  private walkButton: LabeledButton
+  private stepFreeButton: LabeledButton
+  private preselected: string | null = null
   get onSayIt(): PublicApi<void> { return this._onSayIt.publicApi() }
   get onWhereTo(): PublicApi<void> { return this._onWhereTo.publicApi() }
   get onTalk(): PublicApi<void> { return this._onTalk.publicApi() }
@@ -79,9 +82,9 @@ export class FindYourWayModePanelUI extends BaseScriptComponent {
       () => this._onTalk.invoke(), this.textColor, 100, "Button")
     addButton(panel.content, "WhereToButton", "Where to?", this.buttonWidthCm, 4.2, icon("location_on"),
       () => this._onWhereTo.invoke(), this.textColor, 100, "Button")
-    addButton(panel.content, "WalkButton", this.walkLabel, this.buttonWidthCm, this.buttonHeightCm - 1.5,
+    this.walkButton = addButton(panel.content, "WalkButton", this.walkLabel, this.buttonWidthCm, this.buttonHeightCm - 1.5,
       icon("directions_walk"), () => this._onWalk.invoke(), this.textColor, 100, "HeadlineXL", "Primary")
-    addButton(panel.content, "StepFreeButton", this.stepFreeLabel, this.buttonWidthCm,
+    this.stepFreeButton = addButton(panel.content, "StepFreeButton", this.stepFreeLabel, this.buttonWidthCm,
       this.buttonHeightCm - 1.5, icon("accessible"), () => this._onStepFree.invoke(), this.textColor, 100,
       "Headline1", "Primary")
     addText(panel.content, "InterestsTitle", "Point out (optional):", "Caption", width - 3, 2,
@@ -119,6 +122,17 @@ export class FindYourWayModePanelUI extends BaseScriptComponent {
   setInterests(ids: string[]): void {
     for (const k of Object.keys(INTEREST_LABEL)) if (!!this.picked[k] !== (ids.indexOf(k) >= 0)) this.toggleInterest(k)
   }
+
+  // The showing preset: the mode one pinch starts is highlighted ("walk" / "stepFree"; null: none).
+  setPreselected(mode: string | null): void {
+    this.preselected = mode
+    if (this.walkButton) this.walkButton.label.text = (mode === "walk" ? "▶ " : "") + this.walkLabel
+    if (this.stepFreeButton) this.stepFreeButton.label.text = (mode === "stepFree" ? "▶ " : "") + this.stepFreeLabel
+  }
+
+  getPreselected(): string | null { return this.preselected }
+
+  getWalkLabel(): string { return this.walkButton ? this.walkButton.label.text : "" }
 
   show(): void { this.sceneObject.enabled = true }
   hide(): void { this.sceneObject.enabled = false }
