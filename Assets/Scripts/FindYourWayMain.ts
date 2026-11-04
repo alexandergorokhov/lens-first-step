@@ -1764,6 +1764,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   getLineLocalPoints(): vec3[] { return this.routeLine.getPoints() }
   isTurnArrowVisible(): boolean { return this.turnArrow.isShown() }
   isLineSwinging(): boolean { return this.routeLine.isSwinging() }
+  getLineSwingCount(): number { return this.routeLine.getSwingCount() }
   getHudCardText(): string | null { return this.hud.getCardText() }
   getBadgeText(): string | null { return this.hud.getBadgeText() }
   getArrivalText(): string | null { return this.arrivalCard.getShownText() }

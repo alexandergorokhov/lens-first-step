@@ -15,7 +15,7 @@ export async function toModes(it: DefaultLeafInteractor, mapKey: string = "mall"
     await sleep(600)
   }
   await tap(it, "RestartButton")
-  await waitFor(() => main.getPhase() === "scan" && main.isScanSignVisible(), 3000, "scan sign")
+  await waitFor(() => main.getPhase() === "scan" && main.isScanSignVisible(), 8000, "scan sign")
   await sleep(800)
   await waitFor(() => !main.isAnchorSettling(), 12000, "world anchor settled")
   main.debugSetDownloadOverride(JSON.stringify(bundledMaps().filter((m) => m.key === mapKey)[0].map))

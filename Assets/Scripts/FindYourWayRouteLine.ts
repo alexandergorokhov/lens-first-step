@@ -48,6 +48,8 @@ export class FindYourWayRouteLine extends BaseScriptComponent {
   private points: vec3[] = []
   private aheadCm = 1000
   private swingT = -1
+  // How many swings have started (tests: a swing can be over before they look).
+  private swings = 0
   private visible = false
 
   onAwake() {
@@ -122,8 +124,10 @@ export class FindYourWayRouteLine extends BaseScriptComponent {
       this.oldRmv.mesh = this.rmv.mesh
       this.oldRmv.getSceneObject().enabled = true
       this.swingT = 0
+      this.swings++
     } else if (reroute && !this.visible) {
       this.swingT = 0
+      this.swings++
     }
     this.points = points
     this.aheadCm = aheadCm
@@ -143,6 +147,7 @@ export class FindYourWayRouteLine extends BaseScriptComponent {
   isShowing(): boolean { return this.visible }
   getPoints(): vec3[] { return this.points.slice() }
   isSwinging(): boolean { return this.swingT >= 0 }
+  getSwingCount(): number { return this.swings }
 
   private tick(): void {
     if (this.swingT < 0) return

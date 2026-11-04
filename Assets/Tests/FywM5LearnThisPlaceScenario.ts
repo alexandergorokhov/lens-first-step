@@ -15,7 +15,7 @@ export class FywM5LearnThisPlaceScenario extends Scenario {
     const main = getMain()
     main.debugForgetSavedMap()
     await tap(it, "RestartButton")
-    await waitFor(() => main.getPhase() === "scan" && !main.isAnchorSettling(), 4000, "scan sign")
+    await waitFor(() => main.getPhase() === "scan" && !main.isAnchorSettling(), 12000, "scan sign")
     main.debugSetPose(0, 0, 0, 0)
     await tap(it, "ScanSignButton")
     await waitFor(() => main.getPhase() === "choose", 8000, "the three modes")

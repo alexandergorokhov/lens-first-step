@@ -18,7 +18,7 @@ export class FywS1StartAtSignScenario extends Scenario {
     await sleep(300)
     expect(main.areDemoControlsShown(), "demo controls hidden by default").toBe(false)
     main.debugShowDemoControls(true)
-    await waitFor(() => main.getPhase() === "scan" && !main.isAnchorSettling(), 4000, "scan sign")
+    await waitFor(() => main.getPhase() === "scan" && !main.isAnchorSettling(), 12000, "scan sign")
     const s = main.getStartWorldPos()
     const c = main.getCameraWorldPos()
     const d = Math.sqrt((s.x - c.x) ** 2 + (s.z - c.z) ** 2)

@@ -17,10 +17,12 @@ export class FywDc4GateChangeScenario extends Scenario {
     const escTop = findNode(walk.getMapData(), "escTop")!
     walk.debugSetPose(escTop.x, escTop.y, escTop.z + 0.5, 0)
     await sleep(300)
+    const swings = walk.getLineSwingCount()
     await tap(it, "GateChangeButton")
     expect(walk.getDestinationId(), "new destination").toBe("gateC3")
     expect(walk.getHudCardText(), "gate-change card").toBe("Gate change B12 → C3")
-    expect(walk.isLineSwinging(), "line swings round").toBe(true)
+    // The swing lasts 0.9 s; on slow frames it is over before the tap returns, so count it.
+    expect(walk.getLineSwingCount() > swings, "line swings round").toBe(true)
     await shot(walk, "dc4-gate-change-stairs-and-ramp-1", true)
     const k = walk.getRouteEdgeKinds()
     expect(k.indexOf("stairs") >= 0, "walk takes the stairs: " + k.join(",")).toBe(true)

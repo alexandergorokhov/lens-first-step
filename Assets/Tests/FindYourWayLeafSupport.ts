@@ -22,7 +22,7 @@ export function getMain(): FindYourWayMain {
 }
 
 // A tap on Restart rebuilds the whole place inside the tap (~3 s, more late in a long batch).
-const TAP_TIMEOUT_MS = 12000
+const TAP_TIMEOUT_MS = 20000 // 12 s timed out late in long batches (Nov 3 night run)
 
 export async function tap(interactor: DefaultLeafInteractor, name: string): Promise<void> {
   // A button shown this frame gets its Interactable on its first frame: retry for ~1 s.
@@ -70,7 +70,7 @@ export async function startTrip(interactor: DefaultLeafInteractor, profile: Prof
     await sleep(800)
   }
   await tap(interactor, "RestartButton")
-  await waitFor(() => main.getPhase() === "scan" && main.isScanSignVisible(), 3000, "scan sign")
+  await waitFor(() => main.getPhase() === "scan" && main.isScanSignVisible(), 8000, "scan sign")
   await sleep(800) // world anchor settles
   await waitFor(() => !main.isAnchorSettling(), 12000, "world anchor settled")
   if (beforeMode) beforeMode(main)
@@ -111,27 +111,24 @@ export function nodePoints(map: MapData, ids: string[]): Vec3[] {
   })
 }
 
-// Brute force over every simple path, honouring one-way escalators and the profile's rules.
-// Independent of the router's Dijkstra, so it can check "shortest".
+// The shortest distance by Bellman-Ford relaxation, honouring one-way escalators and the profile's
+// rules. Independent of the router's Dijkstra, so it can check "shortest". (It used to try every
+// simple path, which grew past Lens Studio's per-frame JS time limit on today's maps.)
 export function bruteShortest(map: MapData, from: string, to: string, profile: Profile): number {
-  let best = Infinity
-  const seen: {[id: string]: boolean} = {}
-  seen[from] = true
-  const walk = (at: string, sofar: number): void => {
-    if (sofar >= best) return
-    if (at === to) { best = sofar; return }
+  const dist: {[id: string]: number} = {}
+  for (const n of map.nodes) dist[n.id] = Infinity
+  dist[from] = 0
+  for (let i = 0; i < map.nodes.length; i++) {
+    let changed = false
     for (const e of map.edges) {
       if (!e.open) continue
       if (profile === "stepFree" && (e.kind === "stairs" || e.kind === "escalator")) continue
-      const next = e.from === at ? e.to : e.to === at && e.kind !== "escalator" ? e.from : null
-      if (next === null || seen[next]) continue
-      seen[next] = true
-      walk(next, sofar + e.length)
-      seen[next] = false
+      if (dist[e.from] + e.length < dist[e.to]) { dist[e.to] = dist[e.from] + e.length; changed = true }
+      if (e.kind !== "escalator" && dist[e.to] + e.length < dist[e.from]) { dist[e.from] = dist[e.to] + e.length; changed = true }
     }
+    if (!changed) break
   }
-  walk(from, 0)
-  return best
+  return dist[to] === undefined ? Infinity : dist[to]
 }
 
 export function kindsOf(edges: MapEdge[]): string[] {
