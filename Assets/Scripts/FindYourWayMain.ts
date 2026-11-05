@@ -61,8 +61,8 @@ import {MultiStopTrip, orderStops} from "./FindYourWayTrip"
 import {mapLogLines, tripAfterSaving} from "./FindYourWayMapping"
 import {peekPlace} from "./FindYourWayPeek"
 import {showingSettings, StartSettings} from "./FindYourWayDemo"
-import {destinationsOf, FreeWalk, interestList, matchDestination, sayItPhrase, walkableRoute} from "./FindYourWayFreeWalk"
-import {OptionsDock} from "./FindYourWayDock"
+import {destinationsOf, FreeWalk, interestList, matchDestination, sayItPhrase, ShopLook, walkableRoute} from "./FindYourWayFreeWalk"
+import {OptionsDock, quietView, routeLineAheadM} from "./FindYourWayDock"
 import {FindYourWayHomePanelUI} from "./FindYourWayHomePanelUI"
 import {FindYourWayPrefsUI} from "./FindYourWayPrefsUI"
 import {FindYourWayOfferUI} from "./FindYourWayOfferUI"
@@ -218,9 +218,9 @@ export class FindYourWayMain extends BaseScriptComponent {
   presetPreferences: string = "coffee,clothes,hardware"
 
   @input
-  @hint("How far ahead the companion walks, m (core COMPANION_LEAD_M = 6). The floor only enters the view from about 5.4 m")
+  @hint("How far ahead the companion walks, m (core COMPANION_LEAD_M = 7). The floor only enters the view from about 5.4 m")
   @widget(new SliderWidget(1.5, 10, 0.1))
-  companionLeadM: number = 6
+  companionLeadM: number = 7
 
   @input
   @hint("Free walk: seconds the companion points at a matching shop")
@@ -343,6 +343,8 @@ export class FindYourWayMain extends BaseScriptComponent {
   private petPtsCache: {pts: Vec3[]; out: Vec3[]} | null = null
   // The Options panel folds to a small tab once a trip or walk starts.
   private dock = new OptionsDock()
+  // Looking at a shop on a guided trip: its button and short card (Free walk has its own).
+  private shopLook: {map: MapData; look: ShopLook} | null = null
   private mappingPanelPlaced = false
   // "Gate C3 is on C pier, 1 floor up": shown in the cue slot for DEST_NOTE_S after the scan or a
   // destination change (null = work it out on the next frame).
@@ -1498,6 +1500,7 @@ export class FindYourWayMain extends BaseScriptComponent {
         if (d) this.arrivalCard.show(this.arrivalWords(at), this.local(d, ARRIVAL_CARD_CM), this.iconOfNode(at))
         this.hud.setPill(null)
         this.hud.setCue(null)
+        this.freeView.showLook(null, pos)
         this.pointed = null
         if (this.placesUI) this.placesUI.show([], null)
         if (this.view) this.view.setPost(null, true)
@@ -1516,6 +1519,14 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.updateArrow(pos)
     this.updatePlaces(pos)
     this.updateCompanion(pos, false)
+    this.updateShopLook(pos)
+  }
+
+  private updateShopLook(pos: Vec3): void {
+    if (!this.nav) return
+    if (!this.shopLook || this.shopLook.map !== this.nav.map) this.shopLook = {map: this.nav.map, look: new ShopLook(this.nav.map as any)}
+    this.shopLook.look.update(pos, this.userHeading(), getTime())
+    this.freeView.showLook(this.shopLook.look, pos)
   }
 
   // ── Pill, places, companion, play, stops ────────────────────────
@@ -1750,6 +1761,9 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.appPanel.show(on)
     this.dock.update(on, this.appPanel.isPlaying() || this.appPanel.isNextStopShown())
     this.appPanel.setCollapsed(this.dock.isCollapsed())
+    // A clear view while walking: no map badge, score chip or play hint until you stand still.
+    const q = quietView(on, this.playTime.gate.canPlay || this.appPanel.isPlaying(), this.phase === "arrived")
+    this.hud.setQuiet(q.badge, q.score, q.playLine)
     if (!on) return
     const airport = this.getMapKey() === "airport"
     this.appPanel.setShowing(this.showingPreset, this.showingPreset && airport && !!this.nav && this.getDestinationId() !== "gateC3",
@@ -1788,7 +1802,9 @@ export class FindYourWayMain extends BaseScriptComponent {
 
   private updateLine(pos: Vec3): void {
     // Only your floor: the line ends at the foot of the next floor change, with an up/down post.
-    const onLevel = lineOnLevel(lineAhead(this.routeMapPoints(), pos, this.lineAheadM), this.trip ? this.trip.floorY : undefined)
+    // Following the companion, the whole route is drawn; otherwise lineAheadM of it.
+    const ahead = routeLineAheadM(this.guide.on, this.lineAheadM)
+    const onLevel = lineOnLevel(lineAhead(this.routeMapPoints(), pos, ahead), this.trip ? this.trip.floorY : undefined)
     const pts = onLevel.line
     if (this.view) this.view.setPost(onLevel.marker ? this.local(onLevel.marker.at) : null, onLevel.marker ? onLevel.marker.up : true)
     const key = pts.map((p) => Math.round(p.x * 20) + "," + Math.round(p.y * 20) + "," + Math.round(p.z * 20)).join(";")
@@ -1796,7 +1812,13 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.lastLineKey = key
     this.lineMapPoints = pts
     const local = pts.map((p) => this.local(p, LINE_LIFT_CM))
-    this.routeLine.setPath(local.length > 1 ? local : [], this.lineAheadM * 100, this.pendingSwing)
+    let fadeCm = this.lineAheadM * 100
+    if (ahead === Infinity) {
+      fadeCm = 0
+      for (let i = 1; i < pts.length; i++) fadeCm += Math.sqrt((pts[i].x - pts[i - 1].x) ** 2 + (pts[i].z - pts[i - 1].z) ** 2) * 100
+      fadeCm = Math.max(100, fadeCm)
+    }
+    this.routeLine.setPath(local.length > 1 ? local : [], fadeCm, this.pendingSwing)
     this.pendingSwing = false
   }
 
@@ -1974,7 +1996,11 @@ export class FindYourWayMain extends BaseScriptComponent {
   getPrefsModelLabel(id: string): string { return this.prefsPanel ? this.prefsPanel.getModelLabel(id) : "" }
   getFreePrefs(): string[] { return this.free ? this.free.prefs.slice() : [] }
   getDotId(): string | null { return this.free ? this.free.dot() : null }
+  // What the HUD would show if the view weren't kept clear while walking (quietView).
+  getScoreWanted(): string | null { return this.hud.getScoreWanted() }
+  getBadgeWanted(): string | null { return this.hud.getBadgeWanted() }
   isOptionsCollapsed(): boolean { return !!this.appPanel && this.appPanel.isCollapsed() }
+  getOfferPeekTitle(): string | null { const p = this.offerUI ? this.offerUI.getPeek() : null; return p ? p.title : null }
   isOfferPeekShown(): boolean { return !!this.offerUI && this.offerUI.isPeekShown() }
   getOfferPeekLines(): string[] { const p = this.offerUI ? this.offerUI.getPeek() : null; return p ? p.lines.slice() : [] }
   getCompanionLeadM(): number { return this.companionLeadM }

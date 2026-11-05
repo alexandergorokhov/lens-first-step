@@ -67,6 +67,12 @@ export class FindYourWayHudUI extends BaseScriptComponent {
   private scoreText: Text
   private play: SceneObject
   private playText: Text
+  private showBadge = true
+  private showScore = true
+  private showPlay = true
+  private badgeWanted: string | null = null
+  private scoreWanted: string | null = null
+  private playWanted: string | null = null
   private cardTime = -1
   private cardFresh = false
   private cardDuration = 5
@@ -124,10 +130,34 @@ export class FindYourWayHudUI extends BaseScriptComponent {
   getPillText(): string | null { return this.pill.enabled ? this.pillText.text : null }
   setCue(text: string | null): void { this.setLine(this.cue, this.cueText, text) }
   getCueText(): string | null { return this.cue.enabled ? this.cueText.text : null }
-  setScore(text: string | null): void { this.setLine(this.score, this.scoreText, text) }
+  setScore(text: string | null): void {
+    this.scoreWanted = text
+    this.setLine(this.score, this.scoreText, this.showScore ? text : null)
+  }
   getScoreText(): string | null { return this.score.enabled ? this.scoreText.text : null }
-  setPlayLine(text: string | null): void { this.setLine(this.play, this.playText, text) }
+  getScoreWanted(): string | null { return this.scoreWanted }
+  getBadgeWanted(): string | null { return this.badgeWanted }
+  setPlayLine(text: string | null): void {
+    this.playWanted = text
+    this.setLine(this.play, this.playText, this.showPlay ? text : null)
+  }
   getPlayLine(): string | null { return this.play.enabled ? this.playText.text : null }
+
+  // A clear view while walking (core quietView): rows hidden here keep their text and come back.
+  setQuiet(badge: boolean, score: boolean, play: boolean): void {
+    if (badge !== this.showBadge) {
+      this.showBadge = badge
+      this.setBadge(this.badgeWanted)
+    }
+    if (score !== this.showScore) {
+      this.showScore = score
+      this.setScore(this.scoreWanted)
+    }
+    if (play !== this.showPlay) {
+      this.showPlay = play
+      this.setPlayLine(this.playWanted)
+    }
+  }
 
   showCard(text: string, iconName?: string | null, seconds?: number): void {
     this.cardText.text = text
@@ -162,7 +192,8 @@ export class FindYourWayHudUI extends BaseScriptComponent {
   }
 
   setBadge(text: string | null): void {
-    if (text === null) {
+    this.badgeWanted = text
+    if (text === null || !this.showBadge) {
       this.badge.enabled = false
       return
     }

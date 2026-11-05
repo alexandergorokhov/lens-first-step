@@ -6,8 +6,9 @@ import { readFileSync } from "node:fs";
 import { parseMap } from "../router.ts";
 import type { MapData } from "../router.ts";
 import { petTarget } from "../pet.ts";
-import { clampToPaths, FreeWalk, insideShop, offerPeek, walkableRoute } from "../freewalk.ts";
-import { COMPANION_LEAD_M, OptionsDock } from "../dock.ts";
+import { clampToPaths, FreeWalk, insideShop, offerPeek, ShopLook, walkableRoute } from "../freewalk.ts";
+import { COMPANION_LEAD_M, OptionsDock, quietView, routeLineAheadM } from "../dock.ts";
+import { COMPANION_ALPHA } from "../anim.ts";
 
 function mall(): MapData {
   const r = parseMap(readFileSync(new URL("../data/mall.json", import.meta.url), "utf8"));
@@ -19,17 +20,17 @@ const flat = (a: { x: number; z: number }, b: { x: number; z: number }) => Math.
 
 // ── 1. Lead distance ────────────────────────────────────────────────────────
 
-test("L1: the companion leads 6 m ahead", () => {
-  assert.equal(COMPANION_LEAD_M, 6);
+test("L1: the companion leads 7 m ahead", () => {
+  assert.equal(COMPANION_LEAD_M, 7);
 });
 
-test("L2: on a guided route the pet's target is 6 m ahead along the line", () => {
+test("L2: on a guided route the pet's target is 7 m ahead along the line", () => {
   const route = [{ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 20 }];
   const t = petTarget(route, { x: 0, y: 0, z: 2 }, COMPANION_LEAD_M);
-  assert.ok(Math.abs(t.at.z - 8) < 1e-6, "at z " + t.at.z);
+  assert.ok(Math.abs(t.at.z - 9) < 1e-6, "at z " + t.at.z);
 });
 
-test("L3: in Free walk the companion settles about 6 m ahead in the hall", () => {
+test("L3: in Free walk the companion settles about 7 m ahead in the hall", () => {
   const map = mall() as any;
   const fw = new FreeWalk(map, ["coffee"], { aheadM: COMPANION_LEAD_M });
   const pos = { x: 30, y: 0, z: 10 };
@@ -38,7 +39,7 @@ test("L3: in Free walk the companion settles about 6 m ahead in the hall", () =>
   for (let i = 1; i < 200; i++) f = fw.update(pos, 90, 0.05, i * 0.05);
   assert.ok(f.pet, "a companion");
   const d = flat(f.pet!.pos, pos);
-  assert.ok(d > 5.5 && d < 6.5, "lead " + d.toFixed(2));
+  assert.ok(d > 6.5 && d < 7.5, "lead " + d.toFixed(2));
 });
 
 // ── 2. Never through a shop door or wall ────────────────────────────────────
@@ -57,7 +58,7 @@ test("W2: the route given to the companion stops short of the shop door", () => 
   for (const p of r) assert.equal(insideShop(map, p), false, "inside at " + JSON.stringify(p));
   const end = r[r.length - 1];
   assert.ok(end.z > 7 && end.z < 8.5, "ends just outside the door, z " + end.z);
-  // 6 m ahead from 2 m before the turn, the companion waits at the door, not in the shop.
+  // 7 m ahead from 2 m before the turn, the companion waits at the door, not in the shop.
   const t = petTarget(r, { x: 14, y: 0, z: 10 }, COMPANION_LEAD_M);
   assert.equal(insideShop(map, t.at), false);
 });
@@ -70,7 +71,7 @@ test("W3: a route with no shop at its end is unchanged", () => {
 
 test("W4: Free walk's lead spot is pulled back out of a shop onto walkable space", () => {
   const map = mall() as any;
-  // 6 m ahead of (16,0,11) looking south is inside the café.
+  // 7 m ahead of (16,0,11) looking south is inside the café.
   const q = clampToPaths(map, { x: 16, z: 5 }, 0)!;
   assert.ok(q, "a spot");
   assert.equal(insideShop(map, q), false, "spot " + JSON.stringify(q));
@@ -157,4 +158,42 @@ test("O3: looking at the café front from the hall gives its card; looking away 
   assert.ok(peek && peek.title === "Bean There Café", "card " + JSON.stringify(peek));
   for (let i = 0; i < 80; i++) fw.update(pos, 0, 0.05, 2 + i * 0.05);
   assert.equal(fw.peek(pos), null);
+});
+
+// ── 5. Following the companion: the full line, a solid companion, a clear view ──
+
+test("F1: with the companion on, the whole route line is drawn; without it, the usual stretch ahead", () => {
+  assert.equal(routeLineAheadM(true, 10), Infinity);
+  assert.equal(routeLineAheadM(false, 10), 10);
+});
+
+test("F2: the companion reads solid (alpha at least 0.8)", () => {
+  assert.ok(COMPANION_ALPHA >= 0.8 && COMPANION_ALPHA <= 1, String(COMPANION_ALPHA));
+});
+
+test("C1: walking a trip, only the line, companion, pill and arrow: no map badge, score chip or play hint", () => {
+  assert.deepEqual(quietView(true, false, false), { badge: false, score: false, playLine: false });
+});
+
+test("C2: standing still on a trip brings back the score and the play hint; arrival shows the score", () => {
+  assert.deepEqual(quietView(true, true, false), { badge: false, score: true, playLine: true });
+  assert.deepEqual(quietView(true, false, true), { badge: false, score: true, playLine: false });
+});
+
+test("C3: off a trip (sign, choices) nothing is hidden", () => {
+  assert.deepEqual(quietView(false, false, false), { badge: true, score: true, playLine: true });
+});
+
+test("S1: on a guided trip too, looking at a shop gives its card; looking away clears it", () => {
+  const map = mall() as any;
+  const look = new ShopLook(map);
+  const pos = { x: 16, y: 0, z: 11 };
+  look.update(pos, 180, 0);
+  look.update(pos, 180, 1);
+  assert.equal(look.dot(), "cafe");
+  assert.equal(look.peek(pos)!.title, "Bean There Café");
+  assert.ok(look.label(pos).indexOf("Bean There Café") >= 0, look.label(pos));
+  for (let i = 0; i < 80; i++) look.update(pos, 0, 2 + i * 0.05);
+  assert.equal(look.dot(), null);
+  assert.equal(look.peek(pos), null);
 });

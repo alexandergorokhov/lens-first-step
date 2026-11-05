@@ -11,7 +11,7 @@ import {floorArrow, walkChecking} from "./FywVwSupport"
 
 // vw2 — Free walk: it steps aside and points in view, ~10 s apart; no floor arrow while it is in view.
 // Companion polish: the Options panel is folded to its tab once the walk starts (the tab opens it);
-// the companion leads ~6 m ahead and never stands inside a shop; looking at a shop shows its card.
+// the companion leads ~7 m ahead and never stands inside a shop; looking at a shop shows its card.
 @component
 export class FywVw2FreeWalkInViewScenario extends Scenario {
   async run(): Promise<void> {
@@ -56,9 +56,10 @@ export class FywVw2FreeWalkInViewScenario extends Scenario {
     expect(outFrames, "out of view while pointing").toBe(0)
     expect(arrowInView, "no floor arrow while the companion is in view").toBe(0)
     expect(inShop, "frames with the companion inside a shop").toBe(0)
+    expect(main.getBadgeText(), "no map badge in the way while walking").toBe(null)
     leads.sort((a, b) => a - b)
     const lead = leads.length > 0 ? leads[Math.floor(leads.length / 2)] : -1
-    expect(lead > 4.5 && lead < 7.5, "leads about 6 m ahead (median): " + lead.toFixed(1)).toBe(true)
+    expect(lead > 5.5 && lead < 8.5, "leads about 7 m ahead (median): " + lead.toFixed(1)).toBe(true)
     await waitFor(() => main.getPointState() === "lead", 8000, "back in the lead")
     // In Free walk it comes round in front of you when you turn, so it is never out of view for
     // long: the arrow must not show after you turn and it has caught up.

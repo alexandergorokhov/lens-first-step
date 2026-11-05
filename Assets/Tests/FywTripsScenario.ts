@@ -19,6 +19,14 @@ export class FywT1MallStopsScenario extends Scenario {
       const main = await startTrip(it, profile as "walk" | "stepFree", 0, undefined, ["nav"], "mall")
       const stops = main.getStops()
       expect(stops.length, "three stops").toBe(3)
+      if (profile === "walk") {
+        // On a guided trip too, looking at a shop shows its short card (Bean There Café from the hall).
+        main.debugSetPose(16, 0, 11, 180)
+        await waitFor(() => main.isOfferPeekShown(), 3000, "the look-at card on a guided trip")
+        expect(main.getOfferPeekTitle(), "card title").toBe("Bean There Café")
+        main.debugSetPose(16, 0, 11, 0)
+        await waitFor(() => !main.isOfferPeekShown(), 4000, "the card hides after looking away")
+      }
       expect(main.getDestinationId(), "first stop first").toBe(stops[0])
       for (let i = 0; i < stops.length; i++) {
         if (profile === "stepFree") {

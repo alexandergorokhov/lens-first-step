@@ -5,7 +5,7 @@
 import {Vec3} from "./FindYourWayRouter"
 import {levelName, PlaceInfo} from "./FindYourWayMapLibrary"
 import {turnOutOfView, yawTo} from "./FindYourWayGeometry"
-import {FreeWalk} from "./FindYourWayFreeWalk"
+import {FreeWalk, ShopLook} from "./FindYourWayFreeWalk"
 import {FindYourWayBubbleUI} from "./FindYourWayBubbleUI"
 import {FindYourWayCompanionView} from "./FindYourWayCompanionView"
 import {FindYourWayHudUI} from "./FindYourWayHudUI"
@@ -44,6 +44,22 @@ export class FindYourWayFreeWalkView {
   reset(): void {
     this.shownOpen = null
     this.offerPlaced = false
+  }
+
+  // A guided trip: the button and short card of the shop you look at (no list); null hides them.
+  showLook(look: ShopLook | null, pos: Vec3): void {
+    const offer = this.host.offerUI
+    if (!offer) return
+    const dot = look ? look.dot() : null
+    offer.showDot(dot !== null)
+    if (dot === null || !look) {
+      offer.setPeek(null)
+      return
+    }
+    offer.setDotText(look.label(pos))
+    offer.setPeek(look.peek(pos))
+    const cam = this.host.camera.getTransform()
+    offer.placeDot(cam.getWorldPosition().add(cam.getWorldRotation().multiplyVec3(DOT_OFFSET)), cam.getWorldRotation())
   }
 
   tick(free: FreeWalk): void {

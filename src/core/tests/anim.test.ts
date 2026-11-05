@@ -149,6 +149,6 @@ function worldY(id: string, p: { joint: string; at: number[] }): number {
   return y;
 }
 
-test("A14 the companion is see-through enough to show the floor under it", () => {
-  assert.ok(COMPANION_ALPHA >= 0.4 && COMPANION_ALPHA <= 0.6, String(COMPANION_ALPHA));
+test("A14 the companion reads solid enough to follow (alpha 0.8 to 1)", () => {
+  assert.ok(COMPANION_ALPHA >= 0.8 && COMPANION_ALPHA <= 1, String(COMPANION_ALPHA));
 });

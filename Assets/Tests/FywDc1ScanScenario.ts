@@ -32,8 +32,8 @@ export class FywDc1ScanScenario extends Scenario {
     const local = main.getLineLocalPoints()
     expect(local.length >= 2, "line mesh points").toBe(true)
     expect(local[0].y, "line 1 cm above the floor").toBeCloseTo(1, 1)
-    expect(main.getBadgeText() === "online map" || main.getBadgeText() === "offline map", "map badge").toBe(true)
+    expect(main.getBadgeWanted() === "online map" || main.getBadgeWanted() === "offline map", "map badge").toBe(true)
     await shot(main, "dc1-scan-sign-line-appears-1")
-    log("DC1 pass; badge=" + main.getBadgeText())
+    log("DC1 pass; badge=" + main.getBadgeWanted())
   }
 }

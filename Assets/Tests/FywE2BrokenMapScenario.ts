@@ -14,7 +14,7 @@ export class FywE2BrokenMapScenario extends Scenario {
     await sleep(1000)
     const main = await startTrip(it, "walk", 0, (m) => m.debugSetDownloadOverride('{"nodes": [ broken'))
     expect(main.getHudCardTextOrEmpty(), "card").toBe("Map couldn't load")
-    expect(main.getBadgeText(), "badge").toBe("offline map")
+    expect(main.getBadgeWanted(), "badge").toBe("offline map")
     expect(main.getMapSource(), "source").toBe("offline")
     expect(main.getRouteNodes().join(">"), "built-in map still routes").toBe("sign>hall>escFoot>escTop>concourse>bJunction>gateB12")
     await waitFor(() => main.isLineVisible(), 3000, "line visible")

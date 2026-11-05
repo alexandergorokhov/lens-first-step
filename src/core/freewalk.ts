@@ -482,6 +482,35 @@ export function walkableRoute<T extends FwXYZ>(map: FwMap, route: T[], margin: n
 
 // ── The card when you look at a shop ────────────────────────────────────────
 
+// Looking at shops on any trip (Free walk has its own copy inside FreeWalk): which front you look
+// at, what its button says, and its short card.
+export class ShopLook {
+  private map: FwMap;
+  private prefs: string[];
+  private targets: LookTarget[];
+  private dots: DotTracker;
+  private range: number;
+
+  constructor(map: FwMap, prefs: string[] = [], settings?: Partial<FreeSettings>) {
+    const s: FreeSettings = { ...FREE_DEFAULTS, ...(settings || {}) };
+    this.map = map;
+    this.prefs = prefs.slice();
+    this.targets = frontTargets(map);
+    this.dots = new DotTracker(s.dotShowSeconds, s.dotHideSeconds, s.listAwayM);
+    this.range = s.lookRangeM;
+  }
+
+  update(pos: FwXYZ, heading: number, now: number): string | null {
+    this.dots.update(lookTarget(this.targets, pos, heading, this.range), now, pos);
+    return this.dots.dot;
+  }
+
+  dot(): string | null { return this.dots.dot; }
+  label(pos: FwXYZ): string { return this.dots.dot === null ? "" : dotLabel(this.map, this.dots.dot, this.prefs, pos.y); }
+  peek(pos: FwXYZ): OfferPeek | null { return this.dots.dot === null ? null : offerPeek(this.map, this.dots.dot, this.prefs, pos.y); }
+}
+
+
 export interface OfferPeek {
   title: string;
   tag: string;
