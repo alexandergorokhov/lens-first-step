@@ -6,15 +6,15 @@
 import {Billboard} from "SpectaclesInteractionKit.lspkg/Components/Interaction/Billboard/Billboard"
 import {addButton, addText, LabeledButton, makePanel, obj} from "./FindYourWayWidgetsUI"
 
-const BOX_W = 22
+const BOX_W = 26
 const TEXT = new vec4(1, 1, 1, 1)
 const SPONSOR = new vec4(1, 0.85, 0.5, 1)
 // See-through but readable: a dark tint at ~62 %, white text with a dark outline.
 const TINT = new vec4(0.05, 0.08, 0.16, 0.62)
 // Side by side, this far apart (cm, before scaling). Read from 3 to 6 m away: at SCALE the text is
 // at least as large in view as the distance pill's at its 1 m.
-const GAP_CM = 25
-const SCALE = 3.4
+const GAP_CM = 29
+const SCALE = 4.4
 
 export interface OfferBoxesView {
   id: string
@@ -43,9 +43,9 @@ export class FindYourWayOfferBoxesUI extends BaseScriptComponent {
     for (let i = 0; i < 2; i++) {
       const root = obj(this.sceneObject, "OfferBox" + i, new vec3((i - 0.5) * GAP_CM, 0, 0))
       const p = makePanel(root, BOX_W, 0.6, 0.2, undefined, TINT)
-      this.tags.push(outlined(addText(p.content, "OfferBoxTag" + i, "", "Headline2", BOX_W - 1, 1.8, SPONSOR, 90)))
-      this.texts.push(outlined(addText(p.content, "OfferBoxText" + i, "", "Headline2", BOX_W - 1, 2.8, TEXT, 110)))
-      this.closes.push(addButton(p.content, "OfferBoxClose" + i, "x", 4, 2.6, null, () => {
+      this.tags.push(outlined(addText(p.content, "OfferBoxTag" + i, "", "Headline2", BOX_W - 1, 2.6, SPONSOR, 170)))
+      this.texts.push(outlined(addText(p.content, "OfferBoxText" + i, "", "Headline1", BOX_W - 1, 5, TEXT, 220)))
+      this.closes.push(addButton(p.content, "OfferBoxClose" + i, "x", 5, 3.2, null, () => {
         if (this.shown) onClose(this.shown.id)
       }, TEXT, 100, "Button"))
       this.roots.push(root)

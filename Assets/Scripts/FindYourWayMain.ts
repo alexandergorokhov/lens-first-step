@@ -95,8 +95,8 @@ import {FindYourWayPlayTime} from "./FindYourWayPlayTime"
 export type Phase = "scan" | "loading" | "choose" | "prefs" | "free" | "mode" | "nav" | "arrived" | "error" | "mapping"
 
 const ARRIVAL_CARD_CM = 200
-// The offer boxes at a shop stand this high (cm), about eye level.
-const OFFER_BOX_CM = 150
+// The offer boxes at a shop stand this high (cm): above eye level, over plants and props.
+const OFFER_BOX_CM = 185
 const LINE_LIFT_CM = 1 // the floor line sits 1 cm above the floor
 const CLOSED_SIGN_TEXT = "Closed — re-routing"
 const RIDE_CARD_S = 2.5

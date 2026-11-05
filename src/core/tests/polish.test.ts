@@ -280,3 +280,13 @@ test("CH2: round a corner the chevrons follow the new direction; a short line ha
   assert.ok(last.apex.x > last.left.x && last.apex.x > last.right.x, "points along +x after the corner");
   assert.equal(chevronMarks([{ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 20 }], 70, 22).length, 0);
 });
+
+test("B6: the boxes stand ~1.5 m in front of the shop, clear of plants and props at its door", () => {
+  const map = mall() as any;
+  const pos = { x: 16, y: 0, z: 11 };
+  const look = new ShopLook(map);
+  look.update(pos, 180, 0.05, 0);
+  look.update(pos, 180, 0.05, 1);
+  const b = look.lookBoxes(pos)!;
+  assert.ok(b.spot.z >= 8.3 && b.spot.z <= 8.7, "1.5 m out from the café front (z 7): " + b.spot.z);
+});

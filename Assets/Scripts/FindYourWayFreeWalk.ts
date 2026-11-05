@@ -523,10 +523,13 @@ export interface LookBoxes {
   spot: FwXYZ;
 }
 
+// The boxes stand this far in front of the shop's front (m): clear of plants and props at its door.
+const BOXES_OUT_M = 1.5;
+
 function lookBoxesOf(map: FwMap, id: string | null, prefs: string[], pos: FwXYZ): LookBoxes | null {
   if (id === null) return null;
   const b = offerBoxes(map, id, prefs, pos.y);
-  const spot = shopLabelSpot(map, id, pos);
+  const spot = shopLabelSpot(map, id, pos, BOXES_OUT_M);
   return b && spot ? { id, title: b.title, tag: b.tag, boxes: b.boxes, spot } : null;
 }
 
