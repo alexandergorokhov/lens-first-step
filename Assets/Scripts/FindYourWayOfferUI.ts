@@ -20,6 +20,13 @@ export interface OfferRowView {
   image?: string
 }
 
+// The short card shown with the dot while you look at a shop: its name, Sponsored, two offers.
+export interface OfferPeekView {
+  title: string
+  tag: string
+  lines: string[]
+}
+
 export interface OfferListView {
   title: string
   tag: string
@@ -43,11 +50,21 @@ export class FindYourWayOfferUI extends BaseScriptComponent {
   private more: Text
   private rows: Row[] = []
   private shown: OfferListView | null = null
+  private peekRoot: SceneObject
+  private peekTitle: Text
+  private peekLines: Text
+  private peekShown: OfferPeekView | null = null
 
   setup(onDot: () => void, onClose: () => void): void {
     this.dotRoot = obj(this.sceneObject, "OfferDot")
     this.dotRoot.createComponent("Component.Canvas")
     this.dot = addButton(this.dotRoot, "DotButton", "", DOT_W, DOT_H, icon("location_on"), onDot, TEXT, 100, "Headline2", "Gold")
+    // The look-at card, just under the dot.
+    this.peekRoot = obj(this.dotRoot, "OfferPeek", new vec3(0, -DOT_H - 2.6, 0))
+    const pk = makePanel(this.peekRoot, DOT_W, 0.8, 0.2)
+    this.peekTitle = addText(pk.content, "OfferPeekTitle", "", "Caption", DOT_W - 2, 1.6, SPONSOR, 100)
+    this.peekLines = addText(pk.content, "OfferPeekLines", "", "Body", DOT_W - 2, 3.4, TEXT, 100)
+    this.peekRoot.enabled = false
     this.dotRoot.enabled = false
     this.listRoot = obj(this.sceneObject, "OfferList")
     const p = makePanel(this.listRoot, LIST_WIDTH, 1.2, 0.5)
@@ -69,6 +86,21 @@ export class FindYourWayOfferUI extends BaseScriptComponent {
   setDotText(text: string): void { if (this.dot.label.text !== text) this.dot.label.text = text }
   getDotText(): string { return this.dot.label.text }
   isDotShown(): boolean { return this.dotRoot.enabled }
+
+  // The look-at card (null hides it); it shows and hides with the dot.
+  setPeek(v: OfferPeekView | null): void {
+    const same = (a: OfferPeekView | null, b: OfferPeekView | null) =>
+      a === b || (!!a && !!b && a.title === b.title && a.tag === b.tag && a.lines.join("|") === b.lines.join("|"))
+    if (same(v, this.peekShown)) return
+    this.peekShown = v
+    this.peekRoot.enabled = v !== null
+    if (!v) return
+    this.peekTitle.text = v.tag ? v.tag.split(" · ")[0] : ""
+    this.peekLines.text = v.lines.join("\n")
+  }
+
+  getPeek(): OfferPeekView | null { return this.peekShown }
+  isPeekShown(): boolean { return this.peekRoot.enabled && this.dotRoot.enabled }
 
   placeDot(pos: vec3, rot: quat): void {
     const t = this.dotRoot.getTransform()

@@ -397,8 +397,18 @@ export function clampToPaths(map: FwMap, p: { x: number; z: number }, y: number)
     const dx = b.x - a.x;
     const dz = b.z - a.z;
     const len2 = dx * dx + dz * dz;
-    const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.z - a.z) * dz) / len2));
-    const q = { x: a.x + dx * t, y: a.y + (b.y - a.y) * t, z: a.z + dz * t };
+    const pick = (t: number) => ({ x: a.x + dx * t, y: a.y + (b.y - a.y) * t, z: a.z + dz * t });
+    let q = pick(len2 === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.z - a.z) * dz) / len2)));
+    // The way into a shop is walkable only up to its door: the nearest point outside it instead.
+    if (insideShop(map, q)) {
+      let out: FwXYZ | null = null;
+      for (let i = 0; i <= 50; i++) {
+        const c = pick(i / 50);
+        if (!insideShop(map, c) && (!out || flat(p, c) < flat(p, out))) out = c;
+      }
+      if (!out) continue;
+      q = out;
+    }
     const d = flat(p, q);
     if (d < bestD) {
       bestD = d;
@@ -406,6 +416,83 @@ export function clampToPaths(map: FwMap, p: { x: number; z: number }, y: number)
     }
   }
   return best;
+}
+
+// ── Shop doors ───────────────────────────────────────────────────────────────
+
+// Inside a shop: past one of its fronts (as mapped, or as drawn), within its width, this deep.
+const SHOP_DEPTH_M = 8;
+const DOOR_SLACK_M = 0.3;
+// The companion stops this far outside a door (m).
+const DOOR_MARGIN_M = 0.4;
+const SAMPLE_M = 0.2;
+
+const shopFronts = new WeakMap<FwMap, LookTarget[]>();
+
+function frontsOfShops(map: FwMap): LookTarget[] {
+  let t = shopFronts.get(map);
+  if (!t) {
+    const kind: { [id: string]: string } = Object.create(null);
+    for (const n of map.nodes) kind[n.id] = n.kind;
+    t = frontTargets(map).filter((f) => f.outside !== 0 && (kind[f.id] === "place" || kind[f.id] === "destination"));
+    shopFronts.set(map, t);
+  }
+  return t;
+}
+
+// True when p is inside a shop (behind its door) rather than on the walkways.
+export function insideShop(map: FwMap, p: FwXYZ): boolean {
+  for (const t of frontsOfShops(map)) {
+    if (Math.abs(t.y - p.y) >= SAME_FLOOR_M) continue;
+    const s = sideOf(t, p);
+    if (s * t.outside >= 0) continue;
+    const len = flat({ x: t.x1, z: t.z1 }, { x: t.x2, z: t.z2 });
+    if (len < 1e-6) continue;
+    const across = Math.abs(s) / len;
+    const along = ((p.x - t.x1) * (t.x2 - t.x1) + (p.z - t.z1) * (t.z2 - t.z1)) / len;
+    if (across <= SHOP_DEPTH_M && along >= -DOOR_SLACK_M && along <= len + DOOR_SLACK_M) return true;
+  }
+  return false;
+}
+
+// The route the companion may follow: the same line, stopped just outside the first shop door it
+// would go through (the line itself still leads you in).
+export function walkableRoute<T extends FwXYZ>(map: FwMap, route: T[], margin: number = DOOR_MARGIN_M): FwXYZ[] {
+  if (route.length === 0) return route;
+  const out: FwXYZ[] = [route[0]];
+  for (let i = 1; i < route.length; i++) {
+    const a = route[i - 1];
+    const b = route[i];
+    const len = Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2 + (b.z - a.z) ** 2);
+    const n = Math.max(1, Math.ceil(len / SAMPLE_M));
+    for (let k = 1; k <= n; k++) {
+      const t = k / n;
+      const c = { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, z: a.z + (b.z - a.z) * t };
+      if (insideShop(map, c)) {
+        const back = Math.max(0, (k - 1) / n - (len > 0 ? margin / len : 0));
+        const stop = { x: a.x + (b.x - a.x) * back, y: a.y + (b.y - a.y) * back, z: a.z + (b.z - a.z) * back };
+        if (back > 0 || out.length === 1) out.push(stop);
+        return out;
+      }
+    }
+    out.push(b);
+  }
+  return out.length === route.length ? route : out;
+}
+
+// ── The card when you look at a shop ────────────────────────────────────────
+
+export interface OfferPeek {
+  title: string;
+  tag: string;
+  lines: string[];
+}
+
+// A short card for the shop you look at: its name, Sponsored if paid, its first offers; null if it has none.
+export function offerPeek(map: FwMap, id: string, prefs: string[], y: number, max: number = 2): OfferPeek | null {
+  const v = offerView(map, id, prefs, y);
+  if (!v || v.rows.length === 0) return null;
+  return { title: v.title, tag: v.tag, lines: v.rows.slice(0, max).map((r) => (r.price ? r.text + " · " + r.price : r.text)) };
 }
 
 export interface FreePet {
@@ -463,6 +550,8 @@ export class FreeWalk {
 
   dot(): string | null { return this.dots.dot; }
   dotText(pos: FwXYZ): string { return this.dots.dot === null ? "" : dotLabel(this.map, this.dots.dot, this.prefs, pos.y); }
+  // The short offer card for the shop you look at (shown with the dot), or null.
+  peek(pos: FwXYZ): OfferPeek | null { return this.dots.dot === null ? null : offerPeek(this.map, this.dots.dot, this.prefs, pos.y); }
   openId(): string | null { return this.dots.open; }
   pointingAt(): string | null { return this.stop ? this.stop.id : null; }
   // Counts as already pointed at this walk.

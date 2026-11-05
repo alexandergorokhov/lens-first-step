@@ -31,6 +31,11 @@ export async function tap(interactor: DefaultLeafInteractor, name: string): Prom
     await sleep(100)
     target = findInteractableByName(name, undefined, true)
   }
+  // The Options panel folds to a tab once a trip starts: open it, then find the button.
+  if (!target && name !== "OptionsTabButton" && findInteractableByName("OptionsTabButton", undefined, true)) {
+    await tap(interactor, "OptionsTabButton")
+    target = findInteractableByName(name, undefined, true)
+  }
   if (!target) throw new Error("Interactable '" + name + "' not found or not enabled")
   // LEAF's trigger waits forever on its hover/trigger events: fail instead if they never come.
   let done = false

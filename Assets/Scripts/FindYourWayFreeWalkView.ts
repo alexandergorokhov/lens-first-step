@@ -57,6 +57,7 @@ export class FindYourWayFreeWalkView {
     if (offer) {
       offer.showDot(f.dot !== null)
       offer.setDotText(free.dotText(pos))
+      offer.setPeek(f.dot !== null && f.open === null ? free.peek(pos) : null)
       if (f.dot !== null) offer.placeDot(cam.getWorldPosition().add(cam.getWorldRotation().multiplyVec3(DOT_OFFSET)), cam.getWorldRotation())
       if (f.open !== this.shownOpen) {
         this.shownOpen = f.open

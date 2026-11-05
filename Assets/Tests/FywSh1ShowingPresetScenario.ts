@@ -62,6 +62,8 @@ export class FywSh1ShowingPresetScenario extends Scenario {
       main.debugSetShowingPreset(true)
       main.restartShowing()
       await expectShowingState(it, main, "preset")
+      // The Options panel folds to its tab once the trip starts: open it to see the preset's rows.
+      if (main.isOptionsCollapsed()) await tap(it, "OptionsTabButton")
       expect(shown("RestartShowingButton"), "Restart showing on the Options panel").toBe(true)
       expect(shown("ShowingGateChangeButton"), "Demo: gate change shown under the preset").toBe(true)
       expect(shown("ShowingMapButton"), "the map switch shown under the preset").toBe(true)

@@ -6,7 +6,7 @@
 // Must not: decide when play is allowed or change the route (Main and the core logic do).
 
 import {FlexItem} from "SpectaclesUIKit.lspkg/Scripts/Components/Layout2D/Flex/FlexItem"
-import {addButton, addText, LabeledButton, makePanel, Panel} from "./FindYourWayWidgetsUI"
+import {addButton, addText, LabeledButton, makePanel, obj, Panel} from "./FindYourWayWidgetsUI"
 import {icon} from "./FindYourWayIconsUI"
 
 export interface AppPanelHandlers {
@@ -19,6 +19,8 @@ export interface AppPanelHandlers {
   onThrow: () => void
   onNextStop: () => void
   onEndWalk: () => void
+  // Fold the panel to its small tab, or open it again.
+  onToggleOptions?: () => void
   // The showing preset only: back to the showing state, the airport/room map switch, the gate change.
   onRestartShowing?: () => void
   onShowingMap?: () => void
@@ -30,6 +32,8 @@ const BUTTON_H = 4.2
 const TEXT = new vec4(1, 1, 1, 1)
 const PLAY_SCALE = 0.7
 const FONT = 110
+// The folded panel: one small tab (cm).
+const TAB_W = 12
 
 @component
 export class FindYourWayAppPanelUI extends BaseScriptComponent {
@@ -54,6 +58,9 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
   // The rows hidden while playing, and the scale that keeps the rest small at the side of the view.
   private optionRows: SceneObject[] = []
   private playing = false
+  private hideBtn: LabeledButton
+  private tabRoot: SceneObject
+  private collapsed = false
 
   setup(h: AppPanelHandlers): void {
     const panel = makePanel(this.sceneObject, WIDTH + 2, 1.2, 0.8)
@@ -79,9 +86,15 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
       h.onShowingMap || none, TEXT, FONT)
     this.restartShowing = addButton(panel.content, "RestartShowingButton", "Restart showing", WIDTH, BUTTON_H, icon("restart_alt"),
       h.onRestartShowing || none, TEXT, FONT)
-    this.rows = [title.getSceneObject(), this.companion.so, this.model.so, this.places.so, this.seeMap.so, this.play.so, this.jump.so,
+    // Folded once the trip starts (Main's OptionsDock): only a small "Options" tab stays.
+    const toggle = h.onToggleOptions || none
+    this.hideBtn = addButton(panel.content, "HideOptionsButton", "Hide options", WIDTH, BUTTON_H, null, toggle, TEXT, FONT)
+    this.tabRoot = obj(this.sceneObject, "OptionsTab", new vec3(0, 0, 0.6))
+    addButton(this.tabRoot, "OptionsTabButton", "Options", TAB_W, BUTTON_H, null, toggle, TEXT, FONT)
+    this.tabRoot.enabled = false
+    this.rows = [title.getSceneObject(), this.hideBtn.so, this.companion.so, this.model.so, this.places.so, this.seeMap.so, this.play.so, this.jump.so,
       this.throwBtn.so, this.nextStop.so, this.endWalk.so, this.showingGate.so, this.showingMap.so, this.restartShowing.so]
-    this.optionRows = [title.getSceneObject(), this.companion.so, this.model.so, this.places.so, this.seeMap.so]
+    this.optionRows = [title.getSceneObject(), this.hideBtn.so, this.companion.so, this.model.so, this.places.so, this.seeMap.so]
     this.setShowing(false, false, null)
     this.setPlay(false, false, false)
     this.setNextStop(null)
@@ -161,6 +174,23 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
     if (mapLabel !== null && this.showingMap.label.text !== mapLabel) this.showingMap.label.text = mapLabel
     this.relayout()
   }
+
+  // Folded: the rows go and the plate shrinks to the tab; open: the column comes back as it was.
+  setCollapsed(on: boolean): void {
+    if (!this.tabRoot || on === this.collapsed) return
+    this.collapsed = on
+    this.panel.content.enabled = !on
+    this.tabRoot.enabled = on
+    if (on) this.panel.plate.size = new vec2(TAB_W + 2, BUTTON_H + 2)
+    else {
+      this.layoutKey = ""
+      this.relayout()
+    }
+  }
+
+  isCollapsed(): boolean { return this.collapsed }
+
+  isNextStopShown(): boolean { return !!this.nextStop && this.nextStop.so.enabled }
 
   isPlaying(): boolean { return this.playing }
 

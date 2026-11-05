@@ -61,7 +61,8 @@ import {MultiStopTrip, orderStops} from "./FindYourWayTrip"
 import {mapLogLines, tripAfterSaving} from "./FindYourWayMapping"
 import {peekPlace} from "./FindYourWayPeek"
 import {showingSettings, StartSettings} from "./FindYourWayDemo"
-import {destinationsOf, FreeWalk, interestList, matchDestination, sayItPhrase} from "./FindYourWayFreeWalk"
+import {destinationsOf, FreeWalk, interestList, matchDestination, sayItPhrase, walkableRoute} from "./FindYourWayFreeWalk"
+import {OptionsDock} from "./FindYourWayDock"
 import {FindYourWayHomePanelUI} from "./FindYourWayHomePanelUI"
 import {FindYourWayPrefsUI} from "./FindYourWayPrefsUI"
 import {FindYourWayOfferUI} from "./FindYourWayOfferUI"
@@ -217,9 +218,9 @@ export class FindYourWayMain extends BaseScriptComponent {
   presetPreferences: string = "coffee,clothes,hardware"
 
   @input
-  @hint("How far ahead the companion walks, m. The floor only enters the view from about 5.4 m")
+  @hint("How far ahead the companion walks, m (core COMPANION_LEAD_M = 6). The floor only enters the view from about 5.4 m")
   @widget(new SliderWidget(1.5, 10, 0.1))
-  companionAheadM: number = 7
+  companionLeadM: number = 6
 
   @input
   @hint("Free walk: seconds the companion points at a matching shop")
@@ -338,6 +339,10 @@ export class FindYourWayMain extends BaseScriptComponent {
   private pickMap: FindYourWayPickMapUI | null = null
   private stops: MultiStopTrip | null = null
   private ptsCache: {key: string; map: MapData; pts: Vec3[]} | null = null
+  // The companion's own copy of the route: stopped just outside a shop door (it never walks in).
+  private petPtsCache: {pts: Vec3[]; out: Vec3[]} | null = null
+  // The Options panel folds to a small tab once a trip or walk starts.
+  private dock = new OptionsDock()
   private mappingPanelPlaced = false
   // "Gate C3 is on C pier, 1 floor up": shown in the cue slot for DEST_NOTE_S after the scan or a
   // destination change (null = work it out on the next frame).
@@ -508,6 +513,10 @@ export class FindYourWayMain extends BaseScriptComponent {
       onThrow: () => this.playTime.throwTreat(),
       onNextStop: () => this.nextStop(),
       onEndWalk: () => this.endTrip(),
+      onToggleOptions: () => {
+        this.dock.toggle()
+        if (this.appPanel) this.appPanel.setCollapsed(this.dock.isCollapsed())
+      },
       onMap: () => this.setMapShown(!this.mapShown),
       onRestartShowing: () => this.restartShowing(),
       onShowingMap: () => this.nextMap(),
@@ -732,7 +741,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     }
     this.prefsPanel.show(false)
     this.free = new FreeWalk(this.map, this.prefsPanel.getPicked(), {
-      aheadM: this.companionAheadM,
+      aheadM: this.companionLeadM,
       pointSeconds: this.pointSeconds,
       pointRadiusM: this.pointRadiusM,
       maxStops: this.maxStopsPerWalk,
@@ -1573,7 +1582,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   private resetGuide(): void {
     this.guide = new PetGuide()
     this.guide.companion = this.companion
-    this.guide.lead = this.companionAheadM
+    this.guide.lead = this.companionLeadM
     this.coach = null
     this.pointed = null
     this.travelled = 0
@@ -1597,7 +1606,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   }
 
   setCompanionOn(on: boolean): void {
-    const route = this.routeMapPoints()
+    const route = this.petRoutePoints()
     const pos = this.nav || this.free ? this.userPos() : {x: 0, y: 0, z: 0}
     this.guide.setOn(on, route, pos, this.routeKey())
     if (this.free) this.free.setCompanion(on, pos, this.userHeading())
@@ -1623,7 +1632,7 @@ export class FindYourWayMain extends BaseScriptComponent {
 
   // A pointing spot kept in the cone you look along (out to the companion's lead, + an aside step).
   private keepInView(spot: Vec3, user: Vec3, look: number): Vec3 {
-    return clampToView(user, look, spot, VIEW_HALF_DEG, Math.max(VIEW_FAR_M, this.companionAheadM + 1.5))
+    return clampToView(user, look, spot, VIEW_HALF_DEG, Math.max(VIEW_FAR_M, this.companionLeadM + 1.5))
   }
 
   // The small floor arrow near your feet toward the companion, after ~2 s out of view.
@@ -1655,7 +1664,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (this.playTime.update(pos)) return
     const dt = getDeltaTime()
     const now = getTime()
-    const route = this.routeMapPoints()
+    const route = this.petRoutePoints()
     if (!this.guide.keepInView) this.guide.keepInView = (spot, user, look) => this.keepInView(spot, user, look)
     this.guide.look = this.userHeading()
     this.guide.update(route, pos, dt, this.routeKey(), arrived, now)
@@ -1739,12 +1748,20 @@ export class FindYourWayMain extends BaseScriptComponent {
     const on = this.phase === "nav" || this.phase === "arrived" || this.phase === "free"
     const wasOn = this.appPanel.getSceneObject().enabled
     this.appPanel.show(on)
+    this.dock.update(on, this.appPanel.isPlaying() || this.appPanel.isNextStopShown())
+    this.appPanel.setCollapsed(this.dock.isCollapsed())
     if (!on) return
     const airport = this.getMapKey() === "airport"
     this.appPanel.setShowing(this.showingPreset, this.showingPreset && airport && !!this.nav && this.getDestinationId() !== "gateC3",
       this.showingPreset ? (airport ? "Map: Preview room" : "Map: Airport") : null)
     const offset = this.appPanel.isPlaying() ? this.playPanelOffset : global.deviceInfoSystem.isEditor() ? PREVIEW_PANEL_OFFSET : this.appPanelOffset
     this.panels.follow(this.appPanel.getSceneObject(), offset, wasOn)
+  }
+
+  private petRoutePoints(): Vec3[] {
+    const pts = this.routeMapPoints()
+    if (!this.petPtsCache || this.petPtsCache.pts !== pts) this.petPtsCache = {pts, out: walkableRoute(this.getMapData(), pts) as Vec3[]}
+    return this.petPtsCache.out
   }
 
   private routeMapPoints(): Vec3[] {
@@ -1957,6 +1974,10 @@ export class FindYourWayMain extends BaseScriptComponent {
   getPrefsModelLabel(id: string): string { return this.prefsPanel ? this.prefsPanel.getModelLabel(id) : "" }
   getFreePrefs(): string[] { return this.free ? this.free.prefs.slice() : [] }
   getDotId(): string | null { return this.free ? this.free.dot() : null }
+  isOptionsCollapsed(): boolean { return !!this.appPanel && this.appPanel.isCollapsed() }
+  isOfferPeekShown(): boolean { return !!this.offerUI && this.offerUI.isPeekShown() }
+  getOfferPeekLines(): string[] { const p = this.offerUI ? this.offerUI.getPeek() : null; return p ? p.lines.slice() : [] }
+  getCompanionLeadM(): number { return this.companionLeadM }
   isDotShown(): boolean { return !!this.offerUI && this.offerUI.isDotShown() }
   getDotText(): string { return this.offerUI ? this.offerUI.getDotText() : "" }
   isOfferShown(): boolean { return !!this.offerUI && this.offerUI.isListShown() }
