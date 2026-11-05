@@ -5,7 +5,7 @@
 import {Vec3} from "./FindYourWayRouter"
 import {levelName, PlaceInfo} from "./FindYourWayMapLibrary"
 import {turnOutOfView, yawTo} from "./FindYourWayGeometry"
-import {FreeWalk, ShopLook} from "./FindYourWayFreeWalk"
+import {FreeWalk, LookBoxes, ShopLook} from "./FindYourWayFreeWalk"
 import {FindYourWayBubbleUI} from "./FindYourWayBubbleUI"
 import {FindYourWayCompanionView} from "./FindYourWayCompanionView"
 import {FindYourWayHudUI} from "./FindYourWayHudUI"
@@ -33,6 +33,8 @@ export interface FreeWalkViewHost {
   userHeading(): number
   local(p: Vec3, liftCm?: number): vec3
   playChime(): void
+  // The two offer boxes at the shop you look at (null hides them).
+  showBoxes(b: LookBoxes | null): void
 }
 
 export class FindYourWayFreeWalkView {
@@ -46,20 +48,14 @@ export class FindYourWayFreeWalkView {
     this.offerPlaced = false
   }
 
-  // A guided trip: the button and short card of the shop you look at (no list); null hides them.
+  // A guided trip: the two offer boxes at the shop you look at; null hides them. No button in your face.
   showLook(look: ShopLook | null, pos: Vec3): void {
     const offer = this.host.offerUI
-    if (!offer) return
-    const dot = look ? look.dot() : null
-    offer.showDot(dot !== null)
-    if (dot === null || !look) {
+    if (offer) {
+      offer.showDot(false)
       offer.setPeek(null)
-      return
     }
-    offer.setDotText(look.label(pos))
-    offer.setPeek(look.peek(pos))
-    const cam = this.host.camera.getTransform()
-    offer.placeDot(cam.getWorldPosition().add(cam.getWorldRotation().multiplyVec3(DOT_OFFSET)), cam.getWorldRotation())
+    this.host.showBoxes(look ? look.lookBoxes(pos) : null)
   }
 
   tick(free: FreeWalk): void {
@@ -71,10 +67,9 @@ export class FindYourWayFreeWalkView {
     const cam = this.host.camera.getTransform()
     const offer = this.host.offerUI
     if (offer) {
-      offer.showDot(f.dot !== null)
-      offer.setDotText(free.dotText(pos))
-      offer.setPeek(f.dot !== null && f.open === null ? free.peek(pos) : null)
-      if (f.dot !== null) offer.placeDot(cam.getWorldPosition().add(cam.getWorldRotation().multiplyVec3(DOT_OFFSET)), cam.getWorldRotation())
+      // No button in your face: the two boxes stand at the shop instead (Main.showBoxes).
+      offer.showDot(false)
+      offer.setPeek(null)
       if (f.open !== this.shownOpen) {
         this.shownOpen = f.open
         offer.showList(free.list(pos))
@@ -85,6 +80,7 @@ export class FindYourWayFreeWalkView {
         this.offerPlaced = true
       }
     }
+    this.host.showBoxes(free.lookBoxes(pos))
     const pet = f.pet
     if (this.host.view && pet) {
       const pointing = pet.mood === "point"

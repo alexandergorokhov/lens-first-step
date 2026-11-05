@@ -29,9 +29,10 @@ Each feature below passed its LEAF test, run inside the Lens and pressing the re
 - **Pointing that stays in view:** at a matching shop within about 8 m the companion steps aside from its 7 m lead, points for a few seconds in the view you look along (never behind you) and goes back to the lead, about 10 s apart, in Free walk, Go to a place and Tour. If it has been out of view for 2 s, a faint arrow on the floor near your feet points to it.
 - **Showing preset:** one Inspector switch (`showingPreset` on FindYourWay) starts at the airport's entrance sign with demo controls hidden, the dog on and Walk preselected. The Options panel adds **Restart showing**, **Demo: gate change** and an Airport ↔ Preview room map switch.
 - **Free walk:** browse with no destination. The companion stops at shops matching your preferences, stays in front when you turn around, and says when there are "3 picks upstairs". Look at any shop and a small card shows Sponsored (if paid) and two of its offers; pinch the gold button for up to 3. Sponsored shops are always labelled, and paying never changes a route.
+- **The floor line:** a 34 cm band with a soft glow and white chevrons every 70 cm pointing the way, 60% see-through so the floor shows (the look of the first airport videos).
 - **Full line while you follow:** with the companion on, the whole route on your floor is drawn, not just the next 10 m.
-- **A clear view while walking:** only the floor line, the companion, a small distance pill and the turn arrow stay in front of you; the map badge, the score chip and the play hint come back when you stand still. Looking at a shop on any trip shows its short offer card.
-- **Options panel out of the way:** once a trip or walk starts it folds to a small **Options** tab. Tap it to open, **Hide options** folds it again, and it opens by itself when you need **Next stop** or **Stop playing**.
+- **Almost screenless while walking:** only the floor line and the companion (and the turn arrow) stay in front of you. Everything else lives in one panel, **Control**, folded to a small tab once the trip starts: tap it to open (floor, metres and time to go, companion, places, end trip), **Hide** folds it, and it opens by itself when you need **Next stop** or **Stop playing**. The score chip and play hint come back when you stand still.
+- **Look at a shop:** two small see-through boxes appear at the shop, one offer each (Sponsored on paid places), each with an x that closes them for that shop.
 - **Tour:** visit the shops you like, stop by stop. **Multi-stop:** pick several shops and they're visited in the shortest order.
 - **Go to a place:** say it, or pick from a list or a floor-by-floor map.
 - **While you wait:** Hop (raise a hand and the companion jumps obstacles), catch (grab a treat, throw it, it fetches) and seated play. None of these ever changes the route.
@@ -61,7 +62,7 @@ Each feature below passed its LEAF test, run inside the Lens and pressing the re
 npm test
 ```
 
-There are 480 tests (offline: 479 pass, 1 skipped). One downloads the maps from the public gist; offline, set `OFFLINE=1` to skip it. The run first checks that the Lens's copies of the core files match `src/core`; after editing `src/core`, run `npm run sync`.
+There are 489 tests (offline: 488 pass, 1 skipped). One downloads the maps from the public gist; offline, set `OFFLINE=1` to skip it. The run first checks that the Lens's copies of the core files match `src/core`; after editing `src/core`, run `npm run sync`.
 
 **LEAF tests** run inside the Lens:
 1. Select **LeafIndex** in the Scene Hierarchy and tick **autoRun**. To run only some, type their ids in **only**, separated by commas.

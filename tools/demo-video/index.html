@@ -161,7 +161,7 @@ const chevron = (() => {
   t.colorSpace = THREE.SRGBColorSpace;
   return t;
 })();
-const LINE_OPACITY = 0.5; // src/core/pet.ts: the line is 50% transparent in every guide mode
+const LINE_OPACITY = 0.4; // src/core/pet.ts: the line is 60% see-through in every guide mode
 const lineMat = new THREE.MeshBasicMaterial({ map: chevron, transparent: true, opacity: LINE_OPACITY, vertexColors: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide });
 const glowMat = new THREE.MeshBasicMaterial({ color: 0x3b8cff, transparent: true, opacity: 0.28, vertexColors: true, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
 const lineMesh = new THREE.Mesh(new THREE.BufferGeometry(), lineMat);

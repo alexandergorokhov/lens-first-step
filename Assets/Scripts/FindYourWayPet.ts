@@ -39,9 +39,13 @@ export function companionChoices(): { id: string; label: string }[] {
   return Object.keys(COMPANIONS).map((id) => ({ id, label: id === "dog" ? "Dog" : COMPANIONS[id].name }));
 }
 
-// The route line is ~50% transparent in every guide mode (line only, or companion + line), so
-// the floor and the flow of people show through it.
-export const LINE_OPACITY = 0.5;
+// The route line is 60% see-through in every guide mode (line only, or companion + line), so
+// the floor and the flow of people show through it (it was 50%; 20% more see-through now).
+export const LINE_OPACITY = 0.4;
+
+// The look of the line in the first airport videos (tools/demo-video): a 34 cm band, a soft glow to
+// about 80 cm, and white chevrons every 70 cm pointing the way you go.
+export const LINE_STYLE = { widthCm: 34, glowCm: 23, opacity: LINE_OPACITY, chevronSpacingCm: 70, chevronCm: 22, chevronOpacity: 0.85 };
 
 export function guideVisuals(companionOn: boolean): { showLine: boolean; lineOpacity: number; showCompanion: boolean } {
   return { showLine: true, lineOpacity: LINE_OPACITY, showCompanion: companionOn };

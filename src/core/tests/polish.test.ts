@@ -6,9 +6,11 @@ import { readFileSync } from "node:fs";
 import { parseMap } from "../router.ts";
 import type { MapData } from "../router.ts";
 import { petTarget } from "../pet.ts";
-import { clampToPaths, FreeWalk, insideShop, offerPeek, ShopLook, walkableRoute } from "../freewalk.ts";
-import { COMPANION_LEAD_M, OptionsDock, quietView, routeLineAheadM } from "../dock.ts";
+import { clampToPaths, FreeWalk, insideShop, offerBoxes, OfferDismissals, offerPeek, shopLabelSpot, ShopLook, walkableRoute } from "../freewalk.ts";
+import { COMPANION_LEAD_M, OptionsDock, walkingHud, routeLineAheadM } from "../dock.ts";
 import { COMPANION_ALPHA } from "../anim.ts";
+import { chevronMarks } from "../geometry.ts";
+import { LINE_STYLE } from "../pet.ts";
 
 function mall(): MapData {
   const r = parseMap(readFileSync(new URL("../data/mall.json", import.meta.url), "utf8"));
@@ -171,17 +173,59 @@ test("F2: the companion reads solid (alpha at least 0.8)", () => {
   assert.ok(COMPANION_ALPHA >= 0.8 && COMPANION_ALPHA <= 1, String(COMPANION_ALPHA));
 });
 
-test("C1: walking a trip, only the line, companion, pill and arrow: no map badge, score chip or play hint", () => {
-  assert.deepEqual(quietView(true, false, false), { badge: false, score: false, playLine: false });
+test("C1: walking a trip, nothing in front but the line and companion: no pill, cue, badge, score or hint", () => {
+  assert.deepEqual(walkingHud(true, false, false), { pill: false, cue: false, badge: false, score: false, playLine: false });
 });
 
-test("C2: standing still on a trip brings back the score and the play hint; arrival shows the score", () => {
-  assert.deepEqual(quietView(true, true, false), { badge: false, score: true, playLine: true });
-  assert.deepEqual(quietView(true, false, true), { badge: false, score: true, playLine: false });
+test("C2: standing still on a trip brings back only the score and the play hint; arrival shows the score", () => {
+  assert.deepEqual(walkingHud(true, true, false), { pill: false, cue: false, badge: false, score: true, playLine: true });
+  assert.deepEqual(walkingHud(true, false, true), { pill: false, cue: false, badge: false, score: true, playLine: false });
 });
 
 test("C3: off a trip (sign, choices) nothing is hidden", () => {
-  assert.deepEqual(quietView(false, false, false), { badge: true, score: true, playLine: true });
+  assert.deepEqual(walkingHud(false, false, false), { pill: true, cue: true, badge: true, score: true, playLine: true });
+});
+
+test("D1: the one panel is called Control and folds to its tab when the trip starts", () => {
+  const d = new OptionsDock();
+  assert.equal(OptionsDock.TITLE, "Control");
+  d.update(true, false);
+  assert.equal(d.isCollapsed(), true);
+});
+
+// ── 6. Looking at a shop: two small offer boxes at the shop, each with a close button ──
+
+test("B1: looking at Bean There Café gives exactly two boxes, Sponsored on it", () => {
+  const map = mall() as any;
+  const b = offerBoxes(map, "cafe", [], 0)!;
+  assert.equal(b.title, "Bean There Café");
+  assert.ok(b.tag.indexOf("Sponsored") === 0, b.tag);
+  assert.deepEqual(b.boxes, ["Flat white · $3.50", "Cake of the day · $4"]);
+});
+
+test("B2: a shop with one offer gives one box; no offers, no boxes", () => {
+  const map = mall() as any;
+  const one = map.nodes.filter((n: any) => n.front && n.offer && n.offer.length === 1)[0];
+  if (one) assert.equal(offerBoxes(map, one.id, [], one.y)!.boxes.length, 1);
+  assert.equal(offerBoxes(map, "nowhere", [], 0), null);
+});
+
+test("B3: closing the boxes dismisses them for that shop only", () => {
+  const d = new OfferDismissals();
+  assert.equal(d.visible("cafe"), true);
+  d.dismiss("cafe");
+  assert.equal(d.visible("cafe"), false);
+  assert.equal(d.visible("threads"), true);
+  assert.equal(d.visible(null), false);
+});
+
+test("B4: the boxes stand at the shop's front, on your side of it, not inside the shop", () => {
+  const map = mall() as any;
+  const user = { x: 16, y: 0, z: 11 };
+  const p = shopLabelSpot(map, "cafe", user)!;
+  assert.ok(p, "a spot");
+  assert.equal(insideShop(map, p), false, JSON.stringify(p));
+  assert.ok(Math.abs(p.x - 16) < 3.5 && p.z > 6 && p.z < 9.5, JSON.stringify(p));
 });
 
 test("S1: on a guided trip too, looking at a shop gives its card; looking away clears it", () => {
@@ -196,4 +240,43 @@ test("S1: on a guided trip too, looking at a shop gives its card; looking away c
   for (let i = 0; i < 80; i++) look.update(pos, 0, 2 + i * 0.05);
   assert.equal(look.dot(), null);
   assert.equal(look.peek(pos), null);
+});
+
+test("B5: Free walk and guided trips give the boxes and their spot for the shop you look at", () => {
+  const map = mall() as any;
+  const pos = { x: 16, y: 0, z: 11 };
+  for (const look of [new FreeWalk(map, [], {}), new ShopLook(map)]) {
+    look.update(pos, 180, 0.05, 0);
+    look.update(pos, 180, 0.05, 1);
+    const b = look.lookBoxes(pos)!;
+    assert.equal(b.id, "cafe");
+    assert.equal(b.boxes.length, 2);
+    assert.equal(insideShop(map, b.spot), false);
+  }
+});
+
+// ── 7. The floor line of the first airport videos: a wide band, white chevrons, a soft glow ──
+
+test("LS1: the line is the airport-video band (34 cm, ~80 cm with its glow), 20% more see-through", () => {
+  assert.equal(LINE_STYLE.widthCm, 34);
+  assert.ok(LINE_STYLE.widthCm + 2 * LINE_STYLE.glowCm >= 75 && LINE_STYLE.widthCm + 2 * LINE_STYLE.glowCm <= 85);
+  assert.equal(LINE_STYLE.opacity, 0.4);
+});
+
+test("CH1: chevrons every 70 cm along the line, each pointing the way you go", () => {
+  const marks = chevronMarks([{ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 300 }], LINE_STYLE.chevronSpacingCm, LINE_STYLE.chevronCm);
+  assert.equal(marks.length, 4);
+  for (const m of marks) {
+    assert.ok(m.apex.z > m.left.z && m.apex.z > m.right.z, "apex ahead");
+    assert.ok(Math.abs(m.left.x + m.right.x) < 1e-6 && m.left.x !== m.right.x, "arms either side");
+    assert.ok(Math.abs(m.apex.x) < 1e-6, "apex on the line");
+  }
+  assert.ok(marks[1].apex.z - marks[0].apex.z > 69 && marks[1].apex.z - marks[0].apex.z < 71);
+});
+
+test("CH2: round a corner the chevrons follow the new direction; a short line has none", () => {
+  const marks = chevronMarks([{ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 100 }, { x: 200, y: 0, z: 100 }], 70, 22);
+  const last = marks[marks.length - 1];
+  assert.ok(last.apex.x > last.left.x && last.apex.x > last.right.x, "points along +x after the corner");
+  assert.equal(chevronMarks([{ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 20 }], 70, 22).length, 0);
 });

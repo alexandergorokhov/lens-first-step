@@ -296,3 +296,34 @@ export function walkStep(map: WallMap, from: XYZ, to: XYZ): XYZ {
   }
   return Math.abs(x - to.x) < 1e-9 && Math.abs(z - to.z) < 1e-9 ? to : { x, y, z };
 }
+
+// Chevrons along the floor line: every `spacing` (the first at 0.6 of it), a "^" `size` long and
+// wide pointing the way the line goes. Same units as the points (the Lens passes cm).
+export function chevronMarks(pts: XYZ[], spacing: number, size: number): { apex: XYZ; left: XYZ; right: XYZ }[] {
+  const out: { apex: XYZ; left: XYZ; right: XYZ }[] = [];
+  if (pts.length < 2 || spacing <= 0) return out;
+  let next = spacing * 0.6;
+  let walked = 0;
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1];
+    const b = pts[i];
+    const len = Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2 + (b.z - a.z) ** 2);
+    const flatLen = Math.sqrt((b.x - a.x) ** 2 + (b.z - a.z) ** 2);
+    if (len < 1e-9) continue;
+    while (next <= walked + len && flatLen > 1e-9) {
+      const t = (next - walked) / len;
+      const c = { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, z: a.z + (b.z - a.z) * t };
+      const dx = (b.x - a.x) / flatLen;
+      const dz = (b.z - a.z) / flatLen;
+      const h = size / 2;
+      out.push({
+        apex: { x: c.x + dx * h, y: c.y, z: c.z + dz * h },
+        left: { x: c.x - dx * h - dz * h, y: c.y, z: c.z - dz * h + dx * h },
+        right: { x: c.x - dx * h + dz * h, y: c.y, z: c.z - dz * h - dx * h },
+      });
+      next += spacing;
+    }
+    walked += len;
+  }
+  return out;
+}

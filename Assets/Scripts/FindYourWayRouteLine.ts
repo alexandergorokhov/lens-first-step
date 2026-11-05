@@ -3,6 +3,11 @@
 // far end of the look-ahead window. On a re-route the old line fades out while the new one
 // grows outward from the user (the "swing"). Inputs: an Unlit material to clone.
 // Must not: compute routes (Main passes building-local points in cm).
+// Look (core LINE_STYLE, as in the first airport videos): a 34 cm band with a soft glow and white
+// chevrons every 70 cm; the band's opacity is LINE_OPACITY (the Inspector colour gives the hue).
+
+import {chevronMarks} from "./FindYourWayGeometry"
+import {LINE_STYLE} from "./FindYourWayPet"
 
 @component
 export class FindYourWayRouteLine extends BaseScriptComponent {
@@ -42,6 +47,7 @@ export class FindYourWayRouteLine extends BaseScriptComponent {
   @ui.group_end
 
   private rmv: RenderMeshVisual
+  private chevRmv: RenderMeshVisual
   private oldRmv: RenderMeshVisual
   private mat: Material
   private oldMat: Material
@@ -73,24 +79,50 @@ export class FindYourWayRouteLine extends BaseScriptComponent {
     oldSo.enabled = false
     lineSo.enabled = false
 
+    const chevSo = global.scene.createSceneObject("RouteLineChevrons")
+    chevSo.setParent(this.sceneObject)
+    this.chevRmv = chevSo.createComponent("Component.RenderMeshVisual") as RenderMeshVisual
+    const chevMat = this.material.clone()
+    chevMat.mainPass.baseTex = this.makeWhiteTexture()
+    chevMat.mainPass.baseColor = new vec4(1, 1, 1, LINE_STYLE.chevronOpacity)
+    chevMat.mainPass.blendMode = BlendMode.Normal
+    chevMat.mainPass.depthWrite = false
+    chevMat.mainPass.depthTest = true
+    chevMat.mainPass.twoSided = true
+    this.chevRmv.mainMaterial = chevMat
+    this.chevRmv.setRenderOrder(21)
+    chevSo.enabled = false
+
     this.createEvent("UpdateEvent").bind(() => this.tick())
   }
 
   private setupMat(m: Material, tex: Texture): void {
     m.mainPass.baseTex = tex
-    m.mainPass.baseColor = this.lineColor
+    m.mainPass.baseColor = this.color()
     m.mainPass.blendMode = BlendMode.Normal
     m.mainPass.depthWrite = false
     m.mainPass.depthTest = true
     m.mainPass.twoSided = true
   }
 
+  // The Inspector hue at the core opacity (LINE_STYLE.opacity).
+  private color(): vec4 {
+    const c = this.lineColor
+    return new vec4(c.x, c.y, c.z, LINE_STYLE.opacity)
+  }
+
+  private makeWhiteTexture(): Texture {
+    const tex = ProceduralTextureProvider.createWithFormat(1, 1, TextureFormat.RGBA8Unorm)
+    ;(tex.control as ProceduralTextureProvider).setPixels(0, 0, 1, 1, new Uint8Array([255, 255, 255, 255]))
+    return tex
+  }
+
   // 64 x 16 texture: u along the line (fade at the far end), v across (core + soft glow).
   private makeGlowTexture(): Texture {
     const W = 64, H = 16
     const tex = ProceduralTextureProvider.createWithFormat(W, H, TextureFormat.RGBA8Unorm)
-    const half = this.widthCm / 2 + this.glowCm
-    const core = half > 0 ? (this.widthCm / 2) / half : 1
+    const half = LINE_STYLE.widthCm / 2 + LINE_STYLE.glowCm
+    const core = half > 0 ? (LINE_STYLE.widthCm / 2) / half : 1
     const data = new Uint8Array(W * H * 4)
     for (let j = 0; j < H; j++) {
       const v = (j + 0.5) / H
@@ -133,6 +165,7 @@ export class FindYourWayRouteLine extends BaseScriptComponent {
     this.aheadCm = aheadCm
     this.visible = points.length > 1
     this.rmv.getSceneObject().enabled = this.visible
+    this.chevRmv.getSceneObject().enabled = this.visible
     if (this.visible) this.rebuild()
   }
 
@@ -142,6 +175,7 @@ export class FindYourWayRouteLine extends BaseScriptComponent {
     this.swingT = -1
     this.rmv.getSceneObject().enabled = false
     this.oldRmv.getSceneObject().enabled = false
+    this.chevRmv.getSceneObject().enabled = false
   }
 
   isShowing(): boolean { return this.visible }
@@ -153,7 +187,7 @@ export class FindYourWayRouteLine extends BaseScriptComponent {
     if (this.swingT < 0) return
     this.swingT += getDeltaTime()
     const k = Math.min(1, this.swingT / this.swingSeconds)
-    const c = this.lineColor
+    const c = this.color()
     this.oldMat.mainPass.baseColor = new vec4(c.x, c.y, c.z, c.w * (1 - k))
     if (this.visible) this.rebuild()
     if (k >= 1) {
@@ -173,11 +207,55 @@ export class FindYourWayRouteLine extends BaseScriptComponent {
     pts = roundCorners(pts, 60)
     if (pts.length < 2) {
       this.rmv.getSceneObject().enabled = false
+      this.chevRmv.getSceneObject().enabled = false
       return
     }
     this.rmv.getSceneObject().enabled = true
-    this.rmv.mesh = ribbon(pts, this.widthCm / 2 + this.glowCm, this.aheadCm)
+    this.rmv.mesh = ribbon(pts, LINE_STYLE.widthCm / 2 + LINE_STYLE.glowCm, this.aheadCm)
+    const marks = chevronMarks(pts, LINE_STYLE.chevronSpacingCm, LINE_STYLE.chevronCm)
+    this.chevRmv.getSceneObject().enabled = marks.length > 0
+    if (marks.length > 0) this.chevRmv.mesh = chevrons(marks, CHEVRON_ARM_CM, this.aheadCm, pts[0])
   }
+}
+
+// Each chevron's two arms are thin quads; they fade with the line's far end.
+const CHEVRON_ARM_CM = 4
+
+function chevrons(marks: {apex: {x: number; y: number; z: number}; left: {x: number; y: number; z: number}; right: {x: number; y: number; z: number}}[],
+    thick: number, aheadCm: number, start: vec3): RenderMesh {
+  const mb = new MeshBuilder([
+    {name: "position", components: 3},
+    {name: "normal", components: 3},
+    {name: "texture0", components: 2},
+  ])
+  mb.topology = MeshTopology.Triangles
+  mb.indexType = MeshIndexType.UInt16
+  const verts: number[] = []
+  const idx: number[] = []
+  const arm = (a: {x: number; y: number; z: number}, b: {x: number; y: number; z: number}) => {
+    const dx = b.x - a.x, dz = b.z - a.z
+    const l = Math.sqrt(dx * dx + dz * dz)
+    if (l < 1e-6) return
+    const nx = (-dz / l) * thick / 2, nz = (dx / l) * thick / 2
+    const y = a.y + 0.3
+    const k = verts.length / 8
+    verts.push(a.x + nx, y, a.z + nz, 0, 1, 0, 0, 0)
+    verts.push(a.x - nx, y, a.z - nz, 0, 1, 0, 0, 1)
+    verts.push(b.x + nx, y, b.z + nz, 0, 1, 0, 1, 0)
+    verts.push(b.x - nx, y, b.z - nz, 0, 1, 0, 1, 1)
+    idx.push(k, k + 2, k + 1, k + 1, k + 2, k + 3)
+  }
+  for (const m of marks) {
+    // Past the look-ahead window the line has faded: no chevrons there.
+    if (new vec3(m.apex.x, m.apex.y, m.apex.z).distance(start) > aheadCm) break
+    arm(m.left, m.apex)
+    arm(m.right, m.apex)
+  }
+  if (idx.length === 0) arm(marks[0].left, marks[0].apex)
+  mb.appendVerticesInterleaved(verts)
+  mb.appendIndices(idx)
+  mb.updateMesh()
+  return mb.getMesh()
 }
 
 function truncate(p: vec3[], maxLen: number): vec3[] {

@@ -364,14 +364,14 @@ test("Q6 'Go here?' makes the place the destination (same re-route as a gate cha
   }
 });
 
-// ---- Q7: the line stays at 50% in every guide mode ---------------------------------
+// ---- Q7: the line stays at 40% opacity (60% see-through) in every guide mode ---------------------------------
 
-test("Q7 The route line is 50% transparent with the pet off and on (Pet + line)", () => {
-  assert.equal(LINE_OPACITY, 0.5);
+test("Q7 The route line is 60% see-through with the pet off and on (Pet + line)", () => {
+  assert.equal(LINE_OPACITY, 0.4);
   for (const on of [false, true]) {
     const v = guideVisuals(on);
     assert.equal(v.showLine, true);
-    assert.equal(v.lineOpacity, 0.5);
+    assert.equal(v.lineOpacity, 0.4);
     assert.equal(v.showCompanion, on);
   }
   const g = new PetGuide();

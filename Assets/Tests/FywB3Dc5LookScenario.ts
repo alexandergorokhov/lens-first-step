@@ -5,8 +5,8 @@ import {sleep} from "Leaf.lspkg/Utils/common/Utils"
 import {log, tap, waitFor} from "./FindYourWayLeafSupport"
 import {startFreeWalk} from "./FywB3Support"
 
-// b3-dc5 — Companion off: look at several shops. Each gets a dot, including non-matching ones;
-// opening one shows at most 3 items; ignoring one changes nothing.
+// b3-dc5 — Companion off: look at several shops. Each gets two small offer boxes at the shop,
+// including non-matching ones; looking away hides them; the x closes them for that shop.
 @component
 export class FywB3Dc5LookScenario extends Scenario {
   async run(): Promise<void> {
@@ -16,37 +16,35 @@ export class FywB3Dc5LookScenario extends Scenario {
     expect(main.isCompanionOn(), "companion off").toBe(false)
     expect(main.getPhase(), "free").toBe("free")
 
-    // A matching shop: Bolt Hardware from the back court, looking north.
+    // A matching shop: Bolt Hardware from the back court, looking north: two small boxes at the
+    // shop, one offer each, and no button or list in your face.
     main.debugSetPose(30, 0, 22, 0)
-    await waitFor(() => main.getDotId() === "boltHardware", 2000, "dot on Bolt Hardware")
-    expect(main.isDotShown(), "the dot shows").toBe(true)
-    expect(main.getDotText(), "it says what it opens").toBe("Offers: Bolt Hardware")
-    await tap(it, "DotButton")
-    await waitFor(() => main.isOfferShown(), 2000, "offer list")
-    const v = main.getOfferList()!
-    expect(v.title, "shop name on top").toBe("Bolt Hardware")
-    expect(v.rows.length <= 3 && v.rows.length > 0, "at most 3 items: " + v.rows.length).toBe(true)
-    await tap(it, "OfferCloseButton")
-    await waitFor(() => !main.isOfferShown(), 2000, "list closed")
+    await waitFor(() => main.getDotId() === "boltHardware", 2000, "looking at Bolt Hardware")
+    await waitFor(() => main.isOfferPeekShown() && main.getOfferBoxesId() === "boltHardware", 2000, "its boxes")
+    expect(main.isDotShown(), "no button in the view").toBe(false)
+    const v = main.getOfferPeekLines()
+    expect(v.length > 0 && v.length <= 2, "one or two boxes: " + v.length).toBe(true)
+    expect(main.getOfferPeekTitle(), "shop").toBe("Bolt Hardware")
 
-    // A non-matching shop gets a dot too: Aurora Sport (sport is not picked).
+    // A non-matching shop gets its boxes too: Aurora Sport (sport is not picked).
     main.debugSetPose(38, 0, 22, 0)
-    await waitFor(() => main.getDotId() === "auroraSport", 2000, "dot on a non-matching shop")
+    await waitFor(() => main.getOfferBoxesId() === "auroraSport", 2000, "boxes at a non-matching shop")
 
-    // Ignoring it changes nothing: no list, and the dot goes after looking away.
+    // Looking away hides them, and nothing else changes.
     main.debugSetPose(38, 0, 22, 90)
-    await sleep(600)
-    expect(main.isOfferShown(), "no list").toBe(false)
-    await waitFor(() => !main.isDotShown(), 3500, "the dot hides ~2 s after looking away")
+    await waitFor(() => !main.isOfferPeekShown(), 3500, "the boxes hide ~2 s after looking away")
     expect(main.getPhase(), "still walking").toBe("free")
 
-    // A list closes after walking ~5 m away.
+    // The x closes them for that shop: looking at it again shows nothing.
     main.debugSetPose(30, 0, 22, 0)
-    await waitFor(() => main.isDotShown(), 2000, "dot again")
-    await tap(it, "DotButton")
-    await waitFor(() => main.isOfferShown(), 2000, "offer list again")
-    main.debugSetPose(30, 0, 16.5, 180)
-    await waitFor(() => !main.isOfferShown(), 2000, "closes after walking away")
+    await waitFor(() => main.getOfferBoxesId() === "boltHardware", 2000, "boxes again")
+    await tap(it, "OfferBoxClose0")
+    await waitFor(() => !main.isOfferPeekShown(), 1000, "closed")
+    main.debugSetPose(30, 0, 22, 90)
+    await sleep(2500)
+    main.debugSetPose(30, 0, 22, 0)
+    await sleep(1500)
+    expect(main.isOfferPeekShown(), "closed for that shop").toBe(false)
     log("b3-dc5 pass")
   }
 }

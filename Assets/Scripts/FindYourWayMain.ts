@@ -61,8 +61,9 @@ import {MultiStopTrip, orderStops} from "./FindYourWayTrip"
 import {mapLogLines, tripAfterSaving} from "./FindYourWayMapping"
 import {peekPlace} from "./FindYourWayPeek"
 import {showingSettings, StartSettings} from "./FindYourWayDemo"
-import {destinationsOf, FreeWalk, interestList, matchDestination, sayItPhrase, ShopLook, walkableRoute} from "./FindYourWayFreeWalk"
-import {OptionsDock, quietView, routeLineAheadM} from "./FindYourWayDock"
+import {destinationsOf, FreeWalk, interestList, LookBoxes, matchDestination, OfferDismissals, sayItPhrase, ShopLook, walkableRoute} from "./FindYourWayFreeWalk"
+import {OptionsDock, routeLineAheadM, walkingHud} from "./FindYourWayDock"
+import {FindYourWayOfferBoxesUI} from "./FindYourWayOfferBoxesUI"
 import {FindYourWayHomePanelUI} from "./FindYourWayHomePanelUI"
 import {FindYourWayPrefsUI} from "./FindYourWayPrefsUI"
 import {FindYourWayOfferUI} from "./FindYourWayOfferUI"
@@ -94,6 +95,8 @@ import {FindYourWayPlayTime} from "./FindYourWayPlayTime"
 export type Phase = "scan" | "loading" | "choose" | "prefs" | "free" | "mode" | "nav" | "arrived" | "error" | "mapping"
 
 const ARRIVAL_CARD_CM = 200
+// The offer boxes at a shop stand this high (cm), about eye level.
+const OFFER_BOX_CM = 150
 const LINE_LIFT_CM = 1 // the floor line sits 1 cm above the floor
 const CLOSED_SIGN_TEXT = "Closed — re-routing"
 const RIDE_CARD_S = 2.5
@@ -345,6 +348,10 @@ export class FindYourWayMain extends BaseScriptComponent {
   private dock = new OptionsDock()
   // Looking at a shop on a guided trip: its button and short card (Free walk has its own).
   private shopLook: {map: MapData; look: ShopLook} | null = null
+  // The two small offer boxes at a shop you look at, and the shops whose boxes you closed.
+  private offerBoxes: FindYourWayOfferBoxesUI | null = null
+  private offerClosed = new OfferDismissals()
+  private boxesTitle: string | null = null
   private mappingPanelPlaced = false
   // "Gate C3 is on C pier, 1 floor up": shown in the cue slot for DEST_NOTE_S after the scan or a
   // destination change (null = work it out on the next frame).
@@ -490,6 +497,7 @@ export class FindYourWayMain extends BaseScriptComponent {
       get bubble() { return self.bubble },
       panels: this.panels,
       offerOffset: this.offerOffset,
+      showBoxes: (b: LookBoxes | null) => this.showBoxes(b),
       halfViewDeg: this.halfViewDeg,
       userPos: () => this.userPos(),
       userHeading: () => this.userHeading(),
@@ -576,6 +584,13 @@ export class FindYourWayMain extends BaseScriptComponent {
     const ou = global.scene.createSceneObject("OfferUI")
     this.offerUI = ou.createComponent(FindYourWayOfferUI.getTypeName()) as FindYourWayOfferUI
     this.offerUI.setup(() => this.openDot(), () => { if (this.free) this.free.closeList() })
+    const ob = global.scene.createSceneObject("OfferBoxes")
+    ob.setParent(this.building)
+    this.offerBoxes = ob.createComponent(FindYourWayOfferBoxesUI.getTypeName()) as FindYourWayOfferBoxesUI
+    this.offerBoxes.setup((id) => {
+      this.offerClosed.dismiss(id)
+      this.showBoxes(null)
+    })
     const bu = global.scene.createSceneObject("CompanionBubble")
     bu.setParent(this.building)
     this.bubble = bu.createComponent(FindYourWayBubbleUI.getTypeName()) as FindYourWayBubbleUI
@@ -1501,6 +1516,7 @@ export class FindYourWayMain extends BaseScriptComponent {
         this.hud.setPill(null)
         this.hud.setCue(null)
         this.freeView.showLook(null, pos)
+        this.showBoxes(null)
         this.pointed = null
         if (this.placesUI) this.placesUI.show([], null)
         if (this.view) this.view.setPost(null, true)
@@ -1520,6 +1536,14 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.updatePlaces(pos)
     this.updateCompanion(pos, false)
     this.updateShopLook(pos)
+  }
+
+  // The boxes at the shop you look at, unless you closed them for that shop (null hides them).
+  private showBoxes(b: LookBoxes | null): void {
+    if (!this.offerBoxes) return
+    const on = !!b && this.offerClosed.visible(b.id)
+    this.boxesTitle = on ? b!.title : null
+    this.offerBoxes.show(on ? {id: b!.id, tag: b!.tag, boxes: b!.boxes} : null, on ? this.local(b!.spot, OFFER_BOX_CM) : null)
   }
 
   private updateShopLook(pos: Vec3): void {
@@ -1762,8 +1786,11 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.dock.update(on, this.appPanel.isPlaying() || this.appPanel.isNextStopShown())
     this.appPanel.setCollapsed(this.dock.isCollapsed())
     // A clear view while walking: no map badge, score chip or play hint until you stand still.
-    const q = quietView(on, this.playTime.gate.canPlay || this.appPanel.isPlaying(), this.phase === "arrived")
-    this.hud.setQuiet(q.badge, q.score, q.playLine)
+    // Almost screenless while walking: the pill, cue and badge live in the Control panel.
+    const q = walkingHud(on, this.playTime.gate.canPlay || this.appPanel.isPlaying(), this.phase === "arrived")
+    this.hud.setQuiet(q.badge, q.score, q.playLine, q.pill, q.cue)
+    this.appPanel.setInfo(on ? [this.hud.getPillWanted(), this.hud.getCueWanted(), this.hud.getScoreWanted(), this.hud.getBadgeWanted()].filter((x) => !!x).join("\n") : null)
+    if (!on) this.showBoxes(null)
     if (!on) return
     const airport = this.getMapKey() === "airport"
     this.appPanel.setShowing(this.showingPreset, this.showingPreset && airport && !!this.nav && this.getDestinationId() !== "gateC3",
@@ -1816,7 +1843,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (ahead === Infinity) {
       fadeCm = 0
       for (let i = 1; i < pts.length; i++) fadeCm += Math.sqrt((pts[i].x - pts[i - 1].x) ** 2 + (pts[i].z - pts[i - 1].z) ** 2) * 100
-      fadeCm = Math.max(100, fadeCm)
+      fadeCm = Math.max(100, fadeCm * 1.35) // the fade only touches the last few metres
     }
     this.routeLine.setPath(local.length > 1 ? local : [], fadeCm, this.pendingSwing)
     this.pendingSwing = false
@@ -1918,8 +1945,10 @@ export class FindYourWayMain extends BaseScriptComponent {
   getUserMapPos(): Vec3 { return this.userPos() }
   getHudCardTextOrEmpty(): string { return this.hud.getCardText() || "" }
   // State for the LEAF scenarios.
-  getPillText(): string | null { return this.hud.getPillText() }
-  getCueText(): string | null { return this.hud.getCueText() }
+  // The pill's and cue's content (shown in the Control panel while walking; isPillShown: in view).
+  getPillText(): string | null { return this.hud.getPillWanted() }
+  getCueText(): string | null { return this.hud.getCueWanted() }
+  isPillShown(): boolean { return this.hud.getPillText() !== null }
   getScoreText(): string | null { return this.hud.getScoreText() }
   getPlayLine(): string | null { return this.hud.getPlayLine() }
   isFloorPostShown(): boolean { return !!this.view && this.view.isPostShown() }
@@ -2000,9 +2029,11 @@ export class FindYourWayMain extends BaseScriptComponent {
   getScoreWanted(): string | null { return this.hud.getScoreWanted() }
   getBadgeWanted(): string | null { return this.hud.getBadgeWanted() }
   isOptionsCollapsed(): boolean { return !!this.appPanel && this.appPanel.isCollapsed() }
-  getOfferPeekTitle(): string | null { const p = this.offerUI ? this.offerUI.getPeek() : null; return p ? p.title : null }
-  isOfferPeekShown(): boolean { return !!this.offerUI && this.offerUI.isPeekShown() }
-  getOfferPeekLines(): string[] { const p = this.offerUI ? this.offerUI.getPeek() : null; return p ? p.lines.slice() : [] }
+  // The two offer boxes at the shop you look at.
+  getOfferPeekTitle(): string | null { return this.offerBoxes && this.offerBoxes.isShown() ? this.boxesTitle : null }
+  isOfferPeekShown(): boolean { return !!this.offerBoxes && this.offerBoxes.isShown() }
+  getOfferPeekLines(): string[] { const v = this.offerBoxes ? this.offerBoxes.getShown() : null; return v ? v.boxes.slice() : [] }
+  getOfferBoxesId(): string | null { const v = this.offerBoxes ? this.offerBoxes.getShown() : null; return v ? v.id : null }
   getCompanionLeadM(): number { return this.companionLeadM }
   isDotShown(): boolean { return !!this.offerUI && this.offerUI.isDotShown() }
   getDotText(): string { return this.offerUI ? this.offerUI.getDotText() : "" }

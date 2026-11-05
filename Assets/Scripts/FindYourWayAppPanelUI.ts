@@ -8,6 +8,7 @@
 import {FlexItem} from "SpectaclesUIKit.lspkg/Scripts/Components/Layout2D/Flex/FlexItem"
 import {addButton, addText, LabeledButton, makePanel, obj, Panel} from "./FindYourWayWidgetsUI"
 import {icon} from "./FindYourWayIconsUI"
+import {OptionsDock} from "./FindYourWayDock"
 
 export interface AppPanelHandlers {
   onCompanion: () => void
@@ -61,11 +62,14 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
   private hideBtn: LabeledButton
   private tabRoot: SceneObject
   private collapsed = false
+  private info: Text
 
   setup(h: AppPanelHandlers): void {
     const panel = makePanel(this.sceneObject, WIDTH + 2, 1.2, 0.8)
     this.panel = panel
-    const title = addText(panel.content, "AppTitle", "Options", "Headline2", WIDTH, 2.4, TEXT, FONT)
+    const title = addText(panel.content, "AppTitle", OptionsDock.TITLE, "Headline2", WIDTH, 2.4, TEXT, FONT)
+    // While walking: the floor, metres and time to go (the pill and cue that left the view).
+    this.info = addText(panel.content, "ControlInfo", "", "Caption", WIDTH, 5, TEXT, FONT)
     this.companion = addButton(panel.content, "CompanionButton", "Pet: off", WIDTH, BUTTON_H, icon("directions_walk"),
       h.onCompanion, TEXT, FONT)
     this.model = addButton(panel.content, "ModelButton", "Swap model", WIDTH, BUTTON_H, null, h.onModel, TEXT, FONT)
@@ -88,11 +92,11 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
       h.onRestartShowing || none, TEXT, FONT)
     // Folded once the trip starts (Main's OptionsDock): only a small "Options" tab stays.
     const toggle = h.onToggleOptions || none
-    this.hideBtn = addButton(panel.content, "HideOptionsButton", "Hide options", WIDTH, BUTTON_H, null, toggle, TEXT, FONT)
+    this.hideBtn = addButton(panel.content, "HideOptionsButton", "Hide", WIDTH, BUTTON_H, null, toggle, TEXT, FONT)
     this.tabRoot = obj(this.sceneObject, "OptionsTab", new vec3(0, 0, 0.6))
-    addButton(this.tabRoot, "OptionsTabButton", "Options", TAB_W, BUTTON_H, null, toggle, TEXT, FONT)
+    addButton(this.tabRoot, "OptionsTabButton", OptionsDock.TITLE, TAB_W, BUTTON_H, null, toggle, TEXT, FONT)
     this.tabRoot.enabled = false
-    this.rows = [title.getSceneObject(), this.hideBtn.so, this.companion.so, this.model.so, this.places.so, this.seeMap.so, this.play.so, this.jump.so,
+    this.rows = [title.getSceneObject(), this.info.getSceneObject(), this.hideBtn.so, this.companion.so, this.model.so, this.places.so, this.seeMap.so, this.play.so, this.jump.so,
       this.throwBtn.so, this.nextStop.so, this.endWalk.so, this.showingGate.so, this.showingMap.so, this.restartShowing.so]
     this.optionRows = [title.getSceneObject(), this.hideBtn.so, this.companion.so, this.model.so, this.places.so, this.seeMap.so]
     this.setShowing(false, false, null)
@@ -189,6 +193,20 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
   }
 
   isCollapsed(): boolean { return this.collapsed }
+
+  // The trip's floor, metres and time (null or empty hides the row).
+  setInfo(text: string | null): void {
+    if (!this.info) return
+    const on = !!text && !this.playing
+    if (on && this.info.text !== text) this.info.text = text!
+    const so = this.info.getSceneObject()
+    if (so.enabled !== on) {
+      so.enabled = on
+      this.relayout()
+    }
+  }
+
+  getInfo(): string | null { return this.info && this.info.getSceneObject().enabled ? this.info.text : null }
 
   isNextStopShown(): boolean { return !!this.nextStop && this.nextStop.so.enabled }
 

@@ -482,6 +482,54 @@ export function walkableRoute<T extends FwXYZ>(map: FwMap, route: T[], margin: n
 
 // ── The card when you look at a shop ────────────────────────────────────────
 
+// The two small boxes shown at a shop while you look at it: its first two offers, Sponsored if paid.
+export function offerBoxes(map: FwMap, id: string, prefs: string[], y: number): { title: string; tag: string; boxes: string[] } | null {
+  const p = offerPeek(map, id, prefs, y, 2);
+  return p ? { title: p.title, tag: p.tag, boxes: p.lines } : null;
+}
+
+// Shops whose boxes you closed (their x): they stay closed for the rest of the session.
+export class OfferDismissals {
+  private closed: { [id: string]: boolean } = Object.create(null);
+  dismiss(id: string): void { this.closed[id] = true; }
+  visible(id: string | null): boolean { return id !== null && !this.closed[id]; }
+}
+
+// Where the boxes stand: the middle of the shop's front you can see from where you are, a little
+// outside it (null if the shop has no front).
+export function shopLabelSpot(map: FwMap, id: string, user: FwXYZ, outM: number = 0.5): FwXYZ | null {
+  let best: FwXYZ | null = null;
+  let bestD = Infinity;
+  for (const t of frontTargets(map)) {
+    if (t.id !== id || t.outside === 0 || Math.abs(t.y - user.y) >= SAME_FLOOR_M) continue;
+    if (sideOf(t, user) * t.outside <= 0) continue;
+    const len = flat({ x: t.x1, z: t.z1 }, { x: t.x2, z: t.z2 });
+    if (len < 1e-6) continue;
+    let nx = -(t.z2 - t.z1) / len;
+    let nz = (t.x2 - t.x1) / len;
+    if (sideOf(t, { x: (t.x1 + t.x2) / 2 + nx, z: (t.z1 + t.z2) / 2 + nz }) * t.outside < 0) { nx = -nx; nz = -nz; }
+    const p = { x: (t.x1 + t.x2) / 2 + nx * outM, y: t.y, z: (t.z1 + t.z2) / 2 + nz * outM };
+    const d = flat(p, user);
+    if (d < bestD && !insideShop(map, p)) { bestD = d; best = p; }
+  }
+  return best;
+}
+
+export interface LookBoxes {
+  id: string;
+  title: string;
+  tag: string;
+  boxes: string[];
+  spot: FwXYZ;
+}
+
+function lookBoxesOf(map: FwMap, id: string | null, prefs: string[], pos: FwXYZ): LookBoxes | null {
+  if (id === null) return null;
+  const b = offerBoxes(map, id, prefs, pos.y);
+  const spot = shopLabelSpot(map, id, pos);
+  return b && spot ? { id, title: b.title, tag: b.tag, boxes: b.boxes, spot } : null;
+}
+
 // Looking at shops on any trip (Free walk has its own copy inside FreeWalk): which front you look
 // at, what its button says, and its short card.
 export class ShopLook {
@@ -500,10 +548,14 @@ export class ShopLook {
     this.range = s.lookRangeM;
   }
 
-  update(pos: FwXYZ, heading: number, now: number): string | null {
-    this.dots.update(lookTarget(this.targets, pos, heading, this.range), now, pos);
+  // (dt is unused: the same call shape as FreeWalk.update.)
+  update(pos: FwXYZ, heading: number, dtOrNow: number, now?: number): string | null {
+    const t = now === undefined ? dtOrNow : now;
+    this.dots.update(lookTarget(this.targets, pos, heading, this.range), t, pos);
     return this.dots.dot;
   }
+
+  lookBoxes(pos: FwXYZ): LookBoxes | null { return lookBoxesOf(this.map, this.dots.dot, this.prefs, pos); }
 
   dot(): string | null { return this.dots.dot; }
   label(pos: FwXYZ): string { return this.dots.dot === null ? "" : dotLabel(this.map, this.dots.dot, this.prefs, pos.y); }
@@ -581,6 +633,8 @@ export class FreeWalk {
   dotText(pos: FwXYZ): string { return this.dots.dot === null ? "" : dotLabel(this.map, this.dots.dot, this.prefs, pos.y); }
   // The short offer card for the shop you look at (shown with the dot), or null.
   peek(pos: FwXYZ): OfferPeek | null { return this.dots.dot === null ? null : offerPeek(this.map, this.dots.dot, this.prefs, pos.y); }
+  // The two small boxes at the shop you look at, and where they stand.
+  lookBoxes(pos: FwXYZ): LookBoxes | null { return lookBoxesOf(this.map, this.dots.dot, this.prefs, pos); }
   openId(): string | null { return this.dots.open; }
   pointingAt(): string | null { return this.stop ? this.stop.id : null; }
   // Counts as already pointed at this walk.

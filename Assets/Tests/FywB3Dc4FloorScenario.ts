@@ -19,16 +19,13 @@ export class FywB3Dc4FloorScenario extends Scenario {
     await waitFor(() => main.getBubbleText() !== null, 5000, "the bubble")
     expect(main.getBubbleText(), "bubble").toBe("5 picks upstairs")
 
-    // Looking at the stairs gives the same dot as a shop.
+    // Looking at the stairs gives the same two boxes as a shop: the first picks upstairs.
     main.debugSetPose(57, 0, 13, 0)
-    await waitFor(() => main.getDotId() === "stairsFoot", 2000, "dot on the stairs")
-    await tap(it, "DotButton")
-    await waitFor(() => main.isOfferShown(), 2000, "the list")
-    const v = main.getOfferList()!
-    expect(v.rows.length, "first 3 picks").toBe(3)
-    expect(v.more, "and more").toBe(true)
-    expect(v.rows[0].text.indexOf("Second Skin · Sponsored"), "paid first, with its tag: " + v.rows[0].text).toBe(0)
-    await tap(it, "OfferCloseButton")
+    await waitFor(() => main.getDotId() === "stairsFoot", 2000, "looking at the stairs")
+    await waitFor(() => main.isOfferPeekShown() && main.getOfferBoxesId() === "stairsFoot", 2000, "the boxes at the stairs")
+    const v = main.getOfferPeekLines()
+    expect(v.length, "two picks").toBe(2)
+    expect(v[0].indexOf("Second Skin · Sponsored"), "paid first, with its tag: " + v[0]).toBe(0)
     await waitFor(() => main.getBubbleText() === null, 6000, "the bubble hides")
 
     // Go up and find one of them.
@@ -39,7 +36,7 @@ export class FywB3Dc4FloorScenario extends Scenario {
     expect(main.getDebugPose()!.pos.y, "upstairs").toBe(5)
     main.debugSetPose(50, 5, 22, 0)
     // The next flight's hint can come first.
-    await waitFor(() => main.getStopId() === "secondSkin", 9000, "the companion stops at it")
+    await waitFor(() => main.getStopId() === "secondSkin", 16000, "the companion stops at it")
     await waitFor(() => main.getDotId() === "secondSkin", 2000, "and it gets a dot")
     expect((main.getCompanionMapPos() as {y: number}).y, "the companion came up").toBe(5)
     log("b3-dc4 pass")

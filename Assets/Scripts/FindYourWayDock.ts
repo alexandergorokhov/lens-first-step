@@ -9,6 +9,8 @@ export const COMPANION_LEAD_M = 7;
 // a button in it is needed now (Next stop at a stop, Stop while playing) it opens by itself, and
 // folds back after if you had it folded. Off a trip it is never folded.
 export class OptionsDock {
+  // The one panel left on screen while you walk: everything else lives in it.
+  static readonly TITLE = "Control";
   private active = false;
   private folded = false;
   private forced = false;
@@ -37,10 +39,10 @@ export function routeLineAheadM(companionOn: boolean, aheadM: number): number {
   return companionOn ? Infinity : aheadM;
 }
 
-// A clear view while you walk a trip: only the floor line, the companion, the distance pill and the
-// turn arrow. The map badge goes once the trip starts; the score chip and the play hint come back
-// when you stand still (the score also at arrival). Off a trip nothing is hidden.
-export function quietView(tripActive: boolean, standing: boolean, arrived: boolean): { badge: boolean; score: boolean; playLine: boolean } {
-  if (!tripActive) return { badge: true, score: true, playLine: true };
-  return { badge: false, score: standing || arrived, playLine: standing && !arrived };
+// Almost screenless while you walk a trip: only the floor line and the companion (and the turn
+// arrow). The distance pill, floor cue and map badge move into the Control panel; the score chip and
+// the play hint come back when you stand still (the score also at arrival). Off a trip nothing is hidden.
+export function walkingHud(tripActive: boolean, standing: boolean, arrived: boolean): { pill: boolean; cue: boolean; badge: boolean; score: boolean; playLine: boolean } {
+  if (!tripActive) return { pill: true, cue: true, badge: true, score: true, playLine: true };
+  return { pill: false, cue: false, badge: false, score: standing || arrived, playLine: standing && !arrived };
 }

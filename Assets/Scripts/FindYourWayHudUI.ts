@@ -68,6 +68,10 @@ export class FindYourWayHudUI extends BaseScriptComponent {
   private play: SceneObject
   private playText: Text
   private showBadge = true
+  private showPill = true
+  private showCue = true
+  private pillWanted: string | null = null
+  private cueWanted: string | null = null
   private showScore = true
   private showPlay = true
   private badgeWanted: string | null = null
@@ -126,10 +130,18 @@ export class FindYourWayHudUI extends BaseScriptComponent {
     so.enabled = true
   }
 
-  setPill(text: string | null): void { this.setLine(this.pill, this.pillText, text) }
+  setPill(text: string | null): void {
+    this.pillWanted = text
+    this.setLine(this.pill, this.pillText, this.showPill ? text : null)
+  }
   getPillText(): string | null { return this.pill.enabled ? this.pillText.text : null }
-  setCue(text: string | null): void { this.setLine(this.cue, this.cueText, text) }
+  getPillWanted(): string | null { return this.pillWanted }
+  setCue(text: string | null): void {
+    this.cueWanted = text
+    this.setLine(this.cue, this.cueText, this.showCue ? text : null)
+  }
   getCueText(): string | null { return this.cue.enabled ? this.cueText.text : null }
+  getCueWanted(): string | null { return this.cueWanted }
   setScore(text: string | null): void {
     this.scoreWanted = text
     this.setLine(this.score, this.scoreText, this.showScore ? text : null)
@@ -144,7 +156,15 @@ export class FindYourWayHudUI extends BaseScriptComponent {
   getPlayLine(): string | null { return this.play.enabled ? this.playText.text : null }
 
   // A clear view while walking (core quietView): rows hidden here keep their text and come back.
-  setQuiet(badge: boolean, score: boolean, play: boolean): void {
+  setQuiet(badge: boolean, score: boolean, play: boolean, pill: boolean = true, cue: boolean = true): void {
+    if (pill !== this.showPill) {
+      this.showPill = pill
+      this.setPill(this.pillWanted)
+    }
+    if (cue !== this.showCue) {
+      this.showCue = cue
+      this.setCue(this.cueWanted)
+    }
     if (badge !== this.showBadge) {
       this.showBadge = badge
       this.setBadge(this.badgeWanted)
