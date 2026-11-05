@@ -192,10 +192,10 @@ export interface StartSettings {
   preselect: "walk" | "stepFree" | null;
 }
 
-// The state shown to the judges: the airport at its entrance sign, demo controls hidden, the dog
-// on, Walk preselected (Step-Free one pinch away).
+// The state shown to the judges: the shopping mall at its entrance sign, demo controls hidden,
+// the dog on, Walk preselected (Step-Free one pinch away).
 export const SHOWING: StartSettings = {
-  mapKey: "airport",
+  mapKey: "mall",
   startAtSign: true,
   showDemoControls: false,
   companionModel: "dog",

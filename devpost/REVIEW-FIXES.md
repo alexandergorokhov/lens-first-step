@@ -18,6 +18,8 @@ Alex shows the project to the judges on Thursday. One switch should put the Lens
 3. **Add Restart showing:** a button on the Options panel, shown only when the preset is on, that does the reset above. It's not a demo control, so it stays visible with demo controls hidden.
 4. Run `sh1-showing-preset` plus the existing restart and map-switch LEAF scenarios. Keep `OFFLINE=1 npm test` green, then commit.
 
+**Built 2026-11-04 (night run), then changed on Alex's word:** the preset shows the **shopping mall**, not the airport: Restart showing goes back to the mall's sign (destination: the cinema), **Demo: plan change** fires the mall's "meet at the food court" event (it says **Demo: gate change** on the airport), and the map switch goes Mall ↔ Preview room. The companion leads **5 m** ahead (was 7 m). The table below still describes the airport beats; on the mall, Lift A is the lift that can go out of service.
+
 **Showing order** (the same as the video; see VIDEO-SHOTLIST.md):
 
 | # | Beat | In the Lens |

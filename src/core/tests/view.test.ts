@@ -332,3 +332,25 @@ test("V15 Free walk: it steps at most ~1.5 m aside from its lead spot, points in
   assert.ok(checked > 0);
   for (let i = 1; i < stopsAt.length; i++) assert.ok(stopsAt[i] - stopsAt[i - 1] >= 10 - 1e-6, "10 s apart: " + stopsAt.join());
 });
+
+test("V16 walking fast, it still points: stepping aside gives up after ~1 s and it points from there", () => {
+  const map = load("map.json");
+  const route = routePoints(map, findRoute(map, "sign", "gateB12", "walk"));
+  const guide = new PetGuide();
+  guide.lead = 5;
+  guide.keepInView = (spot, user, look) => clampToView(user, look, spot, VIEW_HALF_DEG, Math.max(VIEW_FAR_M, guide.lead + 1.5));
+  guide.setOn(true, route, route[0], "k");
+  // 5.8 m/s along the first stretch: the aside spot moves faster than the companion walks.
+  const a = route[0], b = route[1];
+  const len = Math.hypot(b.x - a.x, b.z - a.z);
+  guide.look = headingAlong(a, b);
+  const place = { x: (a.x + b.x) / 2 + 3, y: a.y, z: (a.z + b.z) / 2 };
+  guide.point(place, 0, 3);
+  const states: string[] = [];
+  for (let t = 0.05; t <= 2.5; t += 0.05) {
+    const k = Math.min(1, (5.8 * t) / len);
+    guide.update(route, lerp(a, b, k), 0.05, "k", false, t);
+    states.push(guide.pointState);
+  }
+  assert.ok(states.includes("point"), "it points: " + [...new Set(states)].join(","));
+});

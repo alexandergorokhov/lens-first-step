@@ -63,6 +63,8 @@ export const TREAT_RADIUS = 1.5;
 export const POINT_SECONDS = 3;
 // While pointing it steps this far off the line toward the place (m): out of the way, in view.
 export const SIDE_STEP = 1.2;
+// Still stepping aside after this long (s), it points from where it is.
+export const ASIDE_GIVE_UP = 1;
 // A segment that climbs or drops at least this much is a floor change.
 const LEVEL_STEP = 0.5;
 
@@ -292,7 +294,7 @@ export function treatsResult(got: number, total: number, companion: Companion = 
 export class PetGuide {
   on = false;
   companion: Companion = COMPANIONS.dog;
-  pointing: { at: XYZ; until: number } | null = null;
+  pointing: { at: XYZ; until: number; since: number } | null = null;
   pet: PetState | null = null;
   spots: XYZ[] = [];
   got: boolean[] = [];
@@ -318,7 +320,7 @@ export class PetGuide {
   // Stop, turn and point at a place for POINT_SECONDS (from places.ts's PointingCoach).
   point(place: XYZ, now: number, seconds: number = POINT_SECONDS): void {
     if (!this.on) return;
-    this.pointing = { at: { x: place.x, y: place.y, z: place.z }, until: now + seconds };
+    this.pointing = { at: { x: place.x, y: place.y, z: place.z }, until: now + seconds, since: now };
     this.pointState = "aside";
   }
 
@@ -355,7 +357,8 @@ export class PetGuide {
       const pos = d <= step ? spot : lerp(this.pet.pos, spot, step / d);
       const h = headingOf(pos, this.pointing.at);
       this.pet = { pos, heading: h === null ? this.pet.heading : h, mood: "point" };
-      if (d <= step) this.pointState = "point";
+      // At its spot, or still chasing it after ASIDE_GIVE_UP s (you walk faster than it): it points.
+      if (d <= step || now - this.pointing.since >= ASIDE_GIVE_UP) this.pointState = "point";
       else if (this.pointState !== "point") this.pointState = "aside";
     } else if (this.pet) {
       this.pet = stepPet(this.pet, route, user, dt, arrived, this.lead);

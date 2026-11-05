@@ -210,7 +210,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   companionOnAtStart: boolean = false
 
   @input
-  @hint("Showing preset (for the judges): overrides map, start at sign, demo controls, companion model and on at start; preselects Walk; adds Restart showing, Demo: gate change and an Airport/Preview room map switch to the Options panel")
+  @hint("Showing preset (for the judges): overrides map, start at sign, demo controls, companion model and on at start; preselects Walk; adds Restart showing, Demo: plan change (gate change at the airport) and a map switch to the Preview room to the Options panel. Shows the shopping mall")
   showingPreset: boolean = false
 
   @input
@@ -1047,11 +1047,11 @@ export class FindYourWayMain extends BaseScriptComponent {
   }
 
   // The saved map (Learn this place) comes after the bundled ones. Under the showing preset the
-  // switch goes between the airport and the preview room (for Learn this place), one press each way.
+  // switch goes between the preset's map and the preview room (for Learn this place), one press each way.
   private nextMapIndex(): number {
     if (this.showingPreset) {
       const keys = MAP_SOURCES.map((m) => m.key)
-      return this.getMapKey() === "airport" ? keys.indexOf("room") : keys.indexOf("airport")
+      return this.getMapKey() === this.mapKey ? keys.indexOf("room") : keys.indexOf(this.mapKey)
     }
     return (this.mapIndex + 1) % (MAP_SOURCES.length + (this.mappedText ? 1 : 0))
   }
@@ -1071,8 +1071,8 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.preselect = s.preselect
   }
 
-  // Restart showing: the airport at its sign, closures cleared, the destination back to the map's
-  // own, the dog; the demo controls follow the preset.
+  // Restart showing: the preset's map at its sign, closures cleared, the destination back to the
+  // map's own, the dog; the demo controls follow the preset.
   restartShowing(): void {
     this.applyShowing()
     const idx = MAP_SOURCES.map((m) => m.key).indexOf(this.mapKey)
@@ -1765,9 +1765,14 @@ export class FindYourWayMain extends BaseScriptComponent {
     const q = quietView(on, this.playTime.gate.canPlay || this.appPanel.isPlaying(), this.phase === "arrived")
     this.hud.setQuiet(q.badge, q.score, q.playLine)
     if (!on) return
-    const airport = this.getMapKey() === "airport"
-    this.appPanel.setShowing(this.showingPreset, this.showingPreset && airport && !!this.nav && this.getDestinationId() !== "gateC3",
-      this.showingPreset ? (airport ? "Map: Preview room" : "Map: Airport") : null)
+    // Demo: the map's own plan change (a gate change at the airport), until it has happened.
+    const change = this.showingPreset && this.nav ? this.firstEvent("destinationChanged") : null
+    const home = this.getMapKey() === this.mapKey
+    const names: {[key: string]: string} = {airport: "Airport", mall: "Shopping mall", hospital: "Hospital", campus: "Campus", room: "Preview room"}
+    const homeName = names[this.mapKey] || this.mapKey
+    this.appPanel.setShowing(this.showingPreset, !!change && !!change.to && this.getDestinationId() !== change.to,
+      this.showingPreset ? (home ? "Map: Preview room" : "Map: " + homeName) : null,
+      this.getMapKey() === "airport" ? "Demo: gate change" : "Demo: plan change")
     const offset = this.appPanel.isPlaying() ? this.playPanelOffset : global.deviceInfoSystem.isEditor() ? PREVIEW_PANEL_OFFSET : this.appPanelOffset
     this.panels.follow(this.appPanel.getSceneObject(), offset, wasOn)
   }
@@ -2043,7 +2048,12 @@ export class FindYourWayMain extends BaseScriptComponent {
   debugSeeMap(on: boolean): void { this.setMapShown(on) }
   isPeekShown(): boolean { return !!this.peekView && this.peekView.isShown() }
   isShowingPreset(): boolean { return this.showingPreset }
-  debugSetShowingPreset(on: boolean): void { this.showingPreset = on }
+  // Tests: the preset on or off, with the start settings re-applied (the Inspector's own when off).
+  debugSetShowingPreset(on: boolean): void {
+    if (this.showingPreset === on) return
+    this.showingPreset = on
+    this.applyShowing()
+  }
   getStartSettings(): StartSettings {
     return {mapKey: this.mapKey, startAtSign: this.startAtSign, showDemoControls: this.showDemoControls,
       companionModel: this.companionModel, companionOnAtStart: this.companionOnAtStart, preselect: this.preselect as StartSettings["preselect"]}

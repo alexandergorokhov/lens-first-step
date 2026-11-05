@@ -44,6 +44,9 @@ import {FywB3Dc4FloorScenario} from "./FywB3Dc4FloorScenario"
 import {FywB3Dc5LookScenario} from "./FywB3Dc5LookScenario"
 import {FywB3Dc6GoToScenario} from "./FywB3Dc6GoToScenario"
 import {FywReelScenario} from "./FywReelScenario"
+import {FywMallRobotVideoScenario} from "./FywMallRobotVideoScenario"
+import {FywMallDogVideoScenario} from "./FywMallDogVideoScenario"
+import {FywMallCoffeeVideoScenario} from "./FywMallCoffeeVideoScenario"
 import {FywV1VoiceScenario} from "./FywV1VoiceScenario"
 import {FywPm1PickMapScenario} from "./FywPm1PickMapScenario"
 import {FywTr1TourScenario} from "./FywTr1TourScenario"
@@ -124,9 +127,9 @@ export class FindYourWayLeafIndex extends BaseScriptComponent {
     {id: "vw3-tour-points-in-view", typename: FywVw3TourInViewScenario.getTypeName()},
     {id: "sh1-showing-preset", typename: FywSh1ShowingPresetScenario.getTypeName()},
     {id: "visual-reel", typename: FywReelScenario.getTypeName()},
-    {id: "visual-check-places", typename: FywCheckPlacesScenario.getTypeName()},
-    {id: "visual-look", typename: FywLookScenario.getTypeName()},
-    {id: "visual-map", typename: FywMapLookScenario.getTypeName()},
+    {id: "visual-mall-robot", typename: FywMallRobotVideoScenario.getTypeName()},
+    {id: "visual-mall-dog", typename: FywMallDogVideoScenario.getTypeName()},
+    {id: "visual-mall-coffee", typename: FywMallCoffeeVideoScenario.getTypeName()},
     {id: "visual-rigs", typename: FywRigStageScenario.getTypeName()},
   ] as ScenarioMetadata[]).concat(!INCLUDE_SHOTS ? [] : [
     // Screenshot set-ups — skipped by the runner unless named in `only`.

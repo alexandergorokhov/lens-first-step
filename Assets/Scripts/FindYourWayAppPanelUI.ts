@@ -165,13 +165,14 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
   // The showing preset's rows: Restart showing, Demo: gate change (airport trips only) and the map
   // switch (its label names the map it goes to; null hides it). Not demo controls: they stay with
   // the demo controls hidden.
-  setShowing(restart: boolean, gate: boolean, mapLabel: string | null): void {
+  setShowing(restart: boolean, gate: boolean, mapLabel: string | null, gateLabel: string = "Demo: gate change"): void {
     if (!this.restartShowing) return
     const show = (b: LabeledButton, on: boolean) => { if (b.so.enabled !== on) b.so.enabled = on }
     show(this.restartShowing, restart && !this.playing)
     show(this.showingGate, gate && !this.playing)
     show(this.showingMap, mapLabel !== null && !this.playing)
     if (mapLabel !== null && this.showingMap.label.text !== mapLabel) this.showingMap.label.text = mapLabel
+    if (this.showingGate.label.text !== gateLabel) this.showingGate.label.text = gateLabel
     this.relayout()
   }
 

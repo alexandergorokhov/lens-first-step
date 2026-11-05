@@ -7,7 +7,7 @@
     - !<own> beae2714-1555-483e-8750-5ad8ad6d00ed
     - !<own> 49237bc4-f9e6-442f-b388-f2f7c7ddc103
     - !<own> abd7f7cc-fe64-4a6c-9229-15566f25581c
-    - !<own> 751e73ac-f379-4756-a687-04b10374e2ce
+    - !<own> ca9bd413-5268-4286-a677-78f19cd38edf
   layers: !<Layers/267ee9a7-aff2-4f9d-9a49-f71214747d03>
     userLayers:
       - id: 1
@@ -645,6 +645,22 @@
     CapitalizationOverride: None
   DepthTest: false
   TwoSided: false
+- !<ScriptComponent/06ecd86e-e2ab-4b6f-9316-aae74ac36172>
+  PrefabRemaps:
+    []
+  Name: MessagingBridge
+  Enabled: true
+  ScriptAsset: !<reference> 4c470e55-3d80-4780-ba2b-d011215918a3
+  ScriptInputsDefault:
+    {}
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      {}
+  ScriptTypes:
+    "":
+      {}
 - !<ScriptComponent/0765650c-0d53-4ab6-aa34-92f150efc8ff>
   PrefabRemaps:
     []
@@ -905,22 +921,6 @@
   ScriptInputs:
     "":
       drawDebug: false
-  ScriptTypes:
-    "":
-      {}
-- !<ScriptComponent/142dab12-d581-4fb7-be43-19aea115ebf2>
-  PrefabRemaps:
-    []
-  Name: MessagingBridge
-  Enabled: true
-  ScriptAsset: !<reference> 4c470e55-3d80-4780-ba2b-d011215918a3
-  ScriptInputsDefault:
-    {}
-  ScriptTypesDefault:
-    {}
-  ScriptInputs:
-    "":
-      {}
   ScriptTypes:
     "":
       {}
@@ -4191,21 +4191,6 @@
   ScriptTypes:
     "":
       {}
-- !<SceneObject/751e73ac-f379-4756-a687-04b10374e2ce>
-  PrefabRemaps:
-    []
-  Name: LEAF Plugin Bridge
-  Enabled: true
-  Layers: 1
-  LocalTransform: !<TransformEntity>
-    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
-    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
-    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    HasSegmentScaleCompensation: false
-  Children:
-    []
-  Components:
-    - !<own> 142dab12-d581-4fb7-be43-19aea115ebf2
 - !<SceneObject/75f8edd3-c83d-4d64-a512-e976b9f93b38>
   PrefabRemaps:
     []
@@ -7360,6 +7345,21 @@
   Components:
     - !<own> 03c1f513-aeb0-4f7c-8d18-ac1a72569980
     - !<own> 203ec0dd-978c-4d77-aa99-22d5a28bf8b8
+- !<SceneObject/ca9bd413-5268-4286-a677-78f19cd38edf>
+  PrefabRemaps:
+    []
+  Name: LEAF Plugin Bridge
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 06ecd86e-e2ab-4b6f-9316-aae74ac36172
 - !<SceneObject/ca9e6cfd-8ef4-47f8-bca0-468b2a384e31>
   PrefabRemaps:
     []
@@ -8501,6 +8501,7 @@
     companionOnAtStart: true
     presetPreferences: true
     pointSeconds: true
+    pointRadiusM: true
     maxStopsPerWalk: true
     lookRangeM: true
     appPanelOffset: true
@@ -8534,10 +8535,11 @@
       modePanelOffset: !<Vec3> {x: 8.000000, y: -4.000000, z: -100.000000}
       companionModel: dog
       companionOnAtStart: false
+      showingPreset: true
       presetPreferences: "coffee,clothes,hardware"
-      companionAheadM: !<float> 7.000000
+      companionAheadM: !<float> 5.000000
       pointSeconds: !<float> 3.000000
-      pointRadiusM: !<float> 12.000000
+      pointRadiusM: !<float> 8.000000
       maxStopsPerWalk: !<float> 0.000000
       lookRangeM: !<float> 12.000000
       offerOffset: !<Vec3> {x: 15.000000, y: 0.000000, z: -100.000000}

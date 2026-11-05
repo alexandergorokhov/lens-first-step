@@ -5,11 +5,11 @@ import {expect} from "Leaf.lspkg/Utils/common/Expect"
 import {sleep} from "Leaf.lspkg/Utils/common/Utils"
 import {FindYourWayMain} from "../Scripts/FindYourWayMain"
 import {findNode} from "../Scripts/FindYourWayRouter"
-import {getMain, log, tap, waitFor} from "./FindYourWayLeafSupport"
+import {bundledMaps, getMain, log, tap, waitFor} from "./FindYourWayLeafSupport"
 
 // sh1 — the showing preset (REVIEW-FIXES.md section 0): one switch puts the Lens in the state shown
 // to the judges, and Restart showing brings it back after a trip, a lift closure, a gate change and
-// a model swap.
+// a model swap. The preset shows the shopping mall.
 
 function shown(name: string): boolean {
   const t = findInteractableByName(name, undefined, true)
@@ -21,6 +21,8 @@ async function toModePanel(it: DefaultLeafInteractor, main: FindYourWayMain): Pr
   await waitFor(() => main.getPhase() === "scan" && main.isScanSignVisible(), 4000, "scan sign")
   await sleep(800)
   await waitFor(() => !main.isAnchorSettling(), 12000, "world anchor settled")
+  // The shipped map, so a stale online copy can't change the result.
+  main.debugSetDownloadOverride(JSON.stringify(bundledMaps().filter((m) => m.key === main.getMapKey())[0].map))
   const sign = findNode(main.getMapData(), main.getStartId())!
   main.debugSetPose(sign.x, 0, sign.z - 1.5, 0)
   await tap(it, "ScanSignButton")
@@ -30,7 +32,7 @@ async function toModePanel(it: DefaultLeafInteractor, main: FindYourWayMain): Pr
 }
 
 async function expectShowingState(it: DefaultLeafInteractor, main: FindYourWayMain, what: string): Promise<void> {
-  expect(main.getMapKey(), what + ": airport").toBe("airport")
+  expect(main.getMapKey(), what + ": the shopping mall").toBe("mall")
   expect(main.getPhase(), what + ": scan phase").toBe("scan")
   const s = main.getStartSettings()
   expect(s.startAtSign, what + ": starts at the sign").toBe(true)
@@ -45,7 +47,7 @@ async function expectShowingState(it: DefaultLeafInteractor, main: FindYourWayMa
   await toModePanel(it, main)
   expect(main.getPreselectedMode(), what + ": Walk preselected").toBe("walk")
   expect(main.getWalkButtonLabel().indexOf("▶") === 0, what + ": Walk highlighted: " + main.getWalkButtonLabel()).toBe(true)
-  expect(main.getDestinationId(), what + ": to B12").toBe("gateB12")
+  expect(main.getDestinationId(), what + ": to the cinema").toBe("cinema")
   await tap(it, "WalkButton")
   await waitFor(() => main.getPhase() === "nav", 8000, what + ": one pinch starts Walk")
   await sleep(300)
@@ -65,16 +67,16 @@ export class FywSh1ShowingPresetScenario extends Scenario {
       // The Options panel folds to its tab once the trip starts: open it to see the preset's rows.
       if (main.isOptionsCollapsed()) await tap(it, "OptionsTabButton")
       expect(shown("RestartShowingButton"), "Restart showing on the Options panel").toBe(true)
-      expect(shown("ShowingGateChangeButton"), "Demo: gate change shown under the preset").toBe(true)
+      expect(shown("ShowingGateChangeButton"), "Demo: plan change shown under the preset").toBe(true)
       expect(shown("ShowingMapButton"), "the map switch shown under the preset").toBe(true)
 
       // Mess it up: a lift closure, a model swap, the gate change.
-      main.debugCloseEdge("lift1")
+      main.debugCloseEdge("liftA")
       await tap(it, "ModelButton")
       expect(main.getCompanionModel() !== "dog", "model swapped").toBe(true)
       await tap(it, "ShowingGateChangeButton")
-      expect(main.getDestinationId(), "gate change swings the route to C3").toBe("gateC3")
-      expect(main.getHudCardText(), "with the card").toBe("Gate change B12 → C3")
+      expect(main.getDestinationId(), "the plan change swings the route to the food court").toBe("foodCourt")
+      expect(main.getHudCardText(), "with the card").toBe("Plan change: meet at the food court")
       expect(main.getClosedEdges().length > 0, "a closure").toBe(true)
 
       await tap(it, "RestartShowingButton")
@@ -88,7 +90,7 @@ export class FywSh1ShowingPresetScenario extends Scenario {
       await tap(it, "WalkButton")
       await waitFor(() => main.getPhase() === "nav", 8000, "Walk")
       await sleep(300)
-      expect(shown("ShowingGateChangeButton"), "no Demo: gate change without the preset").toBe(false)
+      expect(shown("ShowingGateChangeButton"), "no Demo: plan change without the preset").toBe(false)
       expect(shown("RestartShowingButton"), "no Restart showing without the preset").toBe(false)
       log("sh1 pass")
     } finally {

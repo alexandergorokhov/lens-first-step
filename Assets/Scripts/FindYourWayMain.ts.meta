@@ -34,7 +34,7 @@
     buildingUI: false
     camera: false
     chime: false
-    companionAheadM: false
+    companionLeadM: false
     companionModel: false
     companionOnAtStart: false
     demoControls: false
@@ -58,6 +58,7 @@
     presetPreferences: false
     routeLine: false
     showDemoControls: false
+    showingPreset: false
     signOffset: false
     standIn: false
     startAtSign: false
@@ -98,8 +99,9 @@
       modePanelOffset: !<Vec3> {x: 0.000000, y: -20.000000, z: -100.000000}
       companionModel: dog
       companionOnAtStart: false
+      showingPreset: false
       presetPreferences: "coffee,clothes,hardware"
-      companionAheadM: 2.500000
+      companionLeadM: !<float> 6.000000
       pointSeconds: !<float> 3.000000
       pointRadiusM: !<float> 8.000000
       maxStopsPerWalk: !<float> 0.000000
@@ -144,8 +146,9 @@
     - '// @input vec3 modePanelOffset = "{8,-4,-100}" {"hint":"Mode panel offset from the head at start (right, up, forward), cm"}'
     - "// @input string companionModel = \"dog\" {\"hint\":\"The companion's model: same logic, only the look and the collectible change\", \"widget\":\"combobox\", \"values\":[{\"label\":\"Dog (treats)\", \"value\":\"dog\"}, {\"label\":\"Robot (bolts)\", \"value\":\"robot\"}, {\"label\":\"Rover (stars)\", \"value\":\"rover\"}]}"
     - '// @input bool companionOnAtStart {"hint":"Companion on when a trip starts (it can always be turned on or off on the app panel)"}'
+    - '// @input bool showingPreset {"hint":"Showing preset (for the judges): overrides map, start at sign, demo controls, companion model and on at start; preselects Walk; adds Restart showing, Demo: plan change (gate change at the airport) and a map switch to the Preview room to the Options panel. Shows the shopping mall"}'
     - '// @input string presetPreferences = "coffee,clothes,hardware" {"hint":"The saved preferences of the demo (category ids, comma separated)"}'
-    - '// @input float companionAheadM = 7 {"hint":"How far ahead the companion walks, m. The floor only enters the view from about 5.4 m", "widget":"slider", "min":1.5, "max":10, "step":0.1}'
+    - '// @input float companionLeadM = 7 {"hint":"How far ahead the companion walks, m (core COMPANION_LEAD_M = 7). The floor only enters the view from about 5.4 m", "widget":"slider", "min":1.5, "max":10, "step":0.1}'
     - '// @input float pointSeconds = 3 {"hint":"Free walk: seconds the companion points at a matching shop", "widget":"slider", "min":1, "max":8, "step":0.5}'
     - '// @input float pointRadiusM = 12 {"hint":"Free walk: how near a matching shop must be for the companion to stop, m", "widget":"slider", "min":2, "max":15, "step":0.5}'
     - '// @input float maxStopsPerWalk {"hint":"Free walk: most stops per walk (0 = every match); stopping everywhere may get annoying", "widget":"slider", "min":0, "max":30, "step":1}'

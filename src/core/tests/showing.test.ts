@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { SHOWING, showingSettings, type StartSettings } from "../demo.ts";
 
 const authored: StartSettings = {
-  mapKey: "mall",
+  mapKey: "hospital",
   startAtSign: false,
   showDemoControls: true,
   companionModel: "robot",
@@ -13,9 +13,9 @@ const authored: StartSettings = {
   preselect: null,
 };
 
-test("SH1 the preset: airport, start at the sign, demo controls hidden, the dog on, Walk preselected", () => {
+test("SH1 the preset: the shopping mall, start at the sign, demo controls hidden, the dog on, Walk preselected", () => {
   assert.deepEqual(SHOWING, {
-    mapKey: "airport",
+    mapKey: "mall",
     startAtSign: true,
     showDemoControls: false,
     companionModel: "dog",

@@ -16,6 +16,8 @@ export function getMain(): FindYourWayMain {
   if (!so) throw new Error("SceneObject 'FindYourWay' not found")
   const main = so.getComponent(FindYourWayMain.getTypeName()) as FindYourWayMain
   if (!main) throw new Error("FindYourWayMain component not found")
+  // The scenarios start from the Inspector's own settings, not the showing preset (sh1 turns it on).
+  main.debugSetShowingPreset(false)
   // The demo controls (restart, map switch, gate change) are hidden by default; tests use them.
   main.debugShowDemoControls(true)
   return main
