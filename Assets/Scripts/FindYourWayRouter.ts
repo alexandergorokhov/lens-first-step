@@ -94,6 +94,8 @@ export interface MapPlace {
   title?: string;
   standInLabel?: string;
   standInModel?: boolean;
+  // A shopping place: the Lens lines its walls with shops.
+  retail?: boolean;
   start?: string;
   destination?: string;
   levels?: PlaceLevel[];
@@ -442,6 +444,7 @@ export function validateMap(map: MapData): string | null {
     const v = (p as any)[key];
     if (v !== undefined && !(typeof v === "number" && v > 0)) return "place " + key + " must be a positive number";
   }
+  if (p.retail !== undefined && typeof p.retail !== "boolean") return "place retail must be true or false";
   if (badText(p.title)) return "place title must be text up to " + MAX_LABEL_LENGTH + " characters";
   if (badText(p.sayIt)) return "place sayIt must be text up to " + MAX_LABEL_LENGTH + " characters";
   if (p.interests !== undefined) {

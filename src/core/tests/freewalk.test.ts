@@ -21,6 +21,7 @@ import {
   offerView,
   otherFloorPicks,
   sayItPhrase,
+  shopFrontPose,
 } from "../freewalk.ts";
 
 function mall(): MapData {
@@ -418,18 +419,15 @@ test("L5 looking at the front you can see counts, not only the map's line", () =
   const map = mall();
   const targets = frontTargets(map);
   for (const id of ["cafe", "iceCream", "secondSkin"]) {
-    const n = map.nodes.filter((m: { id: string }) => m.id === id)[0];
-    const e = map.edges.filter((k: { from: string; to: string; kind: string }) => k.kind === "walk" && (k.from === id || k.to === id))[0];
-    const o = map.nodes.filter((m: { id: string }) => m.id === (e.from === id ? e.to : e.from))[0];
-    const l = Math.hypot(o.x - n.x, o.z - n.z);
-    const d = { x: (o.x - n.x) / l, z: (o.z - n.z) / l };
-    const mid = { x: n.x - d.x * 1.7, z: n.z - d.z * 1.7 };
-    // From along the way in, looking at each part of the drawn front.
+    // The front the Lens draws: flat on the wall, facing into the hall (shopFrontPose).
+    const p = shopFrontPose(map, id)!;
+    const d = p.facing;
+    // From the hall in front of it, looking at each part of the drawn front.
     let hits = 0, tries = 0;
-    for (const out of [1, 3, 5, 7]) {
+    for (const out of [4, 5, 6, 7]) {
       for (const along of [-2.4, -1.2, 0, 1.2, 2.4]) {
-        const at = { x: n.x + d.x * out, y: n.y, z: n.z + d.z * out };
-        const look = { x: mid.x - d.z * along, z: mid.z + d.x * along };
+        const at = { x: p.x + d.x * out, y: p.y, z: p.z + d.z * out };
+        const look = { x: p.x - d.z * along, z: p.z + d.x * along };
         tries++;
         if (lookTarget(targets, at, (Math.atan2(look.x - at.x, look.z - at.z) * 180) / Math.PI, 12) === id) hits++;
       }

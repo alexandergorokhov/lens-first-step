@@ -36,7 +36,7 @@ export interface FwEdge {
 export interface FwMap {
   nodes: FwNode[];
   edges: FwEdge[];
-  place?: { interests?: { id: string; label: string }[]; sayIt?: string; destination?: string };
+  place?: { interests?: { id: string; label: string }[]; sayIt?: string; destination?: string; footprint?: { minX: number; maxX: number; minZ: number; maxZ: number } };
 }
 
 // Everything the brief calls a default and the Inspector can tune.
@@ -156,21 +156,88 @@ export function frontTargets(map: FwMap): LookTarget[] {
       }
     }
     out.push(t);
-    if ((n.kind === "place" || n.kind === "destination") && from) out.push(drawnFront(n, from));
+    if ((n.kind === "place" || n.kind === "destination") && from) {
+      const d = drawnFront(n, map);
+      if (d) out.push(d);
+    }
   }
   return out;
 }
 
-// The front as you see it: across the way in, behind the node.
-function drawnFront(n: FwNode, from: FwNode): LookTarget {
-  const l = flat(n, from);
-  const dx = (from.x - n.x) / l;
-  const dz = (from.z - n.z) / l;
-  const cx = n.x - dx * DRAWN_BACK_M;
-  const cz = n.z - dz * DRAWN_BACK_M;
-  const t: LookTarget = { id: n.id, y: n.y, x1: cx + dz * DRAWN_HALF_M, z1: cz - dx * DRAWN_HALF_M, x2: cx - dz * DRAWN_HALF_M, z2: cz + dx * DRAWN_HALF_M, outside: 0 };
-  t.outside = sideOf(t, from) > 0 ? 1 : -1;
+// The front as you see it: the shop front the Lens draws (shopFrontPose), across its facing.
+function drawnFront(n: FwNode, map: FwMap): LookTarget | null {
+  const p = shopFrontPose(map, n.id);
+  if (!p) return null;
+  const f = p.facing;
+  const t: LookTarget = { id: n.id, y: n.y, x1: p.x + f.z * DRAWN_HALF_M, z1: p.z - f.x * DRAWN_HALF_M, x2: p.x - f.z * DRAWN_HALF_M, z2: p.z + f.x * DRAWN_HALF_M, outside: 0 };
+  t.outside = sideOf(t, { x: p.x + f.x, z: p.z + f.z }) > 0 ? 1 : -1;
   return t;
+}
+
+// ── Where a shop front stands ────────────────────────────────────────────────
+
+// A place this close to an outer wall (m) gets its front on that wall; further in, it stays by its node.
+const WALL_NEAR_M = 6;
+// A front on a wall stands this far in from it (m), just in front of the plain wall bays.
+const WALL_INSET_M = 0.4;
+
+export interface FrontPose extends FwXYZ {
+  // The way the front faces (into the hall): always along x or z, so it is parallel to the walls.
+  facing: { x: number; z: number };
+}
+
+function squared(d: { x: number; z: number }): { x: number; z: number } {
+  if (Math.abs(d.x) > Math.abs(d.z)) return { x: d.x > 0 ? 1 : -1, z: 0 };
+  return { x: 0, z: d.z >= 0 ? 1 : -1 };
+}
+
+// The middle of the shop front the Lens draws for a named place, and the way it faces. Near an outer
+// wall (the map's footprint) it stands flat on that wall facing into the hall; otherwise it stands
+// just behind its node, squared to the building's axes, facing the way in. null for an unknown id.
+export function shopFrontPose(map: FwMap, id: string): FrontPose | null {
+  let n: FwNode | null = null;
+  for (const x of map.nodes) if (x.id === id) n = x;
+  if (!n) return null;
+  let way = { x: 0, z: -1 };
+  for (const e of map.edges) {
+    if (e.kind === "lift") continue;
+    const otherId = e.from === id ? e.to : e.to === id ? e.from : null;
+    if (otherId === null) continue;
+    let o: FwNode | null = null;
+    for (const x of map.nodes) if (x.id === otherId) o = x;
+    if (!o || Math.abs(o.y - n.y) > 0.5) continue;
+    const l = flat(o, n);
+    if (l > 0.01) { way = { x: (o.x - n.x) / l, z: (o.z - n.z) / l }; break; }
+  }
+  const fp = map.place && map.place.footprint;
+  if (fp && n.x >= fp.minX && n.x <= fp.maxX && n.z >= fp.minZ && n.z <= fp.maxZ) {
+    const walls = [
+      { d: n.x - fp.minX, facing: { x: 1, z: 0 }, x: fp.minX + WALL_INSET_M, z: n.z },
+      { d: fp.maxX - n.x, facing: { x: -1, z: 0 }, x: fp.maxX - WALL_INSET_M, z: n.z },
+      { d: n.z - fp.minZ, facing: { x: 0, z: 1 }, x: n.x, z: fp.minZ + WALL_INSET_M },
+      { d: fp.maxZ - n.z, facing: { x: 0, z: -1 }, x: n.x, z: fp.maxZ - WALL_INSET_M },
+    ];
+    let best = walls[0];
+    for (const w of walls) if (w.d < best.d) best = w;
+    if (best.d <= WALL_NEAR_M) return { x: best.x, y: n.y, z: best.z, facing: best.facing };
+  }
+  const f = squared(way);
+  return { x: n.x - f.x * DRAWN_BACK_M, y: n.y, z: n.z - f.z * DRAWN_BACK_M, facing: f };
+}
+
+// True when a plain wall bay centred at (x, z) on floor y, facing `facing`, would overlap one of the
+// named shop fronts (so the Lens leaves that bay out). halfM: half the bay's width.
+export function bayCovered(fronts: FrontPose[], y: number, x: number, z: number, facing: { x: number; z: number }, halfM: number): boolean {
+  for (const p of fronts) {
+    if (Math.abs(p.y - y) >= SAME_FLOOR_M) continue;
+    if (p.facing.x * facing.x + p.facing.z * facing.z < 0.99) continue;
+    const dx = x - p.x;
+    const dz = z - p.z;
+    const across = Math.abs(dx * facing.x + dz * facing.z);
+    const along = Math.abs(-dx * facing.z + dz * facing.x);
+    if (across < 1 && along < halfM + DRAWN_HALF_M) return true;
+  }
+  return false;
 }
 
 // The id of the nearest front the head direction crosses from outside, on your floor, within range.

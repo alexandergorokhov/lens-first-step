@@ -60,6 +60,10 @@ export interface PlaceSpec {
   title?: string;
   standInLabel?: string;
   standInModel?: boolean;
+  // A shopping place: the Lens lines its walls with shops. Other maps keep their own plain look.
+  // Left out, a map with shopping interests (Free walk picks) counts as one.
+  retail?: boolean;
+  interests?: unknown[];
   start?: string;
   destination?: string;
   levels?: PlaceLevel[];
@@ -80,6 +84,7 @@ export interface PlaceInfo {
   title: string;
   standInLabel: string;
   standInModel: boolean;
+  retail: boolean;
   start: string;
   destination: string;
   levels: PlaceLevel[];
@@ -119,6 +124,7 @@ export function placeOf(map: PlaceMapLike): PlaceInfo {
     title: raw.title || map.name || DEFAULT_TITLE,
     standInLabel: raw.standInLabel || DEFAULT_STAND_IN_LABEL,
     standInModel: raw.standInModel !== false,
+    retail: raw.retail === true || (raw.retail === undefined && Array.isArray(raw.interests) && raw.interests.length > 0),
     start: start,
     destination: dest,
     levels: Array.isArray(raw.levels) && raw.levels.length > 0 ? raw.levels : [{ y: 0, name: DEFAULT_LEVEL_NAME }],

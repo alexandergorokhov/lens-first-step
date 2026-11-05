@@ -9,6 +9,7 @@
 import {boardModel, PlaceGroup} from "./FindYourWayPeek"
 import {MapData, MapNode, findNode} from "./FindYourWayRouter"
 import {approachDir, PlaceInfo} from "./FindYourWayMapLibrary"
+import {bayCovered, FrontPose, FwMap, shopFrontPose} from "./FindYourWayFreeWalk"
 
 type ToLocal = (x: number, y: number, z: number) => vec3
 
@@ -26,7 +27,6 @@ const GALLERY_DEPTH_M = 3
 const TRIM = new vec4(0.3, 0.27, 0.25, 1)
 const GLAZING = 0.62 // how far a shop's windows lean from its colour toward white
 const PLANT_EVERY = 3 // a planter by every third shop front
-const RETAIL_MIN_PLACES = 10 // this many named places: the walls fill up with shops
 const BAY_M = 7 // one wall shop, pilaster to pilaster
 const BANNER_GAP_M = 12
 const LIGHT_W_CM = 24
@@ -117,8 +117,9 @@ export class FindYourWayStandIn extends BaseScriptComponent {
     this.solid = false
     if (!place.standInModel) return
     this.solid = this.previewBackdrop && global.deviceInfoSystem.isEditor()
-    // In a shopping place the shops line the outer walls, so the low wall would hide them.
-    const retail = this.solid && map.nodes.filter((n) => n.kind === "place" || n.kind === "destination").length >= RETAIL_MIN_PLACES
+    // In a shopping place (the map says "retail") the shops line the outer walls, so the low wall
+    // would hide them. Other maps, like the airport, keep their own plain look.
+    const retail = this.solid && place.retail
 
     const floors = new Boxes()
     const walls = new Boxes()
@@ -406,17 +407,23 @@ export class FindYourWayStandIn extends BaseScriptComponent {
       awnings.boxAxes(at(0, 215, 30), side.uniformScale(half + 10), new vec3(0, 6, 0), fwd.uniformScale(30))
       return at
     }
+    // Every front is parallel to the walls: flat on the outer wall when the place is near one,
+    // else squared up just behind its node (shopFrontPose, shared with what you can look at).
+    const fw = map as unknown as FwMap
+    const namedFronts: FrontPose[] = []
     map.nodes.forEach((n, i) => {
       if (n.kind !== "place" && n.kind !== "destination") return
-      const ad = approachDir(map, n.id)
-      const fwd = new vec3(ad.x, 0, -ad.z)
-      const at = shopFront(toLocal(n.x, n.y, n.z).sub(fwd.uniformScale(170)), fwd, i % fronts.length, 280, true)
+      const pose = shopFrontPose(fw, n.id)
+      if (!pose) return
+      namedFronts.push(pose)
+      const fwd = new vec3(pose.facing.x, 0, -pose.facing.z)
+      const at = shopFront(toLocal(pose.x, pose.y, pose.z), fwd, i % fronts.length, 280, n.kind === "place")
       if (i % PLANT_EVERY === 0) planters.push(at(340, 0, 50))
       // A garden gets its planters.
       if (n.icon === GARDEN_ICON) for (const x of GARDEN_PLANTERS_CM) planters.push(at(x, 0, 130))
     })
     const inlay = new Boxes()
-    if (!outdoor && map.nodes.filter((n) => n.kind === "place" || n.kind === "destination").length >= RETAIL_MIN_PLACES) {
+    if (!outdoor && place.retail) {
       // Every floor's walls: a run of shops with pilasters. The ground floor also gets a border and banners.
       const y = lowest
       const inset = 0.3
@@ -426,7 +433,10 @@ export class FindYourWayStandIn extends BaseScriptComponent {
         const bays = Math.floor(len / BAY_M)
         for (let i = 0; i < bays; i++) {
           const t = (i + 0.5) / bays
-          const p = toLocal(x0 + (x1 - x0) * t + dx * inset, y, z0 + (z1 - z0) * t + dz * inset)
+          const mx = x0 + (x1 - x0) * t + dx * inset, mz = z0 + (z1 - z0) * t + dz * inset
+          // A named shop already stands here: leave the plain bay out.
+          if (bayCovered(namedFronts, y, mx, mz, {x: dx, z: dz}, len / bays / 2)) { bay++; continue }
+          const p = toLocal(mx, y, mz)
           const at = shopFront(p, new vec3(dx, 0, -dz), bay % fronts.length, (len / bays) * 50 - 20)
           frames.boxAxes(at((len / bays) * 50, 170, 10), new vec3(22, 0, 0), new vec3(0, 170, 0), new vec3(0, 0, 22)) // pilaster
           if (y === lowest && bay % PLANT_EVERY === 1) planters.push(at((len / bays) * 50 - 90, 0, 90))

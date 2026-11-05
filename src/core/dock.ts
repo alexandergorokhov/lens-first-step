@@ -46,3 +46,10 @@ export function walkingHud(tripActive: boolean, standing: boolean, arrived: bool
   if (!tripActive) return { pill: true, cue: true, badge: true, score: true, playLine: true };
   return { pill: false, cue: false, badge: false, score: standing || arrived, playLine: standing && !arrived };
 }
+
+// A preference button in Free walk: picked ones carry a check and full colour, the rest are dimmed,
+// so what you picked is plain to see at a glance.
+export const UNPICKED_ALPHA = 0.45;
+export function pickChip(label: string, picked: boolean): { text: string; alpha: number; highlight: boolean } {
+  return picked ? { text: "✓ " + label, alpha: 1, highlight: true } : { text: label, alpha: UNPICKED_ALPHA, highlight: false };
+}

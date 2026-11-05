@@ -1543,7 +1543,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (!this.offerBoxes) return
     const on = !!b && this.offerClosed.visible(b.id)
     this.boxesTitle = on ? b!.title : null
-    this.offerBoxes.show(on ? {id: b!.id, tag: b!.tag, boxes: b!.boxes} : null, on ? this.local(b!.spot, OFFER_BOX_CM) : null)
+    this.offerBoxes.show(on ? {id: b!.id, title: b!.title, tag: b!.tag, boxes: b!.boxes} : null, on ? this.local(b!.spot, OFFER_BOX_CM) : null)
   }
 
   private updateShopLook(pos: Vec3): void {

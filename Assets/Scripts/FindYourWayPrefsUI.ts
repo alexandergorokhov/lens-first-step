@@ -7,6 +7,7 @@
 import {addButton, addRow, addText, LabeledButton, makePanel, obj} from "./FindYourWayWidgetsUI"
 import {icon} from "./FindYourWayIconsUI"
 import {companionChoices} from "./FindYourWayPet"
+import {pickChip} from "./FindYourWayDock"
 
 export interface PrefsHandlers {
   onStart: () => void
@@ -116,7 +117,7 @@ export class FindYourWayPrefsUI extends BaseScriptComponent {
   private paint(id: string): void {
     const b = this.boxes[id]
     const item = this.list.filter((i) => i.id === id)[0]
-    if (b && item) b.label.text = (this.picked[id] ? "✓ " : "") + item.label
+    if (b && item) showChip(b, pickChip(item.label, !!this.picked[id]))
   }
 
   private refreshSummary(): void {
@@ -129,7 +130,7 @@ export class FindYourWayPrefsUI extends BaseScriptComponent {
     if (this.companionAsk) this.companionAsk.label.text = text
     for (const c of companionChoices()) {
       const b = this.modelBoxes[c.id]
-      if (b) b.label.text = (c.id === this.modelId ? "✓ " : "") + c.label
+      if (b) showChip(b, pickChip(c.label, c.id === this.modelId))
     }
   }
 
@@ -147,4 +148,11 @@ export class FindYourWayPrefsUI extends BaseScriptComponent {
   isChanging(): boolean { return !!this.change && this.change.enabled }
   show(on: boolean): void { this.sceneObject.enabled = on }
   isShown(): boolean { return this.sceneObject.enabled }
+}
+
+// What you picked is plain to see: a check and full white, or the name dimmed.
+function showChip(b: LabeledButton, chip: {text: string; alpha: number}): void {
+  b.label.text = chip.text
+  const c = b.label.textFill.color
+  b.label.textFill.color = new vec4(c.x, c.y, c.z, chip.alpha)
 }

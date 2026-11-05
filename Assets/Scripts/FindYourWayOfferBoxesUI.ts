@@ -15,9 +15,14 @@ const TINT = new vec4(0.05, 0.08, 0.16, 0.62)
 // at least as large in view as the distance pill's at its 1 m.
 const GAP_CM = 29
 const SCALE = 4.4
+// The shop's name sits this high above the middle of the boxes (cm, before scaling).
+const TITLE_UP_CM = 9
+const TITLE_W = BOX_W * 2 + 3
 
 export interface OfferBoxesView {
   id: string
+  // The shop's name, shown above the boxes so you see which shop you are looking at.
+  title?: string
   tag: string
   boxes: string[]
 }
@@ -37,6 +42,8 @@ export class FindYourWayOfferBoxesUI extends BaseScriptComponent {
   private tags: Text[] = []
   private closes: LabeledButton[] = []
   private shown: OfferBoxesView | null = null
+  private titleRoot: SceneObject | null = null
+  private title: Text | null = null
 
   setup(onClose: (id: string) => void): void {
     this.sceneObject.createComponent(Billboard.getTypeName())
@@ -50,18 +57,25 @@ export class FindYourWayOfferBoxesUI extends BaseScriptComponent {
       }, TEXT, 100, "Button"))
       this.roots.push(root)
     }
+    this.titleRoot = obj(this.sceneObject, "OfferBoxTitle", new vec3(0, TITLE_UP_CM, 0))
+    const tp = makePanel(this.titleRoot, TITLE_W, 0.6, 0.2, undefined, TINT)
+    this.title = outlined(addText(tp.content, "OfferBoxTitleText", "", "Headline1", TITLE_W - 1, 4.2, TEXT, 220))
     this.getTransform().setLocalScale(new vec3(SCALE, SCALE, SCALE))
     this.sceneObject.enabled = false
   }
 
   // null hides them. localPos: building-local cm, where the boxes stand.
   show(v: OfferBoxesView | null, localPos: vec3 | null): void {
-    const changed = !v || !this.shown || v.id !== this.shown.id || v.boxes.join("|") !== this.shown.boxes.join("|")
+    const changed = !v || !this.shown || v.id !== this.shown.id || v.title !== this.shown.title || v.boxes.join("|") !== this.shown.boxes.join("|")
     this.shown = v
     this.sceneObject.enabled = v !== null
     if (!v) return
     if (localPos) this.getTransform().setLocalPosition(localPos)
     if (!changed) return
+    if (this.title && this.titleRoot) {
+      this.titleRoot.enabled = !!v.title
+      this.title.text = v.title || ""
+    }
     for (let i = 0; i < 2; i++) {
       const on = i < v.boxes.length
       this.roots[i].enabled = on
