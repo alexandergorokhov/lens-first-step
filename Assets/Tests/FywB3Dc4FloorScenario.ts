@@ -21,7 +21,7 @@ export class FywB3Dc4FloorScenario extends Scenario {
 
     // Looking at the stairs gives the same two boxes as a shop: the first picks upstairs.
     main.debugSetPose(57, 0, 13, 0)
-    await waitFor(() => main.getDotId() === "stairsFoot", 2000, "looking at the stairs")
+    await waitFor(() => main.getDotId() === "stairsFoot", 3500, "looking at the stairs (2 s look)")
     await waitFor(() => main.isOfferPeekShown() && main.getOfferBoxesId() === "stairsFoot", 2000, "the boxes at the stairs")
     const v = main.getOfferPeekLines()
     expect(v.length, "two picks").toBe(2)

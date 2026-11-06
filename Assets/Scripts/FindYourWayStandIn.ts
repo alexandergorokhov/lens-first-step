@@ -96,12 +96,18 @@ export class FindYourWayStandIn extends BaseScriptComponent {
   @allowUndefined
   @hint("Optional: a planter set along the shop fronts in the preview backdrop")
   planterPrefab: ObjectPrefab
+
+  @input
+  @allowUndefined
+  @hint("Optional: the airport's own model (Assets/Models/Airport/airport.glb, the concept video's terminal: npm run airport:glb). In the preview the airport map shows it instead of the stand-in boxes")
+  airportModel: ObjectPrefab
   @ui.group_end
 
   private model: SceneObject | null = null
   private solid = false
   private directory = false
   private closedPlates: {[edgeId: string]: RenderMeshVisual} = {}
+  private usingModel = false
 
   clear(): void {
     if (this.model) this.model.destroy()
@@ -120,6 +126,16 @@ export class FindYourWayStandIn extends BaseScriptComponent {
     // In a shopping place (the map says "retail") the shops line the outer walls, so the low wall
     // would hide them. Other maps, like the airport, keep their own plain look.
     const retail = this.solid && place.retail
+    // The airport has its own model (glass walls, steel, gates, escalators and stairs): the map's
+    // metres, standing at the map's origin. The routes, walls and rides still come from the map.
+    this.usingModel = false
+    if (this.solid && this.airportModel && place.title === "Airport") {
+      const inst = this.airportModel.instantiate(this.model)
+      inst.getTransform().setLocalPosition(toLocal(0, 0, 0))
+      this.usingModel = true
+      this.addClosurePlates(map, place, toLocal)
+      return
+    }
 
     const floors = new Boxes()
     const walls = new Boxes()
@@ -180,9 +196,33 @@ export class FindYourWayStandIn extends BaseScriptComponent {
       } else {
         minX -= 3; maxX += 3; minZ -= 3; maxZ += 3
       }
+      // An upper floor has openings over the escalators and stairs that come up to it, so riding
+      // up never takes your head through the floor (1 m cells, left out where the run is).
+      const runs = level.y === lowest ? [] : map.edges.filter((e) => e.kind === "escalator" || e.kind === "stairs" || e.kind === "ramp").map((e) => {
+        const f = findNode(map, e.from) as MapNode, t = findNode(map, e.to) as MapNode
+        const top = f.y > t.y ? f : t, foot = f.y > t.y ? t : f
+        return Math.abs(top.y - level.y) < 0.01 && foot.y < level.y - 0.5 ? {a: foot, b: top, half: (e.kind === "escalator" ? 0.6 : e.kind === "stairs" ? 0.9 : 0.8) + 0.5} : null
+      }).filter((r) => r !== null) as {a: MapNode; b: MapNode; half: number}[]
+      const inRun = (x: number, z: number): boolean => runs.some((r) => {
+        const dx = r.b.x - r.a.x, dz = r.b.z - r.a.z, l2 = dx * dx + dz * dz || 1
+        const t = ((x - r.a.x) * dx + (z - r.a.z) * dz) / l2
+        if (t < 0 || t > 1.05) return false
+        return Math.abs((x - r.a.x) * dz - (z - r.a.z) * dx) / Math.sqrt(l2) < r.half
+      })
+      if (runs.length > 0) {
+        for (let x = minX; x < maxX; x += 1) {
+          for (let z = minZ; z < maxZ; z += 1) {
+            if (inRun(x + 0.5, z + 0.5)) continue
+            const p = toLocal(x + 0.5, level.y, z + 0.5)
+            floors.box(new vec3(p.x, p.y - 6, p.z), new vec3(101, 10, 101))
+          }
+        }
+      } else {
+        const a = toLocal(minX, level.y, minZ), b = toLocal(maxX, level.y, maxZ)
+        const c = a.add(b).uniformScale(0.5)
+        floors.box(new vec3(c.x, c.y - 6, c.z), new vec3(Math.abs(b.x - a.x), 10, Math.abs(b.z - a.z)))
+      }
       const a = toLocal(minX, level.y, minZ), b = toLocal(maxX, level.y, maxZ)
-      const c = a.add(b).uniformScale(0.5)
-      floors.box(new vec3(c.x, c.y - 6, c.z), new vec3(Math.abs(b.x - a.x), 10, Math.abs(b.z - a.z)))
       if (level.y === lowest && place.footprint && !retail) addWalls(a, b)
     }
 
@@ -192,7 +232,7 @@ export class FindYourWayStandIn extends BaseScriptComponent {
       const pf = toLocal(f.x, f.y, f.z), pt = toLocal(t.x, t.y, t.z)
       if (e.kind === "escalator" || e.kind === "stairs" || e.kind === "ramp") {
         const width = e.kind === "escalator" ? 120 : e.kind === "stairs" ? 180 : 160
-        connectors.slab(pf.add(new vec3(0, -4, 0)), pt.add(new vec3(0, -4, 0)), width, 8)
+        if (e.kind !== "stairs") connectors.slab(pf.add(new vec3(0, -4, 0)), pt.add(new vec3(0, -4, 0)), width, 8)
         const across = new vec3(pt.z - pf.z, 0, pf.x - pt.x)
         if (e.kind !== "ramp" && across.length > 1) {
           const off = across.normalize().uniformScale(width / 2)
@@ -202,11 +242,34 @@ export class FindYourWayStandIn extends BaseScriptComponent {
           }
         }
         if (e.kind === "stairs") {
-          // a few step edges so stairs read as stairs
-          const steps = 8
-          for (let k = 1; k < steps; k++) {
-            const q = vec3.lerp(pf, pt, k / steps)
-            connectors.slab(q.add(new vec3(0, 0, 0)), vec3.lerp(pf, pt, (k + 0.15) / steps), width, 3)
+          // Real steps: solid blocks ~17 cm high from the lower floor up, each with a lighter nosing.
+          const lo = pf.y <= pt.y ? pf : pt, hi = pf.y <= pt.y ? pt : pf
+          const rise = hi.y - lo.y
+          const flat = new vec3(hi.x - lo.x, 0, hi.z - lo.z)
+          const run = flat.length
+          if (rise > 1 && run > 1) {
+            const steps = Math.max(3, Math.round(rise / 17))
+            const along = flat.normalize()
+            const side = new vec3(-along.z, 0, along.x)
+            const tread = run / steps
+            for (let k = 0; k < steps; k++) {
+              const top = (rise * (k + 1)) / steps
+              const mid = lo.add(along.uniformScale(tread * (k + 0.5)))
+              connectors.boxAxes(new vec3(mid.x, lo.y + top / 2 - 1, mid.z), along.uniformScale(tread / 2), new vec3(0, top / 2, 0), side.uniformScale(width / 2))
+              const nose = lo.add(along.uniformScale(tread * k + 2))
+              rails.boxAxes(new vec3(nose.x, lo.y + top - 0.5, nose.z), along.uniformScale(2.5), new vec3(0, 1.2, 0), side.uniformScale(width / 2 - 2))
+            }
+            // Handrails on posts both sides.
+            for (const q of [1, -1]) {
+              const off = side.uniformScale(q * (width / 2 - 4))
+              rails.slab(lo.add(off).add(new vec3(0, 92, 0)), hi.add(off).add(new vec3(0, 92, 0)), 6, 6)
+              for (let k = 0; k <= 4; k++) {
+                const at = vec3.lerp(lo, hi, k / 4).add(off)
+                rails.box(at.add(new vec3(0, 46, 0)), new vec3(5, 92, 5))
+              }
+            }
+          } else {
+            connectors.slab(pf.add(new vec3(0, -4, 0)), pt.add(new vec3(0, -4, 0)), width, 8)
           }
         }
       } else if (e.kind === "lift") {
@@ -233,8 +296,11 @@ export class FindYourWayStandIn extends BaseScriptComponent {
     this.addMesh("Rails", rails, this.connectorColor, new vec4(0.72, 0.84, 0.88, 1))
     this.addMesh("Lifts", lifts, this.liftColor, new vec4(0.74, 0.78, 0.82, 1))
     if (this.solid) this.addBackdrop(map, place, toLocal, lowest)
+    this.addClosurePlates(map, place, toLocal)
+  }
 
-    // Red plate behind each "connection closed" sign (the sign itself is a UIKit button).
+  // Red plate behind each "connection closed" sign (the sign itself is a UIKit button).
+  private addClosurePlates(map: MapData, place: PlaceInfo, toLocal: ToLocal): void {
     for (const ev of place.events) {
       if (ev.type !== "connectionClosed" || !ev.at || !ev.edge) continue
       const n = findNode(map, ev.at)
@@ -264,6 +330,7 @@ export class FindYourWayStandIn extends BaseScriptComponent {
   }
 
   isSolid(): boolean { return this.solid }
+  usesModel(): boolean { return this.usingModel }
   hasDirectory(): boolean { return this.directory }
   isBuilt(): boolean { return !!this.model && this.model.getChildrenCount() > 0 }
 

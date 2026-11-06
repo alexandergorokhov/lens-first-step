@@ -25,6 +25,7 @@ export const FURNITURE = [
   [79.5, 81.8, 38.2, 39, 6, 1.05, 0x2f3a4a, "B16 desk"],
   [91.5, 93.8, 38.2, 39, 6, 1.05, 0x2f3a4a, "B18 desk"],
   [94.6, 95.4, 33.5, 35.8, 6, 1.05, 0x2f3a4a, "B20 desk"],
+  [8.8, 10.8, 38.7, 39.4, 5, 1.05, 0x2f3a4a, "C12 desk"],
   // Sky Lounge (y 9): reception desk, sofas
   [78.8, 81.2, 20.6, 21.6, 9, 1.05, 0x5b4636, "Sky Lounge desk"],
   [76.5, 79, 27, 28, 9, 0.75, 0x7a8fa6, "sofa"],
@@ -37,8 +38,41 @@ export const LIFTS = [
   ["lift1", "lift1G", "lift1U", "hall", "bJunction"],
   ["lift2", "lift2G", "lift2U", "hall", "cTop"],
   ["loungeLift", "loungeLiftG", "loungeLiftU", "bPier2", "skyLounge"],
+  ["liftC", "liftCG", "liftCU", "cJunction", "cLiftHall"],
 ];
 export const LIFT_HALF = 1.25;
+
+// Rows of gate seats: [x0, x1, floor y, z, facing south]. One seat every 0.6 m from x0 to x1.
+export const SEATS = [
+  [63, 67, 6, 39.2, false], [75, 79, 6, 39.2, false], [87, 91, 6, 39.2, false], // B14, B16, B18
+  [94.6, 95.4, 6, 30.5, true], // B20
+  [46.5, 51.5, 6, 39.2, false], [46.5, 51.5, 6, 38.0, true], [56.2, 59.2, 6, 30.6, true], // B12
+  [0.8, 3.2, 5, 34.0, true], [0.8, 3.2, 5, 35.2, false], // C3
+  [11.4, 12.6, 5, 34.5, true], [11.4, 12.6, 5, 35.6, false], // C12, east of the way in
+];
+
+// People: [seed, x, y, z, heading, options, walk path or null]. Walkers move in the concept video; the
+// Lens model (export-airport.mjs) leaves them out, as they would stand frozen mid-step.
+export const PEOPLE = [
+  ...[[40, 5.0], [40.3, 6.0], [44, 5.4], [44.2, 6.6], [48, 5.1], [52, 5.6], [52.2, 6.7], [56, 5.2]].map(([x, z], i) => [i + 1, x, 0, z, 180, { suitcase: i % 2 === 0 }, null]),
+  [11, 4.2, 0, 6.5, 270, {}, null],
+  [12, 4.6, 0, 12.5, 250, { suitcase: true }, null],
+  [13, 18, 0, 3.5, 90, { suitcase: true }, { a: [10, 3.5], b: [26, 3.0], T: 14 }],
+  [14, 55, 0, 16, 0, {}, { a: [56, 14], b: [56, 30], T: 16 }],
+  [15, 14, 0, 30, 0, { suitcase: true }, { a: [16, 36], b: [24, 24], T: 13 }],
+  [16, 47, 6, 39.2, 180, { seated: true }, null],
+  [17, 49.4, 6, 39.2, 180, { seated: true }, null],
+  [18, 48.2, 6, 38.0, 0, { seated: true }, null],
+  [19, 57.4, 6, 30.6, 0, { seated: true }, null],
+  [20, 1.4, 5, 34.0, 0, { seated: true }, null],
+  [21, 2.6, 5, 35.2, 180, { seated: true }, null],
+  [22, 22, 6, 36.4, 180, {}, null],
+  [23, 36, 6, 36.6, 160, { suitcase: true }, null],
+  [24, 40, 6, 26, 0, { suitcase: true }, { a: [40, 25], b: [57, 27], T: 15 }],
+  [25, 26, 6, 38.2, 0, {}, { a: [20, 36.5], b: [42, 36.8], T: 22 }],
+  [26, 58, 6, 34, 270, {}, null],
+  [27, 8, 0, 36, 90, { suitcase: true }, { a: [3, 36], b: [22, 34], T: 17 }],
+];
 
 // Which side of a lift shaft (N/S/E/W) faces the node the door opens toward.
 export function doorFace(liftNode, other) {

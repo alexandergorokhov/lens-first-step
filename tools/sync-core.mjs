@@ -29,6 +29,7 @@ export const CORE_MODULES = [
   { src: "src/core/dock.ts", lens: "Assets/Scripts/FindYourWayDock.ts" },
   { src: "src/core/props.ts", lens: "Assets/Scripts/FindYourWayProps.ts" },
   { src: "src/core/theme.ts", lens: "Assets/Scripts/FindYourWayTheme.ts" },
+  { src: "src/core/captions.ts", lens: "Assets/Scripts/FindYourWayCaptions.ts" },
 ];
 
 // The one list of bundled maps (key, file served/downloaded, Lens copy name).
@@ -39,7 +40,8 @@ export function mapIndex(root = ROOT) {
 export function syncPairs(root = ROOT) {
   const maps = mapIndex(root).map((m) => ({ src: "src/core/data/" + m.file, lens: "Assets/Maps/" + m.lens }));
   // The props, worked out in Node (npm run props) so the Lens only stands them up.
-  return CORE_MODULES.concat(maps).concat([{ src: "src/core/data/props.json", lens: "Assets/Maps/props.json" }]);
+  return CORE_MODULES.concat(maps).concat([{ src: "src/core/data/props.json", lens: "Assets/Maps/props.json" },
+    { src: "src/core/data/airport-solids.json", lens: "Assets/Maps/airport-solids.json" }]);
 }
 
 // Copies that are missing or differ from their source.

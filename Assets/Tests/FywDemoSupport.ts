@@ -64,6 +64,16 @@ export async function walk(run: DemoRun, pts: Vec3[], stop?: () => boolean): Pro
   }
 }
 
+// The same points, the last one moved back along the last stretch by `m` metres.
+export function shortOfEnd(pts: Vec3[], m: number): Vec3[] {
+  if (pts.length < 2) return pts
+  const a = pts[pts.length - 2], b = pts[pts.length - 1]
+  const len = Math.sqrt((b.x - a.x) ** 2 + (b.z - a.z) ** 2)
+  if (len <= m + 0.2) return pts
+  const f = (len - m) / len
+  return pts.slice(0, -1).concat([{x: a.x + (b.x - a.x) * f, y: b.y, z: a.z + (b.z - a.z) * f}])
+}
+
 export async function hold(run: DemoRun, seconds: number): Promise<void> {
   const s = getTime()
   while (getTime() - s < seconds) {
@@ -131,7 +141,8 @@ export async function walkLeg(run: DemoRun): Promise<string[]> {
     const nodes = all.slice(at)
     const k = main.getRouteEdgeKinds().slice(at).indexOf("lift")
     if (k < 0) {
-      await walk(run, [me].concat(nodes.slice(1).map((id) => nodePos(main, id))), () => main.getPhase() === "arrived")
+      // Stop at the door, not on the shop's node (inside the airport model's shop or gate desk).
+      await walk(run, shortOfEnd([me].concat(nodes.slice(1).map((id) => nodePos(main, id))), 1.8), () => main.getPhase() === "arrived")
       break
     }
     const lift = nodes[k]
@@ -261,6 +272,7 @@ export function offendingTexts(main: FindYourWayMain): string[] {
 }
 
 function allowed(main: FindYourWayMain, path: string): boolean {
+  if (path.indexOf("OffersCard") >= 0 || path.indexOf("Captions") >= 0) return true
   if (path.indexOf("StandInBuilding") >= 0) return path.indexOf("PlaceIcons") < 0 && path.indexOf("CompanionBubble") < 0
   if (path.indexOf("AppPanel") === 0) return main.isOptionsCollapsed()
   if (path.indexOf("ModePanel") >= 0) return true

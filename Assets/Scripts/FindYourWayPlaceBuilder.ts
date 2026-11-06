@@ -125,7 +125,10 @@ export class FindYourWayPlaceBuilder {
       ui.addPlaceSign("StandIn", this.host.local(start, PLACE_SIGN_CM).add(new vec3(-260, 0, -150)),
         place.standInLabel, place.title, "map")
     }
+    // The airport's own model carries its gate boards and shop names.
+    const ownSigns = this.host.standIn.usesModel()
     for (const n of map.nodes) {
+      if (ownSigns && (n.kind === "destination" || n.kind === "gate" || n.kind === "place")) continue
       if (n.kind === "destination" || n.kind === "gate") {
         if (this.host.standIn.isSolid()) ui.addPlaceSign(n.id, this.fasciaSpot(n), n.label || n.id, null, n.icon || null, FASCIA_SIGN_SCALE, FASCIA_TEXT_SIZE)
         else ui.addPlaceSign(n.id, this.host.local(n, DEST_SIGN_CM), n.label || n.id, n.type || null, n.icon || null)

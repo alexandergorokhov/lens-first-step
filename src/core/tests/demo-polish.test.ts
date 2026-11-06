@@ -40,7 +40,7 @@ test("CS2 clean screen: the Control tab stays folded even when a button in it is
 });
 
 test("CS3 clean screen: only the offer boxes, the arrival card, the voice caption and the Control tab may show", () => {
-  const allowed = ["offerBoxes", "arrival", "voiceCaption", "controlTab"];
+  const allowed = ["offerBoxes", "offerCard", "arrival", "voiceCaption", "controlTab", "captions"];
   const banned = ["badge", "pill", "cue", "score", "playLine", "notice", "rideCard", "placeIcons", "bubble", "offerList", "demoControls", "debug"];
   for (const k of allowed) assert.equal(cleanAllows(k, true, true), true, k);
   for (const k of banned) assert.equal(cleanAllows(k, true, true), false, k);
@@ -199,4 +199,37 @@ test("C2 the animated models play a clip for each mood: walk or run by speed, id
   assert.ok(clipFor("dog", "lead", 2).rate > clipFor("dog", "lead", 1).rate);
   assert.ok(clipFor("dog", "lead", 50).rate <= 2 && clipFor("dog", "lead", 0.2).rate >= 0.5);
   assert.equal(clipFor("robot", "wait", 0).rate, 1);
+});
+
+test("V6 the wheelchair takes lifts only: every Step-Free route in the airport goes by lift (no ramp, stairs or escalator); Walk takes the stairs to the C pier", () => {
+  const m = load("map.json");
+  assert.ok(m.edges.every((e) => e.kind !== "ramp"), "no ramp left at the airport");
+  const dests = m.nodes.filter((n) => n.kind === "destination" || n.kind === "place").map((n) => n.id);
+  for (const d of dests) {
+    const r = new Navigator(m, "sign", d, "stepFree").route;
+    if (r.status !== "route") continue;
+    assert.ok(r.edges.every((e) => e.kind === "walk" || e.kind === "lift"), d + ": " + r.edges.map((e) => e.kind).join(","));
+  }
+  const c12 = new Navigator(m, "sign", "gateC12", "stepFree").route;
+  assert.ok(c12.status === "route" && c12.edges.filter((e) => e.kind === "lift").length === 2, "two lifts to Gate C12");
+  const walk = new Navigator(m, "concourse", "gateC12", "walk").route;
+  assert.ok(walk.status === "route" && walk.edges.some((e) => e.kind === "stairs"), "walking: the stairs, the quickest");
+});
+
+test("O1 offers show after you look at a shop for 2 s, not before; at most 2, with Sponsored kept", async () => {
+  const { OFFER_LOOK_S, ShopLook, offerPeek, frontTargets } = await import("../freewalk.ts");
+  assert.equal(OFFER_LOOK_S, 2);
+  const m = load("mall.json");
+  const look = new ShopLook(m as any, [], { dotShowSeconds: OFFER_LOOK_S });
+  // Stand in front of Threads and look at it.
+  const t = (frontTargets(m as any) as any[]).filter((x) => x.id === "threads")[0];
+  assert.ok(t, "Threads has a front");
+  const c = { x: (t.x1 + t.x2) / 2, z: (t.z1 + t.z2) / 2 };
+  const pos = { x: c.x, y: 0, z: c.z + 4 };
+  const heading = (Math.atan2(c.x - pos.x, c.z - pos.z) * 180) / Math.PI;
+  assert.equal(look.update(pos, heading, 0, 10), null);
+  assert.equal(look.update(pos, heading, 0, 11.9), null, "not yet at 1.9 s");
+  assert.equal(look.update(pos, heading, 0, 12.05), "threads", "shown at 2 s");
+  const p = offerPeek(m as any, "threads", [], 0)!;
+  assert.ok(p.lines.length >= 1 && p.lines.length <= 2);
 });

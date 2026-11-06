@@ -91,7 +91,7 @@ test("S6b after arriving, 5.5 m from B12 does not report rerouted on consecutive
 
 test("C5 noticeFor: askStaff on Walk says NO_ROUTE_MESSAGE, on Step-Free ASK_STAFF_MESSAGE; error has text; a route has none", async () => {
   const { noticeFor } = (await import("../router.ts")) as any;
-  const closed = setEdgeOpen(setEdgeOpen(setEdgeOpen(load("map.json"), "lift1", false), "lift2", false), "rampC", false);
+  const closed = setEdgeOpen(setEdgeOpen(setEdgeOpen(load("map.json"), "lift1", false), "lift2", false), "liftC", false);
   const walkNoWay = findRoute(setEdgeOpen(closed, "lift1", false), "gateC3", "sign", "walk");
   // From C3 back to the sign on Walk with the lifts closed there is still a way (stairs), so build a dead end:
   const island: MapData = { version: 1, nodes: [P(0, 0, 0), P(1, 0, 0), P(5, 0, 0)].map((p, i) => ({ id: "n" + i, kind: i === 1 ? "assistance" : "junction", ...p })), edges: [{ from: "n0", to: "n1", length: 1, kind: "walk", open: true }] };
@@ -197,8 +197,11 @@ test("C9 arrival needs the same level: standing under a mezzanine destination is
 // ── C10 edge-aware change detection ─────────────────────────────────────────
 
 test("C10 setProfile reports a change when only the connection kind changes", () => {
-  const nav = new Navigator(load("map.json"), "cTop", "gateC3", "walk");
-  assert.deepEqual(nodesOf(nav), ["cTop", "cJunction", "gateC3"]);
+  // Stairs and a ramp between the same two nodes (the airport's C pier now has a lift instead).
+  const m: MapData = { version: 1, nodes: [{ id: "a", kind: "junction", ...P(0, 0, 0) }, { id: "b", kind: "junction", ...P(0, 1, 8) }, { id: "c", kind: "destination", ...P(0, 1, 12) }],
+    edges: [{ from: "a", to: "b", length: 8.1, kind: "stairs", open: true }, { from: "a", to: "b", length: 12, kind: "ramp", open: true }, { from: "b", to: "c", length: 4, kind: "walk", open: true }] } as any;
+  const nav = new Navigator(m, "a", "c", "walk");
+  assert.deepEqual(nodesOf(nav), ["a", "b", "c"]);
   assert.equal(nav.setProfile("stepFree"), true, "stairs -> ramp between the same nodes");
   assert.ok(nav.route.status === "route" && nav.route.edges[0].kind === "ramp");
 });

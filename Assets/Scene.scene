@@ -208,6 +208,7 @@
       wallHeightM: !<float> 3.000000
       previewBackdrop: true
       planterPrefab: !<reference.ObjectPrefab> 5f633954-25c9-4c16-ba3e-ffda8974c4db
+      airportModel: !<reference.ObjectPrefab> 16cc0196-5f8f-4b6a-956e-3c2d92493ae8
   ScriptTypes:
     "":
       {}
@@ -8502,6 +8503,8 @@
     showingPreset: true
     demo: true
     cleanScreen: true
+    liveCaptions: true
+    captionLanguage: true
     presetPreferences: true
     pointSeconds: true
     maxStopsPerWalk: true
@@ -8545,6 +8548,8 @@
         - !<reference> 99781a7e-76b6-47e9-ae61-d7214df51cd7
         - !<reference> 3b1136b9-7926-49ae-b5f9-799f1d55317a
         - !<reference> 51db806c-80fd-4f29-8405-23d451c6c3a4
+      agentModel: !<reference.ObjectPrefab> 3e880731-dfe7-489f-a00f-514a03f4096d
+      assistantModel: !<reference.ObjectPrefab> 779e0503-2e87-4cc2-a099-386ba7286699
       robotModel: !<reference.ObjectPrefab> 274c83ee-f607-4507-884b-1cf290da54a6
       mapKey: mall
       tryOnlineMap: true
@@ -8561,6 +8566,8 @@
       showingPreset: false
       demo: !<string> off
       cleanScreen: false
+      liveCaptions: false
+      captionLanguage: English
       presetPreferences: "coffee,clothes,hardware"
       companionLeadM: !<float> 7.000000
       pointSeconds: !<float> 3.000000

@@ -5,7 +5,9 @@
 // catch hints and score). Must not: decide when a gate changes or which map is used.
 
 import {cardClock} from "./FindYourWayPlace"
-import {addIcon, addRow, addText, easeOutCubic, makePanel, obj, Panel} from "./FindYourWayWidgetsUI"
+import {addIcon, addRow, addText, CARD_TINT, easeOutCubic, makePanel, obj, Panel, TAB_TINT} from "./FindYourWayWidgetsUI"
+import {THEME} from "./FindYourWayTheme"
+import {addPopIn} from "./FindYourWayPopIn"
 import {icon} from "./FindYourWayIconsUI"
 
 @component
@@ -80,6 +82,16 @@ export class FindYourWayHudUI extends BaseScriptComponent {
   private cardTime = -1
   private cardFresh = false
   private cardDuration = 5
+  // The offers of the shop you looked at for 2 s (top right, clear of the way ahead).
+  private offers: SceneObject
+  private offerTitle: Text
+  private offerTag: Text
+  private offerLines: Text[] = []
+  private offersShown: {title: string; lines: string[]} | null = null
+  // Live captions (bottom): two rows and the language they came from.
+  private captions: SceneObject
+  private captionRows: Text[] = []
+  private captionLang: Text
   // The clean screen while walking: notice and ride cards are logged, not shown.
   private cardsMuted = false
 
@@ -119,7 +131,70 @@ export class FindYourWayHudUI extends BaseScriptComponent {
     ;[this.score, this.scoreText] = line("ScoreChip", this.scorePosition, 9, "Treats 0 of 0")
     ;[this.play, this.playText] = line("PlayLine", this.playPosition, 24, "Raise your hand: Pet jumps")
 
+    // Offers: a small see-through card in the top-right corner, never across the way ahead.
+    this.offers = obj(this.sceneObject, "OffersCard", new vec3(11.5, 5.0, -70))
+    const op = makePanel(this.offers, 19, 0.8, 0.2, undefined, CARD_TINT)
+    const gold = new vec4(THEME.sponsored[0], THEME.sponsored[1], THEME.sponsored[2], 1)
+    this.offerTitle = addText(op.content, "OffersTitle", "", "Headline1", 18, 2.6, this.textColor, 70, HorizontalAlignment.Left)
+    this.offerTag = addText(op.content, "OffersTag", "", "Subheadline", 18, 1.8, gold, 70, HorizontalAlignment.Left)
+    for (let i = 0; i < 2; i++) {
+      this.offerLines.push(addText(op.content, "OffersLine" + i, "", "Headline2", 18, 2.4, this.textColor, 70, HorizontalAlignment.Left))
+    }
+    addPopIn(this.offers)
+    this.offers.enabled = false
+
+    // Captions: two rows at the bottom, below the line of sight.
+    this.captions = obj(this.sceneObject, "Captions", new vec3(0, -10.4, -70))
+    const cp = makePanel(this.captions, 27, 0.5, 0.1, undefined, TAB_TINT)
+    this.captionLang = addText(cp.content, "CaptionLang", "", "Caption", 26, 1.2, new vec4(0.8, 0.95, 1, 1), 70, HorizontalAlignment.Left)
+    for (let i = 0; i < 2; i++) {
+      this.captionRows.push(addText(cp.content, "CaptionRow" + i, "", "Body", 26, 1.7, this.textColor, 70, HorizontalAlignment.Left))
+    }
+    this.captions.enabled = false
+
     this.createEvent("UpdateEvent").bind(() => this.tick())
+  }
+
+  // The offers card: the shop's name, "Sponsored" when paid, at most 2 offers; null hides it.
+  setOffers(v: {title: string; tag: string; lines: string[]} | null): void {
+    const key = (x: {title: string; lines: string[]} | null) => (x ? x.title + "|" + x.lines.join("|") : "")
+    if (key(v) === key(this.offersShown)) return
+    this.offersShown = v ? {title: v.title, lines: v.lines.slice(0, 2)} : null
+    if (!v) {
+      this.offers.enabled = false
+      return
+    }
+    this.offerTitle.text = v.title
+    this.offerTag.text = v.tag ? v.tag.split(" · ")[0] : ""
+    this.offerTag.getSceneObject().enabled = !!v.tag
+    for (let i = 0; i < 2; i++) {
+      const line = v.lines[i]
+      this.offerLines[i].text = line ? "• " + line : ""
+      this.offerLines[i].getSceneObject().enabled = !!line
+    }
+    this.offers.enabled = true
+  }
+
+  getOffers(): {title: string; lines: string[]} | null { return this.offers.enabled ? this.offersShown : null }
+
+  // Captions: up to two rows; lang: e.g. "Spanish → English" (empty hides it); no rows hides the band.
+  setCaptions(rows: string[], lang: string): void {
+    if (rows.length === 0) {
+      this.captions.enabled = false
+      return
+    }
+    this.captionLang.text = lang
+    this.captionLang.getSceneObject().enabled = lang !== ""
+    for (let i = 0; i < 2; i++) {
+      const r = rows[i] || ""
+      if (this.captionRows[i].text !== r) this.captionRows[i].text = r
+      this.captionRows[i].getSceneObject().enabled = r !== ""
+    }
+    this.captions.enabled = true
+  }
+
+  getCaptions(): string[] {
+    return this.captions.enabled ? this.captionRows.map((t) => t.text).filter((t) => t !== "") : []
   }
 
   // One-line chips: null hides; same text = no work.

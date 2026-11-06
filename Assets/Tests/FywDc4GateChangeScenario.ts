@@ -6,7 +6,7 @@ import {sleep} from "Leaf.lspkg/Utils/common/Utils"
 import {findNode, findRoute, parseMap, setEdgeOpen, MapData} from "../Scripts/FindYourWayRouter"
 import {bruteShortest, bundledMaps, kindsOf, log, nodePoints, startTrip, tap, waitFor, walkAlong, shot, SHOT} from "./FindYourWayLeafSupport"
 
-// DC4 — Gate change: Walk takes the stairs down to the C pier; Step-Free takes the ramp.
+// DC4 — Gate change: Walk takes the stairs down to the C pier; Step-Free takes the C pier lift.
 @component
 export class FywDc4GateChangeScenario extends Scenario {
   async run(): Promise<void> {
@@ -32,7 +32,7 @@ export class FywDc4GateChangeScenario extends Scenario {
     const sf = await startTrip(it, "stepFree")
     await tap(it, "GateChangeButton")
     const k2 = sf.getRouteEdgeKinds()
-    expect(k2.indexOf("ramp") >= 0, "step-free takes the ramp: " + k2.join(",")).toBe(true)
+    expect(k2.filter((k) => k === "lift").length >= 1 && k2.indexOf("stairs") < 0, "step-free takes the C pier lift: " + k2.join(",")).toBe(true)
     expect(k2.indexOf("stairs") < 0 && k2.indexOf("escalator") < 0, "no stairs/escalator").toBe(true)
     await shot(sf, "dc4-gate-change-stairs-and-ramp-2")
     log("DC4 pass")

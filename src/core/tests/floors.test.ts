@@ -322,12 +322,12 @@ test("S16 Riding a lift down: Step-Free from Departures to the entrance takes a 
   assert.equal(t.floors, -1);
 });
 
-test("S16 Stairs down on Walk: Departures to C pier takes the stairs down, Step-Free the ramp down", () => {
+test("S16 Stairs down on Walk: Departures to C pier takes the stairs down, Step-Free the C pier lift down", () => {
   const map = loadMap();
   const w = tripAhead(map, route(map, "concourse", "gateC3", "walk"), at(map, "concourse"))!;
   assert.deepEqual(w.changes.map((c) => c.edge.kind + (c.up ? " up" : " down")), ["stairs down"]);
   const s = tripAhead(map, route(map, "concourse", "gateC3", "stepFree"), at(map, "concourse"))!;
-  assert.deepEqual(s.changes.map((c) => c.edge.kind + (c.up ? " up" : " down")), ["ramp down"]);
+  assert.deepEqual(s.changes.map((c) => c.edge.kind + (c.up ? " up" : " down")), ["lift down"]);
 });
 
 test("S17 Three levels: ground -> Departures -> C pier is cued up, then down", () => {
@@ -337,7 +337,7 @@ test("S17 Three levels: ground -> Departures -> C pier is cued up, then down", (
   assert.equal(w.floors, 1);
   assert.equal(destinationFloorText("Gate C3", "C pier", w.floors), "Gate C3 is on C pier, 1 floor up");
   const s = tripAhead(map, route(map, "sign", "gateC3", "stepFree"), at(map, "sign"))!;
-  assert.deepEqual(s.changes.map((c) => c.edge.kind + (c.up ? " up" : " down")), ["lift up", "ramp down"]);
+  assert.deepEqual(s.changes.map((c) => c.edge.kind + (c.up ? " up" : " down")), ["lift up", "lift down"]);
 });
 
 test("S17 A trip that starts upstairs and ends downstairs: the cue counts down to the change and then moves on", () => {

@@ -28,6 +28,7 @@
   ExportUid: 00000000-0000-0000-0000-000000000000
   PackagePolicy: CanBeUnpacked
   ScriptInputsHidden:
+    airportModel: false
     connectorColor: false
     floorColor: false
     groundColor: false
@@ -57,6 +58,7 @@
       wallHeightM: !<float> 3.000000
       previewBackdrop: true
       planterPrefab: !<reference.ObjectPrefab> 00000000-0000-0000-0000-000000000000
+      airportModel: !<reference.ObjectPrefab> 00000000-0000-0000-0000-000000000000
   ScriptTypes:
     -
       {}
@@ -77,4 +79,5 @@
     - '// @input float wallHeightM = 3 {"hint":"Wall height, m", "widget":"slider", "min":1, "max":6, "step":0.5}'
     - '// @input bool previewBackdrop = true {"hint":"In Lens Studio only: solid building you can walk through, hiding the preview room. Never on Specs."}'
     - '// @input Asset.ObjectPrefab planterPrefab {"hint":"Optional: a planter set along the shop fronts in the preview backdrop"}'
+    - "// @input Asset.ObjectPrefab airportModel {\"hint\":\"Optional: the airport's own model (Assets/Models/Airport/airport.glb, the concept video's terminal: npm run airport:glb). In the preview the airport map shows it instead of the stand-in boxes\"}"
     - '// @ui {"widget":"group_end"}'

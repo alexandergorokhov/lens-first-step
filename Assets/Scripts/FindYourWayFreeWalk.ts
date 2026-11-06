@@ -1158,3 +1158,6 @@ export function parseAskReply(map: FwMap, reply: string): string[] | null {
   for (const s of v.stops) if (typeof s !== "string" || ids.indexOf(s) < 0) return null;
   return v.stops.slice();
 }
+
+// Look at a shop this long (s) and its offers show (at most 2, in a small card at the top right).
+export const OFFER_LOOK_S = 2;

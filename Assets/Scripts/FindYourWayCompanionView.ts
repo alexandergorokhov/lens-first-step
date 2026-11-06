@@ -160,6 +160,8 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
     this.model.setParent(this.sceneObject)
     this.player = null
     this.clip = ""
+    this.lastClip = ""
+    this.fadeIn = 1
     this.rig = null
     const prefab = this.prefabs[key]
     if (prefab) {
@@ -216,7 +218,14 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
       this.speedMs += (speed - this.speedMs) * Math.min(1, dt * SPEED_SMOOTHING)
     }
     if (this.player) {
-      this.playMood(dt)
+      try {
+        this.playMood(dt)
+      } catch (e) {
+        // A clip that isn't there must never stop the companion from walking.
+        print("[FYW] companion clip: " + e)
+        this.lastClip = ""
+        this.clip = ""
+      }
       return
     }
     if (this.rig) this.rig.apply(poseFor(this.modelId, {mood: this.mood, speedMs: this.speedMs, travelledM: this.travelledM, t: getTime()}))

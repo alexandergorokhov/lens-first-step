@@ -3,7 +3,7 @@
 // shops, gates, signs and people. Positions come from the map's nodes, so the router's route
 // runs exactly through it. Map metres: x east, y up, z north -> three.js (x, y, -z).
 import * as THREE from "three";
-import { FURNITURE, LIFTS, LIFT_HALF, SHOPS, doorFace as faceOf } from "./layout.mjs";
+import { FURNITURE, LIFTS, LIFT_HALF, PEOPLE, SEATS, SHOPS, doorFace as faceOf } from "./layout.mjs";
 
 export const V = (x, y, z) => new THREE.Vector3(x, y, -z);
 const DEG = Math.PI / 180;
@@ -289,7 +289,7 @@ export function buildAirport(scene, map) {
   };
   // The east stairs come up through the B pier floor (opening from z 22 to their top at z 26).
   const eastHole = [[62.9, 22.01], [65.1, 22.01], [65.1, 26], [62.9, 26]];
-  slab(root, dep, 6, upperFloor, 0.45, [shaftHole("lift1U"), shaftHole("lift2U"), eastHole]);
+  slab(root, dep, 6, upperFloor, 0.45, [shaftHole("lift1U"), shaftHole("lift2U"), eastHole].concat(node("liftCU") ? [[[8.7, 29.2], [11.3, 29.2], [11.3, 30.49], [8.7, 30.49]]] : []));
   // Sky Lounge mezzanine (y 9) over the B pier, with the lounge stairs and lift openings.
   const loungeM = new THREE.MeshLambertMaterial({ map: tileTex("#b9a58a", "#9a8669", "#6f5f48", 0.9) });
   slab(root, [[69, 20], [84, 20], [84, 31.5], [69, 31.5]], 9, loungeM, 0.35,
@@ -528,14 +528,13 @@ export function buildAirport(scene, map) {
   };
   for (const s of SHOPS) shop(...s);
   for (const [x0, x1, z0, z1, y, h, color] of FURNITURE) box(root, x0, x1, y, y + h, z0, z1, lambert(color));
+  for (const [x0, x1, y, z, south] of SEATS) chairRow(root, x0, x1, y, z, south);
   // B pier gates: seating and gate boards (B12's are below).
   for (const [id, code, dest] of [["gateB14", "B14", "Oslo 09:30"], ["gateB16", "B16", "Vienna 09:45"], ["gateB18", "B18", "Dublin 09:20"]]) {
     const g = node(id);
-    chairRow(root, g.x - 3, g.x + 1, 6, 39.2, false);
     signBoard(root, g.x, 9.0, 39.6, 180, 2.4, 1.2, signTex([code, dest], { w: 512, h: 256, size: 120 }), false);
   }
   const b20 = node("gateB20");
-  chairRow(root, 94.6, 95.4, 6, 30.5, true);
   signBoard(root, 95.8, 8.8, b20.z, 270, 2.4, 1.2, signTex(["B20", "Prague 10:05"], { w: 512, h: 256, size: 120 }), false);
   signBoard(root, 58, 9.0, 32, 90, 4.4, 0.75, signTex(["Gates B14 – B20  →"], { w: 1536, h: 260, size: 110 }));
   signBoard(root, 72, 8.6, 31.2, 180, 3.2, 0.7, signTex(["↑  Sky Lounge"], { w: 1280, h: 240, bg: "#4a3a26", fg: "#ffe2a8" }), false);
@@ -545,14 +544,13 @@ export function buildAirport(scene, map) {
   // Gates: desks, seating, gate boards.
   const b12 = node("gateB12"), c3 = node("gateC3");
   box(root, b12.x + 1.5, b12.x + 3.8, 6, 7.05, b12.z + 1.2, b12.z + 2, lambert(0x2f3a4a));
-  chairRow(root, 46.5, 51.5, 6, 39.2, false);
-  chairRow(root, 46.5, 51.5, 6, 38.0, true);
-  chairRow(root, 56.2, 59.2, 6, 30.6, true);
   signBoard(root, b12.x, 9.0, 39.6, 180, 2.4, 1.2, signTex(["B12", "Lisbon 08:40"], { w: 512, h: 256, size: 120 }), false);
   box(root, c3.x + 1.2, c3.x + 3.2, 5, 6.05, c3.z + 0.6, c3.z + 1.3, lambert(0x2f3a4a));
-  chairRow(root, 0.8, 3.2, 5, 34.0, true);
-  chairRow(root, 0.8, 3.2, 5, 35.2, false);
   signBoard(root, c3.x, 7.8, 39.6, 180, 2.4, 1.2, signTex(["C3", "Madrid 08:55"], { w: 512, h: 256, size: 120 }), false);
+  const c12 = node("gateC12");
+  if (c12) {
+    signBoard(root, c12.x, 7.8, 39.6, 180, 2.4, 1.2, signTex(["C12", "Lisbon 09:10"], { w: 512, h: 256, size: 120 }), false);
+  }
 
   // Wayfinding signs.
   signBoard(root, 30, 3.4, 12.5, 180, 4.4, 0.75, signTex(["↑  Departures  ·  Gates B  C"], { w: 1536, h: 260, size: 110 }));
@@ -610,24 +608,8 @@ export function buildAirport(scene, map) {
     root.add(p);
     people.push({ p, walk, y, seed });
   };
-  [[40, 5.0], [40.3, 6.0], [44, 5.4], [44.2, 6.6], [48, 5.1], [52, 5.6], [52.2, 6.7], [56, 5.2]].forEach(([x, z], i) => add(i + 1, x, 0, z, 180, { suitcase: i % 2 === 0 }));
-  add(11, 4.2, 0, 6.5, 270);
-  add(12, 4.6, 0, 12.5, 250, { suitcase: true });
-  add(13, 18, 0, 3.5, 90, { suitcase: true }, { a: [10, 3.5], b: [26, 3.0], T: 14 });
-  add(14, 55, 0, 16, 0, {}, { a: [56, 14], b: [56, 30], T: 16 });
-  add(15, 14, 0, 30, 0, { suitcase: true }, { a: [16, 36], b: [24, 24], T: 13 });
-  add(16, 47, 6, 39.2, 180, { seated: true });
-  add(17, 49.4, 6, 39.2, 180, { seated: true });
-  add(18, 48.2, 6, 38.0, 0, { seated: true });
-  add(19, 57.4, 6, 30.6, 0, { seated: true });
-  add(20, 1.4, 5, 34.0, 0, { seated: true });
-  add(21, 2.6, 5, 35.2, 180, { seated: true });
-  add(22, 22, 6, 36.4, 180);
-  add(23, 36, 6, 36.6, 160, { suitcase: true });
-  add(24, 40, 6, 26, 0, { suitcase: true }, { a: [40, 25], b: [57, 27], T: 15 });
-  add(25, 26, 6, 38.2, 0, {}, { a: [20, 36.5], b: [42, 36.8], T: 22 });
-  add(26, 58, 6, 34, 270);
-  add(27, 8, 0, 36, 90, { suitcase: true }, { a: [3, 36], b: [22, 34], T: 17 });
+  // The Lens model (export) leaves out the walkers: they would stand frozen mid-step on the way.
+  for (const [seed, x, y, z, h, opts, walk] of PEOPLE) if (!(walk && globalThis.AIRPORT_EXPORT)) add(seed, x, y, z, h, opts, walk);
 
   // Per-frame updates: walkers, lift cabs and doors, the out-of-service sign.
   let lastSolid = false;

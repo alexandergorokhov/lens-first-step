@@ -152,11 +152,11 @@ test("S4 Gate change B12 -> C3 while walking: card text and re-route from curren
   assert.equal(nodesOf(walker)[0], "concourse");
   assert.equal(nodesOf(walker).at(-1), "gateC3");
 
-  // Hero moment: the Step-Free traveller's line swings from Lift 1 to Lift 2 and the ramp.
+  // Hero moment: the Step-Free traveller's line swings from Lift 1 to Lift 2 and the C pier lift.
   const stepFree = new Navigator(map, "sign", "gateB12", "stepFree");
   assert.equal(stepFree.setDestination("gateC3"), true);
-  assert.ok(nodesOf(stepFree).includes("lift2G"));
-  assert.ok(stepFree.route.status === "route" && kinds(stepFree.route.edges).includes("ramp"));
+  assert.ok(nodesOf(stepFree).includes("lift2G") && nodesOf(stepFree).includes("liftCU"));
+  assert.ok(stepFree.route.status === "route" && kinds(stepFree.route.edges).filter((k) => k === "lift").length === 2);
 });
 
 // S4 Lens part: LEAF dc4-gate-change-stairs-and-ramp (card text, line swing, new route).
@@ -301,8 +301,8 @@ test("E2 parseMap names what is wrong with a broken map file", () => {
   }
 });
 
-test("E3 No step-free route (lift + ramp closed): ask-staff message and a line to the nearest assistance point", () => {
-  const map = setEdgeOpen(loadMap(), "rampC", false);
+test("E3 No step-free route (the C pier lift closed): ask-staff message and a line to the nearest assistance point", () => {
+  const map = setEdgeOpen(loadMap(), "liftC", false);
   const r = findRoute(map, "sign", "gateC3", "stepFree");
   assert.equal(r.status, "askStaff");
   if (r.status !== "askStaff") return;

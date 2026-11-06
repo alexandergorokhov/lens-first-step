@@ -40,7 +40,7 @@ export class FywDemoVideoScenario extends Scenario {
     await hold(run, 2)
     await airportTrip(run)
     this.mark("arrived " + run.main.getArrivalText())
-    await this.lookBack(run, "gateC12")
+    await hold(run, 8.5)
     await closeDemo(run.main)
 
     this.mark("demo 2: mall, follow the dog")
@@ -48,7 +48,7 @@ export class FywDemoVideoScenario extends Scenario {
     await hold(run, 2)
     await mallPetTrip(run)
     this.mark("arrived " + run.main.getArrivalText())
-    await this.lookBack(run, "foodCourt")
+    await hold(run, 8.5)
     await closeDemo(run.main)
 
     this.mark("demo 3: Free walk with the robot")

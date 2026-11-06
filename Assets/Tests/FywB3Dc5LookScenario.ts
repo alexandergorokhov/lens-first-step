@@ -19,8 +19,8 @@ export class FywB3Dc5LookScenario extends Scenario {
     // A matching shop: Bolt Hardware from the back court, looking north: two small boxes at the
     // shop, one offer each, and no button or list in your face.
     main.debugSetPose(30, 0, 22, 0)
-    await waitFor(() => main.getDotId() === "boltHardware", 2000, "looking at Bolt Hardware")
-    await waitFor(() => main.isOfferPeekShown() && main.getOfferBoxesId() === "boltHardware", 2000, "its boxes")
+    await waitFor(() => main.getDotId() === "boltHardware", 3500, "looking at Bolt Hardware (2 s look)")
+    await waitFor(() => main.isOfferPeekShown() && main.getOfferBoxesId() === "boltHardware", 3500, "its offers (2 s look)")
     expect(main.isDotShown(), "no button in the view").toBe(false)
     const v = main.getOfferPeekLines()
     expect(v.length > 0 && v.length <= 2, "one or two boxes: " + v.length).toBe(true)
@@ -28,23 +28,17 @@ export class FywB3Dc5LookScenario extends Scenario {
 
     // A non-matching shop gets its boxes too: Aurora Sport (sport is not picked).
     main.debugSetPose(38, 0, 22, 0)
-    await waitFor(() => main.getOfferBoxesId() === "auroraSport", 2000, "boxes at a non-matching shop")
+    await waitFor(() => main.getOfferBoxesId() === "auroraSport", 3500, "offers at a non-matching shop (2 s look)")
 
     // Looking away hides them, and nothing else changes.
     main.debugSetPose(38, 0, 22, 90)
     await waitFor(() => !main.isOfferPeekShown(), 3500, "the boxes hide ~2 s after looking away")
     expect(main.getPhase(), "still walking").toBe("free")
 
-    // The x closes them for that shop: looking at it again shows nothing.
+    // Looking again shows them again: the small card at the top right, never in the way.
     main.debugSetPose(30, 0, 22, 0)
-    await waitFor(() => main.getOfferBoxesId() === "boltHardware", 2000, "boxes again")
-    await tap(it, "OfferBoxClose0")
-    await waitFor(() => !main.isOfferPeekShown(), 1000, "closed")
-    main.debugSetPose(30, 0, 22, 90)
-    await sleep(2500)
-    main.debugSetPose(30, 0, 22, 0)
-    await sleep(1500)
-    expect(main.isOfferPeekShown(), "closed for that shop").toBe(false)
+    await waitFor(() => main.getOfferBoxesId() === "boltHardware", 3500, "offers again")
+    expect(main.getOfferPeekLines().length <= 2, "at most two offers").toBe(true)
     log("b3-dc5 pass")
   }
 }

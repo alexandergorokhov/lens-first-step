@@ -28,22 +28,29 @@
   ExportUid: 00000000-0000-0000-0000-000000000000
   PackagePolicy: CanBeUnpacked
   ScriptInputsHidden:
+    agentModel: false
     appPanelOffset: false
     arrivalCard: false
+    assistantModel: false
     building: false
     buildingUI: false
     camera: false
+    captionLanguage: false
     chime: false
-    companionAheadM: false
+    cleanScreen: false
+    companionLeadM: false
     companionModel: false
     companionOnAtStart: false
+    demo: false
     demoControls: false
     demoOffset: false
+    dogModel: false
     eyeHeightCm: false
     halfViewDeg: false
     hud: false
     internetModule: false
     lineAheadM: false
+    liveCaptions: false
     lookRangeM: false
     mapBaseUrl: false
     mapKey: false
@@ -56,8 +63,11 @@
     pointRadiusM: false
     pointSeconds: false
     presetPreferences: false
+    propModels: false
+    robotModel: false
     routeLine: false
     showDemoControls: false
+    showingPreset: false
     signOffset: false
     standIn: false
     startAtSign: false
@@ -86,6 +96,12 @@
       arrivalCard: !<MappingBased.AssignableType_8> 00000000-0000-0000-0000-000000000000
       internetModule: !<reference.InternetModule> 00000000-0000-0000-0000-000000000000
       chime: !<reference.AudioTrackAsset> 00000000-0000-0000-0000-000000000000
+      dogModel: !<reference.ObjectPrefab> 00000000-0000-0000-0000-000000000000
+      propModels: !<reference.ObjectPrefab[]>
+        []
+      agentModel: !<reference.ObjectPrefab> 00000000-0000-0000-0000-000000000000
+      assistantModel: !<reference.ObjectPrefab> 00000000-0000-0000-0000-000000000000
+      robotModel: !<reference.ObjectPrefab> 00000000-0000-0000-0000-000000000000
       mapKey: airport
       tryOnlineMap: true
       mapBaseUrl: "http://localhost:8787/"
@@ -98,8 +114,13 @@
       modePanelOffset: !<Vec3> {x: 0.000000, y: -20.000000, z: -100.000000}
       companionModel: dog
       companionOnAtStart: false
+      showingPreset: false
+      demo: !<string> off
+      cleanScreen: false
+      liveCaptions: false
+      captionLanguage: English
       presetPreferences: "coffee,clothes,hardware"
-      companionAheadM: 2.500000
+      companionLeadM: !<float> 6.000000
       pointSeconds: !<float> 3.000000
       pointRadiusM: !<float> 8.000000
       maxStopsPerWalk: !<float> 0.000000
@@ -129,6 +150,11 @@
     - '// @input AssignableType_8 arrivalCard {"hint":"Card over the destination"}'
     - '// @input Asset.InternetModule internetModule {"hint":"Internet module used to download the map"}'
     - '// @input Asset.AudioTrackAsset chime {"hint":"Chime played with the notice card"}'
+    - "// @input Asset.ObjectPrefab dogModel {\"hint\":\"The dog's animated model (Assets/Models/Dog, Quaternius CC0); empty: the jointed primitives\"}"
+    - '// @input Asset.ObjectPrefab[] propModels {"hint":"Props that dress the airport and the mall (Assets/Models/Props, CC0), found by name"}'
+    - '// @input Asset.ObjectPrefab agentModel {"hint":"The gate agent who talks to you (live captions, Assets/Models/People, CC0)"}'
+    - '// @input Asset.ObjectPrefab assistantModel {"hint":"The shop assistant who talks to you (live captions, Assets/Models/People, CC0)"}'
+    - "// @input Asset.ObjectPrefab robotModel {\"hint\":\"The robot's animated model (Assets/Models/Robot, Quaternius CC0); empty: the jointed primitives\"}"
     - '// @ui {"widget":"group_end"}'
     - '// @ui {"widget":"separator"}'
     - '// @ui {"widget":"group_start", "label":"Settings"}'
@@ -142,10 +168,15 @@
     - '// @input float lineAheadM = 10 {"hint":"How much of the route the line shows ahead of the user, m", "widget":"slider", "min":3, "max":30, "step":0.5}'
     - '// @input float halfViewDeg = 16 {"hint":"Half the horizontal field of view, degrees — outside it the turn arrow shows", "widget":"slider", "min":8, "max":40, "step":1}'
     - '// @input vec3 modePanelOffset = "{8,-4,-100}" {"hint":"Mode panel offset from the head at start (right, up, forward), cm"}'
-    - "// @input string companionModel = \"dog\" {\"hint\":\"The companion's model: same logic, only the look and the collectible change\", \"widget\":\"combobox\", \"values\":[{\"label\":\"Dog (treats)\", \"value\":\"dog\"}, {\"label\":\"Robot (bolts)\", \"value\":\"robot\"}, {\"label\":\"Rover (stars)\", \"value\":\"rover\"}]}"
+    - "// @input string companionModel = \"dog\" {\"hint\":\"The companion's model: same logic, only the look and the collectible change\", \"widget\":\"combobox\", \"values\":[{\"label\":\"Dog (treats)\", \"value\":\"dog\"}, {\"label\":\"Robot (bolts)\", \"value\":\"robot\"}]}"
     - '// @input bool companionOnAtStart {"hint":"Companion on when a trip starts (it can always be turned on or off on the app panel)"}'
+    - '// @input bool showingPreset {"hint":"Showing preset (for the judges): overrides map, start at sign, demo controls, companion model and on at start; preselects Walk; adds Restart showing, Demo: gate change and an Airport/Preview room map switch to the Options panel"}'
+    - '// @input string demo = "off" {"hint":"Demo preset: pick one and reset the preview; the Lens opens ready for that demo (clean screen, no demo controls, at the entrance sign). Off: the settings here", "widget":"combobox", "values":[{"label":"Off (settings below)", "value":"off"}, {"label":"1 Airport, wheelchair, Talk: gate 12C", "value":"airportWheelchair"}, {"label":"2 Mall, follow the dog, Talk: food court", "value":"mallPet"}, {"label":"3 Mall, Free walk with the robot", "value":"freeWalkRobot"}]}'
+    - '// @input bool cleanScreen {"hint":"Clean screen while walking: only the floor line, the companion, the turn arrow and the offer boxes; no badges, hints, score, cards or demo controls; the arrival card for 3 s (on in the demo presets)"}'
+    - '// @input bool liveCaptions {"hint":"Live captions: speech around you as two rows at the bottom, translated into the language below (ASR on Specs; the preview shows a scripted announcement). On in the demo presets"}'
+    - '// @input string captionLanguage = "English" {"hint":"Live captions are translated into this language"}'
     - '// @input string presetPreferences = "coffee,clothes,hardware" {"hint":"The saved preferences of the demo (category ids, comma separated)"}'
-    - '// @input float companionAheadM = 7 {"hint":"How far ahead the companion walks, m. The floor only enters the view from about 5.4 m", "widget":"slider", "min":1.5, "max":10, "step":0.1}'
+    - '// @input float companionLeadM = 7 {"hint":"How far ahead the companion walks, m (core COMPANION_LEAD_M = 7). The floor only enters the view from about 5.4 m", "widget":"slider", "min":1.5, "max":10, "step":0.1}'
     - '// @input float pointSeconds = 3 {"hint":"Free walk: seconds the companion points at a matching shop", "widget":"slider", "min":1, "max":8, "step":0.5}'
     - '// @input float pointRadiusM = 12 {"hint":"Free walk: how near a matching shop must be for the companion to stop, m", "widget":"slider", "min":2, "max":15, "step":0.5}'
     - '// @input float maxStopsPerWalk {"hint":"Free walk: most stops per walk (0 = every match); stopping everywhere may get annoying", "widget":"slider", "min":0, "max":30, "step":1}'

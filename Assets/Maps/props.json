@@ -210,34 +210,34 @@
   },
   {
    "model": "trash_bin",
-   "x": 9.5,
+   "x": 7.5,
    "y": 5,
-   "z": 27.5,
+   "z": 25.5,
    "heading": 0,
    "heightM": 0.95
   },
   {
    "model": "suitcase",
-   "x": 19.5,
+   "x": 17.5,
    "y": 5,
-   "z": 29.5,
+   "z": 27.5,
    "heading": 0,
    "heightM": 0.7
   },
   {
    "model": "palm_tree",
-   "x": 5.5,
+   "x": 19.5,
    "y": 5,
-   "z": 31.5,
-   "heading": 0,
+   "z": 33.5,
+   "heading": 180,
    "heightM": 3.3
   },
   {
    "model": "airport_seat",
-   "x": 19.5,
+   "x": 5.5,
    "y": 5,
-   "z": 35.5,
-   "heading": 180,
+   "z": 31.5,
+   "heading": 0,
    "heightM": 0.85
   },
   {

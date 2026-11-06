@@ -49,7 +49,7 @@ import {
   placeOf,
   rideCard,
 } from "./FindYourWayMapLibrary"
-import {feetOnSlope, lineOnLevel, nextTurnAlong, turnOutOfView, walkStep, yawFromForward, yawTo} from "./FindYourWayGeometry"
+import {feetOnSlope, isClear, lineOnLevel, nextTurnAlong, turnOutOfView, walkStep, yawFromForward, yawTo} from "./FindYourWayGeometry"
 import {destinationFloorText, floorCueFor, tripPill} from "./FindYourWayPlace"
 import {Companion, companionChoices, companionOf, COMPANIONS, PetGuide, treatsResult, treatsText} from "./FindYourWayPet"
 import {Place, placeTag, PointingCoach, POINT_SECONDS, visiblePlaces} from "./FindYourWayPlaces"
@@ -61,7 +61,7 @@ import {MultiStopTrip, orderStops} from "./FindYourWayTrip"
 import {mapLogLines, tripAfterSaving} from "./FindYourWayMapping"
 import {peekPlace} from "./FindYourWayPeek"
 import {demoSettings, DemoSettings, showingSettings, StartSettings} from "./FindYourWayDemo"
-import {destinationsOf, FreeWalk, interestList, LookBoxes, matchDestination, OfferDismissals, sayItPhrase, ShopLook, typedSoFar, typingSeconds, planAsk, VOICE_FALLBACK_S, walkableRoute, CLEAN_FREE_WALK} from "./FindYourWayFreeWalk"
+import {destinationsOf, FreeWalk, interestList, LookBoxes, matchDestination, OfferDismissals, sayItPhrase, ShopLook, typedSoFar, typingSeconds, planAsk, VOICE_FALLBACK_S, walkableRoute, CLEAN_FREE_WALK, OFFER_LOOK_S} from "./FindYourWayFreeWalk"
 import {arrivalCardOn, cleanAllows, OptionsDock, routeLineAheadM, walkingHud} from "./FindYourWayDock"
 import {FindYourWayOfferBoxesUI} from "./FindYourWayOfferBoxesUI"
 import {FindYourWayHomePanelUI} from "./FindYourWayHomePanelUI"
@@ -89,6 +89,8 @@ import {FindYourWayPanelFollow} from "./FindYourWayPanelFollow"
 import {FindYourWayPlaceBuilder, Ride} from "./FindYourWayPlaceBuilder"
 import {FindYourWayPlayTime} from "./FindYourWayPlayTime"
 import {FindYourWayPropsView} from "./FindYourWayPropsView"
+import {FindYourWayLiveCaptions} from "./FindYourWayLiveCaptions"
+import {FindYourWaySpeakerView} from "./FindYourWaySpeakerView"
 
 // scan -> loading -> choose (the three modes) -> prefs -> free (Free walk)
 //                                           -> mode -> nav -> arrived (Go to a place)
@@ -110,6 +112,9 @@ const DEST_NOTE_S = 3.5
 // Voice: stop listening after this long with no finished phrase (s).
 const VOICE_TIMEOUT_S = 8
 const COMPANION_IDS = ["dog", "robot"]
+// The airport model's solids, for walking by hand in the preview (npm run airport:solids).
+const AIRPORT_SOLIDS_ASSET = requireAsset("../Maps/airport-solids.json") as JsonAsset
+let AIRPORT_SOLIDS: number[][] | null = null
 // The preview can't hear (ASR runs on Specs): said under Talk there.
 const PREVIEW_TALK_HINT = "Preview: voice shown as typed. Live speech on Specs."
 // After the typed phrase is complete, this long before it is matched (s).
@@ -118,6 +123,8 @@ const TYPED_HOLD_S = 0.6
 const ASK_NEXT_S = 4.5
 // What was heard stays on the panel this long before a demo sets off (s).
 const HEARD_READ_S = 2.2
+// In the preview the scripted announcement plays this long into a trip (s).
+const CAPTION_DEMO_AFTER_S = 0.8
 // Learn this place: the saved map lives in the device's persistent storage under this key.
 const MAPPED_KEY = "fyw.mappedMap"
 const MAPPED_KEY_NAME = "mine"
@@ -157,6 +164,8 @@ export class FindYourWayMain extends BaseScriptComponent {
   @input @hint("Chime played with the notice card") chime: AudioTrackAsset
   @input @allowUndefined @hint("The dog's animated model (Assets/Models/Dog, Quaternius CC0); empty: the jointed primitives") dogModel: ObjectPrefab
   @input @allowUndefined @hint("Props that dress the airport and the mall (Assets/Models/Props, CC0), found by name") propModels: ObjectPrefab[]
+  @input @allowUndefined @hint("The gate agent who talks to you (live captions, Assets/Models/People, CC0)") agentModel: ObjectPrefab
+  @input @allowUndefined @hint("The shop assistant who talks to you (live captions, Assets/Models/People, CC0)") assistantModel: ObjectPrefab
   @input @allowUndefined @hint("The robot's animated model (Assets/Models/Robot, Quaternius CC0); empty: the jointed primitives") robotModel: ObjectPrefab
   @ui.group_end
   @ui.separator
@@ -242,6 +251,14 @@ export class FindYourWayMain extends BaseScriptComponent {
   cleanScreen: boolean = false
 
   @input
+  @hint("Live captions: speech around you as two rows at the bottom, translated into the language below (ASR on Specs; the preview shows a scripted announcement). On in the demo presets")
+  liveCaptions: boolean = false
+
+  @input
+  @hint("Live captions are translated into this language")
+  captionLanguage: string = "English"
+
+  @input
   @hint("The saved preferences of the demo (category ids, comma separated)")
   presetPreferences: string = "coffee,clothes,hardware"
 
@@ -306,6 +323,12 @@ export class FindYourWayMain extends BaseScriptComponent {
   private rideOffset = new vec3(0, 0, 0)
   private placeBuilder: FindYourWayPlaceBuilder
   private propsView: FindYourWayPropsView | null = null
+  private captions: FindYourWayLiveCaptions | null = null
+  private speaker: FindYourWaySpeakerView | null = null
+  // The conversation on arrival (preview): when the person speaks (0 = done, -1 = none yet).
+  private talkAt = -1
+  // The shop whose offers show in the card (looked at for 2 s).
+  private offersShown: LookBoxes | null = null
   private playTime: FindYourWayPlayTime
   private freeView: FindYourWayFreeWalkView
   private panels: FindYourWayPanelFollow
@@ -547,6 +570,11 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.view = v.createComponent(FindYourWayCompanionView.getTypeName()) as FindYourWayCompanionView
     this.view.setup(this.standIn.material)
     this.view.setPrefabs({dog: this.dogModel || null, robot: this.robotModel || null})
+    this.captions = new FindYourWayLiveCaptions(this.hud, this.captionLanguage)
+    const sp = global.scene.createSceneObject("Speaker")
+    sp.setParent(this.building)
+    this.speaker = sp.createComponent(FindYourWaySpeakerView.getTypeName()) as FindYourWaySpeakerView
+    this.speaker.setup({agent: this.agentModel || null, assistant: this.assistantModel || null}, this.standIn.material)
     const pv = global.scene.createSceneObject("PropsView")
     pv.setParent(this.building)
     this.propsView = pv.createComponent(FindYourWayPropsView.getTypeName()) as FindYourWayPropsView
@@ -774,6 +802,27 @@ export class FindYourWayMain extends BaseScriptComponent {
     ev.reset(HEARD_READ_S)
   }
 
+  // Live captions in the preview: on arrival someone (the gate agent, the food court host) stands in
+  // front of you, facing you, and speaks; the captions show it and its translation. On Specs the
+  // captions come from real speech around you and nobody is placed.
+  private startConversation(pos: Vec3): void {
+    if (!this.liveCaptions || !global.deviceInfoSystem.isEditor() || !this.speaker || this.talkAt !== -1) return
+    const key = this.getMapKey()
+    if (key !== "airport" && key !== "mall") return
+    const h = (this.userHeading() * Math.PI) / 180
+    const fwd = {x: Math.sin(h), z: Math.cos(h)}, side = {x: Math.cos(h), z: -Math.sin(h)}
+    const map = this.nav ? this.nav.map : this.map
+    let spot: Vec3 | null = null
+    for (const [f, s] of [[1.9, 0.5], [1.9, -0.5], [1.6, 0.9], [1.6, -0.9], [2.4, 0], [1.4, 0]]) {
+      const p = {x: pos.x + fwd.x * f + side.x * s, y: pos.y, z: pos.z + fwd.z * f + side.z * s}
+      if (isClear(map as any, p)) { spot = p; break }
+    }
+    if (!spot) spot = {x: pos.x + fwd.x * 1.9, y: pos.y, z: pos.z + fwd.z * 1.9}
+    const face = (Math.atan2(pos.x - spot.x, pos.z - spot.z) * 180) / Math.PI
+    this.speaker.show(key === "airport" ? "agent" : "assistant", this.local(spot), face)
+    this.talkAt = getTime() + CAPTION_DEMO_AFTER_S
+  }
+
   // The stops for a sentence: the needs in it, the places that make the shortest trip from here
   // (Step-Free when it is the chosen or preselected mode), the gate last.
   private planSentence(text: string): string[] {
@@ -886,6 +935,7 @@ export class FindYourWayMain extends BaseScriptComponent {
       pointRadiusM: this.pointRadiusM,
       maxStops: this.maxStopsPerWalk,
       lookRangeM: this.lookRangeM,
+      dotShowSeconds: OFFER_LOOK_S,
       ...(this.cleanScreen ? CLEAN_FREE_WALK : {}),
     })
     this.free.keepInView = (spot, user, look) => this.keepInView(spot, user, look)
@@ -1218,6 +1268,7 @@ export class FindYourWayMain extends BaseScriptComponent {
       s.companionOnAtStart = true
       s.preselect = d.preselect
       this.cleanScreen = true
+      this.liveCaptions = true
       // The map in the Lens: the public gist copy may lag behind (Gate C12).
       this.tryOnlineMap = false
       if (d.interests.length > 0) this.presetPreferences = d.interests.join(",")
@@ -1409,7 +1460,9 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.rides = this.placeBuilder.build()
     if (this.propsView) {
       const key = this.getMapKey()
-      this.propsView.build(key === "airport" || key === "mall" ? key : "", (p, lift) => this.local(p, lift))
+      // The airport's own model has its seats, desks and people already.
+      const kit = key === "mall" || (key === "airport" && !this.standIn.usesModel()) ? key : ""
+      this.propsView.build(kit, (p, lift) => this.local(p, lift))
     }
     this.showClosures()
   }
@@ -1467,6 +1520,17 @@ export class FindYourWayMain extends BaseScriptComponent {
     return global.deviceInfoSystem.isEditor() && (this.phase === "free" || this.phase === "nav" || this.phase === "arrived")
   }
 
+  private inSolid(p: Vec3): boolean {
+    if (!AIRPORT_SOLIDS) {
+      try { AIRPORT_SOLIDS = JSON.parse(AIRPORT_SOLIDS_ASSET.getString()) } catch (e) { AIRPORT_SOLIDS = [] }
+    }
+    const b = 0.3 // half a body
+    for (const s of AIRPORT_SOLIDS as number[][]) {
+      if (Math.abs(p.y - s[4]) < 0.9 && p.x > s[0] - b && p.x < s[1] + b && p.z > s[2] - b && p.z < s[3] + b) return true
+    }
+    return false
+  }
+
   // The preview's keys walk through anything, so the walls push back here. The real building does it on Specs.
   private walkWalls(): void {
     if (!this.walkingInPreview() || this.debugPose) {
@@ -1474,7 +1538,16 @@ export class FindYourWayMain extends BaseScriptComponent {
       return
     }
     const pos = this.userPos()
-    const to = this.lastWalked ? walkStep(this.nav ? this.nav.map : this.map, this.lastWalked, pos) : pos
+    let to = this.lastWalked ? walkStep(this.nav ? this.nav.map : this.map, this.lastWalked, pos) : pos
+    // The airport model's own desks, seats, shops and people (Assets/Maps/airport-solids.json): slide
+    // along them, as along a wall.
+    if (this.lastWalked && this.standIn.usesModel()) {
+      const from = this.lastWalked
+      if (this.inSolid(to) && !this.inSolid(from)) {
+        const alongX = {x: to.x, y: to.y, z: from.z}, alongZ = {x: from.x, y: to.y, z: to.z}
+        to = !this.inSolid(alongX) ? alongX : !this.inSolid(alongZ) ? alongZ : {x: from.x, y: to.y, z: from.z}
+      }
+    }
     if (to.x !== pos.x || to.z !== pos.z) {
       this.rideOffset = this.rideOffset.add(new vec3((to.x - pos.x) * 100, 0, -(to.z - pos.z) * 100))
       this.placeBuilding()
@@ -1633,6 +1706,20 @@ export class FindYourWayMain extends BaseScriptComponent {
     }
     this.probeFloor()
     this.tickTyping()
+    if (this.captions) {
+      const walking = this.phase === "nav" || this.phase === "arrived" || this.phase === "free"
+      this.captions.setOn(this.liveCaptions && walking)
+      if (!walking && this.talkAt !== -1) {
+        this.talkAt = -1
+        if (this.speaker) this.speaker.hide()
+      }
+      if (this.talkAt > 0 && getTime() >= this.talkAt) {
+        this.talkAt = 0
+        this.captions.playDemo(this.getMapKey())
+      }
+      if (this.speaker && this.speaker.isShown()) this.speaker.setSpeaking(this.captions.isDemoSpeaking())
+      this.captions.tick()
+    }
     // A demo preset scans the sign by itself once the world has settled.
     if (this.demoAutoPending && this.phase === "scan" && this.anchorFrames === 0 && !this.debugPose) this.scanSign()
     this.followDemoControls()
@@ -1668,6 +1755,8 @@ export class FindYourWayMain extends BaseScriptComponent {
         const d = findNode(this.nav.map, at)
         if (d) this.arrivalCard.show(this.arrivalWords(at), this.local(d, ARRIVAL_CARD_CM), this.iconOfNode(at))
         this.arrivedAt = getTime()
+        const lastStop = !this.stops || this.stops.index >= this.stops.total - 1
+        if (lastStop) this.startConversation(pos)
         this.hud.setPill(null)
         this.hud.setCue(null)
         this.freeView.showLook(null, pos)
@@ -1699,16 +1788,19 @@ export class FindYourWayMain extends BaseScriptComponent {
   }
 
   // The boxes at the shop you look at, unless you closed them for that shop (null hides them).
+  // The shop you looked at for 2 s: its offers (at most 2) in the small card at the top right, clear of
+  // the way ahead (the old boxes at the shop front stay hidden). null hides it.
   private showBoxes(b: LookBoxes | null): void {
-    if (!this.offerBoxes) return
     const on = !!b && this.offerClosed.visible(b.id)
+    this.offersShown = on ? b : null
     this.boxesTitle = on ? b!.title : null
-    this.offerBoxes.show(on ? {id: b!.id, title: b!.title, tag: b!.tag, boxes: b!.boxes} : null, on ? this.local(b!.spot, OFFER_BOX_CM) : null)
+    this.hud.setOffers(on ? {title: b!.title, tag: b!.tag, lines: b!.boxes.slice(0, 2)} : null)
+    if (this.offerBoxes && this.offerBoxes.isShown()) this.offerBoxes.show(null, null)
   }
 
   private updateShopLook(pos: Vec3): void {
     if (!this.nav) return
-    if (!this.shopLook || this.shopLook.map !== this.nav.map) this.shopLook = {map: this.nav.map, look: new ShopLook(this.nav.map as any)}
+    if (!this.shopLook || this.shopLook.map !== this.nav.map) this.shopLook = {map: this.nav.map, look: new ShopLook(this.nav.map as any, [], {dotShowSeconds: OFFER_LOOK_S})}
     this.shopLook.look.update(pos, this.userHeading(), getTime())
     this.freeView.showLook(this.shopLook.look, pos)
   }
@@ -2199,10 +2291,13 @@ export class FindYourWayMain extends BaseScriptComponent {
   getBadgeWanted(): string | null { return this.hud.getBadgeWanted() }
   isOptionsCollapsed(): boolean { return !!this.appPanel && this.appPanel.isCollapsed() }
   // The two offer boxes at the shop you look at.
-  getOfferPeekTitle(): string | null { return this.offerBoxes && this.offerBoxes.isShown() ? this.boxesTitle : null }
-  isOfferPeekShown(): boolean { return !!this.offerBoxes && this.offerBoxes.isShown() }
-  getOfferPeekLines(): string[] { const v = this.offerBoxes ? this.offerBoxes.getShown() : null; return v ? v.boxes.slice() : [] }
-  getOfferBoxesId(): string | null { const v = this.offerBoxes ? this.offerBoxes.getShown() : null; return v ? v.id : null }
+  getOfferPeekTitle(): string | null { return this.hud.getOffers() ? this.boxesTitle : null }
+  isOfferPeekShown(): boolean { return this.hud.getOffers() !== null }
+  getOfferPeekLines(): string[] { const v = this.hud.getOffers(); return v ? v.lines.slice() : [] }
+  getOfferBoxesId(): string | null { return this.hud.getOffers() && this.offersShown ? this.offersShown.id : null }
+  getCaptionRows(): string[] { return this.hud.getCaptions() }
+  isCaptionsOn(): boolean { return !!this.captions && this.captions.isOn() }
+  isSpeakerShown(): boolean { return !!this.speaker && this.speaker.isShown() }
   getCompanionLeadM(): number { return this.companionLeadM }
   isDotShown(): boolean { return !!this.offerUI && this.offerUI.isDotShown() }
   getDotText(): string { return this.offerUI ? this.offerUI.getDotText() : "" }

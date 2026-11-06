@@ -59,9 +59,9 @@ export function pickChip(label: string, picked: boolean): { text: string; alpha:
 
 // The clean screen (on in the demo presets): while you walk, the view holds only the floor line, the
 // companion, the turn arrow when needed and the offer boxes. Of the texts that can show by themselves,
-// only these may: the offer boxes, the arrival card (for CLEAN_ARRIVAL_S), the voice caption and the
-// folded Control tab. A notice before a trip (the map failed to load) still shows.
-const CLEAN_ALLOWED = ["offerBoxes", "arrival", "voiceCaption", "controlTab"];
+// only these may: the offers card, the arrival card (for CLEAN_ARRIVAL_S), the voice caption, live
+// captions and the folded Control tab. A notice before a trip (the map failed to load) still shows.
+const CLEAN_ALLOWED = ["offerBoxes", "offerCard", "arrival", "voiceCaption", "controlTab", "captions"];
 export function cleanAllows(kind: string, clean: boolean, tripActive: boolean): boolean {
   if (!clean) return true;
   if (kind === "notice") return !tripActive;
