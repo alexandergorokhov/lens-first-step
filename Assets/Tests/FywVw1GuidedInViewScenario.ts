@@ -19,7 +19,8 @@ export class FywVw1GuidedInViewScenario extends Scenario {
     const route = main.getRouteNodes().join(">")
     const length = main.getRouteLength()
     const dest = main.getDestinationId()
-    const r = await walkChecking(main, ["sign", "hall", "escFoot"], "vw1")
+    // At walking pace: at ~6 m/s the 3 s point ends before the dog reaches its spot.
+  const r = await walkChecking(main, ["sign", "hall", "escFoot"], "vw1", 0.1)
     expect(r.points > 0, "it pointed on the way").toBe(true)
     await waitFor(() => main.getPointState() === "lead", 8000, "back in the lead")
     expect(main.getRouteNodes().join(">"), "route unchanged").toBe(route)

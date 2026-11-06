@@ -6,12 +6,13 @@ import {FOV_HALF_DEG, inView} from "../Scripts/FindYourWayView"
 import {log, nodePoints, waitFor, walkAlong} from "./FindYourWayLeafSupport"
 
 // Walks the route (map node ids), checking every frame that a pointing companion is in view.
-export async function walkChecking(main: FindYourWayMain, ids: string[], what: string): Promise<{points: number; leads: number}> {
+// stepM per 60 ms: 0.35 is ~6 m/s (quick); 0.1 is ~1.7 m/s, a walk.
+export async function walkChecking(main: FindYourWayMain, ids: string[], what: string, stepM: number = 0.35): Promise<{points: number; leads: number}> {
   let points = 0
   let leads = 0
   let last = "lead"
   let outFrames = 0
-  await walkAlong(main, nodePoints(main.getMapData(), ids), 0.35, () => {
+  const check = () => {
     const st = main.getPointState()
     if (st === "point" && last !== "point") points++
     if (st === "lead" && last === "return") leads++
@@ -20,7 +21,15 @@ export async function walkChecking(main: FindYourWayMain, ids: string[], what: s
     const feet = main.getUserPos()
     if (st === "point" && pet && Math.abs(pet.y - feet.y) < 0.5 && !inView(feet, main.getUserHeading(), pet, FOV_HALF_DEG)) outFrames++
     return false
-  })
+  }
+  await walkAlong(main, nodePoints(main.getMapData(), ids), stepM, check)
+  // A point started near the end may still be stepping aside when the walk stops: keep checking
+  // (in view included) until it has pointed, for up to 4 s.
+  const until = getTime() + 4
+  while (points === 0 && main.getPointState() !== "lead" && getTime() < until) {
+    check()
+    await sleep(50)
+  }
   log(what + ": " + points + " points, " + leads + " back to lead, " + outFrames + " frames out of view while pointing")
   expect(outFrames, what + ": out of view while pointing").toBe(0)
   return {points, leads}
