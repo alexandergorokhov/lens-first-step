@@ -1736,6 +1736,9 @@ export class FindYourWayMain extends BaseScriptComponent {
       this.freeView.tick(this.free)
       this.updateFloorArrow(this.userPos(), this.free.pet ? this.free.pet.pos : null)
     }
+    if (this.phase === "choose" || this.phase === "mode" || this.phase === "prefs" || (this.phase === "arrived" && this.nav)) {
+      this.updateShopLook(this.userPos())
+    }
     if ((this.phase !== "nav" && this.phase !== "arrived") || !this.nav) return
     const pos = this.userPos()
     const progress = this.nav.updatePosition(pos)
@@ -1798,9 +1801,12 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (this.offerBoxes && this.offerBoxes.isShown()) this.offerBoxes.show(null, null)
   }
 
+  // Looking at a shop for 2 s shows its offers, whenever you are in the place: before a trip, on it and
+  // after arriving (Free walk has its own copy).
   private updateShopLook(pos: Vec3): void {
-    if (!this.nav) return
-    if (!this.shopLook || this.shopLook.map !== this.nav.map) this.shopLook = {map: this.nav.map, look: new ShopLook(this.nav.map as any, [], {dotShowSeconds: OFFER_LOOK_S})}
+    const map = this.nav ? this.nav.map : this.map
+    if (!map) return
+    if (!this.shopLook || this.shopLook.map !== map) this.shopLook = {map, look: new ShopLook(map as any, [], {dotShowSeconds: OFFER_LOOK_S})}
     this.shopLook.look.update(pos, this.userHeading(), getTime())
     this.freeView.showLook(this.shopLook.look, pos)
   }
@@ -2048,7 +2054,9 @@ export class FindYourWayMain extends BaseScriptComponent {
     const q = walkingHud(on, this.playTime.gate.canPlay || this.appPanel.isPlaying(), this.phase === "arrived", this.cleanScreen)
     this.hud.setQuiet(q.badge, q.score, q.playLine, q.pill, q.cue)
     this.appPanel.setInfo(on ? [this.hud.getPillWanted(), this.hud.getCueWanted(), this.hud.getScoreWanted(), this.hud.getBadgeWanted()].filter((x) => !!x).join("\n") : null)
-    if (!on) this.showBoxes(null)
+    // Off a trip the offers still show when you look at a shop (updateShopLook); only scanning and
+    // mapping hide them.
+    if (this.phase === "scan" || this.phase === "loading" || this.phase === "mapping" || this.phase === "error") this.showBoxes(null)
     if (!on) return
     const airport = this.getMapKey() === "airport"
     this.appPanel.setShowing(this.showingPreset, this.showingPreset && airport && !!this.nav && this.getDestinationId() !== "gateC3",
@@ -2293,6 +2301,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   // The two offer boxes at the shop you look at.
   getOfferPeekTitle(): string | null { return this.hud.getOffers() ? this.boxesTitle : null }
   isOfferPeekShown(): boolean { return this.hud.getOffers() !== null }
+  getOfferPeekTag(): string { return this.hud.getOffersTag() }
   getOfferPeekLines(): string[] { const v = this.hud.getOffers(); return v ? v.lines.slice() : [] }
   getOfferBoxesId(): string | null { return this.hud.getOffers() && this.offersShown ? this.offersShown.id : null }
   getCaptionRows(): string[] { return this.hud.getCaptions() }

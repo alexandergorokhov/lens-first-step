@@ -176,6 +176,7 @@ export class FindYourWayHudUI extends BaseScriptComponent {
   }
 
   getOffers(): {title: string; lines: string[]} | null { return this.offers.enabled ? this.offersShown : null }
+  getOffersTag(): string { return this.offers.enabled && this.offerTag.getSceneObject().enabled ? this.offerTag.text : "" }
 
   // Captions: up to two rows; lang: e.g. "Spanish → English" (empty hides it); no rows hides the band.
   setCaptions(rows: string[], lang: string): void {

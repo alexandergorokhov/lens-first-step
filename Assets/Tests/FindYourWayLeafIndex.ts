@@ -61,6 +61,7 @@ import {FywDemoAirportScenario} from "./FywDemoAirportScenario"
 import {FywDemoMallPetScenario} from "./FywDemoMallPetScenario"
 import {FywDemoFreeWalkRobotScenario} from "./FywDemoFreeWalkRobotScenario"
 import {FywDemoVideoScenario} from "./FywDemoVideoScenario"
+import {FywO1OffersAnywhereScenario} from "./FywO1OffersAnywhereScenario"
 import {FywCheckPlacesScenario} from "./FywCheckPlacesScenario"
 import {FywLookScenario} from "./FywLookScenario"
 import {FywMapLookScenario} from "./FywMapLookScenario"
@@ -134,6 +135,7 @@ export class FindYourWayLeafIndex extends BaseScriptComponent {
     {id: "demo-airport", typename: FywDemoAirportScenario.getTypeName()},
     {id: "demo-mall-pet", typename: FywDemoMallPetScenario.getTypeName()},
     {id: "demo-free-walk-robot", typename: FywDemoFreeWalkRobotScenario.getTypeName()},
+    {id: "o1-offers-anywhere", typename: FywO1OffersAnywhereScenario.getTypeName()},
     {id: "visual-reel", typename: FywReelScenario.getTypeName()},
     {id: "visual-demos", typename: FywDemoVideoScenario.getTypeName()},
     {id: "visual-check-places", typename: FywCheckPlacesScenario.getTypeName()},
