@@ -3,7 +3,7 @@ import {DefaultLeafInteractor} from "Leaf.lspkg/Interactors/interactor/DefaultLe
 import {expect} from "Leaf.lspkg/Utils/common/Expect"
 import {sleep} from "Leaf.lspkg/Utils/common/Utils"
 import {FOV_HALF_DEG, inView} from "../Scripts/FindYourWayView"
-import {log, startTrip, tap, waitFor, walkAlong} from "./FindYourWayLeafSupport"
+import {log, setCompanion, startTrip, waitFor, walkAlong} from "./FindYourWayLeafSupport"
 import {startFreeWalk, toModes} from "./FywB3Support"
 import {floorArrow, walkChecking} from "./FywVwSupport"
 
@@ -15,7 +15,7 @@ export class FywVw1GuidedInViewScenario extends Scenario {
     const it = new DefaultLeafInteractor()
     await sleep(1000)
     const main = await startTrip(it, "walk", 0, undefined, ["nav"], "airport", (m) => m.debugSetInterests(["coffee"]))
-    await tap(it, "CompanionButton")
+    await setCompanion(it, main, true) // on at start or not (a blind tap turned it off)
     const route = main.getRouteNodes().join(">")
     const length = main.getRouteLength()
     const dest = main.getDestinationId()
@@ -26,7 +26,7 @@ export class FywVw1GuidedInViewScenario extends Scenario {
     expect(main.getRouteLength(), "length unchanged").toBe(length)
     expect(main.getDestinationId(), "destination unchanged").toBe(dest)
     await floorArrow(main, "vw1")
-    await tap(it, "CompanionButton")
+    await setCompanion(it, main, false)
     log("vw1 pass")
   }
 }

@@ -65,7 +65,9 @@ export const PANEL_TINT = vec(glass("panel"))
 export const CARD_TINT = vec(glass("card"))
 export const TAB_TINT = vec(glass("tab"))
 export const ALERT_TINT = new vec4(THEME.changed[0] * 0.85, THEME.changed[1] * 0.75, THEME.changed[2] * 0.6, 0.78)
-const PANEL_SCALE = 0.82 // every panel, so none blocks the narrow view
+export const PANEL_SCALE = 0.82 // every panel, so none blocks the narrow view
+// Every panel made, so the offers card can find the open menus and stay clear of them.
+export const ALL_PANELS: Panel[] = []
 const TEXT_WARMTH = vec(THEME.text)
 
 function warm(c: vec4): vec4 {
@@ -104,7 +106,9 @@ export function makePanel(root: SceneObject, widthCm: number, pad: number, gap: 
   flex.onLayoutComplete.add((r) => {
     plate.size = new vec2(r.containerWidth, r.containerHeight)
   })
-  return {root, content, flex, plate}
+  const made = {root, content, flex, plate}
+  ALL_PANELS.push(made)
+  return made
 }
 
 function registerItem(parent: SceneObject, item: FlexItem): void {

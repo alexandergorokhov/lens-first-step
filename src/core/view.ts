@@ -193,3 +193,50 @@ export function shopTrigger(shops: VShop[], user: VXYZ, path: VXYZ[], done: (id:
   }
   return best;
 }
+
+// The offers card never covers an open menu. Rects are centre + full size, in cm on the
+// head-locked plane 70 cm ahead (x right, y up). Slots are all above the line of sight: top
+// right first (as on a trip), then top left, then higher up on either side.
+export interface VRect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+export const OFFER_SLOTS: { x: number; y: number }[] = [
+  { x: 11.5, y: 5 },
+  { x: -13, y: 5 },
+  { x: 11.5, y: 11 },
+  { x: -13, y: 11 },
+];
+
+export function rectsOverlap(a: VRect, b: VRect): number {
+  const ox = Math.min(a.x + a.w / 2, b.x + b.w / 2) - Math.max(a.x - a.w / 2, b.x - b.w / 2);
+  const oy = Math.min(a.y + a.h / 2, b.y + b.h / 2) - Math.max(a.y - a.h / 2, b.y - b.h / 2);
+  return ox > 0 && oy > 0 ? ox * oy : 0;
+}
+
+// What the wearer sees on that plane (cm, full size; the preview is about 40 x 45, Specs a bit more).
+export const OFFER_VIEW = { w: 38, h: 40 };
+
+export function offersSlot(card: { w: number; h: number }, panels: VRect[], slots = OFFER_SLOTS): { x: number; y: number } {
+  // Every slot is pulled in so the whole card stays inside the view.
+  const fit = (v: number, size: number, view: number) => {
+    const m = Math.max(0, view / 2 - size / 2);
+    return Math.max(-m, Math.min(m, v));
+  };
+  const inView = slots.map((s) => ({ x: fit(s.x, card.w, OFFER_VIEW.w), y: fit(s.y, card.h, OFFER_VIEW.h) }));
+  let best = inView[0];
+  let bestArea = Infinity;
+  for (const s of inView) {
+    const r = { x: s.x, y: s.y, w: card.w, h: card.h };
+    const area = panels.reduce((sum, p) => sum + rectsOverlap(r, p), 0);
+    if (area === 0) return s;
+    if (area < bestArea) {
+      best = s;
+      bestArea = area;
+    }
+  }
+  return best;
+}

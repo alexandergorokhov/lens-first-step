@@ -5,7 +5,7 @@
 // catch hints and score). Must not: decide when a gate changes or which map is used.
 
 import {cardClock} from "./FindYourWayPlace"
-import {addIcon, addRow, addText, CARD_TINT, easeOutCubic, makePanel, obj, Panel, TAB_TINT} from "./FindYourWayWidgetsUI"
+import {addIcon, addRow, addText, CARD_TINT, easeOutCubic, makePanel, obj, Panel, PANEL_SCALE, TAB_TINT} from "./FindYourWayWidgetsUI"
 import {THEME} from "./FindYourWayTheme"
 import {addPopIn} from "./FindYourWayPopIn"
 import {icon} from "./FindYourWayIconsUI"
@@ -88,6 +88,7 @@ export class FindYourWayHudUI extends BaseScriptComponent {
   private offerTag: Text
   private offerLines: Text[] = []
   private offersShown: {title: string; lines: string[]} | null = null
+  private offersPanel: Panel
   // Live captions (bottom): two rows and the language they came from.
   private captions: SceneObject
   private captionRows: Text[] = []
@@ -133,12 +134,13 @@ export class FindYourWayHudUI extends BaseScriptComponent {
 
     // Offers: a small see-through card in the top-right corner, never across the way ahead.
     this.offers = obj(this.sceneObject, "OffersCard", new vec3(11.5, 5.0, -70))
-    const op = makePanel(this.offers, 19, 0.8, 0.2, undefined, CARD_TINT)
+    const op = makePanel(this.offers, 16, 0.8, 0.2, undefined, CARD_TINT)
+    this.offersPanel = op
     const gold = new vec4(THEME.sponsored[0], THEME.sponsored[1], THEME.sponsored[2], 1)
-    this.offerTitle = addText(op.content, "OffersTitle", "", "Headline1", 18, 2.6, this.textColor, 70, HorizontalAlignment.Left)
-    this.offerTag = addText(op.content, "OffersTag", "", "Subheadline", 18, 1.8, gold, 70, HorizontalAlignment.Left)
+    this.offerTitle = addText(op.content, "OffersTitle", "", "Headline1", 15, 2.6, this.textColor, 70, HorizontalAlignment.Left)
+    this.offerTag = addText(op.content, "OffersTag", "", "Subheadline", 15, 1.8, gold, 70, HorizontalAlignment.Left)
     for (let i = 0; i < 2; i++) {
-      this.offerLines.push(addText(op.content, "OffersLine" + i, "", "Headline2", 18, 2.4, this.textColor, 70, HorizontalAlignment.Left))
+      this.offerLines.push(addText(op.content, "OffersLine" + i, "", "Headline2", 15, 2.4, this.textColor, 70, HorizontalAlignment.Left))
     }
     addPopIn(this.offers)
     this.offers.enabled = false
@@ -175,6 +177,16 @@ export class FindYourWayHudUI extends BaseScriptComponent {
     this.offers.enabled = true
   }
 
+  // Where the offers card sits (cm, camera space) and its size; Main moves it clear of open menus.
+  setOffersAt(x: number, y: number): void { this.offers.getTransform().setLocalPosition(new vec3(x, y, -70)) }
+  getOffersAt(): {x: number; y: number} {
+    const p = this.offers.getTransform().getLocalPosition()
+    return {x: p.x, y: p.y}
+  }
+  getOffersSize(): {w: number; h: number} {
+    const s = this.offersPanel.plate.size
+    return {w: s.x * PANEL_SCALE, h: s.y * PANEL_SCALE}
+  }
   getOffers(): {title: string; lines: string[]} | null { return this.offers.enabled ? this.offersShown : null }
   getOffersTag(): string { return this.offers.enabled && this.offerTag.getSceneObject().enabled ? this.offerTag.text : "" }
 

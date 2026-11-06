@@ -54,7 +54,8 @@ import {destinationFloorText, floorCueFor, tripPill} from "./FindYourWayPlace"
 import {Companion, companionChoices, companionOf, COMPANIONS, PetGuide, treatsResult, treatsText} from "./FindYourWayPet"
 import {Place, placeTag, PointingCoach, POINT_SECONDS, visiblePlaces} from "./FindYourWayPlaces"
 import {tourStops} from "./FindYourWayTour"
-import {clampToView, FOV_HALF_DEG, inView, OutOfViewTimer, VIEW_FAR_M, VIEW_HALF_DEG} from "./FindYourWayView"
+import {clampToView, FOV_HALF_DEG, inView, OFFER_VIEW, offersSlot, OutOfViewTimer, rectsOverlap, VIEW_FAR_M, VIEW_HALF_DEG, VRect} from "./FindYourWayView"
+import {ALL_PANELS} from "./FindYourWayWidgetsUI"
 import {FindYourWayVoice} from "./FindYourWayVoice"
 import {FindYourWayPickMapUI} from "./FindYourWayPickMapUI"
 import {MultiStopTrip, orderStops} from "./FindYourWayTrip"
@@ -1739,6 +1740,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (this.phase === "choose" || this.phase === "mode" || this.phase === "prefs" || (this.phase === "arrived" && this.nav)) {
       this.updateShopLook(this.userPos())
     }
+    this.placeOffersCard()
     if ((this.phase !== "nav" && this.phase !== "arrived") || !this.nav) return
     const pos = this.userPos()
     const progress = this.nav.updatePosition(pos)
@@ -1793,6 +1795,63 @@ export class FindYourWayMain extends BaseScriptComponent {
   // The boxes at the shop you look at, unless you closed them for that shop (null hides them).
   // The shop you looked at for 2 s: its offers (at most 2) in the small card at the top right, clear of
   // the way ahead (the old boxes at the shop front stay hidden). null hides it.
+  // The open menus as seen from the head, on the HUD's plane 70 cm ahead (cm, x right, y up).
+  private menuRectsInView(): VRect[] {
+    const roots: SceneObject[] = []
+    for (const c of [this.appPanel, this.homePanel, this.prefsPanel, this.modePanel, this.demoControls, this.arrivalCard] as any[]) {
+      if (c && !isNull(c) && c.getSceneObject) roots.push(c.getSceneObject())
+    }
+    const under = (o: SceneObject): boolean => {
+      for (let p: SceneObject | null = o; p; p = p.getParent()) if (roots.indexOf(p) >= 0) return true
+      return false
+    }
+    const inv = this.camera.getTransform().getInvertedWorldTransform()
+    const out: VRect[] = []
+    // Panels destroyed by a restart or a map switch leave the list here.
+    for (let i = ALL_PANELS.length - 1; i >= 0; i--) {
+      if (isNull(ALL_PANELS[i].root) || isNull(ALL_PANELS[i].plate)) ALL_PANELS.splice(i, 1)
+    }
+    for (const p of ALL_PANELS) {
+      if (!p.root.isEnabledInHierarchy || !under(p.root)) continue
+      const t = p.root.getTransform()
+      const c = inv.multiplyPoint(t.getWorldPosition())
+      if (c.z > -5) continue
+      const k = 70 / -c.z
+      const s = t.getWorldScale().x
+      out.push({x: c.x * k, y: c.y * k, w: p.plate.size.x * s * k, h: p.plate.size.y * s * k})
+    }
+    return out
+  }
+
+  // The offers card keeps its corner while that corner is clear of every open menu; else it moves
+  // to the first clear slot (view.ts offersSlot).
+  private placeOffersCard(): void {
+    if (!this.hud.getOffers()) return
+    const size = this.hud.getOffersSize()
+    const menus = this.menuRectsInView()
+    const at = this.hud.getOffersAt()
+    const here = {x: at.x, y: at.y, w: size.w, h: size.h}
+    if (menus.every((m) => rectsOverlap(here, m) === 0)) return
+    const s = offersSlot(size, menus)
+    this.hud.setOffersAt(s.x, s.y)
+  }
+
+  // Test hook: is the whole offers card inside the view (view.ts OFFER_VIEW)?
+  isOfferCardInView(): boolean {
+    const size = this.hud.getOffersSize()
+    const at = this.hud.getOffersAt()
+    return Math.abs(at.x) + size.w / 2 <= OFFER_VIEW.w / 2 + 0.01 && Math.abs(at.y) + size.h / 2 <= OFFER_VIEW.h / 2 + 0.01
+  }
+
+  // Test hook: how much of the open menus the offers card covers (cm²; 0 = clear).
+  getOfferCardOverlap(): number {
+    if (!this.hud.getOffers()) return 0
+    const size = this.hud.getOffersSize()
+    const at = this.hud.getOffersAt()
+    const r = {x: at.x, y: at.y, w: size.w, h: size.h}
+    return this.menuRectsInView().reduce((sum, m) => sum + rectsOverlap(r, m), 0)
+  }
+
   private showBoxes(b: LookBoxes | null): void {
     const on = !!b && this.offerClosed.visible(b.id)
     this.offersShown = on ? b : null

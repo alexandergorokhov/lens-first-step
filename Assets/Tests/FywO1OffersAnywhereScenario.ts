@@ -40,6 +40,10 @@ export class FywO1OffersAnywhereScenario extends Scenario {
     const lines = main.getOfferPeekLines()
     expect(lines.length >= 1 && lines.length <= 2, "one or two offers: " + lines.join(" | ")).toBe(true)
     log("o1 Threads: " + main.getOfferPeekTitle() + " / " + lines.join(" | "))
+    // The card never covers the open "What would you like to do?" menu (Nov 6 screenshot).
+    await waitFor(() => main.getOfferCardOverlap() === 0, 1500, "offers card clear of the open menu")
+    log("o1 card clear of the menu (overlap " + main.getOfferCardOverlap().toFixed(1) + " cm²)")
+    expect(main.isOfferCardInView(), "the whole card inside the view").toBe(true)
     await shot(main, "o1-threads-offers")
 
     this.lookAt(main, "cafe")
