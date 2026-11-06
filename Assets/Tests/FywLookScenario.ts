@@ -19,7 +19,7 @@ export class FywLookScenario extends Scenario {
     const a = nodePos(main, ids[0]), b = nodePos(main, ids[1])
     const heading = (Math.atan2(b.x - a.x, b.z - a.z) * 180) / Math.PI
     main.debugSetPose(a.x, a.y, a.z, heading)
-    for (const id of ["dog", "robot", "rover"]) {
+    for (const id of ["dog", "robot"]) {
       main.setCompanionModel(id)
       log("LOOK " + id)
       await sleep(4000)

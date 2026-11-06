@@ -1,0 +1,149 @@
+- !<AssetImportMetadata/ebc58702-f27c-46ac-bd10-9a612921a98f>
+  ImportedAssetIds:
+    .hidden/Material: !<reference> afecc711-fa41-4dd3-87b5-ef9f57ba8cfe
+    21df3115d5bfabfa: !<reference> 1e452922-acd6-4b7b-9b39-0fcaa20867b9
+    26ba073d67b9d0dd: !<reference> ae19915f-468f-474c-b958-53e4a268f74d
+    33dab20414985264: !<reference> 56f526ed-ad84-42df-b613-b9dd68a90174
+    40e651056cdc9b7a: !<reference> c4d86a90-d737-48d3-a40c-6ab3182a1c06
+    66d68356be095b36: !<reference> 697668c2-04b7-47cf-8858-0775f2ecb6c0
+    88ab437fd121cc69: !<reference> 69bb73cd-c954-4a3c-8088-963c6dbb3374
+    Materials/Material: !<reference> 986dacb7-9f8c-4930-ba85-bab291e861ed
+    Materials/Material|Material|GraphPassInfo: !<reference> 6ff55033-1ce1-46a5-a819-33ebb4075a4a
+    Meshes/Present: !<reference> 738b54d7-e2c1-488c-84f3-078380523d26
+    Scene: !<reference> efe7d285-6d76-4f95-88e8-a74637b6a4d5
+    Textures/House_Props_Diffuse: !<reference> 642b8a15-10d2-4cb4-a965-ea83ed95070b
+  ImporterName: GltfImporter
+  PrimaryAsset: !<reference> efe7d285-6d76-4f95-88e8-a74637b6a4d5
+  PackageType: LegacyPackage
+  LegacyPackagePolicy: CanBeUnpackedTransparent
+  ExtraData:
+    {}
+  AssetDataMap:
+    Scene: !<own> 2024d52b-9145-4772-be87-77af60b46c17
+  DependentFiles:
+    []
+  ImporterSettings: !<GltfImporterSettings>
+    UseLegacyImporter: false
+    WithMaterials: true
+    NamingConvention: ByCategorySanitizeV2
+    PersistentIdGenerationAlgorithm: DescriptorBasedV2
+    AnimationCurveOptimization: true
+    CustomAnimationSamplingRate: 30.000000
+    ImportVertexColor: true
+    ImportTangents: true
+    ImportMorphTargetAnimation: true
+    ConvertMetersToCentimeters: true
+    RegenerateTangents: false
+    OptimizeMesh: true
+  CompressionSettings: !<ComplexCompressionSettings>
+    Presets:
+      None Compression: !<FileCompressionSettings>
+        {}
+      Performance Compression: !<PerformanceCompressionSettings>
+        Level: Medium
+        Mipmap: false
+    ExtensionMappings:
+      mesh: None Compression
+      png: Performance Compression
+    Overrides:
+      {}
+- !<SceneObject/1e452922-acd6-4b7b-64c6-f0355df79846>
+  PrefabRemaps:
+    []
+  Name: Root Scene
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 697668c2-04b7-47cf-77a7-f88a0d13493f
+  Components:
+    []
+- !<ObjectPrefabAssetData/2024d52b-9145-4772-be87-77af60b46c17>
+  Prototype: !<ObjectOwner/9c7a5e05-c43b-4c13-b0bb-3b88715e1118>
+    PackagePath: ""
+    objects:
+      - !<own> ae19915f-468f-474c-46a7-ac1b5d9708b2
+- !<RenderMeshVisual/56f526ed-ad84-42df-49ec-46229756fe8b>
+  PrefabRemaps:
+    []
+  Name: Present
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 986dacb7-9f8c-4930-ba85-bab291e861ed
+  Mesh: !<reference> 738b54d7-e2c1-488c-84f3-078380523d26
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<SceneObject/697668c2-04b7-47cf-77a7-f88a0d13493f>
+  PrefabRemaps:
+    []
+  Name: RootNode
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> c4d86a90-d737-48d3-5bf3-954ce7d5e3f9
+  Components:
+    []
+- !<SceneObject/69bb73cd-c954-4a3c-7f77-69c39244cc8b>
+  PrefabRemaps:
+    []
+  Name: Scenes
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 1e452922-acd6-4b7b-64c6-f0355df79846
+  Components:
+    []
+- !<SceneObject/ae19915f-468f-474c-46a7-ac1b5d9708b2>
+  PrefabRemaps:
+    []
+  Name: gift_box
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 100.000000, y: 100.000000, z: 100.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 69bb73cd-c954-4a3c-7f77-69c39244cc8b
+  Components:
+    []
+- !<SceneObject/c4d86a90-d737-48d3-5bf3-954ce7d5e3f9>
+  PrefabRemaps:
+    []
+  Name: Present
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 100.000000, y: 100.000000, z: 100.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 56f526ed-ad84-42df-49ec-46229756fe8b

@@ -35,6 +35,8 @@ export interface FreeWalkViewHost {
   playChime(): void
   // The two offer boxes at the shop you look at (null hides them).
   showBoxes(b: LookBoxes | null): void
+  // The clean screen: no bubble and no offer list (the boxes at the shop stay).
+  clean(): boolean
 }
 
 export class FindYourWayFreeWalkView {
@@ -72,10 +74,10 @@ export class FindYourWayFreeWalkView {
       offer.setPeek(null)
       if (f.open !== this.shownOpen) {
         this.shownOpen = f.open
-        offer.showList(free.list(pos))
+        offer.showList(this.host.clean() ? null : free.list(pos))
         this.offerPlaced = false
       }
-      if (f.open !== null) {
+      if (f.open !== null && !this.host.clean()) {
         this.host.panels.follow(offer.listRootObject(), this.host.offerOffset, this.offerPlaced)
         this.offerPlaced = true
       }
@@ -88,7 +90,7 @@ export class FindYourWayFreeWalkView {
       this.host.view.setMood(pet.mood)
       this.host.view.setPose(this.host.local(pet.pos), pet.heading)
     }
-    if (this.host.bubble) this.host.bubble.show(f.bubble, pet ? this.host.local(pet.pos, BUBBLE_ABOVE_CM) : null)
+    if (this.host.bubble) this.host.bubble.show(this.host.clean() ? null : f.bubble, pet ? this.host.local(pet.pos, BUBBLE_ABOVE_CM) : null)
     if (f.stopped) {
       print("[FYW] companion stops at " + f.stopped + (f.bubble ? " (" + f.bubble + ")" : ""))
       this.host.playChime()

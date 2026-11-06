@@ -223,7 +223,7 @@ export function buildAllFeaturesTimeline(map = loadMap("mall.json")) {
   };
   const stops = new MultiStopTrip(orderStops("sign", STOPS, dist));
   const dog = companionOf("dog");
-  const rover = companionOf("rover");
+  const rover = companionOf("robot");
 
   start(b, { title: "Everything together: a trip to the mall", mode: "Walk", seated: false, to: stops.current(), interests: ["coffee"] });
   S.stopLabel = stops.label(name);
@@ -271,7 +271,7 @@ export function buildAllFeaturesTimeline(map = loadMap("mall.json")) {
   press(b, "Play while you wait");
   playHop(b, dog);
 
-  S.caption = "Any model, the same game: dog to rover";
+  S.caption = "Any model, the same game: dog to robot";
   S.app = { ...S.app, buttons: buttons("Swap model", "Throw a treat") };
   b.hold(0.4);
   press(b, "Swap model");

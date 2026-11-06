@@ -101,12 +101,12 @@ test("hospital video: stairs up, room change back down the stairs to X-ray; whee
   assert.ok(f.some((x: any) => x.closed && x.closed.liftA) && f.some((x: any) => x.closed && x.closed.liftB));
 });
 
-test("campus video: rover on, points at the coffee cart, off the line re-routes, room change down the stairs; wheelchair takes the ramp when the lift is out", async () => {
+test("campus video: robot on, points at the coffee cart, off the line re-routes, room change down the stairs; wheelchair takes the ramp when the lift is out", async () => {
   const { campus } = await scenarios();
   const f = campus.frames;
   assert.equal(campus.offRouteRerouted, true, "walking off the line re-routed");
   assert.ok(f.some((x: any) => x.pet && x.pet.mood === "point"), "the rover pointed");
-  assert.ok(f.some((x: any) => x.companion === "rover"));
+  assert.ok(f.some((x: any) => x.companion === "robot"));
   const stars = f.filter((x: any) => x.score).at(-1).score.text.match(/\d+/g).map(Number);
   assert.equal(stars[0], stars[1], "all stars found");
   const roll = f.filter((x: any) => x.mode === "Step-Free");

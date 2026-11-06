@@ -1,0 +1,229 @@
+- !<AssetImportMetadata/99ac3630-77de-4acf-b06f-71626131c46c>
+  ImportedAssetIds:
+    .hidden/Atlas: !<reference> 2defd1e5-afe2-48f7-8ac9-a70f971b4db5
+    065f3c39f0114041: !<reference> 1a2d3f16-1ba5-41b5-aad5-9fae5babd7fa
+    26ba073d67b9d0dd: !<reference> caba69dc-600e-4f70-897f-baea4a4b5065
+    2a2b0b6f460670cb: !<reference> ab6f84a7-17f2-4f2f-a458-7ac7013fea8c
+    3c0d641fcedcd049: !<reference> ac6951bc-39f5-4031-865a-283829c42e15
+    62f1816f5c6d8f47: !<reference> c5d1739e-be9c-401b-835b-01a7c1e006da
+    746c31d33d9da6dd: !<reference> 48678638-b63e-47fd-9c7f-130d072dc7fd
+    88ab437fd121cc69: !<reference> b2036251-43ac-40e9-a6d2-4e3796b2a7f6
+    890bf6f0a6237237: !<reference> 9b6bfeb9-be61-4a48-89bc-f3db03f7e7ff
+    8c2c6f3cf8d060fd: !<reference> 1dcdcbc0-da2d-4289-8d22-306147f8d67f
+    9321d331a677ec72: !<reference> 74253103-544b-4fef-91ba-c1a0919a4b8b
+    Materials/Atlas: !<reference> 86ba2c1a-118b-4483-97b9-5f3b632bff7f
+    Materials/Atlas|Atlas|GraphPassInfo: !<reference> 66b9bd31-3a91-4913-9be2-ef601b45ae63
+    Materials/Glass: !<reference> 0591f08f-dc9c-4088-a081-7348c38d1565
+    Materials/Glass|Glass|GraphPassInfo: !<reference> 34553053-5321-4313-b40e-a3e3eb3953dd
+    Meshes/Environment_CanFridge_Door_Environment_CanFridge_Door_Atlas: !<reference> 074b40f2-0792-40c4-bef3-8659622ce4da
+    Meshes/Environment_CanFridge_Door_Environment_CanFridge_Door_Glass: !<reference> be990448-5d4a-4bb7-9435-3987af966e9c
+    Meshes/Environment_CanFridge_Environment_CanFridge_Atlas: !<reference> 0ac5bf24-b06b-49fd-af1e-df324eef2001
+    Scene: !<reference> 51db806c-80fd-4f29-8405-23d451c6c3a4
+    Textures/Sushi_Atlas: !<reference> bcfe368c-ea0a-4078-8d01-2478e2e60fda
+  ImporterName: GltfImporter
+  PrimaryAsset: !<reference> 51db806c-80fd-4f29-8405-23d451c6c3a4
+  PackageType: LegacyPackage
+  LegacyPackagePolicy: CanBeUnpackedTransparent
+  ExtraData:
+    {}
+  AssetDataMap:
+    Scene: !<own> a76bd96f-96ca-4504-9e27-c8c676bd4f93
+  DependentFiles:
+    []
+  ImporterSettings: !<GltfImporterSettings>
+    UseLegacyImporter: false
+    WithMaterials: true
+    NamingConvention: ByCategorySanitizeV2
+    PersistentIdGenerationAlgorithm: DescriptorBasedV2
+    AnimationCurveOptimization: true
+    CustomAnimationSamplingRate: 30.000000
+    ImportVertexColor: true
+    ImportTangents: true
+    ImportMorphTargetAnimation: true
+    ConvertMetersToCentimeters: true
+    RegenerateTangents: false
+    OptimizeMesh: true
+  CompressionSettings: !<ComplexCompressionSettings>
+    Presets:
+      None Compression: !<FileCompressionSettings>
+        {}
+      Performance Compression: !<PerformanceCompressionSettings>
+        Level: Medium
+        Mipmap: false
+    ExtensionMappings:
+      mesh: None Compression
+      png: Performance Compression
+    Overrides:
+      {}
+- !<RenderMeshVisual/1a2d3f16-1ba5-41b5-552a-6051a4542805>
+  PrefabRemaps:
+    []
+  Name: Environment_CanFridge_Environment_CanFridge_Atlas
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 86ba2c1a-118b-4483-97b9-5f3b632bff7f
+  Mesh: !<reference> 0ac5bf24-b06b-49fd-af1e-df324eef2001
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<SceneObject/1dcdcbc0-da2d-4289-72dd-cf9eb8072980>
+  PrefabRemaps:
+    []
+  Name: Scene0
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 74253103-544b-4fef-6e45-3e5f6e65b474
+    - !<own> 48678638-b63e-47fd-6380-ecf2f8d23802
+  Components:
+    []
+- !<SceneObject/48678638-b63e-47fd-6380-ecf2f8d23802>
+  PrefabRemaps:
+    []
+  Name: Environment_CanFridge_Door
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 9b6bfeb9-be61-4a48-7643-0c24fc081800
+    - !<own> ab6f84a7-17f2-4f2f-5ba7-8538fec01573
+  Components:
+    []
+- !<SceneObject/74253103-544b-4fef-6e45-3e5f6e65b474>
+  PrefabRemaps:
+    []
+  Name: Environment_CanFridge
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 1a2d3f16-1ba5-41b5-552a-6051a4542805
+- !<SceneObject/9b6bfeb9-be61-4a48-7643-0c24fc081800>
+  PrefabRemaps:
+    []
+  Name: Environment_CanFridge_Door_Environment_CanFridge_Door_Atlas
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> c5d1739e-be9c-401b-7ca4-fe583e1ff925
+- !<ObjectPrefabAssetData/a76bd96f-96ca-4504-9e27-c8c676bd4f93>
+  Prototype: !<ObjectOwner/644aa9e5-2008-4812-8930-f92e5b3181af>
+    PackagePath: ""
+    objects:
+      - !<own> caba69dc-600e-4f70-7680-4515b5b4af9a
+- !<SceneObject/ab6f84a7-17f2-4f2f-5ba7-8538fec01573>
+  PrefabRemaps:
+    []
+  Name: Environment_CanFridge_Door_Environment_CanFridge_Door_Glass
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> ac6951bc-39f5-4031-79a5-d7c7d63bd1ea
+- !<RenderMeshVisual/ac6951bc-39f5-4031-79a5-d7c7d63bd1ea>
+  PrefabRemaps:
+    []
+  Name: Environment_CanFridge_Door_Environment_CanFridge_Door_Glass
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 0591f08f-dc9c-4088-a081-7348c38d1565
+  Mesh: !<reference> be990448-5d4a-4bb7-9435-3987af966e9c
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<SceneObject/b2036251-43ac-40e9-592d-b1c8694d5809>
+  PrefabRemaps:
+    []
+  Name: Scenes
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 1dcdcbc0-da2d-4289-72dd-cf9eb8072980
+  Components:
+    []
+- !<RenderMeshVisual/c5d1739e-be9c-401b-7ca4-fe583e1ff925>
+  PrefabRemaps:
+    []
+  Name: Environment_CanFridge_Door_Environment_CanFridge_Door_Atlas
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 86ba2c1a-118b-4483-97b9-5f3b632bff7f
+  Mesh: !<reference> 074b40f2-0792-40c4-bef3-8659622ce4da
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<SceneObject/caba69dc-600e-4f70-7680-4515b5b4af9a>
+  PrefabRemaps:
+    []
+  Name: vending_fridge
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 100.000000, y: 100.000000, z: 100.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> b2036251-43ac-40e9-592d-b1c8694d5809
+  Components:
+    []

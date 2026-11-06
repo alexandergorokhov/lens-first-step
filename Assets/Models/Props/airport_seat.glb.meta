@@ -1,0 +1,215 @@
+- !<AssetImportMetadata/30468bfa-e811-453e-8ea7-94176e19085e>
+  ImportedAssetIds:
+    .hidden/carpetBlue: !<reference> 17dcd76a-fee8-4086-8c55-32791722d0ba
+    13a4b3f95914dad5: !<reference> 6057da37-024f-43aa-a0f7-e3f39ea5399e
+    26ba073d67b9d0dd: !<reference> 24748616-29f8-4a96-b089-62662f1b70b2
+    512a01820b0d192c: !<reference> e04a86f5-b833-42de-bcbc-001a95c1f242
+    88ab437fd121cc69: !<reference> e17730f6-fa5d-42f2-b4a6-3f55f825be52
+    8c2c6f3cf8d060fd: !<reference> 31020f91-abcc-43f4-83c3-b24d82744422
+    Materials/carpetBlue: !<reference> 49849619-e76f-45d2-94a4-4ba8366a9c9e
+    Materials/carpetBlue|carpetBlue|GraphPassInfo: !<reference> 6fab3ab5-93a2-4cce-a62a-0b52a96e5111
+    Materials/metal: !<reference> 6b302759-343e-4701-aa0c-cc74f79dfe53
+    Materials/metal|metal|GraphPassInfo: !<reference> e572b959-cfa2-41d9-b281-118851d737bb
+    Meshes/loungeDesignChair_2: !<reference> 77067178-7b30-45b1-a306-6471777f441c
+    Meshes/loungeDesignChair_21: !<reference> 6e540c72-1fcc-4944-8af0-59ff85b41142
+    Meshes/loungeDesignChair_3: !<reference> 8747d6cf-7877-436f-935c-5f0155dd24d8
+    Meshes/loungeDesignChair_31: !<reference> 02599a91-c9c5-46fa-9fc8-5fc5efd999a5
+    Scene: !<reference> ccc59752-e8a1-4901-bc42-1aa3c4bd5bc2
+    ae3a050b90749bc7: !<reference> 233dc46d-8854-4d24-bbf3-5a5d784fcb69
+    c8fe198d6e4e037e: !<reference> 56829b49-7e2c-4620-b8cb-3aee7f83fcf1
+    d55c36be5929a82f: !<reference> 7ceb8371-8e81-4cf4-8f81-4be3396f4974
+    d79fd2b9b9f439b8: !<reference> 21a195a6-478f-460a-ad99-8eab91b446d4
+  ImporterName: GltfImporter
+  PrimaryAsset: !<reference> ccc59752-e8a1-4901-bc42-1aa3c4bd5bc2
+  PackageType: LegacyPackage
+  LegacyPackagePolicy: CanBeUnpackedTransparent
+  ExtraData:
+    {}
+  AssetDataMap:
+    Scene: !<own> 382e0e5c-8637-43bb-a191-e2643bf6deba
+  DependentFiles:
+    []
+  ImporterSettings: !<GltfImporterSettings>
+    UseLegacyImporter: false
+    WithMaterials: true
+    NamingConvention: ByCategorySanitizeV2
+    PersistentIdGenerationAlgorithm: DescriptorBasedV2
+    AnimationCurveOptimization: true
+    CustomAnimationSamplingRate: 30.000000
+    ImportVertexColor: true
+    ImportTangents: true
+    ImportMorphTargetAnimation: true
+    ConvertMetersToCentimeters: true
+    RegenerateTangents: false
+    OptimizeMesh: true
+  CompressionSettings: !<ComplexCompressionSettings>
+    Presets:
+      None Compression: !<FileCompressionSettings>
+        {}
+    ExtensionMappings:
+      mesh: None Compression
+    Overrides:
+      {}
+- !<RenderMeshVisual/21a195a6-478f-460a-5266-71546e4bb92b>
+  PrefabRemaps:
+    []
+  Name: loungeDesignChair_3
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 49849619-e76f-45d2-94a4-4ba8366a9c9e
+  Mesh: !<reference> 02599a91-c9c5-46fa-9fc8-5fc5efd999a5
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<SceneObject/233dc46d-8854-4d24-440c-a5a287b03496>
+  PrefabRemaps:
+    []
+  Name: loungeDesignChair
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> e04a86f5-b833-42de-4343-ffe56a3e0dbd
+    - !<own> 6057da37-024f-43aa-5f08-1c0c615ac661
+- !<SceneObject/24748616-29f8-4a96-4f76-9d99d0e48f4d>
+  PrefabRemaps:
+    []
+  Name: airport_seat
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 100.000000, y: 100.000000, z: 100.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> e17730f6-fa5d-42f2-4b59-c0aa07da41ad
+  Components:
+    []
+- !<SceneObject/31020f91-abcc-43f4-7c3c-4db27d8bbbdd>
+  PrefabRemaps:
+    []
+  Name: Scene0
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 233dc46d-8854-4d24-440c-a5a287b03496
+    - !<own> 56829b49-7e2c-4620-4734-c511807c030e
+  Components:
+    []
+- !<ObjectPrefabAssetData/382e0e5c-8637-43bb-a191-e2643bf6deba>
+  Prototype: !<ObjectOwner/9fcf0c0f-5091-4741-b56a-d2e504cd66b6>
+    PackagePath: ""
+    objects:
+      - !<own> 24748616-29f8-4a96-4f76-9d99d0e48f4d
+- !<SceneObject/56829b49-7e2c-4620-4734-c511807c030e>
+  PrefabRemaps:
+    []
+  Name: loungeDesignChair_1
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 7ceb8371-8e81-4cf4-707e-b41cc690b68b
+    - !<own> 21a195a6-478f-460a-5266-71546e4bb92b
+- !<RenderMeshVisual/6057da37-024f-43aa-5f08-1c0c615ac661>
+  PrefabRemaps:
+    []
+  Name: loungeDesignChair_2
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 6b302759-343e-4701-aa0c-cc74f79dfe53
+  Mesh: !<reference> 6e540c72-1fcc-4944-8af0-59ff85b41142
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<RenderMeshVisual/7ceb8371-8e81-4cf4-707e-b41cc690b68b>
+  PrefabRemaps:
+    []
+  Name: loungeDesignChair_3
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 6b302759-343e-4701-aa0c-cc74f79dfe53
+  Mesh: !<reference> 8747d6cf-7877-436f-935c-5f0155dd24d8
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<RenderMeshVisual/e04a86f5-b833-42de-4343-ffe56a3e0dbd>
+  PrefabRemaps:
+    []
+  Name: loungeDesignChair_2
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 49849619-e76f-45d2-94a4-4ba8366a9c9e
+  Mesh: !<reference> 77067178-7b30-45b1-a306-6471777f441c
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<SceneObject/e17730f6-fa5d-42f2-4b59-c0aa07da41ad>
+  PrefabRemaps:
+    []
+  Name: Scenes
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 31020f91-abcc-43f4-7c3c-4db27d8bbbdd
+  Components:
+    []

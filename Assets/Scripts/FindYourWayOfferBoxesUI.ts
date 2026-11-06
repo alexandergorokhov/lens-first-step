@@ -4,13 +4,15 @@
 // shop's front. Must not: choose the offers or remember what was closed (the core does).
 
 import {Billboard} from "SpectaclesInteractionKit.lspkg/Components/Interaction/Billboard/Billboard"
-import {addButton, addText, LabeledButton, makePanel, obj} from "./FindYourWayWidgetsUI"
+import {addButton, addText, CARD_TINT, LabeledButton, makePanel, obj} from "./FindYourWayWidgetsUI"
+import {addPopIn} from "./FindYourWayPopIn"
+import {THEME} from "./FindYourWayTheme"
 
 const BOX_W = 26
 const TEXT = new vec4(1, 1, 1, 1)
-const SPONSOR = new vec4(1, 0.85, 0.5, 1)
-// See-through but readable: a dark tint at ~62 %, white text with a dark outline.
-const TINT = new vec4(0.05, 0.08, 0.16, 0.62)
+const SPONSOR = new vec4(THEME.sponsored[0], THEME.sponsored[1], THEME.sponsored[2], 1)
+// The theme's card glass (no dark backing: it would vanish on Specs), white text with a thin outline.
+const TINT = CARD_TINT
 // Side by side, this far apart (cm, before scaling). Read from 3 to 6 m away: at SCALE the text is
 // at least as large in view as the distance pill's at its 1 m.
 const GAP_CM = 29
@@ -61,6 +63,7 @@ export class FindYourWayOfferBoxesUI extends BaseScriptComponent {
     const tp = makePanel(this.titleRoot, TITLE_W, 0.6, 0.2, undefined, TINT)
     this.title = outlined(addText(tp.content, "OfferBoxTitleText", "", "Headline1", TITLE_W - 1, 4.2, TEXT, 220))
     this.getTransform().setLocalScale(new vec3(SCALE, SCALE, SCALE))
+    addPopIn(this.sceneObject)
     this.sceneObject.enabled = false
   }
 

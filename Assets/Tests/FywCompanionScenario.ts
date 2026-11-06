@@ -7,7 +7,7 @@ import {sleep} from "Leaf.lspkg/Utils/common/Utils"
 import {log, startTrip, tap, walkAlong} from "./FindYourWayLeafSupport"
 import {flat, nodePos} from "./FywBrief2Support"
 
-// p1 — the toggle shows and hides the companion; the line stays; dog -> robot -> rover changes only
+// p1 — the toggle shows and hides the companion; the line stays; dog -> robot changes only
 // the model, name and collectible; the route never changes; the score survives off/on.
 @component
 export class FywP1CompanionToggleScenario extends Scenario {
@@ -30,9 +30,6 @@ export class FywP1CompanionToggleScenario extends Scenario {
     expect(main.getCompanionModel(), "robot model").toBe("robot")
     expect(main.getCompanionName(), "robot name").toBe("Robot")
     expect((main.getScoreWanted() || "").indexOf("Bolts ") === 0, "robot collects bolts: " + main.getScoreWanted()).toBe(true)
-    await tap(it, "ModelButton")
-    await sleep(300)
-    expect(main.getCompanionModel(), "rover model").toBe("rover")
     expect(main.getRouteNodes().join(">"), "route unchanged by the model").toBe(route)
     await tap(it, "CompanionButton")
     await sleep(300)

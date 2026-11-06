@@ -7,6 +7,7 @@
 import Event, {PublicApi} from "SpectaclesInteractionKit.lspkg/Utils/Event"
 import {addButton, addRow, addText, LabeledButton, makePanel} from "./FindYourWayWidgetsUI"
 import {icon} from "./FindYourWayIconsUI"
+import {addPopIn} from "./FindYourWayPopIn"
 
 const INTEREST_LABEL: {[id: string]: string} = {
   coffee: "Coffee", food: "Food", shopping: "Shops", toilet: "Toilets", pharmacy: "Pharmacy",
@@ -62,6 +63,12 @@ export class FindYourWayModePanelUI extends BaseScriptComponent {
   private walkButton: LabeledButton
   private stepFreeButton: LabeledButton
   private preselected: string | null = null
+  private sayItHint: Text
+  private titleText: Text
+  private interestsTitle: Text
+  private interestRows: SceneObject[] = []
+  private talkButton: LabeledButton
+  private talkHint: Text
   get onSayIt(): PublicApi<void> { return this._onSayIt.publicApi() }
   get onWhereTo(): PublicApi<void> { return this._onWhereTo.publicApi() }
   get onTalk(): PublicApi<void> { return this._onTalk.publicApi() }
@@ -71,15 +78,19 @@ export class FindYourWayModePanelUI extends BaseScriptComponent {
   onAwake() {
     const width = this.buttonWidthCm + 4
     const panel = makePanel(this.sceneObject, width, 2.2, 1.4)
-    addText(panel.content, "Title", this.title, "Title2", width - 3, 4, this.textColor, 100)
+    addPopIn(this.sceneObject)
+    this.titleText = addText(panel.content, "Title", this.title, "Title2", width - 3, 4, this.textColor, 100)
     this.destText = addText(panel.content, "Subtitle", this.subtitle, "Headline2", width - 3, 2.8,
       new vec4(this.textColor.x, this.textColor.y, this.textColor.z, 0.85), 100)
     this.sayIt = addButton(panel.content, "SayItButton", "Say it", this.buttonWidthCm, 4.2, null,
       () => this._onSayIt.invoke(), this.textColor, 100, "Button")
-    addText(panel.content, "SayItHint", "stand-in: a preset phrase", "Caption", width - 3, 1.8,
-      new vec4(this.textColor.x, this.textColor.y, this.textColor.z, 0.85), 100)
-    addButton(panel.content, "TalkButton", "Talk: say a place", this.buttonWidthCm, 4.2, null,
+    this.sayItHint = addText(panel.content, "SayItHint", "stand-in: a preset phrase", "Caption", width - 3, 1.8,
+      new vec4(this.textColor.x, this.textColor.y, this.textColor.z, 0.9), 100)
+    this.talkButton = addButton(panel.content, "TalkButton", "Talk: say a place", this.buttonWidthCm, 4.2, null,
       () => this._onTalk.invoke(), this.textColor, 100, "Button")
+    this.talkHint = addText(panel.content, "TalkHint", "", "Caption", width - 3, 1.8,
+      new vec4(this.textColor.x, this.textColor.y, this.textColor.z, 0.9), 100)
+    this.talkHint.getSceneObject().enabled = false
     addButton(panel.content, "WhereToButton", "Where to?", this.buttonWidthCm, 4.2, icon("location_on"),
       () => this._onWhereTo.invoke(), this.textColor, 100, "Button")
     this.walkButton = addButton(panel.content, "WalkButton", this.walkLabel, this.buttonWidthCm, this.buttonHeightCm - 1.5,
@@ -87,12 +98,13 @@ export class FindYourWayModePanelUI extends BaseScriptComponent {
     this.stepFreeButton = addButton(panel.content, "StepFreeButton", this.stepFreeLabel, this.buttonWidthCm,
       this.buttonHeightCm - 1.5, icon("accessible"), () => this._onStepFree.invoke(), this.textColor, 100,
       "Headline1", "Primary")
-    addText(panel.content, "InterestsTitle", "Point out (optional):", "Caption", width - 3, 2,
+    this.interestsTitle = addText(panel.content, "InterestsTitle", "Point out (optional):", "Caption", width - 3, 2,
       new vec4(this.textColor.x, this.textColor.y, this.textColor.z, 0.85), 100)
     const rows = [["coffee", "food", "shopping"], ["toilet", "pharmacy", "accessibleToilet"]]
     const w = (this.buttonWidthCm - 1) / 3
     for (let r = 0; r < rows.length; r++) {
       const row = addRow(panel.content, "InterestsRow" + r, this.buttonWidthCm, 4, 0.5)
+      this.interestRows.push(row)
       for (const id of rows[r]) {
         this.interestButtons[id] = addButton(row, "Interest_" + id, INTEREST_LABEL[id], w, 3.6, null,
           () => this.toggleInterest(id), this.textColor, 100, "Caption")
@@ -121,6 +133,31 @@ export class FindYourWayModePanelUI extends BaseScriptComponent {
   // Test hook: set the picked interests directly (the same state the buttons toggle).
   setInterests(ids: string[]): void {
     for (const k of Object.keys(INTEREST_LABEL)) if (!!this.picked[k] !== (ids.indexOf(k) >= 0)) this.toggleInterest(k)
+  }
+
+  // The demo presets: one question, Talk first; no "Say it" stand-in and no interest chips.
+  setSimple(on: boolean): void {
+    if (this.titleText) this.titleText.text = on ? "Where would you like to go?" : this.title
+    if (this.talkButton) this.talkButton.label.text = on ? "Talk: say it your own way" : "Talk: say a place"
+    if (this.interestsTitle) this.interestsTitle.getSceneObject().enabled = !on
+    for (const r of this.interestRows) r.enabled = !on
+  }
+
+  // The demo presets: Talk is the way to say where to, so the "Say it" stand-in goes.
+  setSayItShown(on: boolean): void {
+    if (this.sayIt) this.sayIt.button.getSceneObject().enabled = on
+    if (this.sayItHint) this.sayItHint.getSceneObject().enabled = on
+  }
+
+  // The line under Talk ("Preview: voice shown as typed. Live speech on Specs."); null hides it.
+  setTalkHint(text: string | null): void {
+    if (!this.talkHint) return
+    if (text !== null) this.talkHint.text = text
+    this.talkHint.getSceneObject().enabled = text !== null
+  }
+
+  getTalkHint(): string | null {
+    return this.talkHint && this.talkHint.getSceneObject().enabled ? this.talkHint.text : null
   }
 
   // The showing preset: the mode one pinch starts is highlighted ("walk" / "stepFree"; null: none).

@@ -2,6 +2,7 @@
 // one to go there. Created at runtime by FindYourWayMain, which places it.
 // Must not: route (Main does, with the id it is given).
 
+import {addPopIn} from "./FindYourWayPopIn"
 import {addButton, addText, LabeledButton, makePanel, obj} from "./FindYourWayWidgetsUI"
 import {mapLevels, MapDot, MapLevel, pickMapLayout, TourMap} from "./FindYourWayTour"
 
@@ -25,6 +26,7 @@ export class FindYourWayPickMapUI extends BaseScriptComponent {
 
   setup(onPick: (id: string) => void, onClose: () => void): void {
     const panel = makePanel(this.sceneObject, WIDTH + 4, 1.6, 0.7)
+    addPopIn(this.sceneObject)
     addText(panel.content, "PickMapTitle", "Pick a place", "Headline1", WIDTH, 3.4, TEXT, 100)
     this.floorText = addText(panel.content, "PickMapFloor", "", "Caption", WIDTH, 1.8, TEXT, 100)
     addText(panel.content, "PickMapArea", " ", "Caption", WIDTH, AREA_H, TEXT, 100)

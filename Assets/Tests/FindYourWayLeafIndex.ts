@@ -55,6 +55,12 @@ import {FywVw1GuidedInViewScenario} from "./FywVw1GuidedInViewScenario"
 import {FywVw2FreeWalkInViewScenario} from "./FywVw2FreeWalkInViewScenario"
 import {FywVw3TourInViewScenario} from "./FywVw3TourInViewScenario"
 import {FywSh1ShowingPresetScenario} from "./FywSh1ShowingPresetScenario"
+import {FywCs1CleanScreenScenario} from "./FywCs1CleanScreenScenario"
+import {FywV2VoiceFallbackScenario} from "./FywV2VoiceFallbackScenario"
+import {FywDemoAirportScenario} from "./FywDemoAirportScenario"
+import {FywDemoMallPetScenario} from "./FywDemoMallPetScenario"
+import {FywDemoFreeWalkRobotScenario} from "./FywDemoFreeWalkRobotScenario"
+import {FywDemoVideoScenario} from "./FywDemoVideoScenario"
 import {FywCheckPlacesScenario} from "./FywCheckPlacesScenario"
 import {FywLookScenario} from "./FywLookScenario"
 import {FywMapLookScenario} from "./FywMapLookScenario"
@@ -123,7 +129,13 @@ export class FindYourWayLeafIndex extends BaseScriptComponent {
     {id: "vw2-free-walk-points-in-view", typename: FywVw2FreeWalkInViewScenario.getTypeName()},
     {id: "vw3-tour-points-in-view", typename: FywVw3TourInViewScenario.getTypeName()},
     {id: "sh1-showing-preset", typename: FywSh1ShowingPresetScenario.getTypeName()},
+    {id: "cs1-clean-screen", typename: FywCs1CleanScreenScenario.getTypeName()},
+    {id: "v2-voice-fallback", typename: FywV2VoiceFallbackScenario.getTypeName()},
+    {id: "demo-airport", typename: FywDemoAirportScenario.getTypeName()},
+    {id: "demo-mall-pet", typename: FywDemoMallPetScenario.getTypeName()},
+    {id: "demo-free-walk-robot", typename: FywDemoFreeWalkRobotScenario.getTypeName()},
     {id: "visual-reel", typename: FywReelScenario.getTypeName()},
+    {id: "visual-demos", typename: FywDemoVideoScenario.getTypeName()},
     {id: "visual-check-places", typename: FywCheckPlacesScenario.getTypeName()},
     {id: "visual-look", typename: FywLookScenario.getTypeName()},
     {id: "visual-map", typename: FywMapLookScenario.getTypeName()},

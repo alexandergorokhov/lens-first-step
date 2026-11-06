@@ -15,6 +15,8 @@ import {BackPlate} from "SpectaclesUIKit.lspkg/Scripts/BackPlate"
 import {Button} from "SpectaclesUIKit.lspkg/Scripts/Components/Button/Button"
 import {RoundedRectangle} from "SpectaclesUIKit.lspkg/Scripts/Visuals/RoundedRectangle/RoundedRectangle"
 
+import {glass, THEME} from "./FindYourWayTheme"
+
 const imageMaterial = requireAsset("../Materials/ImageMaterial.mat") as Material
 
 // ── Type scale (canonical: specs-build-ui patterns.md → Typography)
@@ -57,13 +59,18 @@ export interface Panel {
 // Airport-signage panel colour: a bright-enough navy so it reads on an additive display
 // (very dark plates render as see-through), with white text on top.
 // Calm, see-through panels and warm text: easy on the eyes, and the place stays visible behind them.
-export const PANEL_TINT = new vec4(0.12, 0.22, 0.25, 0.62)
-export const ALERT_TINT = new vec4(0.46, 0.17, 0.15, 0.72)
+// One look (FindYourWayTheme): frosted glass light enough for the additive display; amber for alerts.
+const vec = (c: number[]): vec4 => new vec4(c[0], c[1], c[2], c[3])
+export const PANEL_TINT = vec(glass("panel"))
+export const CARD_TINT = vec(glass("card"))
+export const TAB_TINT = vec(glass("tab"))
+export const ALERT_TINT = new vec4(THEME.changed[0] * 0.85, THEME.changed[1] * 0.75, THEME.changed[2] * 0.6, 0.78)
 const PANEL_SCALE = 0.82 // every panel, so none blocks the narrow view
-const TEXT_WARMTH = new vec4(0.97, 0.94, 0.87, 1)
+const TEXT_WARMTH = vec(THEME.text)
 
 function warm(c: vec4): vec4 {
-  return new vec4(c.x * TEXT_WARMTH.x, c.y * TEXT_WARMTH.y, c.z * TEXT_WARMTH.z, c.w)
+  // Never fainter than the theme allows (0.9): text that fades into the place can't be read.
+  return new vec4(c.x * TEXT_WARMTH.x, c.y * TEXT_WARMTH.y, c.z * TEXT_WARMTH.z, Math.max(THEME.textSoft[3], c.w))
 }
 
 // Canvas + BackPlate on `root`, a Content child (+0.6 cm Z) holding a column FlexLayout.

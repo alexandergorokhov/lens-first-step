@@ -7,7 +7,7 @@
     - !<own> beae2714-1555-483e-8750-5ad8ad6d00ed
     - !<own> 49237bc4-f9e6-442f-b388-f2f7c7ddc103
     - !<own> abd7f7cc-fe64-4a6c-9229-15566f25581c
-    - !<own> 751e73ac-f379-4756-a687-04b10374e2ce
+    - !<own> 6581d4c3-72c2-4da2-9a75-6115480e2a1c
   layers: !<Layers/267ee9a7-aff2-4f9d-9a49-f71214747d03>
     userLayers:
       - id: 1
@@ -905,22 +905,6 @@
   ScriptInputs:
     "":
       drawDebug: false
-  ScriptTypes:
-    "":
-      {}
-- !<ScriptComponent/142dab12-d581-4fb7-be43-19aea115ebf2>
-  PrefabRemaps:
-    []
-  Name: MessagingBridge
-  Enabled: true
-  ScriptAsset: !<reference> 4c470e55-3d80-4780-ba2b-d011215918a3
-  ScriptInputsDefault:
-    {}
-  ScriptTypesDefault:
-    {}
-  ScriptInputs:
-    "":
-      {}
   ScriptTypes:
     "":
       {}
@@ -3335,6 +3319,21 @@
     - !<own> bf238ae0-58db-4128-abf2-00cf2b21159a
   Components:
     []
+- !<SceneObject/6581d4c3-72c2-4da2-9a75-6115480e2a1c>
+  PrefabRemaps:
+    []
+  Name: LEAF Plugin Bridge
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> e5e2a02a-9cc4-4fda-a8de-7fafb76977b1
 - !<SceneObject/65b7c9f6-b839-4e09-a073-1f71d5a152ad>
   PrefabRemaps:
     []
@@ -4191,21 +4190,6 @@
   ScriptTypes:
     "":
       {}
-- !<SceneObject/751e73ac-f379-4756-a687-04b10374e2ce>
-  PrefabRemaps:
-    []
-  Name: LEAF Plugin Bridge
-  Enabled: true
-  Layers: 1
-  LocalTransform: !<TransformEntity>
-    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
-    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
-    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    HasSegmentScaleCompensation: false
-  Children:
-    []
-  Components:
-    - !<own> 142dab12-d581-4fb7-be43-19aea115ebf2
 - !<SceneObject/75f8edd3-c83d-4d64-a512-e976b9f93b38>
   PrefabRemaps:
     []
@@ -8485,6 +8469,22 @@
     InvertRotation: false
   SurfaceOptions: !<SurfaceOptions>
     EnhanceWithNativeAR: false
+- !<ScriptComponent/e5e2a02a-9cc4-4fda-a8de-7fafb76977b1>
+  PrefabRemaps:
+    []
+  Name: MessagingBridge
+  Enabled: true
+  ScriptAsset: !<reference> 4c470e55-3d80-4780-ba2b-d011215918a3
+  ScriptInputsDefault:
+    {}
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      {}
+  ScriptTypes:
+    "":
+      {}
 - !<ScriptComponent/e9c3f69a-bd88-461d-ade2-27d16c927262>
   PrefabRemaps:
     []
@@ -8499,6 +8499,9 @@
     halfViewDeg: true
     companionModel: true
     companionOnAtStart: true
+    showingPreset: true
+    demo: true
+    cleanScreen: true
     presetPreferences: true
     pointSeconds: true
     maxStopsPerWalk: true
@@ -8522,6 +8525,27 @@
       arrivalCard: !<MappingBased.AssignableType_8> 8885f245-15db-4224-a2ef-6afac601eb19
       internetModule: !<reference.InternetModule> 4ce0c535-05ea-4273-ab39-6e2d18686686
       chime: !<reference.AudioTrackAsset> fed4446f-8a97-484e-8dd6-713dc07e2d7c
+      dogModel: !<reference.ObjectPrefab> 2027287b-9c16-47db-b4eb-55d3f071f708
+      propModels: !<reference.ObjectPrefab[]>
+        - !<reference> 5c1ad9b7-460d-45df-9452-2621853e0a4c
+        - !<reference> e3de6244-cfb8-4fc1-9cd6-91814d6d4059
+        - !<reference> cb6ac3d9-178c-4978-a1a7-3681abd44964
+        - !<reference> 18ed52b6-abe7-42f2-a745-c9a61c266f53
+        - !<reference> ba09cb0f-3780-4130-99f9-68f054821ee1
+        - !<reference> f6171514-ae23-4af5-b281-2bbe2f82f9f1
+        - !<reference> a6d05b30-cc2b-48c9-aebd-49b0b42713dc
+        - !<reference> 790e9683-4c68-4614-97ee-fe51ea142370
+        - !<reference> b7f0bd13-e100-4860-88ef-9fc812ad9415
+        - !<reference> 3c03b5ed-2998-43ab-9966-8eae62aae30f
+        - !<reference> 566aec0b-25bf-4e8e-8f99-596b872a03a1
+        - !<reference> efe7d285-6d76-4f95-88e8-a74637b6a4d5
+        - !<reference> ccc59752-e8a1-4901-bc42-1aa3c4bd5bc2
+        - !<reference> 3da482f6-3f53-4730-859b-b6b6d3b42144
+        - !<reference> dc65a886-b6da-4afa-92c2-3c15f120efde
+        - !<reference> 99781a7e-76b6-47e9-ae61-d7214df51cd7
+        - !<reference> 3b1136b9-7926-49ae-b5f9-799f1d55317a
+        - !<reference> 51db806c-80fd-4f29-8405-23d451c6c3a4
+      robotModel: !<reference.ObjectPrefab> 274c83ee-f607-4507-884b-1cf290da54a6
       mapKey: mall
       tryOnlineMap: true
       mapBaseUrl: "https://gist.githubusercontent.com/alexandergorokhov/ac59c2c8d02687651f256b320fff27b8/raw/"
@@ -8534,8 +8558,11 @@
       modePanelOffset: !<Vec3> {x: 8.000000, y: -4.000000, z: -100.000000}
       companionModel: dog
       companionOnAtStart: false
+      showingPreset: false
+      demo: !<string> off
+      cleanScreen: false
       presetPreferences: "coffee,clothes,hardware"
-      companionAheadM: !<float> 7.000000
+      companionLeadM: !<float> 7.000000
       pointSeconds: !<float> 3.000000
       pointRadiusM: !<float> 12.000000
       maxStopsPerWalk: !<float> 0.000000

@@ -259,8 +259,8 @@ export class FywReelScenario extends Scenario {
 
   private async companions(): Promise<void> {
     const main = this.main
-    this.cap("Dog, robot or rover. Your pick")
-    for (const id of ["robot", "rover", "dog"]) {
+    this.cap("Dog or robot. Your pick")
+    for (const id of ["robot", "dog"]) {
       main.setCompanionModel(id)
       await sleep(2200)
     }

@@ -1,0 +1,219 @@
+- !<AssetImportMetadata/540e19df-8870-45ef-94cc-07650799b389>
+  ImportedAssetIds:
+    .hidden/DarkGrey: !<reference> 692df903-4871-46de-a653-aa489afce6a4
+    01bbb36db948e801: !<reference> d3b7b6e3-13c5-4fa7-8c27-ed7a3fd425c7
+    0d7fe65eda55f476: !<reference> 23f1191e-cbe5-40d2-acdc-ed42d6f528d2
+    21df3115d5bfabfa: !<reference> cd8d4d0a-d137-4eb2-bc12-f0d183e36bc2
+    26ba073d67b9d0dd: !<reference> 70c5ccc1-05ae-488a-b8fa-f40231e72ea7
+    66d68356be095b36: !<reference> dbdb6483-cfb3-43ec-b35b-a23c24bd0e80
+    727372a7f479a832: !<reference> cd8061f3-50cb-41b7-9980-0f7f5fba489f
+    88ab437fd121cc69: !<reference> d8a59e5f-8ede-4872-8008-40621d0a7672
+    93349c3f11128743: !<reference> ddfab975-3b76-4af8-a54d-681d4bdf4b7e
+    Materials/DarkGrey: !<reference> 06bb07f3-0f81-4c49-8afe-2fc7cdfcea12
+    Materials/DarkGrey|DarkGrey|GraphPassInfo: !<reference> 33e5c53c-26d2-49e6-b196-6e4dafe18520
+    Materials/LightGreen: !<reference> b9c19599-01ad-4d1b-bac8-e1dffd1e9daa
+    Materials/LightGreen|LightGreen|GraphPassInfo: !<reference> 7d16f102-11ec-40ca-8928-f69b18279dde
+    Materials/Orange: !<reference> 021eab50-6564-4c9b-8c74-a9eeddca04b4
+    Materials/Orange|Orange|GraphPassInfo: !<reference> 780aa3fa-6077-4a55-aead-cf2950e1c239
+    Materials/White: !<reference> e9a6bc3e-177a-455f-94d2-53af7c822195
+    Materials/White|White|GraphPassInfo: !<reference> 7cd86822-6c6e-41f2-949d-63e214cdae49
+    Meshes/Sushi_Roll2: !<reference> 15f515f3-4604-4541-b213-cb21ffbdb38d
+    Meshes/Sushi_Roll21: !<reference> 63cbcedc-1b0a-4966-93d0-c2afd86c6f1c
+    Meshes/Sushi_Roll22: !<reference> d861d31b-b4df-40c9-833f-dac765ee7012
+    Meshes/Sushi_Roll23: !<reference> 1997e568-8ea0-4e2d-b6e9-ef3a326d9225
+    Scene: !<reference> 3c03b5ed-2998-43ab-9966-8eae62aae30f
+    bac1adff094238a4: !<reference> 76d23cd0-41fa-4896-a1f7-a41db6d1823a
+  ImporterName: GltfImporter
+  PrimaryAsset: !<reference> 3c03b5ed-2998-43ab-9966-8eae62aae30f
+  PackageType: LegacyPackage
+  LegacyPackagePolicy: CanBeUnpackedTransparent
+  ExtraData:
+    {}
+  AssetDataMap:
+    Scene: !<own> 56e3881e-a2e6-42f0-89df-8d2c18baee63
+  DependentFiles:
+    []
+  ImporterSettings: !<GltfImporterSettings>
+    UseLegacyImporter: false
+    WithMaterials: true
+    NamingConvention: ByCategorySanitizeV2
+    PersistentIdGenerationAlgorithm: DescriptorBasedV2
+    AnimationCurveOptimization: true
+    CustomAnimationSamplingRate: 30.000000
+    ImportVertexColor: true
+    ImportTangents: true
+    ImportMorphTargetAnimation: true
+    ConvertMetersToCentimeters: true
+    RegenerateTangents: false
+    OptimizeMesh: true
+  CompressionSettings: !<ComplexCompressionSettings>
+    Presets:
+      None Compression: !<FileCompressionSettings>
+        {}
+    ExtensionMappings:
+      mesh: None Compression
+    Overrides:
+      {}
+- !<RenderMeshVisual/23f1191e-cbe5-40d2-5323-12bd290ad72d>
+  PrefabRemaps:
+    []
+  Name: Sushi_Roll2
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> b9c19599-01ad-4d1b-bac8-e1dffd1e9daa
+  Mesh: !<reference> 1997e568-8ea0-4e2d-b6e9-ef3a326d9225
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<ObjectPrefabAssetData/56e3881e-a2e6-42f0-89df-8d2c18baee63>
+  Prototype: !<ObjectOwner/18bf7f51-0f41-4cba-83c0-57e16eb6d9e3>
+    PackagePath: ""
+    objects:
+      - !<own> 70c5ccc1-05ae-488a-4705-0bfdce18d158
+- !<SceneObject/70c5ccc1-05ae-488a-4705-0bfdce18d158>
+  PrefabRemaps:
+    []
+  Name: sushi_plate
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 100.000000, y: 100.000000, z: 100.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> d8a59e5f-8ede-4872-7ff7-bf9de2f5898d
+  Components:
+    []
+- !<SceneObject/76d23cd0-41fa-4896-5e08-5be2492e7dc5>
+  PrefabRemaps:
+    []
+  Name: Sushi_Roll2
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: -90.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 100.000000, y: 100.000000, z: 100.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> d3b7b6e3-13c5-4fa7-73d8-1285c02bda38
+    - !<own> cd8061f3-50cb-41b7-667f-f080a045b760
+    - !<own> ddfab975-3b76-4af8-5ab2-97e2b420b481
+    - !<own> 23f1191e-cbe5-40d2-5323-12bd290ad72d
+- !<RenderMeshVisual/cd8061f3-50cb-41b7-667f-f080a045b760>
+  PrefabRemaps:
+    []
+  Name: Sushi_Roll2
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> e9a6bc3e-177a-455f-94d2-53af7c822195
+  Mesh: !<reference> 63cbcedc-1b0a-4966-93d0-c2afd86c6f1c
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<SceneObject/cd8d4d0a-d137-4eb2-43ed-0f2e7c1c943d>
+  PrefabRemaps:
+    []
+  Name: Root Scene
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> dbdb6483-cfb3-43ec-4ca4-5dc3db42f17f
+  Components:
+    []
+- !<RenderMeshVisual/d3b7b6e3-13c5-4fa7-73d8-1285c02bda38>
+  PrefabRemaps:
+    []
+  Name: Sushi_Roll2
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 06bb07f3-0f81-4c49-8afe-2fc7cdfcea12
+  Mesh: !<reference> 15f515f3-4604-4541-b213-cb21ffbdb38d
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<SceneObject/d8a59e5f-8ede-4872-7ff7-bf9de2f5898d>
+  PrefabRemaps:
+    []
+  Name: Scenes
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> cd8d4d0a-d137-4eb2-43ed-0f2e7c1c943d
+  Components:
+    []
+- !<SceneObject/dbdb6483-cfb3-43ec-4ca4-5dc3db42f17f>
+  PrefabRemaps:
+    []
+  Name: RootNode
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 76d23cd0-41fa-4896-5e08-5be2492e7dc5
+  Components:
+    []
+- !<RenderMeshVisual/ddfab975-3b76-4af8-5ab2-97e2b420b481>
+  PrefabRemaps:
+    []
+  Name: Sushi_Roll2
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 021eab50-6564-4c9b-8c74-a9eeddca04b4
+  Mesh: !<reference> d861d31b-b4df-40c9-833f-dac765ee7012
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}

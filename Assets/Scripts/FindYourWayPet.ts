@@ -24,10 +24,10 @@ export interface Companion {
   collectible: { one: string; many: string };
 }
 
+// Two companions: the dog and the robot (the rover was dropped for the demo, Nov 6).
 export const COMPANIONS: { [id: string]: Companion } = {
   dog: { id: "dog", name: "Dog", model: "dog", collectible: { one: "treat", many: "treats" } },
   robot: { id: "robot", name: "Robot", model: "robot", collectible: { one: "bolt", many: "bolts" } },
-  rover: { id: "rover", name: "Rover", model: "rover", collectible: { one: "star", many: "stars" } },
 };
 
 export function companionOf(id: string): Companion {

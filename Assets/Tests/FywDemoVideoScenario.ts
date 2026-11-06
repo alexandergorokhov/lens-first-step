@@ -1,0 +1,65 @@
+import {Scenario} from "Leaf.lspkg/Scenarios/scenario/Scenario"
+import {sleep} from "Leaf.lspkg/Utils/common/Utils"
+import {FindYourWayMain} from "../Scripts/FindYourWayMain"
+import {log} from "./FindYourWayLeafSupport"
+import {airportTrip, closeDemo, DemoRun, freeWalkRobotTrip, hold, mallPetTrip, openDemo, turnTo} from "./FywDemoSupport"
+import {nodePos} from "./FywBrief2Support"
+
+// visual-demos — the three demos in one take, at walking pace, for the video: the preview camera follows
+// the walk. "[VID] <t> <what>" lines mark each beat (seconds since the take began).
+@component
+export class FywDemoVideoScenario extends Scenario {
+  private t0 = 0
+
+  private mark(what: string): void {
+    print("[VID] " + (getTime() - this.t0).toFixed(2) + " " + what)
+  }
+
+  // A last look at the destination with the companion in view.
+  private async lookBack(run: DemoRun, id: string): Promise<void> {
+    const main: FindYourWayMain = run.main
+    const g = nodePos(main, id)
+    const p = run.main.getDebugPose()!.pos
+    const h = (Math.atan2(g.x - p.x, g.z - p.z) * 180) / Math.PI
+    main.debugSetPose(p.x - Math.sin((h * Math.PI) / 180) * 3, p.y, p.z - Math.cos((h * Math.PI) / 180) * 3, h)
+    await hold(run, 2.5)
+  }
+
+  async run(): Promise<void> {
+    await sleep(1500)
+    // LEAF's own log line at the top of the view is not part of the Lens.
+    for (let i = 0; i < global.scene.getRootObjectsCount(); i++) {
+      const r = global.scene.getRootObject(i)
+      if (r.name.indexOf("LeafDebug") === 0) r.enabled = false
+    }
+    this.t0 = getTime()
+    print("[VID] T0 wall " + Date.now())
+
+    this.mark("demo 1: airport, wheelchair")
+    let run = await openDemo("airportWheelchair", 1.7)
+    await hold(run, 2)
+    await airportTrip(run)
+    this.mark("arrived " + run.main.getArrivalText())
+    await this.lookBack(run, "gateC12")
+    await closeDemo(run.main)
+
+    this.mark("demo 2: mall, follow the dog")
+    run = await openDemo("mallPet", 1.7)
+    await hold(run, 2)
+    await mallPetTrip(run)
+    this.mark("arrived " + run.main.getArrivalText())
+    await this.lookBack(run, "foodCourt")
+    await closeDemo(run.main)
+
+    this.mark("demo 3: Free walk with the robot")
+    run = await openDemo("freeWalkRobot", 1.5)
+    await hold(run, 2.5)
+    const r = await freeWalkRobotTrip(run)
+    this.mark("pointed " + r.pointed.join(",") + " boxes " + r.boxes.join(","))
+    await turnTo(run, 0, 1)
+    await hold(run, 2)
+    await closeDemo(run.main)
+    this.mark("END")
+    log("visual-demos done")
+  }
+}

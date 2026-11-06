@@ -968,10 +968,29 @@ function saidInFull(map: FwMap, heard: string[]): string | null {
   return best;
 }
 
+// Gate codes said any way round become one word, letter first: "12C", "12 C", "C 12" -> "c12".
+// Done before the filler words go, so the "a" in "gate 12 a" is kept as the pier letter.
+function joinCodes(ws: string[]): string[] {
+  const out: string[] = [];
+  for (let i = 0; i < ws.length; i++) {
+    const w = ws[i], next = i + 1 < ws.length ? ws[i + 1] : "";
+    const swapped = /^(\d+)([a-z])$/.exec(w);
+    if (swapped) out.push(swapped[2] + swapped[1]);
+    else if (/^\d+$/.test(w) && /^[a-z]$/.test(next) && FILLER.indexOf(next) < 0 || /^\d+$/.test(w) && /^[a-z]$/.test(next) && i + 2 >= ws.length) {
+      out.push(next + w);
+      i++;
+    } else if (/^[a-z]$/.test(w) && /^\d+$/.test(next) && (FILLER.indexOf(w) < 0 || i === 0 || ws[i - 1] === "gate")) {
+      out.push(w + next);
+      i++;
+    } else out.push(w);
+  }
+  return out;
+}
+
 // The plain-code matcher: a name said in full wins; otherwise it drops filler words and a name
 // matches when all the words left are in it, shortest name first. Null when nothing matches.
 export function matchDestination(map: FwMap, phrase: string): string | null {
-  const heard = words(phrase);
+  const heard = joinCodes(words(phrase));
   const full = saidInFull(map, heard);
   if (full !== null) return full;
   const said = heard.filter((w) => FILLER.indexOf(w) < 0);
@@ -988,4 +1007,154 @@ export function matchDestination(map: FwMap, phrase: string): string | null {
     }
   }
   return best;
+}
+
+// The preview fallback for Talk (ASR runs only on Specs): if nothing is heard within this long, the
+// map's demo phrase types itself in, word by word over the same time, then the real matcher runs.
+export const VOICE_FALLBACK_S = 1.5;
+
+// The words of the phrase shown t seconds into typing it (all of it from `seconds` on).
+export function typedSoFar(phrase: string, t: number, seconds: number = VOICE_FALLBACK_S): string {
+  const ws = phrase.split(" ").filter((w) => w !== "");
+  if (ws.length === 0 || t <= 0) return "";
+  const n = Math.min(ws.length, Math.ceil((ws.length * t) / seconds - 1e-9));
+  return ws.slice(0, n).join(" ");
+}
+
+// Free walk with the clean screen on: no "picks upstairs" stop, as its bubble isn't shown.
+export const CLEAN_FREE_WALK: Partial<FreeSettings> = { hintRadiusM: -1 };
+
+// How long the preview fallback takes to type a phrase in: about 0.22 s a word, at least 1.5 s.
+export function typingSeconds(phrase: string): number {
+  return Math.max(VOICE_FALLBACK_S, phrase.split(" ").filter((w) => w !== "").length * 0.22);
+}
+
+// ── Ask in your own words ──────────────────────────────────────────────────────────────────────
+// "I need coffee and a bathroom before my flight" becomes stops in order. Plain code picks the places
+// from the words here (in the preview and offline); on Specs an LLM can pick them instead (askPrompt,
+// parseAskReply). Either way only places are picked: the router orders and routes them.
+
+const NEED_WORDS: { [need: string]: string[] } = {
+  coffee: ["coffee", "cafe", "latte", "espresso", "cappuccino", "tea"],
+  toilet: ["bathroom", "toilet", "toilets", "restroom", "loo", "washroom", "wc"],
+  food: ["food", "eat", "hungry", "lunch", "dinner", "breakfast", "snack", "sandwich", "juice"],
+  pharmacy: ["pharmacy", "medicine", "headache", "painkillers", "chemist", "plasters"],
+  clothes: ["clothes", "shirt", "jacket", "dress", "shoes", "outfit"],
+  books: ["book", "books", "magazine", "newspaper"],
+  shopping: ["shopping", "gift", "gifts", "souvenir", "souvenirs"],
+  kids: ["toy", "toys", "games"],
+};
+const FLIGHT_WORDS = ["flight", "gate", "plane", "boarding", "fly"];
+
+// The needs in the order they were said, and whether a flight (a gate) ends the trip.
+export function askNeeds(phrase: string): { needs: string[]; flight: boolean } {
+  const ws = words(phrase);
+  const needs: string[] = [];
+  for (const w of ws) {
+    for (const need in NEED_WORDS) if (NEED_WORDS[need].indexOf(w) >= 0 && needs.indexOf(need) < 0) needs.push(need);
+  }
+  return { needs, flight: ws.some((w) => FLIGHT_WORDS.indexOf(w) >= 0) };
+}
+
+// A gate said by its code ("gate 12C") or "my flight": the trip's last stop; null if none.
+function askFinal(map: FwMap, phrase: string, flight: boolean): string | null {
+  const codes = joinCodes(words(phrase)).filter((w) => /^[a-z]\d+$/.test(w));
+  for (const c of codes) {
+    for (const n of map.nodes) if (n.label && words(n.label).indexOf(c) >= 0) return n.id;
+  }
+  if (!flight) return null;
+  const d = map.place && map.place.destination;
+  const dn = d ? map.nodes.filter((n) => n.id === d)[0] : null;
+  return dn && dn.label && words(dn.label).indexOf("gate") >= 0 ? dn.id : null;
+}
+
+function placesFor(map: FwMap, need: string, accessible: boolean): FwNode[] {
+  const of = (cat: string) => map.nodes.filter((n) => n.category === cat);
+  if (need === "toilet" && accessible && of("accessibleToilet").length > 0) return of("accessibleToilet");
+  return of(need);
+}
+
+function permutations<T>(xs: T[]): T[][] {
+  if (xs.length <= 1) return [xs.slice()];
+  const out: T[][] = [];
+  xs.forEach((x, i) => {
+    for (const rest of permutations(xs.slice(0, i).concat(xs.slice(i + 1)))) out.push([x].concat(rest));
+  });
+  return out;
+}
+
+// The stops for what was said, in order: one place for each need (the ones making the shortest whole
+// trip from `start`, at most 4 tried per need), then the gate. accessible: a wheelchair (toilets become
+// accessible toilets). dist(a, b): the route length (Infinity when there is none). [] when nothing matched.
+export function planAsk(map: FwMap, phrase: string, start: string, accessible: boolean, dist: (a: string, b: string) => number): string[] {
+  const final = askFinal(map, phrase, askNeeds(phrase).flight);
+  // Places said by name ("the food court") are stops as they are; their words are not needs.
+  let rest = joinCodes(words(phrase));
+  const named: string[] = [];
+  for (const p of destinationsOf(map).slice().sort((a, b) => words(b.label).length - words(a.label).length)) {
+    const name = words(p.label);
+    for (let i = 0; i + name.length <= rest.length; i++) {
+      if (name.join(" ") !== rest.slice(i, i + name.length).join(" ")) continue;
+      if (p.id !== final && named.indexOf(p.id) < 0) named.push(p.id);
+      rest = rest.slice(0, i).concat(rest.slice(i + name.length));
+      break;
+    }
+  }
+  const { needs } = askNeeds(rest.join(" "));
+  const cache: { [k: string]: number } = {};
+  const d = (a: string, b: string): number => {
+    const k = a + ">" + b;
+    if (!(k in cache)) cache[k] = a === b ? 0 : dist(a, b);
+    return cache[k];
+  };
+  const kinds = needs.map((n) => placesFor(map, n, accessible)
+    .map((p) => p.id)
+    .sort((a, b) => d(start, a) - d(start, b))
+    .slice(0, 4)).filter((c) => c.length > 0);
+  for (const id of named) kinds.push([id]);
+  if (kinds.length === 0) {
+    if (final) return [final];
+    const one = matchDestination(map, phrase);
+    return one ? [one] : [];
+  }
+  let best: string[] = [];
+  let bestLen = Infinity;
+  const pick = (i: number, chosen: string[]): void => {
+    if (i === kinds.length) {
+      for (const order of permutations(chosen)) {
+        const ids = final ? order.concat([final]) : order;
+        let len = 0, at = start;
+        for (const id of ids) { len += d(at, id); at = id; }
+        if (len < bestLen) { bestLen = len; best = ids; }
+      }
+      return;
+    }
+    for (const c of kinds[i]) if (chosen.indexOf(c) < 0) pick(i + 1, chosen.concat([c]));
+  };
+  pick(0, []);
+  return bestLen < Infinity ? best : [];
+}
+
+// For an LLM (on Specs): the sentence and the map's places, asking for place ids only, as JSON.
+export function askPrompt(map: FwMap, phrase: string): string {
+  const rows = destinationsOf(map).map((p) => {
+    const n = map.nodes.filter((x) => x.id === p.id)[0];
+    return p.id + " | " + p.label + " | " + (n && n.category ? n.category : "place");
+  });
+  return "You pick places in a building for a walking guide. The person said: \"" + phrase + "\".\n" +
+    "Places (id | name | kind):\n" + rows.join("\n") + "\n" +
+    "Reply with JSON only: {\"stops\": [\"id\", ...]} listing the places they need, with their gate or final " +
+    "destination last. Use only ids from the list. If unsure, reply {\"stops\": []}.";
+}
+
+// The LLM's reply as place ids, only when it is valid JSON naming real places; otherwise null.
+export function parseAskReply(map: FwMap, reply: string): string[] | null {
+  const a = reply.indexOf("{"), b = reply.lastIndexOf("}");
+  if (a < 0 || b <= a) return null;
+  let v: any;
+  try { v = JSON.parse(reply.slice(a, b + 1)); } catch (e) { return null; }
+  if (!v || !Array.isArray(v.stops) || v.stops.length === 0) return null;
+  const ids = map.nodes.map((n) => n.id);
+  for (const s of v.stops) if (typeof s !== "string" || ids.indexOf(s) < 0) return null;
+  return v.stops.slice();
 }

@@ -1,0 +1,167 @@
+- !<AssetImportMetadata/35783614-d3d3-468f-9b58-67e09d2f71c9>
+  ImportedAssetIds:
+    .hidden/wood: !<reference> dc4252c2-cfab-48ad-861d-5a7327de75bc
+    26ba073d67b9d0dd: !<reference> 022712b6-8c77-4524-a306-4834a5bef125
+    88ab437fd121cc69: !<reference> fa85eeef-0a7e-4c12-8f53-8806d4df9c10
+    8c2c6f3cf8d060fd: !<reference> 824758fa-7e0b-432f-b2c5-b59f657117e0
+    8dd5bb887adb85c6: !<reference> 92b5a25c-fb29-4a28-a144-74ca7561d755
+    Materials/wood: !<reference> 398b6dd7-08ac-42eb-8ae4-51523238805a
+    Materials/wood|wood|GraphPassInfo: !<reference> ce29c064-3527-46f6-b627-1519ca2a1040
+    Meshes/coatRackStanding_2: !<reference> 8281a3d5-af82-4563-beb8-47aa5df395cb
+    Meshes/coatRackStanding_3: !<reference> a9ca87df-6d90-4a14-b963-0e3503d62316
+    Scene: !<reference> 790e9683-4c68-4614-97ee-fe51ea142370
+    ab403e57fa5f7226: !<reference> ae301e67-b71a-4cfb-96eb-f7fd2ffd0608
+    c5bf101e1ddb56f2: !<reference> 999736c5-510e-4850-92ca-e11c8457d590
+    dcafeec5d38665a3: !<reference> 32b2fddb-e445-4016-8882-9426eac78ae3
+  ImporterName: GltfImporter
+  PrimaryAsset: !<reference> 790e9683-4c68-4614-97ee-fe51ea142370
+  PackageType: LegacyPackage
+  LegacyPackagePolicy: CanBeUnpackedTransparent
+  ExtraData:
+    {}
+  AssetDataMap:
+    Scene: !<own> 5b0832ba-416b-4ad0-84eb-65c3d1d6195f
+  DependentFiles:
+    []
+  ImporterSettings: !<GltfImporterSettings>
+    UseLegacyImporter: false
+    WithMaterials: true
+    NamingConvention: ByCategorySanitizeV2
+    PersistentIdGenerationAlgorithm: DescriptorBasedV2
+    AnimationCurveOptimization: true
+    CustomAnimationSamplingRate: 30.000000
+    ImportVertexColor: true
+    ImportTangents: true
+    ImportMorphTargetAnimation: true
+    ConvertMetersToCentimeters: true
+    RegenerateTangents: false
+    OptimizeMesh: true
+  CompressionSettings: !<ComplexCompressionSettings>
+    Presets:
+      None Compression: !<FileCompressionSettings>
+        {}
+    ExtensionMappings:
+      mesh: None Compression
+    Overrides:
+      {}
+- !<SceneObject/022712b6-8c77-4524-5cf9-b7cb5a410eda>
+  PrefabRemaps:
+    []
+  Name: clothes_rack
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 100.000000, y: 100.000000, z: 100.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> fa85eeef-0a7e-4c12-70ac-77f92b2063ef
+  Components:
+    []
+- !<RenderMeshVisual/32b2fddb-e445-4016-777d-6bd91538751c>
+  PrefabRemaps:
+    []
+  Name: coatRackStanding_3
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 398b6dd7-08ac-42eb-8ae4-51523238805a
+  Mesh: !<reference> a9ca87df-6d90-4a14-b963-0e3503d62316
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<ObjectPrefabAssetData/5b0832ba-416b-4ad0-84eb-65c3d1d6195f>
+  Prototype: !<ObjectOwner/291a5490-5980-4c8c-a32b-c7f3b57eb39d>
+    PackagePath: ""
+    objects:
+      - !<own> 022712b6-8c77-4524-5cf9-b7cb5a410eda
+- !<SceneObject/824758fa-7e0b-432f-4d3a-4a609a8ee81f>
+  PrefabRemaps:
+    []
+  Name: Scene0
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 92b5a25c-fb29-4a28-5ebb-8b358a9e28aa
+    - !<own> ae301e67-b71a-4cfb-6914-0802d002f9f7
+  Components:
+    []
+- !<SceneObject/92b5a25c-fb29-4a28-5ebb-8b358a9e28aa>
+  PrefabRemaps:
+    []
+  Name: coatRackStanding
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 999736c5-510e-4850-6d35-1ee37ba82a6f
+- !<RenderMeshVisual/999736c5-510e-4850-6d35-1ee37ba82a6f>
+  PrefabRemaps:
+    []
+  Name: coatRackStanding_2
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 398b6dd7-08ac-42eb-8ae4-51523238805a
+  Mesh: !<reference> 8281a3d5-af82-4563-beb8-47aa5df395cb
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<SceneObject/ae301e67-b71a-4cfb-6914-0802d002f9f7>
+  PrefabRemaps:
+    []
+  Name: coatRackStanding_1
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 32b2fddb-e445-4016-777d-6bd91538751c
+- !<SceneObject/fa85eeef-0a7e-4c12-70ac-77f92b2063ef>
+  PrefabRemaps:
+    []
+  Name: Scenes
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 824758fa-7e0b-432f-4d3a-4a609a8ee81f
+  Components:
+    []

@@ -253,3 +253,22 @@ export function poseFor(id: string, s: RigState): RigPose {
   if (key === "rover") return roverPose(s, travelled);
   return dogPose(s, travelled);
 }
+
+// ── The animated models (Quaternius, CC0) ──────────────────────────────────────────────────────
+// The clip each model plays for a mood, and how fast: the walk keeps time with the ground speed.
+// Clip names are the end of the imported clip names ("RobotArmature|Robot_Walking" ends in "Walking").
+const CLIPS: { [model: string]: { walk: string; run: string; idle: string; sit: string; point: string; arrived: string; walkMs: number; runFrom: number } } = {
+  robot: { walk: "Walking", run: "Running", idle: "Idle", sit: "Idle", point: "Wave", arrived: "ThumbsUp", walkMs: 1.3, runFrom: 2.4 },
+  dog: { walk: "Walk", run: "Gallop", idle: "Idle", sit: "Idle_2_HeadLow", point: "Idle_2", arrived: "Idle_2", walkMs: 1.3, runFrom: 2.6 },
+};
+const MOVING_MS = 0.15;
+
+export function clipFor(model: string, mood: RigMood, speedMs: number): { clip: string; rate: number } {
+  const c = CLIPS[model] || CLIPS.dog;
+  if (mood === "point") return { clip: c.point, rate: 1 };
+  if (mood === "arrived" && speedMs < MOVING_MS) return { clip: c.arrived, rate: 1 };
+  if (mood === "sit" && speedMs < MOVING_MS) return { clip: c.sit, rate: 1 };
+  if (speedMs < MOVING_MS) return { clip: c.idle, rate: 1 };
+  if (mood === "run" || speedMs >= c.runFrom) return { clip: c.run, rate: Math.max(0.7, Math.min(1.6, speedMs / (c.runFrom * 1.3))) };
+  return { clip: c.walk, rate: Math.max(0.5, Math.min(2, speedMs / c.walkMs)) };
+}

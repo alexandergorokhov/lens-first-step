@@ -1,0 +1,256 @@
+- !<AssetImportMetadata/9ac5c985-98e9-4f9f-bd4b-e8e28d903b6a>
+  ImportedAssetIds:
+    .hidden/carpetWhite: !<reference> 8973e708-3348-4fb8-a0b5-bec11840cbad
+    0d1f89010212396c: !<reference> a21e953d-14c9-4e41-9b8c-2e6344f2a36b
+    1e50ec91bc820e08: !<reference> 08f88d2b-07a6-48e8-a625-555a4c275d00
+    26ba073d67b9d0dd: !<reference> 68f6602f-c319-417b-832a-f16f40c3e60f
+    42919dbc4eaccb04: !<reference> b874e3ac-d623-4b8d-91d4-1a498bfa76b4
+    4edcfadd1ecf2861: !<reference> 15db1183-6b80-421d-9891-8beb604922df
+    5f8f68ea445360f2: !<reference> a6bfc6d3-668d-4627-89a8-efd7eb433371
+    88ab437fd121cc69: !<reference> d8cd224b-7928-4878-8a65-30ebf8dec5ae
+    8c2c6f3cf8d060fd: !<reference> 959b22b7-d590-4454-9b40-9b603caf071c
+    Materials/carpetWhite: !<reference> 44d09db4-5f84-4a46-b366-839e2c4d5d97
+    Materials/carpetWhite|carpetWhite|GraphPassInfo: !<reference> 30f6835c-f0c5-48e3-b546-0065c8f6d93c
+    Materials/metal: !<reference> c5315359-2de0-43f1-84c3-cca2e0b42205
+    Materials/metalMedium: !<reference> b4fc4c34-3042-4721-a62b-7dbb483166f8
+    Materials/metalMedium|metalMedium|GraphPassInfo: !<reference> 74e96480-f9bb-4edf-9676-0b8925cbd5b1
+    Materials/metal|metal|GraphPassInfo: !<reference> 26f0ef32-2065-4050-89aa-5e75e3ae4c6a
+    Meshes/kitchenCoffeeMachine_2: !<reference> c3bfb3c6-79c2-455c-9a21-dd1c59cf069e
+    Meshes/kitchenCoffeeMachine_21: !<reference> 94f185bb-558d-4b4b-be3c-a686837e70d9
+    Meshes/kitchenCoffeeMachine_3: !<reference> 2b8e2ae8-6c40-472b-8ae6-687f93c67970
+    Meshes/kitchenCoffeeMachine_31: !<reference> f89d5222-30cc-4ec6-8706-dd77f172086e
+    Meshes/mug_1: !<reference> b1ec92db-17ed-4a07-b073-eff911c3e9a5
+    Scene: !<reference> a6d05b30-cc2b-48c9-aebd-49b0b42713dc
+    b0e271bbcc8a2d75: !<reference> 5f78ef83-2af6-419e-9d40-da769c628819
+    e2ea76d5103a040e: !<reference> 7ab5dc9e-8806-4c13-8eba-4f94ac20e1aa
+    fe1f8ac773d700b4: !<reference> 43f43d05-b276-42d0-921b-d058f78ca387
+  ImporterName: GltfImporter
+  PrimaryAsset: !<reference> a6d05b30-cc2b-48c9-aebd-49b0b42713dc
+  PackageType: LegacyPackage
+  LegacyPackagePolicy: CanBeUnpackedTransparent
+  ExtraData:
+    {}
+  AssetDataMap:
+    Scene: !<own> d501e9ce-7894-46da-acf5-f046f6dd6cf3
+  DependentFiles:
+    []
+  ImporterSettings: !<GltfImporterSettings>
+    UseLegacyImporter: false
+    WithMaterials: true
+    NamingConvention: ByCategorySanitizeV2
+    PersistentIdGenerationAlgorithm: DescriptorBasedV2
+    AnimationCurveOptimization: true
+    CustomAnimationSamplingRate: 30.000000
+    ImportVertexColor: true
+    ImportTangents: true
+    ImportMorphTargetAnimation: true
+    ConvertMetersToCentimeters: true
+    RegenerateTangents: false
+    OptimizeMesh: true
+  CompressionSettings: !<ComplexCompressionSettings>
+    Presets:
+      None Compression: !<FileCompressionSettings>
+        {}
+    ExtensionMappings:
+      mesh: None Compression
+    Overrides:
+      {}
+- !<SceneObject/08f88d2b-07a6-48e8-59da-aaa5b3d8a2ff>
+  PrefabRemaps:
+    []
+  Name: kitchenCoffeeMachine
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 43f43d05-b276-42d0-6de4-2fa708735c78
+    - !<own> a21e953d-14c9-4e41-6473-d19cbb0d5c94
+- !<RenderMeshVisual/15db1183-6b80-421d-676e-74149fb6dd20>
+  PrefabRemaps:
+    []
+  Name: kitchenCoffeeMachine_3
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> c5315359-2de0-43f1-84c3-cca2e0b42205
+  Mesh: !<reference> 2b8e2ae8-6c40-472b-8ae6-687f93c67970
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<RenderMeshVisual/43f43d05-b276-42d0-6de4-2fa708735c78>
+  PrefabRemaps:
+    []
+  Name: kitchenCoffeeMachine_2
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> b4fc4c34-3042-4721-a62b-7dbb483166f8
+  Mesh: !<reference> c3bfb3c6-79c2-455c-9a21-dd1c59cf069e
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<RenderMeshVisual/5f78ef83-2af6-419e-62bf-2589639d77e6>
+  PrefabRemaps:
+    []
+  Name: mug_1
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 44d09db4-5f84-4a46-b366-839e2c4d5d97
+  Mesh: !<reference> b1ec92db-17ed-4a07-b073-eff911c3e9a5
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<SceneObject/68f6602f-c319-417b-7cd5-0e90bf3c19f0>
+  PrefabRemaps:
+    []
+  Name: coffee_machine
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 100.000000, y: 100.000000, z: 100.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> d8cd224b-7928-4878-759a-cf1407213a51
+  Components:
+    []
+- !<RenderMeshVisual/7ab5dc9e-8806-4c13-7145-b06b53df1e55>
+  PrefabRemaps:
+    []
+  Name: kitchenCoffeeMachine_3
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> b4fc4c34-3042-4721-a62b-7dbb483166f8
+  Mesh: !<reference> f89d5222-30cc-4ec6-8706-dd77f172086e
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<SceneObject/959b22b7-d590-4454-64bf-649fc350f8e3>
+  PrefabRemaps:
+    []
+  Name: Scene0
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 08f88d2b-07a6-48e8-59da-aaa5b3d8a2ff
+    - !<own> a6bfc6d3-668d-4627-7657-102814bccc8e
+    - !<own> b874e3ac-d623-4b8d-6e2b-e5b67405894b
+  Components:
+    []
+- !<RenderMeshVisual/a21e953d-14c9-4e41-6473-d19cbb0d5c94>
+  PrefabRemaps:
+    []
+  Name: kitchenCoffeeMachine_2
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> c5315359-2de0-43f1-84c3-cca2e0b42205
+  Mesh: !<reference> 94f185bb-558d-4b4b-be3c-a686837e70d9
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<SceneObject/a6bfc6d3-668d-4627-7657-102814bccc8e>
+  PrefabRemaps:
+    []
+  Name: kitchenCoffeeMachine_1
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 15db1183-6b80-421d-676e-74149fb6dd20
+    - !<own> 7ab5dc9e-8806-4c13-7145-b06b53df1e55
+- !<SceneObject/b874e3ac-d623-4b8d-6e2b-e5b67405894b>
+  PrefabRemaps:
+    []
+  Name: mug
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 5f78ef83-2af6-419e-62bf-2589639d77e6
+- !<ObjectPrefabAssetData/d501e9ce-7894-46da-acf5-f046f6dd6cf3>
+  Prototype: !<ObjectOwner/1b3ddf13-9379-410f-a493-6129fc030147>
+    PackagePath: ""
+    objects:
+      - !<own> 68f6602f-c319-417b-7cd5-0e90bf3c19f0
+- !<SceneObject/d8cd224b-7928-4878-759a-cf1407213a51>
+  PrefabRemaps:
+    []
+  Name: Scenes
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 959b22b7-d590-4454-64bf-649fc350f8e3
+  Components:
+    []

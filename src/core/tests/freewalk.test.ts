@@ -365,7 +365,7 @@ test("I1 the checkbox list comes from the map; maps without one keep today's int
 
 test("G1 'Say it' runs the matcher against the map's names", () => {
   const m = mall();
-  assert.equal(sayItPhrase(m), "Take me to Bolt Hardware");
+  assert.equal(sayItPhrase(m), "Take me to the food court");
   assert.equal(matchDestination(m, "Take me to Bolt Hardware"), "boltHardware");
   assert.equal(matchDestination(m, "bolt hardware please"), "boltHardware");
   assert.equal(matchDestination(m, "where is the cinema"), "cinema");

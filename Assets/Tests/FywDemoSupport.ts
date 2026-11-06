@@ -1,0 +1,281 @@
+// The three demo presets as LEAF trips (POLISH-PLAN.md Tasks 1, 3, 4): open a preset, press Talk (the
+// preview fallback types the demo phrase), walk the trip by the simulated pose, and check what is on
+// screen. Shared by the clean-screen, voice-fallback and demo scenarios, and by the video takes.
+import {sleep} from "Leaf.lspkg/Utils/common/Utils"
+import {FindYourWayMain} from "../Scripts/FindYourWayMain"
+import {Vec3} from "../Scripts/FindYourWayRouter"
+import {pressButton} from "../Scripts/FindYourWayWidgetsUI"
+import {getMain, log, waitFor} from "./FindYourWayLeafSupport"
+import {nodePos} from "./FywBrief2Support"
+
+export interface DemoRun {
+  main: FindYourWayMain
+  // Called every step of a walk (and while waiting): the clean-screen check hooks in here.
+  onStep: () => void
+  // Metres per second of the simulated walk.
+  speed: number
+}
+
+// Opens a demo preset exactly as Reset preview does with it picked in the Inspector.
+export async function openDemo(preset: string, speed: number = 6): Promise<DemoRun> {
+  const main = getMain()
+  main.debugShowDemoControls(false)
+  main.debugClearPose()
+  main.debugSetDemo(preset)
+  main.restartShowing()
+  await waitFor(() => main.getPhase() === "mode" || main.getPhase() === "prefs", 30000, preset + " opens (scan + panel)")
+  await sleep(300)
+  const sign = nodePos(main, main.getStartId())
+  main.debugSetPose(sign.x, sign.y, sign.z, 0)
+  // The preview's camera sees what the simulated walk sees (for screenshots and the video).
+  main.debugSetViewFollowsPose(true)
+  return {main, onStep: () => {}, speed}
+}
+
+// Back to the Inspector's own settings (and the demo controls the other scenarios use).
+export async function closeDemo(main: FindYourWayMain): Promise<void> {
+  main.debugSetDemo("off")
+  main.debugClearPose()
+  main.restartShowing()
+  main.debugShowDemoControls(true)
+  await sleep(500)
+}
+
+// Walks the pose along the points at run.speed, facing the way it goes; stop() ends it early.
+export async function walk(run: DemoRun, pts: Vec3[], stop?: () => boolean): Promise<void> {
+  const main = run.main
+  let h = main.getDebugPose() ? main.getDebugPose()!.heading : 0
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1], b = pts[i]
+    const len = Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2 + (b.z - a.z) ** 2)
+    if (len < 0.05) continue
+    const leg = (Math.atan2(b.x - a.x, b.z - a.z) * 180) / Math.PI
+    const s = getTime()
+    let f = 0
+    while (f < 1) {
+      f = Math.min(1, ((getTime() - s) * run.speed) / len)
+      const turn = ((leg - h + 540) % 360) - 180
+      h += turn * Math.min(1, getDeltaTime() * 6)
+      main.debugSetPose(a.x + (b.x - a.x) * f, a.y + (b.y - a.y) * f, a.z + (b.z - a.z) * f, h)
+      await sleep(1)
+      run.onStep()
+      if (stop && stop()) return
+    }
+  }
+}
+
+export async function hold(run: DemoRun, seconds: number): Promise<void> {
+  const s = getTime()
+  while (getTime() - s < seconds) {
+    await sleep(30)
+    run.onStep()
+  }
+}
+
+export async function turnTo(run: DemoRun, heading: number, seconds: number): Promise<void> {
+  const p = run.main.getDebugPose()!
+  const from = p.heading
+  const by = ((heading - from + 540) % 360) - 180
+  const s = getTime()
+  let f = 0
+  while (f < 1) {
+    f = Math.min(1, (getTime() - s) / seconds)
+    run.main.debugSetPose(p.pos.x, p.pos.y, p.pos.z, from + by * f)
+    await sleep(1)
+    run.onStep()
+  }
+}
+
+export function pose(run: DemoRun): Vec3 {
+  return run.main.getDebugPose()!.pos
+}
+
+// Talk in the preview: the demo phrase types itself in, the matcher picks the place, the preset's mode
+// starts. Returns the words shown while it typed.
+export async function talk(run: DemoRun): Promise<string[]> {
+  const main = run.main
+  if (!pressButton("TalkButton")) throw new Error("Talk button not found")
+  const seen: string[] = []
+  const s = getTime()
+  while (main.getPhase() === "mode" && getTime() - s < 8) {
+    const t = main.getDestinationLabel()
+    if (seen.indexOf(t) < 0) seen.push(t)
+    await sleep(30)
+  }
+  await waitFor(() => main.getPhase() === "nav", 2000, "the trip starts after Talk")
+  return seen
+}
+
+// The route from where you stand: the pose, then the route's nodes after `fromId` (or all of them).
+export function routeFrom(run: DemoRun, fromId: string | null): Vec3[] {
+  const nodes = run.main.getRouteNodes()
+  const i = fromId === null ? 0 : nodes.indexOf(fromId)
+  return [pose(run)].concat(nodes.slice(i + 1).map((id) => nodePos(run.main, id)))
+}
+
+// Walks the current leg to its end: along the route, riding any lift on the way (pressing its button
+// as you would), until the trip says arrived.
+export async function walkLeg(run: DemoRun): Promise<string[]> {
+  const main = run.main
+  const kinds = main.getRouteEdgeKinds()
+  for (let guard = 0; guard < 4 && main.getPhase() !== "arrived"; guard++) {
+    const all = main.getRouteNodes()
+    // The route keeps the nodes already passed: go on from the nearest one on this floor.
+    const me = pose(run)
+    let at = 0, bestD = Infinity
+    all.forEach((id, i) => {
+      const n = nodePos(main, id)
+      const d = Math.abs(n.y - me.y) < 0.6 ? Math.hypot(n.x - me.x, n.z - me.z) : Infinity
+      if (d < bestD) { bestD = d; at = i }
+    })
+    const nodes = all.slice(at)
+    const k = main.getRouteEdgeKinds().slice(at).indexOf("lift")
+    if (k < 0) {
+      await walk(run, [me].concat(nodes.slice(1).map((id) => nodePos(main, id))), () => main.getPhase() === "arrived")
+      break
+    }
+    const lift = nodes[k]
+    const to = nodePos(main, lift)
+    const before = nodes.slice(1, k).map((id) => nodePos(main, id))
+    await walk(run, [pose(run)].concat(before).concat([{x: to.x, y: to.y, z: to.z - 1.2}]))
+    await hold(run, 1.2)
+    main.debugSetPose(to.x, to.y, to.z - 0.4, main.getUserHeading())
+    await hold(run, 0.4)
+    const ride = main.getRideIdFor(lift, "lift")
+    if (!ride || !pressButton("RideButton_" + ride)) throw new Error("no ride button at " + lift)
+    await hold(run, 1.2)
+  }
+  await waitFor(() => main.getPhase() === "arrived", 5000, "arrived at " + main.getDestinationId())
+  return kinds
+}
+
+// Demo 1: "I need coffee and a bathroom before my flight at gate 12C", in a wheelchair: the café, the
+// accessible toilet, then Gate C12, each leg step-free. Returns the stops and every leg's edge kinds.
+export async function airportTrip(run: DemoRun): Promise<{stops: string[]; kinds: string[]}> {
+  const main = run.main
+  await hold(run, 0.8)
+  await talk(run)
+  const stops = main.getStops()
+  if (stops.length < 2 || stops[stops.length - 1] !== "gateC12") throw new Error("stops " + stops.join(","))
+  let kinds: string[] = []
+  for (let i = 0; i < stops.length; i++) {
+    await waitFor(() => main.getPhase() === "nav" && main.getDestinationId() === stops[i], 9000, "leg " + (i + 1) + " to " + stops[i])
+    kinds = kinds.concat(await walkLeg(run))
+    log("demo airport: arrived at " + main.getDestinationId() + " (" + main.getArrivalText() + ")")
+  }
+  return {stops, kinds}
+}
+
+// Demo 2: the food court by voice, Walk, the dog waits at the foot of the escalator.
+export async function mallPetTrip(run: DemoRun): Promise<{waitedAt: string | null; dogNearFoot: boolean}> {
+  const main = run.main
+  await hold(run, 0.8)
+  await talk(run)
+  if (main.getDestinationId() !== "foodCourt") throw new Error("destination " + main.getDestinationId())
+  const nodes = main.getRouteNodes()
+  const kinds = main.getRouteEdgeKinds()
+  const k = kinds.indexOf("escalator")
+  let waitedAt: string | null = null
+  let dogNearFoot = false
+  if (k >= 0) {
+    const footId = nodes[k]
+    const foot = nodePos(main, footId)
+    const prev = nodePos(main, nodes[Math.max(0, k - 1)])
+    const d = Math.sqrt((foot.x - prev.x) ** 2 + (foot.z - prev.z) ** 2)
+    const f = d > 0 ? Math.max(0, 1 - 2 / d) : 0
+    const short = {x: prev.x + (foot.x - prev.x) * f, y: foot.y, z: prev.z + (foot.z - prev.z) * f}
+    await walk(run, [pose(run)].concat(nodes.slice(1, k).map((id) => nodePos(main, id))).concat([short]))
+    await hold(run, 3)
+    const p = main.getCompanionMapPos()
+    dogNearFoot = !!p && Math.sqrt((p.x - foot.x) ** 2 + (p.z - foot.z) ** 2) < 1.5 && Math.abs(p.y - foot.y) < 0.5
+    waitedAt = footId
+    log("demo mall: dog at " + JSON.stringify(p) + ", foot " + footId + " mood " + main.getCompanionMood())
+    await walk(run, routeFrom(run, nodes[k - 1] || null), () => main.getPhase() === "arrived")
+  } else {
+    await walk(run, routeFrom(run, null), () => main.getPhase() === "arrived")
+  }
+  await waitFor(() => main.getPhase() === "arrived", 5000, "arrived at the food court")
+  return {waitedAt, dogNearFoot}
+}
+
+// Demo 3: Free walk with the robot for coffee and clothes: it points at Bean There Café and Threads,
+// and looking at each shows its offer boxes.
+export async function freeWalkRobotTrip(run: DemoRun): Promise<{pointed: string[]; boxes: string[]}> {
+  const main = run.main
+  // At walking pace: the robot walks ahead of you and stops at the shops it passes.
+  run.speed = Math.min(run.speed, 1.6)
+  await hold(run, 0.8)
+  if (!pressButton("PrefsKeepButton") && !pressButton("PrefsStartButton")) throw new Error("no Start in the preferences")
+  await waitFor(() => main.getPhase() === "free", 3000, "Free walk starts")
+  const pointed: string[] = []
+  const boxes: string[] = []
+  const watch = run.onStep
+  run.onStep = () => {
+    watch()
+    const id = main.getStopId()
+    if (id && main.isCompanionPointing() && pointed.indexOf(id) < 0) pointed.push(id)
+    const b = main.getOfferBoxesId()
+    if (b && boxes.indexOf(b) < 0) boxes.push(b)
+  }
+  let n = 0
+  const watch2 = run.onStep
+  run.onStep = () => {
+    watch2()
+    if (n++ % 90 === 0) log("free walk: me " + JSON.stringify(pose(run)) + " pet " + JSON.stringify(main.getCompanionMapPos()) + " " + main.getCompanionMood() + " " + main.getPointState() + " phase " + main.getPhase())
+  }
+  const cafe = nodePos(main, "cafe"), threads = nodePos(main, "threads")
+  // In from the sign, west past the café (look at it), then east past Threads (look at it).
+  await walk(run, [pose(run), {x: 30, y: 0, z: 7}, {x: cafe.x + 1, y: 0, z: 7.5}])
+  await hold(run, 1.5)
+  await turnTo(run, 180, 0.8)
+  await hold(run, 2.5)
+  await walk(run, [pose(run), {x: threads.x, y: 0, z: 7.5}])
+  await hold(run, 1.5)
+  await turnTo(run, 180, 0.8)
+  await hold(run, 2.5)
+  run.onStep = watch
+  return {pointed, boxes}
+}
+
+// ── The clean screen ──────────────────────────────────────────────────────
+
+// Texts the user can see right now that the clean screen does not allow while walking. World signs
+// in the building are part of the place; the offer boxes, the arrival card, the voice caption (on the
+// Go to a place panel) and the folded Control tab are allowed.
+export function offendingTexts(main: FindYourWayMain): string[] {
+  const out: string[] = []
+  const visit = (so: SceneObject, path: string) => {
+    if (!so.isEnabledInHierarchy) return
+    const p = path ? path + "/" + so.name : so.name
+    for (const t of so.getComponents("Component.Text") as Text[]) {
+      if (t.text && t.text.trim() !== "" && !allowed(main, p)) out.push(p + ": " + t.text)
+    }
+    for (let i = 0; i < so.getChildrenCount(); i++) visit(so.getChild(i), p)
+  }
+  for (let i = 0; i < global.scene.getRootObjectsCount(); i++) {
+    const r = global.scene.getRootObject(i)
+    if (r.name === "LeafIndex" || r.name.indexOf("LEAF") === 0 || r.name.indexOf("LeafDebug") === 0) continue
+    visit(r, "")
+  }
+  return out
+}
+
+function allowed(main: FindYourWayMain, path: string): boolean {
+  if (path.indexOf("StandInBuilding") >= 0) return path.indexOf("PlaceIcons") < 0 && path.indexOf("CompanionBubble") < 0
+  if (path.indexOf("AppPanel") === 0) return main.isOptionsCollapsed()
+  if (path.indexOf("ModePanel") >= 0) return true
+  return false
+}
+
+// Hooks the clean-screen check into a run: every offending text seen during the walk is kept.
+export function watchCleanScreen(run: DemoRun, seen: string[]): void {
+  const before = run.onStep
+  let n = 0
+  run.onStep = () => {
+    before()
+    if (n++ % 4 !== 0) return
+    const ph = run.main.getPhase()
+    if (ph !== "nav" && ph !== "arrived" && ph !== "free") return
+    for (const t of offendingTexts(run.main)) if (seen.indexOf(t) < 0) seen.push(t)
+  }
+}

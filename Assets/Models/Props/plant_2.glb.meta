@@ -1,0 +1,194 @@
+- !<AssetImportMetadata/1e2eb5c7-4492-40ea-856f-653ab62048cd>
+  ImportedAssetIds:
+    .hidden/Black: !<reference> 8b6365c7-7fa9-4cd4-a587-554da6079920
+    21df3115d5bfabfa: !<reference> cd850cf3-30b0-4390-ae9e-97206004f536
+    26ba073d67b9d0dd: !<reference> 29509578-478d-4e2b-baf5-e7d431713d76
+    66d68356be095b36: !<reference> 89ee14ac-58aa-467f-a781-77568610585d
+    88ab437fd121cc69: !<reference> 6766f832-f2a6-4fa1-b17f-39fe6ee0bf8d
+    99f7bc584f0c8bd2: !<reference> 29a1605d-2f9b-496e-9de2-b0e99f2202ed
+    Materials/Black: !<reference> 5805400d-6639-4c96-8e2d-9fe50c4a4110
+    Materials/Black|Black|GraphPassInfo: !<reference> 7ea359a5-2c58-4227-bf5f-0c6320673313
+    Materials/Brown: !<reference> eefba5af-015e-4dc8-8a30-fb298dd1d8d3
+    Materials/Brown|Brown|GraphPassInfo: !<reference> 341720c0-215c-4a37-9c1b-c254a170aa36
+    Materials/Plant_Green: !<reference> 2d771687-0dce-4810-95b4-3a7543123403
+    Materials/Plant_Green|Plant_Green|GraphPassInfo: !<reference> 3aca54a9-4740-48da-9bea-f4fb86fa8fae
+    Meshes/Houseplant_7: !<reference> 4f4a4911-dc94-4047-9214-6cd7170c9bc9
+    Meshes/Houseplant_71: !<reference> bde5bb0f-b9a6-4e6c-9801-159e3f6c266b
+    Meshes/Houseplant_72: !<reference> 5ec243cf-8134-4389-93a1-fc610df1171e
+    Scene: !<reference> e3de6244-cfb8-4fc1-9cd6-91814d6d4059
+    a3258e35a1715a41: !<reference> c550a2f5-234b-4b94-b9d4-27503b912751
+    bffd9fc032e730d6: !<reference> 1962ffd3-8c01-4a8e-9578-65d99ff80fec
+    ea55157729cbe6a7: !<reference> e1d965ea-6dcf-401e-b007-5e05fd00e5c4
+  ImporterName: GltfImporter
+  PrimaryAsset: !<reference> e3de6244-cfb8-4fc1-9cd6-91814d6d4059
+  PackageType: LegacyPackage
+  LegacyPackagePolicy: CanBeUnpackedTransparent
+  ExtraData:
+    {}
+  AssetDataMap:
+    Scene: !<own> 88ae982a-77d4-4578-8673-a10254217f9a
+  DependentFiles:
+    []
+  ImporterSettings: !<GltfImporterSettings>
+    UseLegacyImporter: false
+    WithMaterials: true
+    NamingConvention: ByCategorySanitizeV2
+    PersistentIdGenerationAlgorithm: DescriptorBasedV2
+    AnimationCurveOptimization: true
+    CustomAnimationSamplingRate: 30.000000
+    ImportVertexColor: true
+    ImportTangents: true
+    ImportMorphTargetAnimation: true
+    ConvertMetersToCentimeters: true
+    RegenerateTangents: false
+    OptimizeMesh: true
+  CompressionSettings: !<ComplexCompressionSettings>
+    Presets:
+      None Compression: !<FileCompressionSettings>
+        {}
+    ExtensionMappings:
+      mesh: None Compression
+    Overrides:
+      {}
+- !<RenderMeshVisual/1962ffd3-8c01-4a8e-6a87-9a266007f013>
+  PrefabRemaps:
+    []
+  Name: Houseplant_7
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 2d771687-0dce-4810-95b4-3a7543123403
+  Mesh: !<reference> 5ec243cf-8134-4389-93a1-fc610df1171e
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<SceneObject/29509578-478d-4e2b-450a-182bce8ec289>
+  PrefabRemaps:
+    []
+  Name: plant_2
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 100.000000, y: 100.000000, z: 100.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 6766f832-f2a6-4fa1-4e80-c601911f4072
+  Components:
+    []
+- !<SceneObject/29a1605d-2f9b-496e-621d-4f1660ddfd12>
+  PrefabRemaps:
+    []
+  Name: Houseplant_7
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: -90.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 100.000000, y: 100.000000, z: 100.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> e1d965ea-6dcf-401e-4ff8-a1fa02ff1a3b
+    - !<own> c550a2f5-234b-4b94-462b-d8afc46ed8ae
+    - !<own> 1962ffd3-8c01-4a8e-6a87-9a266007f013
+- !<SceneObject/6766f832-f2a6-4fa1-4e80-c601911f4072>
+  PrefabRemaps:
+    []
+  Name: Scenes
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> cd850cf3-30b0-4390-5161-68df9ffb0ac9
+  Components:
+    []
+- !<ObjectPrefabAssetData/88ae982a-77d4-4578-8673-a10254217f9a>
+  Prototype: !<ObjectOwner/36e1b56f-6b22-4eeb-816e-e808ab166db6>
+    PackagePath: ""
+    objects:
+      - !<own> 29509578-478d-4e2b-450a-182bce8ec289
+- !<SceneObject/89ee14ac-58aa-467f-587e-88a979efa7a2>
+  PrefabRemaps:
+    []
+  Name: RootNode
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 29a1605d-2f9b-496e-621d-4f1660ddfd12
+  Components:
+    []
+- !<RenderMeshVisual/c550a2f5-234b-4b94-462b-d8afc46ed8ae>
+  PrefabRemaps:
+    []
+  Name: Houseplant_7
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> eefba5af-015e-4dc8-8a30-fb298dd1d8d3
+  Mesh: !<reference> bde5bb0f-b9a6-4e6c-9801-159e3f6c266b
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<SceneObject/cd850cf3-30b0-4390-5161-68df9ffb0ac9>
+  PrefabRemaps:
+    []
+  Name: Root Scene
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 89ee14ac-58aa-467f-587e-88a979efa7a2
+  Components:
+    []
+- !<RenderMeshVisual/e1d965ea-6dcf-401e-4ff8-a1fa02ff1a3b>
+  PrefabRemaps:
+    []
+  Name: Houseplant_7
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 5805400d-6639-4c96-8e2d-9fe50c4a4110
+  Mesh: !<reference> 4f4a4911-dc94-4047-9214-6cd7170c9bc9
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}

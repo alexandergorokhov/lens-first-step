@@ -1,12 +1,12 @@
 // FindYourWayCompanionView — draws the companion feature inside the building (building-local cm):
-// the companion model (dog / robot / rover: simple light primitives, slightly see-through for
-// the additive display), its collectibles, the floor-change post where the line leaves the
+// the companion model (the animated Quaternius dog and robot, CC0, when their prefabs are given;
+// otherwise the jointed light primitives), a soft shadow under it, its collectibles, the floor-change post where the line leaves the
 // floor, the Hop lane with its obstacles, and the thrown treat for catch.
 // Created at runtime by FindYourWayMain (child of the building) and set up with the stand-in's
 // Unlit material. Must not: decide where the companion goes (FindYourWayPet / FindYourWayPlay do).
 
 import {Boxes, shadeTexture, whiteTexture} from "./FindYourWayStandIn"
-import {RigMood, poseFor, rigOf, COMPANION_ALPHA} from "./FindYourWayAnim"
+import {RigMood, clipFor, poseFor, rigOf, COMPANION_ALPHA} from "./FindYourWayAnim"
 import {LiveRig} from "./FindYourWayRigMesh"
 import {ARROW_OPACITY} from "./FindYourWayView"
 import {Interactable} from "SpectaclesInteractionKit.lspkg/Components/Interaction/Interactable/Interactable"
@@ -34,8 +34,21 @@ const CYAN = new vec4(0.4, 1, 1, 0.95)
 const COLLECTIBLE_COLOR: {[id: string]: vec4} = {
   dog: new vec4(1, 0.75, 0.45, 0.95),
   robot: new vec4(0.75, 0.85, 1, 0.95),
-  rover: new vec4(1, 0.95, 0.4, 0.95),
 }
+
+// The animated models: how tall they stand (cm), and the imported prefab's own height (cm at scale 1).
+const MODEL_HEIGHT_CM: {[id: string]: number} = {dog: 50, robot: 58}
+const MODEL_RAW_CM: {[id: string]: number} = {dog: 310, robot: 463}
+// Bright colours for the additive display (no near-black part), by the model's material name.
+const MODEL_COLORS: {[id: string]: {[material: string]: vec4}} = {
+  robot: {Main: new vec4(0.2, 0.86, 0.86, 1), Grey: new vec4(0.93, 0.95, 0.98, 1), Black: new vec4(0.42, 0.47, 0.56, 1)},
+  dog: {Main: new vec4(1, 0.6, 0.27, 1), Main_Light: new vec4(1, 0.96, 0.9, 1), Black: new vec4(0.45, 0.42, 0.42, 1),
+    Eyes_White: new vec4(1, 1, 1, 1), Eyes_Pupil: new vec4(0.28, 0.22, 0.18, 1), Eyes_Black: new vec4(0.3, 0.26, 0.24, 1)},
+}
+// A little glow of their own colour, so they read on the see-through display.
+const MODEL_GLOW = 0.18
+const CLIP_FADE_S = 0.2
+const SHADOW_CM = 60
 
 const COLLECTIBLE_CM = 12
 const COLLECTIBLE_HEIGHT_CM = 45
@@ -74,6 +87,26 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
   private floorArrow: SceneObject | null = null
   private spin = 0
   private shown = false
+  // The animated models (null: the jointed primitives), and the one playing now.
+  private prefabs: {[id: string]: ObjectPrefab | null} = {}
+  private player: AnimationPlayer | null = null
+  private clipNames: {[clip: string]: string} = {}
+  private clip = ""
+  private fadeIn = 1
+  private lastClip = ""
+  private shadowMesh: RenderMesh | null = null
+  private shadowMat: Material | null = null
+
+  // The imported Quaternius prefabs (Assets/Models); call before the first setModel to use them.
+  setPrefabs(prefabs: {[id: string]: ObjectPrefab | null}): void {
+    this.prefabs = prefabs
+    const id = this.modelId
+    this.modelId = ""
+    if (id) this.setModel(id)
+  }
+
+  getClip(): string { return this.clip }
+  isAnimatedModel(): boolean { return this.player !== null }
 
   // Call once after createComponent: the Unlit material to clone for every part.
   setup(material: Material): void {
@@ -125,7 +158,20 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
     if (this.model) this.model.destroy()
     this.model = global.scene.createSceneObject("Companion_" + key)
     this.model.setParent(this.sceneObject)
-    this.rig = new LiveRig(this.model, rigOf(key), (c) => this.rigMaterial(c))
+    this.player = null
+    this.clip = ""
+    this.rig = null
+    const prefab = this.prefabs[key]
+    if (prefab) {
+      try {
+        this.buildAnimated(prefab, key)
+      } catch (e) {
+        print("[FYW] companion model " + key + " failed, using the primitives: " + e)
+        this.player = null
+      }
+    }
+    if (!this.player) this.rig = new LiveRig(this.model, rigOf(key), (c) => this.rigMaterial(c))
+    this.addShadow(this.model)
     this.lastPos = null
     this.model.enabled = this.shown
     if (this.treat) this.recolor(this.treat, COLLECTIBLE_COLOR[key])
@@ -160,7 +206,7 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
 
   // Feet and wheels keep time with the distance really moved.
   private animate(pos: vec3): void {
-    if (!this.rig) return
+    if (!this.rig && !this.player) return
     const dt = Math.max(getDeltaTime(), 1e-3)
     const step = this.lastPos ? pos.sub(this.lastPos).length / 100 : 0
     this.lastPos = pos
@@ -169,7 +215,144 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
       this.travelledM += this.runningMs > 0 ? this.runningMs * dt : step
       this.speedMs += (speed - this.speedMs) * Math.min(1, dt * SPEED_SMOOTHING)
     }
-    this.rig.apply(poseFor(this.modelId, {mood: this.mood, speedMs: this.speedMs, travelledM: this.travelledM, t: getTime()}))
+    if (this.player) {
+      this.playMood(dt)
+      return
+    }
+    if (this.rig) this.rig.apply(poseFor(this.modelId, {mood: this.mood, speedMs: this.speedMs, travelledM: this.travelledM, t: getTime()}))
+  }
+
+  // The animated model: the clip for the mood, cross-faded, the walk in time with the ground.
+  private playMood(dt: number): void {
+    const p = this.player as AnimationPlayer
+    const want = clipFor(this.modelId, this.mood, this.speedMs)
+    const name = this.clipNames[want.clip]
+    if (!name) return
+    if (want.clip !== this.clip) {
+      if (this.clip && this.clipNames[this.clip]) this.lastClip = this.clipNames[this.clip]
+      this.clip = want.clip
+      this.fadeIn = 0
+      p.setClipEnabled(name, true)
+      p.playClip(name)
+    }
+    this.fadeIn = Math.min(1, this.fadeIn + dt / CLIP_FADE_S)
+    const c = p.getClip(name)
+    if (c) {
+      c.playbackSpeed = want.rate
+      c.weight = this.fadeIn
+    }
+    if (this.lastClip && this.lastClip !== name) {
+      const old = p.getClip(this.lastClip)
+      if (this.fadeIn >= 1 || !old) {
+        p.stopClip(this.lastClip)
+        p.setClipEnabled(this.lastClip, false)
+        this.lastClip = ""
+      } else old.weight = 1 - this.fadeIn
+    }
+  }
+
+  private buildAnimated(prefab: ObjectPrefab, key: string): void {
+    const inst = prefab.instantiate(this.model as SceneObject)
+    const s = MODEL_HEIGHT_CM[key] / MODEL_RAW_CM[key]
+    const t = inst.getTransform()
+    t.setLocalScale(t.getLocalScale().uniformScale(s))
+    // The imported models face +Z; ours face -Z.
+    t.setLocalRotation(quat.angleAxis(Math.PI, vec3.up()))
+    const players: AnimationPlayer[] = []
+    const visit = (so: SceneObject) => {
+      const ap = so.getComponent("Component.AnimationPlayer") as AnimationPlayer
+      if (ap) players.push(ap)
+      const visuals = so.getComponents("Component.RenderMeshVisual") as RenderMeshVisual[]
+      for (const v of visuals) this.brighten(v, key)
+      for (let i = 0; i < so.getChildrenCount(); i++) visit(so.getChild(i))
+    }
+    visit(inst)
+    if (players.length === 0) throw new Error("no AnimationPlayer")
+    const p = players[0]
+    this.clipNames = {}
+    const wanted = ["Walking", "Running", "Idle", "Wave", "ThumbsUp", "Yes", "Walk", "Gallop", "Idle_2", "Idle_2_HeadLow"]
+    for (const c of p.clips) {
+      c.playbackMode = PlaybackMode.Loop
+      for (const w of wanted) {
+        const n = c.name
+        const hit = n === w || n.endsWith("|" + w) || n.endsWith("_" + w) && !n.endsWith("_2_" + w)
+        // Prefer the plain name (the dog has each clip twice).
+        if (hit && (!this.clipNames[w] || n === w)) this.clipNames[w] = n
+      }
+    }
+    p.stopAll()
+    for (const c of p.clips) p.setClipEnabled(c.name, false)
+    this.player = p
+    print("[FYW] companion " + key + ": animated model, clips " + Object.keys(this.clipNames).join(","))
+  }
+
+  // Lit, bright and a little glowing: the imported colours are too dark for an additive display.
+  private brighten(v: RenderMeshVisual, key: string): void {
+    const colors = MODEL_COLORS[key] || {}
+    const n = v.getMaterialsCount()
+    const mats: Material[] = []
+    for (let i = 0; i < n; i++) {
+      const src = v.getMaterial(i)
+      const m = src.clone()
+      const base = src.name.split("/").pop() as string
+      const c = colors[base] || colors[base.replace(/[0-9.]+$/, "")]
+      if (!c) print("[FYW] model material without a colour: " + src.name)
+      const pass = m.mainPass as any
+      if (c) {
+        try {
+          pass.baseColorFactor = c
+          pass.emissiveFactor = new vec3(c.x * MODEL_GLOW, c.y * MODEL_GLOW, c.z * MODEL_GLOW)
+          pass.metallicFactor = 0.05
+          pass.roughnessFactor = 0.55
+        } catch (e) {
+          print("[FYW] model material " + m.name + ": " + e)
+        }
+      }
+      mats.push(m)
+    }
+    v.materials = mats
+  }
+
+  // A soft round shadow on the floor under the companion (it grounds the model in the preview).
+  private addShadow(parent: SceneObject): void {
+    if (!this.shadowMesh) {
+      const mb = new MeshBuilder([
+        {name: "position", components: 3},
+        {name: "normal", components: 3},
+        {name: "texture0", components: 2},
+      ])
+      mb.topology = MeshTopology.Triangles
+      mb.indexType = MeshIndexType.UInt16
+      const h = SHADOW_CM / 2
+      mb.appendVerticesInterleaved([-h, 0, -h, 0, 1, 0, 0, 0, h, 0, -h, 0, 1, 0, 1, 0, h, 0, h, 0, 1, 0, 1, 1, -h, 0, h, 0, 1, 0, 0, 1])
+      mb.appendIndices([0, 2, 1, 0, 3, 2])
+      mb.updateMesh()
+      this.shadowMesh = mb.getMesh()
+      const size = 64
+      const tex = ProceduralTextureProvider.createWithFormat(size, size, TextureFormat.RGBA8Unorm)
+      const d = new Uint8Array(size * size * 4)
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const r = Math.sqrt(((x + 0.5) / size - 0.5) ** 2 + ((y + 0.5) / size - 0.5) ** 2) * 2
+          const a = Math.max(0, 1 - r)
+          d.set([255, 255, 255, Math.round(a * a * 255)], (y * size + x) * 4)
+        }
+      }
+      ;(tex.control as ProceduralTextureProvider).setPixels(0, 0, size, size, d)
+      const m = (this.material as Material).clone()
+      m.mainPass.baseTex = tex
+      m.mainPass.baseColor = new vec4(0.06, 0.08, 0.12, 0.5)
+      m.mainPass.blendMode = BlendMode.Normal
+      m.mainPass.depthWrite = false
+      m.mainPass.twoSided = true
+      this.shadowMat = m
+    }
+    const so = global.scene.createSceneObject("Shadow")
+    so.setParent(parent)
+    so.getTransform().setLocalPosition(new vec3(0, 0.6, 0))
+    const rmv = so.createComponent("Component.RenderMeshVisual") as RenderMeshVisual
+    rmv.mesh = this.shadowMesh
+    rmv.mainMaterial = this.shadowMat as Material
   }
 
   // pos: building-local cm on the floor; headingDeg: clockwise from map north;
@@ -204,7 +387,11 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
   getPose(): vec3 | null { return this.model ? this.model.getTransform().getLocalPosition() : null }
 
   // Collectibles at building-local cm floor spots; got[i] hides spot i.
+  // The clean screen: no floating collectibles on the floor.
+  hideCollectibles = false
+
   setCollectibles(spots: vec3[], got: boolean[]): void {
+    if (this.hideCollectibles) spots = []
     while (this.collectibles.length < spots.length) {
       const so = global.scene.createSceneObject("Collectible" + this.collectibles.length)
       so.setParent(this.sceneObject)

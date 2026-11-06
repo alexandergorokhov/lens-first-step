@@ -1,0 +1,149 @@
+- !<AssetImportMetadata/801c132d-c973-40aa-9568-d67f80309157>
+  ImportedAssetIds:
+    .hidden/Atlas: !<reference> d8026bb4-3cda-48fd-a4c7-f2df78a65064
+    21df3115d5bfabfa: !<reference> f5aed6b7-c189-4c8f-aae1-28e91a124358
+    26ba073d67b9d0dd: !<reference> cd89190a-7ff2-4030-a9b7-4c70b450c786
+    66d68356be095b36: !<reference> 4a22795c-5485-44e9-8d3d-934335732876
+    88ab437fd121cc69: !<reference> 6230b9e1-3edd-494f-ad04-8c7be0524115
+    9883bcdfd0962aa1: !<reference> e5842e21-7e1f-4bea-a77a-fc995b59a98a
+    Materials/Atlas: !<reference> 53e4f5ec-f3b0-4f5a-b1fb-2fce0a3cf8f4
+    Materials/Atlas|Atlas|GraphPassInfo: !<reference> dfef1e93-59a4-4ce9-a585-3076b6bec8dd
+    Meshes/Environment_PalmTree_1: !<reference> e7f162cf-63b0-4e4b-942c-4178a7c79d3e
+    Scene: !<reference> 18ed52b6-abe7-42f2-a745-c9a61c266f53
+    Textures/Atlas_Pirate: !<reference> 35cfe208-8b7d-4125-96cb-42a6919ea7e4
+    b405049cf8cb8366: !<reference> bd23bfe4-e2fa-43ab-83ad-59a9882425b3
+  ImporterName: GltfImporter
+  PrimaryAsset: !<reference> 18ed52b6-abe7-42f2-a745-c9a61c266f53
+  PackageType: LegacyPackage
+  LegacyPackagePolicy: CanBeUnpackedTransparent
+  ExtraData:
+    {}
+  AssetDataMap:
+    Scene: !<own> 948a81f7-085d-4b76-a498-61a71330fa72
+  DependentFiles:
+    []
+  ImporterSettings: !<GltfImporterSettings>
+    UseLegacyImporter: false
+    WithMaterials: true
+    NamingConvention: ByCategorySanitizeV2
+    PersistentIdGenerationAlgorithm: DescriptorBasedV2
+    AnimationCurveOptimization: true
+    CustomAnimationSamplingRate: 30.000000
+    ImportVertexColor: true
+    ImportTangents: true
+    ImportMorphTargetAnimation: true
+    ConvertMetersToCentimeters: true
+    RegenerateTangents: false
+    OptimizeMesh: true
+  CompressionSettings: !<ComplexCompressionSettings>
+    Presets:
+      None Compression: !<FileCompressionSettings>
+        {}
+      Performance Compression: !<PerformanceCompressionSettings>
+        Level: Medium
+        Mipmap: false
+    ExtensionMappings:
+      mesh: None Compression
+      png: Performance Compression
+    Overrides:
+      {}
+- !<SceneObject/4a22795c-5485-44e9-72c2-6cbcca8cd789>
+  PrefabRemaps:
+    []
+  Name: RootNode
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> e5842e21-7e1f-4bea-5885-0366a4a65675
+  Components:
+    []
+- !<SceneObject/6230b9e1-3edd-494f-52fb-73841fadbeea>
+  PrefabRemaps:
+    []
+  Name: Scenes
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> f5aed6b7-c189-4c8f-551e-d716e5edbca7
+  Components:
+    []
+- !<ObjectPrefabAssetData/948a81f7-085d-4b76-a498-61a71330fa72>
+  Prototype: !<ObjectOwner/c9be29c7-26af-4af0-bcb8-3c1c75fb9bd0>
+    PackagePath: ""
+    objects:
+      - !<own> cd89190a-7ff2-4030-5648-b38f4baf3879
+- !<RenderMeshVisual/bd23bfe4-e2fa-43ab-7c52-a65677dbda4c>
+  PrefabRemaps:
+    []
+  Name: Environment_PalmTree_1
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 53e4f5ec-f3b0-4f5a-b1fb-2fce0a3cf8f4
+  Mesh: !<reference> e7f162cf-63b0-4e4b-942c-4178a7c79d3e
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<SceneObject/cd89190a-7ff2-4030-5648-b38f4baf3879>
+  PrefabRemaps:
+    []
+  Name: palm_tree
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 100.000000, y: 100.000000, z: 100.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 6230b9e1-3edd-494f-52fb-73841fadbeea
+  Components:
+    []
+- !<SceneObject/e5842e21-7e1f-4bea-5885-0366a4a65675>
+  PrefabRemaps:
+    []
+  Name: Environment_PalmTree_1
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 100.000000, y: 100.000000, z: 100.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> bd23bfe4-e2fa-43ab-7c52-a65677dbda4c
+- !<SceneObject/f5aed6b7-c189-4c8f-551e-d716e5edbca7>
+  PrefabRemaps:
+    []
+  Name: Root Scene
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 4a22795c-5485-44e9-72c2-6cbcca8cd789
+  Components:
+    []

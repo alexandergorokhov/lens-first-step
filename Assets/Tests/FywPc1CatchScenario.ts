@@ -5,7 +5,7 @@ import {sleep} from "Leaf.lspkg/Utils/common/Utils"
 import {log, startTrip, tap, waitFor} from "./FindYourWayLeafSupport"
 import {nodePos, standStill} from "./FywBrief2Support"
 
-// pc1/pc2 — Catch: throw the treat, the companion fetches it and brings it back; the rover plays
+// pc1/pc2 — Catch: throw the treat, the companion fetches it and brings it back; the robot plays
 // the same game; the route never changes.
 @component
 export class FywPc1CatchScenario extends Scenario {
@@ -22,11 +22,10 @@ export class FywPc1CatchScenario extends Scenario {
     await waitFor(() => main.getCatchPhase() === "idle", 8000, "fetched and brought back")
     expect(main.getCatches(), "one catch").toBe(1)
     await tap(it, "ModelButton")
-    await tap(it, "ModelButton")
-    expect(main.getCompanionModel(), "rover").toBe("rover")
+    expect(main.getCompanionModel(), "robot").toBe("robot")
     await standStill(main, spot)
     await tap(it, "ThrowButton")
-    await waitFor(() => main.getCatchPhase() === "idle", 8000, "rover fetched")
+    await waitFor(() => main.getCatchPhase() === "idle", 8000, "robot fetched")
     expect(main.getCatches(), "two catches").toBe(2)
     expect(main.getRouteNodes().join(">"), "route unchanged by catch").toBe(route)
     await tap(it, "ModelButton")

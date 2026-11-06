@@ -1,0 +1,128 @@
+- !<AssetImportMetadata/3fa0d7ed-5af7-4bfb-a7e3-a9d1232fea3f>
+  ImportedAssetIds:
+    .hidden/brownLight: !<reference> 6437c7e3-d29e-44f7-be65-f41935c19915
+    26ba073d67b9d0dd: !<reference> 325faa06-6fdf-47ce-aabb-2dc37d765a64
+    88ab437fd121cc69: !<reference> c2305f89-2119-4ea2-be06-69d60fc5497b
+    8c2c6f3cf8d060fd: !<reference> b8d5a1d0-878a-4919-b532-1d76a78f762c
+    Materials/brownLight: !<reference> 1c2389f5-4a26-45dd-9e1f-de3d5ceebc7f
+    Materials/brownLight|brownLight|GraphPassInfo: !<reference> 7be7f8e3-cd3e-416a-a3fa-95effb8f75bc
+    Meshes/bag_1: !<reference> 7c31bb8a-7a70-4a74-896e-1723b653128f
+    Scene: !<reference> b7f0bd13-e100-4860-88ef-9fc812ad9415
+    ccdc228da6cb97a2: !<reference> 687e1fa5-b93d-43b0-ace9-bdf6c7a26897
+    fedc89184ba9c100: !<reference> e03b5593-7f7e-4ff4-bffb-0e4b1faee677
+  ImporterName: GltfImporter
+  PrimaryAsset: !<reference> b7f0bd13-e100-4860-88ef-9fc812ad9415
+  PackageType: LegacyPackage
+  LegacyPackagePolicy: CanBeUnpackedTransparent
+  ExtraData:
+    {}
+  AssetDataMap:
+    Scene: !<own> 85b6442a-0c36-44e1-9323-e4b97a67de1d
+  DependentFiles:
+    []
+  ImporterSettings: !<GltfImporterSettings>
+    UseLegacyImporter: false
+    WithMaterials: true
+    NamingConvention: ByCategorySanitizeV2
+    PersistentIdGenerationAlgorithm: DescriptorBasedV2
+    AnimationCurveOptimization: true
+    CustomAnimationSamplingRate: 30.000000
+    ImportVertexColor: true
+    ImportTangents: true
+    ImportMorphTargetAnimation: true
+    ConvertMetersToCentimeters: true
+    RegenerateTangents: false
+    OptimizeMesh: true
+  CompressionSettings: !<ComplexCompressionSettings>
+    Presets:
+      None Compression: !<FileCompressionSettings>
+        {}
+    ExtensionMappings:
+      mesh: None Compression
+    Overrides:
+      {}
+- !<SceneObject/325faa06-6fdf-47ce-5544-d23c8289a59b>
+  PrefabRemaps:
+    []
+  Name: shopping_bag
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 100.000000, y: 100.000000, z: 100.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> c2305f89-2119-4ea2-41f9-9629f03ab684
+  Components:
+    []
+- !<SceneObject/687e1fa5-b93d-43b0-5316-4209385d9768>
+  PrefabRemaps:
+    []
+  Name: bag
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> e03b5593-7f7e-4ff4-4004-f1b4e0511988
+- !<ObjectPrefabAssetData/85b6442a-0c36-44e1-9323-e4b97a67de1d>
+  Prototype: !<ObjectOwner/5fc0f38e-d0aa-433b-9cbf-53ddcdea0127>
+    PackagePath: ""
+    objects:
+      - !<own> 325faa06-6fdf-47ce-5544-d23c8289a59b
+- !<SceneObject/b8d5a1d0-878a-4919-4acd-e289587089d3>
+  PrefabRemaps:
+    []
+  Name: Scene0
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 687e1fa5-b93d-43b0-5316-4209385d9768
+  Components:
+    []
+- !<SceneObject/c2305f89-2119-4ea2-41f9-9629f03ab684>
+  PrefabRemaps:
+    []
+  Name: Scenes
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> b8d5a1d0-878a-4919-4acd-e289587089d3
+  Components:
+    []
+- !<RenderMeshVisual/e03b5593-7f7e-4ff4-4004-f1b4e0511988>
+  PrefabRemaps:
+    []
+  Name: bag_1
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 1c2389f5-4a26-45dd-9e1f-de3d5ceebc7f
+  Mesh: !<reference> 7c31bb8a-7a70-4a74-896e-1723b653128f
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}

@@ -146,7 +146,7 @@ export function buildHospitalTimeline(map = loadMap("hospital.json")) {
 export function buildCampusTimeline(map = loadMap("campus.json")) {
   const b = new Builder(map);
   const S = b.state;
-  const c = companionOf("rover");
+  const c = companionOf("robot");
   // Run 1: walking across the quad with the rover; wander off and get re-routed; room change.
   start(b, { title: "Campus: a student walks to Lecture Hall 1", mode: "Walk", seated: false, to: "lectureHall1", interests: ["coffee"] });
   b.travelled = 0;

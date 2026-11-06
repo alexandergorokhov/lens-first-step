@@ -2,6 +2,7 @@
 // Created at runtime by FindYourWayMain, which places it. Emits through the callbacks given to
 // setup(). Must not: start anything itself (Main owns the phases).
 
+import {addPopIn} from "./FindYourWayPopIn"
 import {addButton, addText, makePanel} from "./FindYourWayWidgetsUI"
 import {icon} from "./FindYourWayIconsUI"
 
@@ -20,6 +21,7 @@ const TEXT = new vec4(1, 1, 1, 1)
 export class FindYourWayHomePanelUI extends BaseScriptComponent {
   setup(h: HomeHandlers): void {
     const panel = makePanel(this.sceneObject, WIDTH + 4, 2, 1.2)
+    addPopIn(this.sceneObject)
     addText(panel.content, "HomeTitle", "What would you like to do?", "Headline1", WIDTH, 3.6, TEXT, 100)
     addButton(panel.content, "FreeWalkButton", "Free walk", WIDTH, BUTTON_H, icon("directions_walk"), h.onFreeWalk, TEXT, 100, "HeadlineXL", "Primary")
     addButton(panel.content, "TourButton", "Tour", WIDTH, BUTTON_H, icon("map"), h.onTour, TEXT, 100, "Headline1", "Primary")

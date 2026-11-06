@@ -62,7 +62,7 @@ Each feature below passed its LEAF test, run inside the Lens and pressing the re
 npm test
 ```
 
-There are 499 tests (offline: 498 pass, 1 skipped). One downloads the maps from the public gist; offline, set `OFFLINE=1` to skip it. The run first checks that the Lens's copies of the core files match `src/core`; after editing `src/core`, run `npm run sync`.
+There are 535 tests (offline: 534 pass, 1 skipped). One downloads the maps from the public gist; offline, set `OFFLINE=1` to skip it. The run first checks that the Lens's copies of the core files match `src/core`; after editing `src/core`, run `npm run sync`.
 
 **LEAF tests** run inside the Lens:
 1. Select **LeafIndex** in the Scene Hierarchy and tick **autoRun**. To run only some, type their ids in **only**, separated by commas.
@@ -92,7 +92,12 @@ All tests run locally; no CI service is used.
 
 ## Credits
 
-- The companion and planter 3D models and the gate-change chime were generated in Lens Studio with CLAD's asset generators (`Assets/GeneratedMeshes`, `Assets/GeneratedSFX`).
+- **Companions:** "Animated Robot" and "Shiba Inu" by Quaternius (quaternius.com), CC0 1.0, via poly.pizza
+  (`Assets/Models/Robot`, `Assets/Models/Dog`).
+- **Props** (`Assets/Models/Props`), all CC0 1.0 via poly.pizza: plants, bench, palm tree, bin, floor lamp, sushi plate,
+  luggage bag, info board and drinks fridge by Quaternius; coffee cup, coffee machine, coat rack, shopping bag, airport
+  seat and screen by Kenney; gift box by CreativeTrio; suitcase by smallbigsquare.
+- The older planter models and the gate-change chime were generated in Lens Studio with CLAD's asset generators (`Assets/GeneratedMeshes`, `Assets/GeneratedSFX`).
 - UI icons in `Assets/Icons` are from an open-source icon set. Confirm the set and its licence before publishing.
 - Lens Studio packages: Spectacles Interaction Kit, Spectacles UI Kit and Utilities, by Snap Inc.
 

@@ -60,9 +60,9 @@ import {FindYourWayPickMapUI} from "./FindYourWayPickMapUI"
 import {MultiStopTrip, orderStops} from "./FindYourWayTrip"
 import {mapLogLines, tripAfterSaving} from "./FindYourWayMapping"
 import {peekPlace} from "./FindYourWayPeek"
-import {showingSettings, StartSettings} from "./FindYourWayDemo"
-import {destinationsOf, FreeWalk, interestList, LookBoxes, matchDestination, OfferDismissals, sayItPhrase, ShopLook, walkableRoute} from "./FindYourWayFreeWalk"
-import {OptionsDock, routeLineAheadM, walkingHud} from "./FindYourWayDock"
+import {demoSettings, DemoSettings, showingSettings, StartSettings} from "./FindYourWayDemo"
+import {destinationsOf, FreeWalk, interestList, LookBoxes, matchDestination, OfferDismissals, sayItPhrase, ShopLook, typedSoFar, typingSeconds, planAsk, VOICE_FALLBACK_S, walkableRoute, CLEAN_FREE_WALK} from "./FindYourWayFreeWalk"
+import {arrivalCardOn, cleanAllows, OptionsDock, routeLineAheadM, walkingHud} from "./FindYourWayDock"
 import {FindYourWayOfferBoxesUI} from "./FindYourWayOfferBoxesUI"
 import {FindYourWayHomePanelUI} from "./FindYourWayHomePanelUI"
 import {FindYourWayPrefsUI} from "./FindYourWayPrefsUI"
@@ -88,6 +88,7 @@ import {FindYourWayFreeWalkView} from "./FindYourWayFreeWalkView"
 import {FindYourWayPanelFollow} from "./FindYourWayPanelFollow"
 import {FindYourWayPlaceBuilder, Ride} from "./FindYourWayPlaceBuilder"
 import {FindYourWayPlayTime} from "./FindYourWayPlayTime"
+import {FindYourWayPropsView} from "./FindYourWayPropsView"
 
 // scan -> loading -> choose (the three modes) -> prefs -> free (Free walk)
 //                                           -> mode -> nav -> arrived (Go to a place)
@@ -108,7 +109,15 @@ const MAPPING_PANEL_OFFSET = new vec3(0, -8, -115)
 const DEST_NOTE_S = 3.5
 // Voice: stop listening after this long with no finished phrase (s).
 const VOICE_TIMEOUT_S = 8
-const COMPANION_IDS = ["dog", "robot", "rover"]
+const COMPANION_IDS = ["dog", "robot"]
+// The preview can't hear (ASR runs on Specs): said under Talk there.
+const PREVIEW_TALK_HINT = "Preview: voice shown as typed. Live speech on Specs."
+// After the typed phrase is complete, this long before it is matched (s).
+const TYPED_HOLD_S = 0.6
+// A trip asked for in your own words goes on to its next stop this long after arriving (s).
+const ASK_NEXT_S = 4.5
+// What was heard stays on the panel this long before a demo sets off (s).
+const HEARD_READ_S = 2.2
 // Learn this place: the saved map lives in the device's persistent storage under this key.
 const MAPPED_KEY = "fyw.mappedMap"
 const MAPPED_KEY_NAME = "mine"
@@ -146,6 +155,9 @@ export class FindYourWayMain extends BaseScriptComponent {
   @input @hint("Card over the destination") arrivalCard: FindYourWayArrivalUI
   @input @hint("Internet module used to download the map") internetModule: InternetModule
   @input @hint("Chime played with the notice card") chime: AudioTrackAsset
+  @input @allowUndefined @hint("The dog's animated model (Assets/Models/Dog, Quaternius CC0); empty: the jointed primitives") dogModel: ObjectPrefab
+  @input @allowUndefined @hint("Props that dress the airport and the mall (Assets/Models/Props, CC0), found by name") propModels: ObjectPrefab[]
+  @input @allowUndefined @hint("The robot's animated model (Assets/Models/Robot, Quaternius CC0); empty: the jointed primitives") robotModel: ObjectPrefab
   @ui.group_end
   @ui.separator
   @ui.group_start("Settings")
@@ -204,7 +216,6 @@ export class FindYourWayMain extends BaseScriptComponent {
   @widget(new ComboBoxWidget([
     new ComboBoxItem("Dog (treats)", "dog"),
     new ComboBoxItem("Robot (bolts)", "robot"),
-    new ComboBoxItem("Rover (stars)", "rover"),
   ]))
   companionModel: string = "dog"
 
@@ -215,6 +226,20 @@ export class FindYourWayMain extends BaseScriptComponent {
   @input
   @hint("Showing preset (for the judges): overrides map, start at sign, demo controls, companion model and on at start; preselects Walk; adds Restart showing, Demo: gate change and an Airport/Preview room map switch to the Options panel")
   showingPreset: boolean = false
+
+  @input
+  @hint("Demo preset: pick one and reset the preview; the Lens opens ready for that demo (clean screen, no demo controls, at the entrance sign). Off: the settings here")
+  @widget(new ComboBoxWidget([
+    new ComboBoxItem("Off (settings below)", "off"),
+    new ComboBoxItem("1 Airport, wheelchair, Talk: gate 12C", "airportWheelchair"),
+    new ComboBoxItem("2 Mall, follow the dog, Talk: food court", "mallPet"),
+    new ComboBoxItem("3 Mall, Free walk with the robot", "freeWalkRobot"),
+  ]))
+  demo: string = "off"
+
+  @input
+  @hint("Clean screen while walking: only the floor line, the companion, the turn arrow and the offer boxes; no badges, hints, score, cards or demo controls; the arrival card for 3 s (on in the demo presets)")
+  cleanScreen: boolean = false
 
   @input
   @hint("The saved preferences of the demo (category ids, comma separated)")
@@ -280,6 +305,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   // Building-local cm the traveller has been carried by rides (the building moves the other way).
   private rideOffset = new vec3(0, 0, 0)
   private placeBuilder: FindYourWayPlaceBuilder
+  private propsView: FindYourWayPropsView | null = null
   private playTime: FindYourWayPlayTime
   private freeView: FindYourWayFreeWalkView
   private panels: FindYourWayPanelFollow
@@ -385,6 +411,17 @@ export class FindYourWayMain extends BaseScriptComponent {
   // The Inspector's own start settings (before the showing preset overrides them).
   private authored: StartSettings | null = null
   private preselect: string | null = null
+  // The demo preset in use (null: off), and whether it still has to scan and open its mode.
+  private demoSet: DemoSettings | null = null
+  private demoAutoPending = false
+  private authoredEyeCm = 180
+  private authoredOnline = true
+  private arrivedAt = 0
+  // Talk: whether anything was heard, and the preview fallback typing the demo phrase in.
+  private heardAny = false
+  private typing: {phrase: string; t0: number} | null = null
+  // Stops planned from a sentence ("coffee and a bathroom before my flight"): they follow on by themselves.
+  private askTrip = false
 
   onAwake() {
     try {
@@ -498,6 +535,7 @@ export class FindYourWayMain extends BaseScriptComponent {
       panels: this.panels,
       offerOffset: this.offerOffset,
       showBoxes: (b: LookBoxes | null) => this.showBoxes(b),
+      clean: () => this.cleanScreen,
       halfViewDeg: this.halfViewDeg,
       userPos: () => this.userPos(),
       userHeading: () => this.userHeading(),
@@ -508,6 +546,11 @@ export class FindYourWayMain extends BaseScriptComponent {
     v.setParent(this.building)
     this.view = v.createComponent(FindYourWayCompanionView.getTypeName()) as FindYourWayCompanionView
     this.view.setup(this.standIn.material)
+    this.view.setPrefabs({dog: this.dogModel || null, robot: this.robotModel || null})
+    const pv = global.scene.createSceneObject("PropsView")
+    pv.setParent(this.building)
+    this.propsView = pv.createComponent(FindYourWayPropsView.getTypeName()) as FindYourWayPropsView
+    this.propsView.setup(this.propModels || [])
     const pl = global.scene.createSceneObject("PlaceIcons")
     pl.setParent(this.building)
     this.placesUI = pl.createComponent(FindYourWayPlacesUI.getTypeName()) as FindYourWayPlacesUI
@@ -614,6 +657,11 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (!this.homePanel) return
     this.panels.placeAhead(this.homePanel.getSceneObject())
     this.homePanel.show(true)
+    if (this.demoAutoPending && this.demoSet) {
+      this.demoAutoPending = false
+      if (this.demoSet.open === "freeWalk") this.chooseFreeWalk()
+      else this.chooseGoTo()
+    }
   }
 
   // Go to a place: say where to, then Walk or Step-Free (today's flow).
@@ -624,7 +672,11 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.placeModePanel()
     this.modePanel.setSayItPhrase(sayItPhrase(this.map))
     this.modePanel.setDestination(nodeLabel(this.map, this.tripDestination || this.place.destination))
-    this.modePanel.setPreselected(this.showingPreset ? this.preselect : null)
+    this.modePanel.setPreselected(this.showingPreset || this.demoSet ? this.preselect : null)
+    this.modePanel.setSayItShown(!this.demoSet)
+    this.modePanel.setSimple(!!this.demoSet)
+    if (this.demoSet) this.modePanel.setNote("e.g. \"" + sayItPhrase(this.map) + "\"")
+    this.modePanel.setTalkHint(global.deviceInfoSystem.isEditor() ? PREVIEW_TALK_HINT : null)
     this.modePanel.show()
   }
 
@@ -650,16 +702,32 @@ export class FindYourWayMain extends BaseScriptComponent {
       return
     }
     this.modePanel.setNote("Listening…")
+    this.heardAny = false
+    this.typing = null
     this.voice.start((text, final) => this.heard(text, final), (why) => {
       print("[FYW] voice: " + why)
       this.modePanel.setNote("didn't catch that: try Where to?")
     })
     print("[FYW] voice: " + (this.voice.listening ? "listening" : "not available"))
     const attempt = ++this.voiceTry
+    // The preview fallback: nothing heard within VOICE_FALLBACK_S, the map's demo phrase types itself
+    // in ("Heard: Take me to gate 12C"), then the real matcher and router take over. On Specs live
+    // ASR answers first and this never runs.
+    const fb = this.createEvent("DelayedCallbackEvent")
+    fb.bind(() => {
+      this.removeEvent(fb)
+      if (attempt !== this.voiceTry || this.heardAny || this.phase !== "mode") return
+      const phrase = sayItPhrase(this.map)
+      if (!phrase) return
+      this.voice.stop()
+      this.typing = {phrase, t0: getTime()}
+      print("[FYW] voice: preview fallback, typing the demo phrase")
+    })
+    fb.reset(VOICE_FALLBACK_S)
     const ev = this.createEvent("DelayedCallbackEvent")
     ev.bind(() => {
       this.removeEvent(ev)
-      if (attempt !== this.voiceTry || !this.voice.listening) return
+      if (attempt !== this.voiceTry || !this.voice.listening || this.typing) return
       this.voice.stop()
       this.modePanel.setNote("didn't catch that: try Where to?")
     })
@@ -668,15 +736,70 @@ export class FindYourWayMain extends BaseScriptComponent {
 
   private heard(text: string, final: boolean): void {
     if (this.phase !== "mode") return
+    if (text) this.heardAny = true
     if (!final) {
       this.modePanel.setNote("Heard: " + text)
       return
     }
     this.voice.stop()
-    const id = matchDestination(this.map, text)
+    const plan = this.planSentence(text)
+    if (plan.length >= 2) {
+      print("[FYW] heard: " + text.length + " characters -> " + plan.join(" > ")) // never what was said
+      this.tourIds = plan
+      this.askTrip = true
+      this.tripDestination = null
+      this.modePanel.setNote("Heard: " + text + "\n→ " + plan.map((x) => nodeLabel(this.map, x)).join(" → "))
+      this.goOnAfterHeard()
+      return
+    }
+    const id = plan.length === 1 ? plan[0] : matchDestination(this.map, text)
     print("[FYW] heard: " + text.length + " characters -> " + id) // never what was said
-    if (id) this.pickDestination(id)
-    else this.modePanel.setNote("didn't catch that: try Where to?")
+    if (id) {
+      this.pickDestination(id)
+      if (this.demoSet) this.modePanel.setNote("Heard: " + text + "  →  " + nodeLabel(this.map, id))
+      this.goOnAfterHeard()
+    } else this.modePanel.setNote("didn't catch that: try Where to?")
+  }
+
+  // A demo preset goes on with its mode by itself once you have read what was heard: one Talk, and
+  // the companion leads.
+  private goOnAfterHeard(): void {
+    if (!this.demoSet || !this.preselect) return
+    const attempt = this.voiceTry
+    const ev = this.createEvent("DelayedCallbackEvent")
+    ev.bind(() => {
+      this.removeEvent(ev)
+      if (attempt === this.voiceTry && this.phase === "mode") this.chooseMode(this.preselect as Profile)
+    })
+    ev.reset(HEARD_READ_S)
+  }
+
+  // The stops for a sentence: the needs in it, the places that make the shortest trip from here
+  // (Step-Free when it is the chosen or preselected mode), the gate last.
+  private planSentence(text: string): string[] {
+    const profile: Profile = (this.profile || this.preselect || "walk") as Profile
+    const start = this.startOverride || this.tripStart || this.place.start
+    return planAsk(this.map, text, start, profile === "stepFree", (a, b) => {
+      const r = new Navigator(this.map, a, b, profile).route
+      return r.status === "route" ? r.length : r.status === "arrived" ? 0 : Infinity
+    })
+  }
+
+  // One frame of the preview fallback: the phrase appears word by word, then it is "heard".
+  private tickTyping(): void {
+    if (!this.typing) return
+    if (this.phase !== "mode") {
+      this.typing = null
+      return
+    }
+    const t = getTime() - this.typing.t0
+    const secs = typingSeconds(this.typing.phrase)
+    const shown = typedSoFar(this.typing.phrase, t, secs)
+    this.modePanel.setNote("Heard: " + shown + (shown === this.typing.phrase ? "" : "…"))
+    if (t < secs + TYPED_HOLD_S) return
+    const phrase = this.typing.phrase
+    this.typing = null
+    this.heard(phrase, true)
   }
 
   private openWhereTo(): void {
@@ -763,6 +886,7 @@ export class FindYourWayMain extends BaseScriptComponent {
       pointRadiusM: this.pointRadiusM,
       maxStops: this.maxStopsPerWalk,
       lookRangeM: this.lookRangeM,
+      ...(this.cleanScreen ? CLEAN_FREE_WALK : {}),
     })
     this.free.keepInView = (spot, user, look) => this.keepInView(spot, user, look)
     this.phase = "free"
@@ -812,6 +936,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.destinationOverride = null
     this.endStops()
     this.tourIds = null
+    this.askTrip = false
     this.nav = null
     this.profile = null
     this.coach = null
@@ -1025,6 +1150,9 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.tourIds = null
     this.tourPending = false
     this.voice.stop()
+    this.typing = null
+    this.askTrip = false
+    this.demoAutoPending = !!this.demoSet
     if (this.pickMap) this.pickMap.show(false)
     this.standingEyeY = null
     this.downloadOverride = null
@@ -1074,10 +1202,29 @@ export class FindYourWayMain extends BaseScriptComponent {
   // The showing preset over the Inspector's settings (or the Inspector's own when it is off).
   private applyShowing(): void {
     if (!this.authored) {
+      this.authoredEyeCm = this.eyeHeightCm
+      this.authoredOnline = this.tryOnlineMap
       this.authored = {mapKey: this.mapKey, startAtSign: this.startAtSign, showDemoControls: this.showDemoControls,
         companionModel: this.companionModel, companionOnAtStart: this.companionOnAtStart, preselect: null}
     }
     const s = showingSettings(this.authored, this.showingPreset)
+    this.demoSet = demoSettings(this.demo)
+    if (this.demoSet) {
+      const d = this.demoSet
+      s.mapKey = d.mapKey
+      s.startAtSign = true
+      s.showDemoControls = false
+      s.companionModel = d.companionModel
+      s.companionOnAtStart = true
+      s.preselect = d.preselect
+      this.cleanScreen = true
+      // The map in the Lens: the public gist copy may lag behind (Gate C12).
+      this.tryOnlineMap = false
+      if (d.interests.length > 0) this.presetPreferences = d.interests.join(",")
+      // Seated: the floor this much nearer the eyes.
+      this.eyeHeightCm = this.authoredEyeCm - d.seatedDropCm
+      print("[FYW] demo preset: " + this.demo)
+    }
     this.mapKey = s.mapKey
     this.startAtSign = s.startAtSign
     this.showDemoControls = s.showDemoControls
@@ -1260,6 +1407,10 @@ export class FindYourWayMain extends BaseScriptComponent {
   // Also called after the place is rebuilt for a downloaded map.
   private buildPlace(): void {
     this.rides = this.placeBuilder.build()
+    if (this.propsView) {
+      const key = this.getMapKey()
+      this.propsView.build(key === "airport" || key === "mall" ? key : "", (p, lift) => this.local(p, lift))
+    }
     this.showClosures()
   }
 
@@ -1481,6 +1632,9 @@ export class FindYourWayMain extends BaseScriptComponent {
       this.anchorWorld(true)
     }
     this.probeFloor()
+    this.tickTyping()
+    // A demo preset scans the sign by itself once the world has settled.
+    if (this.demoAutoPending && this.phase === "scan" && this.anchorFrames === 0 && !this.debugPose) this.scanSign()
     this.followDemoControls()
     this.followAppPanel()
     this.updatePeek()
@@ -1513,6 +1667,7 @@ export class FindYourWayMain extends BaseScriptComponent {
         const at = this.nav.route.nodes[0]
         const d = findNode(this.nav.map, at)
         if (d) this.arrivalCard.show(this.arrivalWords(at), this.local(d, ARRIVAL_CARD_CM), this.iconOfNode(at))
+        this.arrivedAt = getTime()
         this.hud.setPill(null)
         this.hud.setCue(null)
         this.freeView.showLook(null, pos)
@@ -1521,6 +1676,11 @@ export class FindYourWayMain extends BaseScriptComponent {
         if (this.placesUI) this.placesUI.show([], null)
         if (this.view) this.view.setPost(null, true)
         print("[FYW] arrived at " + at)
+      }
+      if (!arrivalCardOn(getTime() - this.arrivedAt, this.cleanScreen) && this.arrivalCard.getShownText() !== null) this.arrivalCard.hide()
+      if (this.askTrip && this.stops && this.stops.index < this.stops.total - 1 && getTime() - this.arrivedAt > ASK_NEXT_S) {
+        this.nextStop()
+        return
       }
       this.updateCompanion(pos, true)
       return
@@ -1589,6 +1749,10 @@ export class FindYourWayMain extends BaseScriptComponent {
       this.pointed = {place: p, until: now + POINT_SECONDS}
       this.guide.point(p, now)
       print("[FYW] pointing at " + p.id + " (" + placeTag(p) + ")")
+    }
+    if (!cleanAllows("placeIcons", this.cleanScreen, true)) {
+      this.placesUI.show([], null)
+      return
     }
     const shown = visiblePlaces(this.nav.map, route, pos, {profile: this.nav.profile, muted: this.placesMuted})
     this.placesUI.show(shown.map((q) => q.id), this.pointed && !this.placesMuted ? this.pointed.place.id : null)
@@ -1710,6 +1874,7 @@ export class FindYourWayMain extends BaseScriptComponent {
       this.view.setMood(pet.mood)
       this.view.setPose(this.local(pet.pos), pet.heading)
     }
+    this.view.hideCollectibles = this.cleanScreen
     this.view.setCollectibles(this.guide.spots.map((q) => this.local(q)), this.guide.got)
     this.hud.setScore(arrived ? treatsResult(this.guide.found, this.guide.total, this.companion)
       : treatsText(this.guide.found, this.guide.total, this.companion))
@@ -1783,11 +1948,12 @@ export class FindYourWayMain extends BaseScriptComponent {
     const on = this.phase === "nav" || this.phase === "arrived" || this.phase === "free"
     const wasOn = this.appPanel.getSceneObject().enabled
     this.appPanel.show(on)
-    this.dock.update(on, this.appPanel.isPlaying() || this.appPanel.isNextStopShown())
+    this.dock.update(on, this.appPanel.isPlaying() || this.appPanel.isNextStopShown(), this.cleanScreen)
+    this.hud.setCardsMuted(!cleanAllows("notice", this.cleanScreen, on))
     this.appPanel.setCollapsed(this.dock.isCollapsed())
     // A clear view while walking: no map badge, score chip or play hint until you stand still.
     // Almost screenless while walking: the pill, cue and badge live in the Control panel.
-    const q = walkingHud(on, this.playTime.gate.canPlay || this.appPanel.isPlaying(), this.phase === "arrived")
+    const q = walkingHud(on, this.playTime.gate.canPlay || this.appPanel.isPlaying(), this.phase === "arrived", this.cleanScreen)
     this.hud.setQuiet(q.badge, q.score, q.playLine, q.pill, q.cue)
     this.appPanel.setInfo(on ? [this.hud.getPillWanted(), this.hud.getCueWanted(), this.hud.getScoreWanted(), this.hud.getBadgeWanted()].filter((x) => !!x).join("\n") : null)
     if (!on) this.showBoxes(null)
@@ -1860,7 +2026,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   }
 
   private followDemoControls(): void {
-    const shown = this.showDemoControls || this.demoControlsForced
+    const shown = (this.showDemoControls && !this.cleanScreen) || this.demoControlsForced
     const dso = this.demoControls.getSceneObject()
     if (dso.enabled !== shown) dso.enabled = shown
     if (!shown || !this.panels) return
@@ -1955,6 +2121,9 @@ export class FindYourWayMain extends BaseScriptComponent {
   isCompanionOn(): boolean { return this.guide.on }
   isCompanionShown(): boolean { return !!this.view && this.view.isVisible() }
   getCompanionModel(): string { return this.view ? this.view.getModel() : "" }
+  getCompanionClip(): string { return this.view ? this.view.getClip() : "" }
+  getPropCount(): number { return this.propsView ? this.propsView.getCount() : 0 }
+  isCompanionAnimated(): boolean { return !!this.view && this.view.isAnimatedModel() }
   getCompanionName(): string { return this.companion.name }
   getModelButtonLabel(): string { return this.appPanel ? this.appPanel.getModelLabel() : "" }
   getCompanionMapPos(): Vec3 | null {
@@ -2074,6 +2243,21 @@ export class FindYourWayMain extends BaseScriptComponent {
   debugSeeMap(on: boolean): void { this.setMapShown(on) }
   isPeekShown(): boolean { return !!this.peekView && this.peekView.isShown() }
   isShowingPreset(): boolean { return this.showingPreset }
+  isCleanScreen(): boolean { return this.cleanScreen }
+  getDemoPreset(): string { return this.demoSet ? this.demo : "off" }
+  getTalkHint(): string | null { return this.modePanel.getTalkHint() }
+  isVoiceTyping(): boolean { return this.typing !== null }
+  isAskTrip(): boolean { return this.askTrip }
+  getStopIndex(): number { return this.stops ? this.stops.index : -1 }
+  // Test hook: a demo preset (or "off"); takes effect on Restart showing (restartShowing()).
+  debugSetDemo(preset: string): void {
+    this.demo = preset
+    if (preset === "off") {
+      this.cleanScreen = false
+      this.eyeHeightCm = this.authoredEyeCm
+      this.tryOnlineMap = this.authoredOnline
+    }
+  }
   debugSetShowingPreset(on: boolean): void { this.showingPreset = on }
   getStartSettings(): StartSettings {
     return {mapKey: this.mapKey, startAtSign: this.startAtSign, showDemoControls: this.showDemoControls,

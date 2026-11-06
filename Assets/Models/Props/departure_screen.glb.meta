@@ -1,0 +1,215 @@
+- !<AssetImportMetadata/827ce494-f15d-4130-8adb-e4b92bb71ba7>
+  ImportedAssetIds:
+    .hidden/metal: !<reference> 84b3a846-9673-4dae-8413-50d88c11fff1
+    20b0d13f6a10af71: !<reference> addcbb16-52ee-4859-8768-13c7ec10e219
+    26ba073d67b9d0dd: !<reference> 3aefc796-d64e-4e66-8db6-fc07e9eac62a
+    55a0f0bd48e3b8f0: !<reference> bb7c6341-e2a4-469b-8af8-8c720dec6e05
+    5ba316c25b4281de: !<reference> b264a450-1397-47ae-a50f-6f498a342432
+    88ab437fd121cc69: !<reference> 990a1241-e199-4523-ae2f-3d8dffa459a7
+    8c2c6f3cf8d060fd: !<reference> 3695e5d3-4521-4eab-b901-448d47c6d877
+    908c9fc8ce27a605: !<reference> a05cfe7b-cd6f-44f9-a9dd-4b91f31d9059
+    Materials/metal: !<reference> 812e7f71-58ab-45f3-a891-e36640f05a21
+    Materials/metalDark: !<reference> 0c2db4b9-757d-4860-b823-b8671fccd225
+    Materials/metalDark|metalDark|GraphPassInfo: !<reference> de2e3be6-87b7-4329-b477-9f85e324b76f
+    Materials/metal|metal|GraphPassInfo: !<reference> f659927b-c465-4b71-be9a-5e9a2dc943c2
+    Meshes/televisionModern_2: !<reference> 411a2d80-b903-4a1f-8123-3b054d7b8145
+    Meshes/televisionModern_21: !<reference> 58b808f4-dc44-47e2-8aa1-7bee950dc914
+    Meshes/televisionModern_3: !<reference> 3b00059c-cfd9-458c-8724-3961f8c5582a
+    Meshes/televisionModern_31: !<reference> 96acd50c-9e94-4662-9257-7d0726f92b36
+    Scene: !<reference> 99781a7e-76b6-47e9-ae61-d7214df51cd7
+    d9bda0073d17095f: !<reference> e61005c1-2c32-479f-90ff-191461a27624
+    eb0f37e0e582a8da: !<reference> 4af4c278-4d8d-47b6-a5cb-ad68511f3115
+  ImporterName: GltfImporter
+  PrimaryAsset: !<reference> 99781a7e-76b6-47e9-ae61-d7214df51cd7
+  PackageType: LegacyPackage
+  LegacyPackagePolicy: CanBeUnpackedTransparent
+  ExtraData:
+    {}
+  AssetDataMap:
+    Scene: !<own> bfc33e0c-213d-4b85-b620-53ea1eb2afa9
+  DependentFiles:
+    []
+  ImporterSettings: !<GltfImporterSettings>
+    UseLegacyImporter: false
+    WithMaterials: true
+    NamingConvention: ByCategorySanitizeV2
+    PersistentIdGenerationAlgorithm: DescriptorBasedV2
+    AnimationCurveOptimization: true
+    CustomAnimationSamplingRate: 30.000000
+    ImportVertexColor: true
+    ImportTangents: true
+    ImportMorphTargetAnimation: true
+    ConvertMetersToCentimeters: true
+    RegenerateTangents: false
+    OptimizeMesh: true
+  CompressionSettings: !<ComplexCompressionSettings>
+    Presets:
+      None Compression: !<FileCompressionSettings>
+        {}
+    ExtensionMappings:
+      mesh: None Compression
+    Overrides:
+      {}
+- !<SceneObject/3695e5d3-4521-4eab-46fe-bb72b8392788>
+  PrefabRemaps:
+    []
+  Name: Scene0
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> e61005c1-2c32-479f-6f00-e6eb9e5d89db
+    - !<own> bb7c6341-e2a4-469b-7507-738df21391fa
+  Components:
+    []
+- !<SceneObject/3aefc796-d64e-4e66-7249-03f8161539d5>
+  PrefabRemaps:
+    []
+  Name: departure_screen
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 100.000000, y: 100.000000, z: 100.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 990a1241-e199-4523-51d0-c272005ba658
+  Components:
+    []
+- !<RenderMeshVisual/4af4c278-4d8d-47b6-5a34-5297aee0ceea>
+  PrefabRemaps:
+    []
+  Name: televisionModern_3
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 0c2db4b9-757d-4860-b823-b8671fccd225
+  Mesh: !<reference> 96acd50c-9e94-4662-9257-7d0726f92b36
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<SceneObject/990a1241-e199-4523-51d0-c272005ba658>
+  PrefabRemaps:
+    []
+  Name: Scenes
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 3695e5d3-4521-4eab-46fe-bb72b8392788
+  Components:
+    []
+- !<RenderMeshVisual/a05cfe7b-cd6f-44f9-5622-b46e0ce26fa6>
+  PrefabRemaps:
+    []
+  Name: televisionModern_2
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 0c2db4b9-757d-4860-b823-b8671fccd225
+  Mesh: !<reference> 411a2d80-b903-4a1f-8123-3b054d7b8145
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<RenderMeshVisual/addcbb16-52ee-4859-7897-ec3813ef1de6>
+  PrefabRemaps:
+    []
+  Name: televisionModern_3
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 812e7f71-58ab-45f3-a891-e36640f05a21
+  Mesh: !<reference> 3b00059c-cfd9-458c-8724-3961f8c5582a
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<RenderMeshVisual/b264a450-1397-47ae-5af0-90b675cbdbcd>
+  PrefabRemaps:
+    []
+  Name: televisionModern_2
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 812e7f71-58ab-45f3-a891-e36640f05a21
+  Mesh: !<reference> 58b808f4-dc44-47e2-8aa1-7bee950dc914
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<SceneObject/bb7c6341-e2a4-469b-7507-738df21391fa>
+  PrefabRemaps:
+    []
+  Name: televisionModern_1
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> addcbb16-52ee-4859-7897-ec3813ef1de6
+    - !<own> 4af4c278-4d8d-47b6-5a34-5297aee0ceea
+- !<ObjectPrefabAssetData/bfc33e0c-213d-4b85-b620-53ea1eb2afa9>
+  Prototype: !<ObjectOwner/4b786082-cda8-47b7-92ca-2556ec092d6a>
+    PackagePath: ""
+    objects:
+      - !<own> 3aefc796-d64e-4e66-7249-03f8161539d5
+- !<SceneObject/e61005c1-2c32-479f-6f00-e6eb9e5d89db>
+  PrefabRemaps:
+    []
+  Name: televisionModern
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> a05cfe7b-cd6f-44f9-5622-b46e0ce26fa6
+    - !<own> b264a450-1397-47ae-5af0-90b675cbdbcd

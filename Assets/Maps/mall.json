@@ -10,7 +10,7 @@
     "standInModel": true,
     "start": "sign",
     "destination": "cinema",
-    "sayIt": "Take me to Bolt Hardware",
+    "sayIt": "Take me to the food court",
     "interests": [
       {
         "id": "coffee",

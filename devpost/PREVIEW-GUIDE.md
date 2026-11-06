@@ -8,6 +8,28 @@ No glasses needed. Everything below runs in Lens Studio's Preview panel on your 
 2. In the **Preview** panel, set device **SPECS 27**, mode **Interactive** and scene **Plane**. The stand-in building is solid in Lens Studio only, so an empty scene lets it read as a place you walk through.
 3. Click **reset preview** (the circular arrow) so the Lens starts fresh. It opens in the shopping mall.
 
+## The three demos (one Inspector setting each)
+
+Select **FindYourWay** in the Scene Hierarchy, pick **Demo preset** in the Inspector, then click **reset preview**.
+The Lens opens ready: the sign is scanned for you, the screen stays clear while you walk (only the floor line, the
+companion, the turn arrow and the offer boxes), and there are no demo controls. Set it back to **Off** for the full app.
+
+**1. Airport, wheelchair, "in your own words".** Preset **1 Airport, wheelchair**. Seated view, Step-Free picked.
+Click **Talk**. In the preview the Lens can't hear you (speech recognition runs on Specs), so the sentence types itself
+in: "I need coffee and a bathroom before my flight at gate 12C". The panel shows the plan, Café, then Accessible toilet,
+then Gate C12, and the dog sets off. Follow it with W A S D (Shift + A / D to turn): through Lift 1 (click its button
+inside the lift), to the café, the accessible toilet, then down the ramp to Gate C12. Each stop shows a card for 3 s,
+then the dog leads on.
+
+**2. Mall, follow the dog.** Preset **2 Mall, follow the dog**. Walk picked. Click **Talk**: "Take me to the food
+court". Follow the dog; it waits at the foot of the escalator until you get there, then rides up with you.
+
+**3. Free walk with the robot.** Preset **3 Mall, Free walk with the robot**. Coffee and clothes are picked: click
+**Keep them and walk**. The robot walks ahead and stops to wave at **Bean There Café** and **Threads**. Look at a shop
+(turn toward it) and its two offer boxes appear.
+
+Caption for recordings: "Voice shown as typed in the preview; live speech on Specs."
+
 ## Controls
 
 | Do | How |
@@ -99,7 +121,7 @@ Write **logic proven** next to what tests and the preview show working, and **fe
 npm test
 ```
 
-Expect `pass 499`, `fail 0`. One test downloads the maps from the public gist; with no internet, set `OFFLINE=1` to skip it (`pass 498`, `skipped 1`). The run first checks that the Lens copies match `src/core`. After editing `src/core`, run `npm run sync`.
+Expect `pass 535`, `fail 0`. One test downloads the maps from the public gist; with no internet, set `OFFLINE=1` to skip it (`pass 534`, `skipped 1`). The run first checks that the Lens copies match `src/core`. After editing `src/core`, run `npm run sync`.
 
 **LEAF tests** run inside the Lens, pressing the real buttons:
 

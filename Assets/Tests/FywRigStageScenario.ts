@@ -32,7 +32,7 @@ export class FywRigStageScenario extends Scenario {
       m.mainPass.twoSided = true
       return m
     }
-    const rigs = ["dog", "robot", "rover"].map((id, i) => {
+    const rigs = ["dog", "robot"].map((id, i) => {
       const so = global.scene.createSceneObject("Stage_" + id)
       so.setParent(stage)
       const t = so.getTransform()

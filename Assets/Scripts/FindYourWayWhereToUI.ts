@@ -2,6 +2,7 @@
 // the same job as the voice stand-in. Created at runtime by FindYourWayMain.
 // Must not: route (Main does, with the id it is given).
 
+import {addPopIn} from "./FindYourWayPopIn"
 import {addButton, addText, LabeledButton, makePanel} from "./FindYourWayWidgetsUI"
 import {icon} from "./FindYourWayIconsUI"
 
@@ -19,6 +20,7 @@ export class FindYourWayWhereToUI extends BaseScriptComponent {
 
   setup(onPick: (id: string) => void, onClose: () => void, onMap: () => void): void {
     const panel = makePanel(this.sceneObject, WIDTH + 4, 1.8, 0.7)
+    addPopIn(this.sceneObject)
     addText(panel.content, "WhereToTitle", "Where to?", "Headline1", WIDTH, 3.6, TEXT, 100)
     this.pageText = addText(panel.content, "WhereToPage", "", "Caption", WIDTH, 1.8, TEXT, 100)
     for (let i = 0; i < PAGE; i++) {

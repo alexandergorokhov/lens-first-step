@@ -16,11 +16,12 @@ export class OptionsDock {
   private forced = false;
 
   // tripActive: on a trip or walk; mustShow: a button in the panel is needed right now.
-  update(tripActive: boolean, mustShow: boolean): void {
+  // clean: the clean screen (demo presets): it never opens by itself, only on a tap.
+  update(tripActive: boolean, mustShow: boolean, clean: boolean = false): void {
     if (tripActive && !this.active) this.folded = true;
     if (!tripActive) this.folded = false;
     this.active = tripActive;
-    this.forced = mustShow;
+    this.forced = mustShow && !clean;
   }
 
   toggle(): void {
@@ -42,7 +43,9 @@ export function routeLineAheadM(companionOn: boolean, aheadM: number): number {
 // Almost screenless while you walk a trip: only the floor line and the companion (and the turn
 // arrow). The distance pill, floor cue and map badge move into the Control panel; the score chip and
 // the play hint come back when you stand still (the score also at arrival). Off a trip nothing is hidden.
-export function walkingHud(tripActive: boolean, standing: boolean, arrived: boolean): { pill: boolean; cue: boolean; badge: boolean; score: boolean; playLine: boolean } {
+// With the clean screen on (the demo presets) none of them ever shows.
+export function walkingHud(tripActive: boolean, standing: boolean, arrived: boolean, clean: boolean = false): { pill: boolean; cue: boolean; badge: boolean; score: boolean; playLine: boolean } {
+  if (clean) return { pill: false, cue: false, badge: false, score: false, playLine: false };
   if (!tripActive) return { pill: true, cue: true, badge: true, score: true, playLine: true };
   return { pill: false, cue: false, badge: false, score: standing || arrived, playLine: standing && !arrived };
 }
@@ -52,4 +55,21 @@ export function walkingHud(tripActive: boolean, standing: boolean, arrived: bool
 export const UNPICKED_ALPHA = 0.45;
 export function pickChip(label: string, picked: boolean): { text: string; alpha: number; highlight: boolean } {
   return picked ? { text: "✓ " + label, alpha: 1, highlight: true } : { text: label, alpha: UNPICKED_ALPHA, highlight: false };
+}
+
+// The clean screen (on in the demo presets): while you walk, the view holds only the floor line, the
+// companion, the turn arrow when needed and the offer boxes. Of the texts that can show by themselves,
+// only these may: the offer boxes, the arrival card (for CLEAN_ARRIVAL_S), the voice caption and the
+// folded Control tab. A notice before a trip (the map failed to load) still shows.
+const CLEAN_ALLOWED = ["offerBoxes", "arrival", "voiceCaption", "controlTab"];
+export function cleanAllows(kind: string, clean: boolean, tripActive: boolean): boolean {
+  if (!clean) return true;
+  if (kind === "notice") return !tripActive;
+  return CLEAN_ALLOWED.indexOf(kind) >= 0;
+}
+
+export const CLEAN_ARRIVAL_S = 3;
+// Whether the arrival card still shows, this long after arriving.
+export function arrivalCardOn(secondsSinceArrival: number, clean: boolean): boolean {
+  return !clean || secondsSinceArrival < CLEAN_ARRIVAL_S;
 }

@@ -1,0 +1,144 @@
+- !<AssetImportMetadata/9e4735f5-d047-49ea-a4dd-4286b6332790>
+  ImportedAssetIds:
+    .hidden/Wood: !<reference> 3791f247-26bc-4450-8aa9-25ff2525c050
+    21df3115d5bfabfa: !<reference> 29476e94-3135-4e71-a5e0-d5f02ef28fa0
+    26ba073d67b9d0dd: !<reference> 98b3bbd3-58c3-4286-9d06-4d0c947f7878
+    66d68356be095b36: !<reference> ff3c1ae2-c782-4a30-8590-d132f1cab545
+    88ab437fd121cc69: !<reference> 15e81e48-fd77-4793-b21a-e8aba6332685
+    Materials/Wood: !<reference> ef0f92f1-276f-42f0-a2e4-dafa2c3bf2b6
+    Materials/Wood|Wood|GraphPassInfo: !<reference> dfeedbe6-d8c6-4057-bb60-b410ec0b22e5
+    Meshes/Bench_1: !<reference> 0c7d8fa1-9c2c-4dc3-a8fa-f476a6565ea5
+    Scene: !<reference> cb6ac3d9-178c-4978-a1a7-3681abd44964
+    e8bbd9aa2e5437a1: !<reference> 91bc82ce-2446-4a2b-8ece-8f8bc398e6ef
+    f17c5fdefa9996e2: !<reference> efe10141-28bd-428b-9e5c-2f65f0386cfe
+  ImporterName: GltfImporter
+  PrimaryAsset: !<reference> cb6ac3d9-178c-4978-a1a7-3681abd44964
+  PackageType: LegacyPackage
+  LegacyPackagePolicy: CanBeUnpackedTransparent
+  ExtraData:
+    {}
+  AssetDataMap:
+    Scene: !<own> 76f0c55a-c6f7-4e26-9847-77370c5a05f1
+  DependentFiles:
+    []
+  ImporterSettings: !<GltfImporterSettings>
+    UseLegacyImporter: false
+    WithMaterials: true
+    NamingConvention: ByCategorySanitizeV2
+    PersistentIdGenerationAlgorithm: DescriptorBasedV2
+    AnimationCurveOptimization: true
+    CustomAnimationSamplingRate: 30.000000
+    ImportVertexColor: true
+    ImportTangents: true
+    ImportMorphTargetAnimation: true
+    ConvertMetersToCentimeters: true
+    RegenerateTangents: false
+    OptimizeMesh: true
+  CompressionSettings: !<ComplexCompressionSettings>
+    Presets:
+      None Compression: !<FileCompressionSettings>
+        {}
+    ExtensionMappings:
+      mesh: None Compression
+    Overrides:
+      {}
+- !<SceneObject/15e81e48-fd77-4793-4de5-175459ccd97a>
+  PrefabRemaps:
+    []
+  Name: Scenes
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 29476e94-3135-4e71-5a1f-2a0fd10d705f
+  Components:
+    []
+- !<SceneObject/29476e94-3135-4e71-5a1f-2a0fd10d705f>
+  PrefabRemaps:
+    []
+  Name: Root Scene
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> ff3c1ae2-c782-4a30-7a6f-2ecd0e354aba
+  Components:
+    []
+- !<ObjectPrefabAssetData/76f0c55a-c6f7-4e26-9847-77370c5a05f1>
+  Prototype: !<ObjectOwner/57b89c90-2e9d-480c-8531-cb6ebc55d6ef>
+    PackagePath: ""
+    objects:
+      - !<own> 98b3bbd3-58c3-4286-62f9-b2f36b808787
+- !<RenderMeshVisual/91bc82ce-2446-4a2b-7131-70743c671910>
+  PrefabRemaps:
+    []
+  Name: Bench_1
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> ef0f92f1-276f-42f0-a2e4-dafa2c3bf2b6
+  Mesh: !<reference> 0c7d8fa1-9c2c-4dc3-a8fa-f476a6565ea5
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<SceneObject/98b3bbd3-58c3-4286-62f9-b2f36b808787>
+  PrefabRemaps:
+    []
+  Name: bench
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 100.000000, y: 100.000000, z: 100.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 15e81e48-fd77-4793-4de5-175459ccd97a
+  Components:
+    []
+- !<SceneObject/efe10141-28bd-428b-61a3-d09a0fc79301>
+  PrefabRemaps:
+    []
+  Name: Bench_1
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: -90.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 100.000000, y: 100.000000, z: 100.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 91bc82ce-2446-4a2b-7131-70743c671910
+- !<SceneObject/ff3c1ae2-c782-4a30-7a6f-2ecd0e354aba>
+  PrefabRemaps:
+    []
+  Name: RootNode
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> efe10141-28bd-428b-61a3-d09a0fc79301
+  Components:
+    []

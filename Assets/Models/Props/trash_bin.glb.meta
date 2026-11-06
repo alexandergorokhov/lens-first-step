@@ -1,0 +1,169 @@
+- !<AssetImportMetadata/e4bb7d13-0d37-4ec8-b4eb-2e082f32aef1>
+  ImportedAssetIds:
+    .hidden/Black: !<reference> 0d2d342d-a7cd-410e-babf-2a4fd6c48a9a
+    0d47ee92d683ac7d: !<reference> 4261ac4f-e8c5-44f7-aa3b-dcf22a4a1269
+    21df3115d5bfabfa: !<reference> 4be4075d-e4ad-47d3-9dc0-3aabc8b3637c
+    26ba073d67b9d0dd: !<reference> 30b93f5a-bb63-46c2-86f2-804778eefdc9
+    5da4f35eb969922d: !<reference> 992bddfd-5a55-44fa-9b03-339a13c046cd
+    66d68356be095b36: !<reference> 55825c17-edea-4e94-acd8-fbb65f61a26d
+    88ab437fd121cc69: !<reference> 66a4b47b-ad4f-4805-bf1a-e379db8a2c14
+    Materials/Black: !<reference> c4eb04c6-df55-48bb-b09f-9f32ba772802
+    Materials/Black|Black|GraphPassInfo: !<reference> 3e0cf5cf-d5a6-41aa-ad30-c031d3a00a38
+    Materials/LightMetal: !<reference> 2f84941a-b3e3-4ba4-8e89-f3e384591bd6
+    Materials/LightMetal|LightMetal|GraphPassInfo: !<reference> 83e2939f-807e-4fd3-bcdd-19787e55d7b1
+    Meshes/Trashcan_Small1: !<reference> 0427b7fe-da93-4075-addf-30be983eda84
+    Meshes/Trashcan_Small11: !<reference> 840e4327-ef23-4832-9756-92b8d835e450
+    Scene: !<reference> ba09cb0f-3780-4130-99f9-68f054821ee1
+    a7ff3954cceae45b: !<reference> 096c6eff-ea95-4f93-8e50-fc030146287f
+  ImporterName: GltfImporter
+  PrimaryAsset: !<reference> ba09cb0f-3780-4130-99f9-68f054821ee1
+  PackageType: LegacyPackage
+  LegacyPackagePolicy: CanBeUnpackedTransparent
+  ExtraData:
+    {}
+  AssetDataMap:
+    Scene: !<own> 66335153-0ef1-4076-82d9-467233e61c37
+  DependentFiles:
+    []
+  ImporterSettings: !<GltfImporterSettings>
+    UseLegacyImporter: false
+    WithMaterials: true
+    NamingConvention: ByCategorySanitizeV2
+    PersistentIdGenerationAlgorithm: DescriptorBasedV2
+    AnimationCurveOptimization: true
+    CustomAnimationSamplingRate: 30.000000
+    ImportVertexColor: true
+    ImportTangents: true
+    ImportMorphTargetAnimation: true
+    ConvertMetersToCentimeters: true
+    RegenerateTangents: false
+    OptimizeMesh: true
+  CompressionSettings: !<ComplexCompressionSettings>
+    Presets:
+      None Compression: !<FileCompressionSettings>
+        {}
+    ExtensionMappings:
+      mesh: None Compression
+    Overrides:
+      {}
+- !<SceneObject/096c6eff-ea95-4f93-71af-03fcfeb9d780>
+  PrefabRemaps:
+    []
+  Name: Trashcan_Small1
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: -90.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 100.000000, y: 100.000000, z: 100.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 4261ac4f-e8c5-44f7-55c4-230dd5b5ed96
+    - !<own> 992bddfd-5a55-44fa-64fc-cc65ec3fb932
+- !<SceneObject/30b93f5a-bb63-46c2-790d-7fb887110236>
+  PrefabRemaps:
+    []
+  Name: trash_bin
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 100.000000, y: 100.000000, z: 100.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 66a4b47b-ad4f-4805-40e5-1c862475d3eb
+  Components:
+    []
+- !<RenderMeshVisual/4261ac4f-e8c5-44f7-55c4-230dd5b5ed96>
+  PrefabRemaps:
+    []
+  Name: Trashcan_Small1
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> 2f84941a-b3e3-4ba4-8e89-f3e384591bd6
+  Mesh: !<reference> 0427b7fe-da93-4075-addf-30be983eda84
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}
+- !<SceneObject/4be4075d-e4ad-47d3-623f-c554374c9c83>
+  PrefabRemaps:
+    []
+  Name: Root Scene
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 55825c17-edea-4e94-5327-0449a09e5d92
+  Components:
+    []
+- !<SceneObject/55825c17-edea-4e94-5327-0449a09e5d92>
+  PrefabRemaps:
+    []
+  Name: RootNode
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 096c6eff-ea95-4f93-71af-03fcfeb9d780
+  Components:
+    []
+- !<ObjectPrefabAssetData/66335153-0ef1-4076-82d9-467233e61c37>
+  Prototype: !<ObjectOwner/3b247268-2e97-48c0-b5e4-b9c06d72f956>
+    PackagePath: ""
+    objects:
+      - !<own> 30b93f5a-bb63-46c2-790d-7fb887110236
+- !<SceneObject/66a4b47b-ad4f-4805-40e5-1c862475d3eb>
+  PrefabRemaps:
+    []
+  Name: Scenes
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    - !<own> 4be4075d-e4ad-47d3-623f-c554374c9c83
+  Components:
+    []
+- !<RenderMeshVisual/992bddfd-5a55-44fa-64fc-cc65ec3fb932>
+  PrefabRemaps:
+    []
+  Name: Trashcan_Small1
+  Enabled: true
+  RenderOrder: 0
+  StretchMode: Stretch
+  VerticalAlignment: Center
+  HorizontalAlignment: Center
+  MeshShadowMode: None
+  ShadowColor: {x: 1.000000, y: 1.000000, z: 1.000000, w: 1.000000}
+  ShadowDensity: 1.000000
+  Materials:
+    - !<reference> c4eb04c6-df55-48bb-b09f-9f32ba772802
+  Mesh: !<reference> 840e4327-ef23-4832-9756-92b8d835e450
+  Skin: !<reference> 00000000-0000-0000-0000-000000000000
+  BlendShapesEnabled: true
+  BlendNormals: false
+  BlendShapes:
+    {}

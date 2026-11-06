@@ -80,6 +80,8 @@ export class FindYourWayHudUI extends BaseScriptComponent {
   private cardTime = -1
   private cardFresh = false
   private cardDuration = 5
+  // The clean screen while walking: notice and ride cards are logged, not shown.
+  private cardsMuted = false
 
   onAwake() {
     const cardRoot = obj(this.sceneObject, "NoticeCard", this.cardPosition)
@@ -179,7 +181,16 @@ export class FindYourWayHudUI extends BaseScriptComponent {
     }
   }
 
+  setCardsMuted(muted: boolean): void {
+    this.cardsMuted = muted
+    if (muted) this.hideCard()
+  }
+
   showCard(text: string, iconName?: string | null, seconds?: number): void {
+    if (this.cardsMuted) {
+      print("[FYW] card (clean screen, not shown): " + text)
+      return
+    }
     this.cardText.text = text
     const m = this.cardIcon.mainMaterial
     if (m) m.mainPass.baseTex = icon(iconName || "info")

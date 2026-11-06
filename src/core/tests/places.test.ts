@@ -386,8 +386,8 @@ test("Q7 The route line is 60% see-through with the pet off and on (Pet + line)"
 
 // ---- Q8: any companion, just a different model -----------------------------------------------
 
-test("Q8 The companion can be a dog, a robot or a rover: same logic, its own name, model and collectible", () => {
-  assert.deepEqual(Object.keys(COMPANIONS), ["dog", "robot", "rover"]);
+test("Q8 The companion can be a dog or a robot: same logic, its own name, model and collectible", () => {
+  assert.deepEqual(Object.keys(COMPANIONS), ["dog", "robot"]);
   for (const id of Object.keys(COMPANIONS)) {
     const c = companionOf(id);
     assert.equal(c.id, id);
@@ -396,14 +396,13 @@ test("Q8 The companion can be a dog, a robot or a rover: same logic, its own nam
   assert.equal(companionOf("unicorn").id, "dog");
   assert.equal(treatsText(2, 5), "Treats 2 of 5");
   assert.equal(treatsText(2, 5, companionOf("robot")), "Bolts 2 of 5");
-  assert.equal(treatsText(1, 4, companionOf("rover")), "Stars 1 of 4");
+  assert.equal(companionOf("rover").id, "dog", "the rover is gone: the dog stands in");
 });
 
 test("Q8b The picker offers every companion once, named for what you see", () => {
   assert.deepEqual(companionChoices(), [
     { id: "dog", label: "Dog" },
     { id: "robot", label: "Robot" },
-    { id: "rover", label: "Rover" },
   ]);
   assert.deepEqual(companionChoices().map((c) => c.id), Object.keys(COMPANIONS));
 });

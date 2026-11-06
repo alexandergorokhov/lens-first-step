@@ -14,7 +14,7 @@ Every scenario and where it is tested.
   seated height and the scanned sign are simulated with test hooks on `FindYourWayMain`
   (LEAF cannot drive WASD/Q/E).
 
-Node 499 tests, all passing (with `OFFLINE=1` the live gist download is skipped).
+Node 535 tests, all passing (with `OFFLINE=1` the live gist download is skipped).
 `src/core/tests/docs.test.ts` checks this count, the test list and every test named below. LEAF
 scenarios have each passed in the preview; run them in short groups, because long batches can hit a
 tap timeout.
