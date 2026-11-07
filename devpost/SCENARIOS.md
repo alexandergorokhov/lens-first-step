@@ -14,7 +14,7 @@ Every scenario and where it is tested.
   seated height and the scanned sign are simulated with test hooks on `FindYourWayMain`
   (LEAF cannot drive WASD/Q/E).
 
-Node 551 tests, all passing (with `OFFLINE=1` the live gist download is skipped).
+Node 558 tests, all passing (with `OFFLINE=1` the live gist download is skipped).
 `src/core/tests/docs.test.ts` checks this count, the test list and every test named below. LEAF
 scenarios have each passed in the preview; run them in short groups, because long batches can hit a
 tap timeout.
@@ -255,3 +255,11 @@ Dijkstra (`shortestTree`), which the Lens still uses; A* is for big maps (a mall
 | gt1 | Catch by hand: pinch the treat, swing, let go; it lands within reach | LEAF `gt1-grab-and-throw`, Node G1-G3 |
 | R1-R3 | The video edit keeps the right stretches and times the captions | Node `reel-edit.test.ts` |
 | Map 5a | A floor-plan photo to a map: `npm run map:from-plan` | Node `map-from-plan.test.ts` |
+
+## Offers card, demo panel, heard a gate change (Nov 6)
+
+| ID | Scenario | Test |
+|---|---|---|
+| o1 | Look 2 s at a shop anywhere in the place: its offers; the card never covers an open menu and stays in view | LEAF `o1-offers-anywhere`, Node `offers-slot.test.ts` |
+| mp1 | The demo presets hide the interest chips and the panel closes up (no empty band) | LEAF `mp1-no-empty-band` |
+| cr1 | Heard a gate change: the announcement's caption names B14 -> "Re-route to Gate B14?"; No keeps the trip, Yes re-routes step-free | LEAF `cr1-heard-gate-change`, Node `gate-change.test.ts` |

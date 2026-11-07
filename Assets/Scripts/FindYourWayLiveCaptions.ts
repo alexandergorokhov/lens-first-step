@@ -17,6 +17,8 @@ const DEMO_HOLD_S = 0.8
 export class FindYourWayLiveCaptions {
   // On Specs: set to an LLM call to translate; null shows what was heard as it was.
   translator: Translator | null = null
+  // Every final line shown, in the wearer's language (Main checks it for a gate change; add-on D).
+  onFinal: ((text: string) => void) | null = null
   private feed = new CaptionFeed()
   private lang = ""
   private on = false
@@ -45,8 +47,13 @@ export class FindYourWayLiveCaptions {
   // The preview's scripted announcement for this map (airport: Spanish; mall: French).
   playDemo(mapKey: string): void {
     const d = DEMO_SPEECH[mapKey]
-    if (!d || !this.on) return
-    this.demo = {heard: d.heard, english: d.english, lang: d.lang, t0: getTime(), translated: false, who: DEMO_SPEAKER[mapKey] || ""}
+    if (d) this.playScript({heard: d.heard, english: d.english, lang: d.lang, who: DEMO_SPEAKER[mapKey] || ""})
+  }
+
+  // Any scripted line (the preview's sample gate announcement too): typed in, then its translation.
+  playScript(d: {heard: string; english: string; lang: string; who: string}): void {
+    if (!this.on) return
+    this.demo = {heard: d.heard, english: d.english, lang: d.lang, t0: getTime(), translated: false, who: d.who}
     this.demoEndsAt = getTime() + DEMO_TYPE_S + DEMO_HOLD_S
   }
 
@@ -67,6 +74,7 @@ export class FindYourWayLiveCaptions {
       } else if (t >= DEMO_TYPE_S + DEMO_HOLD_S && !this.demo.translated) {
         this.demo.translated = true
         this.feed.push(this.demo.english, true, now)
+        if (this.onFinal) this.onFinal(this.demo.english)
         this.lang = (this.demo.who ? this.demo.who + "  ·  " : "") + name + " → " + this.target + "  ·  preview demo"
       } else if (t < DEMO_TYPE_S + DEMO_HOLD_S) {
         this.feed.push(this.demo.heard, false, now)
@@ -102,11 +110,13 @@ export class FindYourWayLiveCaptions {
     if (!this.on) return
     this.feed.push(text, final && !this.translator, getTime())
     this.lang = ""
+    if (final && !this.translator && this.onFinal) this.onFinal(text)
     if (!final || !this.translator) return
     this.translator(translatePrompt(text, this.target)).then((reply) => {
       const t = parseTranslation(reply)
       this.feed.push(t || text, true, getTime())
       this.lang = t && t !== text ? "→ " + this.target : ""
+      if (this.onFinal) this.onFinal(t || text)
     }).catch(() => this.feed.push(text, true, getTime()))
   }
 }

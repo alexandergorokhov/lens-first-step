@@ -19,7 +19,7 @@ Click **Talk**. In the preview the Lens can't hear you (speech recognition runs 
 in: "I need coffee and a bathroom before my flight at gate 12C". The panel shows the plan, Café, then Accessible toilet,
 then Gate C12, and the dog sets off. Follow it with W A S D (Shift + A / D to turn): through Lift 1 (click its button
 inside the lift), to the café, the accessible toilet, then down the ramp to Gate C12. Each stop shows a card for 3 s,
-then the dog leads on.
+then the dog leads on. **Heard a gate change:** on the way, open **Control** and click **Play announcement**. A sample announcement types in at the bottom in Spanish, then shows in English ("…now boards at gate B14"); Pathpal asks **Re-route to Gate B14?** **Yes** sends you there step-free; **No** keeps your trip. Preview only: a sample announcement and translation; on Specs the captions come from live speech. Nothing is recorded or stored.
 
 **2. Mall, follow the dog.** Preset **2 Mall, follow the dog**. Walk picked. Click **Talk**: "Take me to the food
 court". Follow the dog; it waits at the foot of the escalator until you get there, then rides up with you.
@@ -121,7 +121,7 @@ Write **logic proven** next to what tests and the preview show working, and **fe
 npm test
 ```
 
-Expect `pass 551`, `fail 0`. One test downloads the maps from the public gist; with no internet, set `OFFLINE=1` to skip it (`pass 550`, `skipped 1`). The run first checks that the Lens copies match `src/core`. After editing `src/core`, run `npm run sync`.
+Expect `pass 558`, `fail 0`. One test downloads the maps from the public gist; with no internet, set `OFFLINE=1` to skip it (`pass 557`, `skipped 1`). The run first checks that the Lens copies match `src/core`. After editing `src/core`, run `npm run sync`.
 
 **LEAF tests** run inside the Lens, pressing the real buttons:
 

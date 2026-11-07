@@ -113,7 +113,24 @@ export function makePanel(root: SceneObject, widthCm: number, pad: number, gap: 
 
 function registerItem(parent: SceneObject, item: FlexItem): void {
   const layout = parent.getComponent(FlexLayout.getTypeName()) as FlexLayout | null
-  if (layout) layout.addItems([item])
+  if (!layout) return
+  // Creation order, so an item taken out of the layout and put back returns to its place.
+  item.order = (ORDER_OF.get(layout) || 0) + 1
+  ORDER_OF.set(layout, item.order)
+  layout.addItems([item])
+}
+const ORDER_OF = new Map<FlexLayout, number>()
+
+// Shows or hides an item made by addText / addButton / addRow / addIcon, and takes it out of its
+// column's layout while hidden, so the panel closes up instead of keeping an empty band.
+export function setShownInLayout(so: SceneObject, on: boolean): void {
+  so.enabled = on
+  const item = so.getComponent(FlexItem.getTypeName()) as FlexItem | null
+  const parent = so.getParent()
+  const layout = parent ? (parent.getComponent(FlexLayout.getTypeName()) as FlexLayout | null) : null
+  if (!item || !layout) return
+  if (on) layout.addItems([item])
+  else layout.removeItems([item])
 }
 
 // One text row inside a column FlexLayout. widthCm sizes the cell for the longest expected string.

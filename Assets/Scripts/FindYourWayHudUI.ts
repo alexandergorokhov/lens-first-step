@@ -5,7 +5,7 @@
 // catch hints and score). Must not: decide when a gate changes or which map is used.
 
 import {cardClock} from "./FindYourWayPlace"
-import {addIcon, addRow, addText, CARD_TINT, easeOutCubic, makePanel, obj, Panel, PANEL_SCALE, TAB_TINT} from "./FindYourWayWidgetsUI"
+import {addButton, addIcon, addRow, addText, CARD_TINT, easeOutCubic, makePanel, obj, Panel, PANEL_SCALE, TAB_TINT} from "./FindYourWayWidgetsUI"
 import {THEME} from "./FindYourWayTheme"
 import {addPopIn} from "./FindYourWayPopIn"
 import {icon} from "./FindYourWayIconsUI"
@@ -89,6 +89,10 @@ export class FindYourWayHudUI extends BaseScriptComponent {
   private offerLines: Text[] = []
   private offersShown: {title: string; lines: string[]} | null = null
   private offersPanel: Panel
+  // Add-on D: "Re-route to Gate B14?" with Yes / No, top centre.
+  private reroute: SceneObject
+  private rerouteText: Text
+  private rerouteAnswer: ((yes: boolean) => void) | null = null
   // Live captions (bottom): two rows and the language they came from.
   private captions: SceneObject
   private captionRows: Text[] = []
@@ -145,6 +149,17 @@ export class FindYourWayHudUI extends BaseScriptComponent {
     addPopIn(this.offers)
     this.offers.enabled = false
 
+    // Heard a gate change (add-on D): a question with Yes / No, top centre, until answered.
+    this.reroute = obj(this.sceneObject, "RerouteCard", new vec3(0, 6.5, -70))
+    const rp = makePanel(this.reroute, 20, 0.8, 0.6, undefined, CARD_TINT)
+    this.rerouteText = addText(rp.content, "RerouteText", "", "Title2", 19, 3.2, this.textColor, 70)
+    const rr = addRow(rp.content, "RerouteRow", 19, 3.8, 0.8)
+    const answer = (yes: boolean) => () => { const a = this.rerouteAnswer; this.setReroute(null); if (a) a(yes) }
+    addButton(rr, "RerouteYesButton", "Yes, re-route", 11.5, 3.6, null, answer(true), this.textColor, 70, "Headline2", "Primary")
+    addButton(rr, "RerouteNoButton", "No", 6.5, 3.6, null, answer(false), this.textColor, 70, "Headline2")
+    addPopIn(this.reroute)
+    this.reroute.enabled = false
+
     // Captions: two rows at the bottom, below the line of sight.
     this.captions = obj(this.sceneObject, "Captions", new vec3(0, -10.4, -70))
     const cp = makePanel(this.captions, 27, 0.5, 0.1, undefined, TAB_TINT)
@@ -176,6 +191,14 @@ export class FindYourWayHudUI extends BaseScriptComponent {
     }
     this.offers.enabled = true
   }
+
+  // The re-route question (null hides it); answer(true) on Yes, answer(false) on No.
+  setReroute(text: string | null, answer?: (yes: boolean) => void): void {
+    this.rerouteAnswer = text !== null && answer ? answer : null
+    if (text !== null) this.rerouteText.text = text
+    this.reroute.enabled = text !== null
+  }
+  getRerouteText(): string | null { return this.reroute.enabled ? this.rerouteText.text : null }
 
   // Where the offers card sits (cm, camera space) and its size; Main moves it clear of open menus.
   setOffersAt(x: number, y: number): void { this.offers.getTransform().setLocalPosition(new vec3(x, y, -70)) }

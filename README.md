@@ -14,7 +14,7 @@ Find Your Way Inside puts the route on the floor in front of you. You scan the "
 
 ### Verified in the Lens Studio preview
 
-Each feature below passed its LEAF test, run inside the Lens and pressing the real buttons, in the full run of **2026-11-03**: of 48 scenarios, run in two batches, 39 passed first time, the 8 that failed on timing in the long batches passed when rerun, and 1 test's own path check was too slow for Lens Studio and was fixed, after which it passed. That run includes the companion picker, walking up stairs in the preview and the gold offers button. The new scenarios for the companion pointing in view, the floor arrow and the showing preset, plus the 14 scenarios those changes touch, passed on the final code the same night.
+Each feature below passed its LEAF test, run inside the Lens and pressing the real buttons, in the full run of **2026-11-06**: of 60 scenarios, run in two batches of 30, 58 passed first time. 1 failed on timing in the long batch and passed when rerun; 1 test still looked for the box shell that the airport's own model replaced in the preview, was updated, and passed. That run includes the companion picker, walking up stairs, the offers card, the three demo presets and the heard gate change.
 
 - **Route line on the floor:** shows the next 10 m only, goes round corners, and has an arrow at the edge of the view when the next turn is out of view.
 - **Walk and Step-Free.** Walk takes the shortest route, escalators included. Step-Free never uses stairs or escalators.
@@ -37,6 +37,10 @@ Each feature below passed its LEAF test, run inside the Lens and pressing the re
 - **Go to a place:** say it, or pick from a list or a floor-by-floor map.
 - **While you wait:** Hop (raise a hand and the companion jumps obstacles), catch (grab a treat, throw it, it fetches) and seated play. None of these ever changes the route.
 - **Peek ahead:** pinch and pull toward you for a small model of your route.
+- **Three demo presets** (Inspector **Demo preset**): airport in a wheelchair, mall following the dog, Free walk with the robot. Each opens ready, with a clean screen and the companion on. The panel closes up where the hidden options were.
+- **Ask in your own words:** "I need coffee and a bathroom before my flight at gate 12C" becomes Café, Accessible toilet, Gate C12, in the shortest order, each leg step-free. In the preview the sentence types itself in (no microphone there).
+- **Offers anywhere:** look at a shop for 2 s, before, during or after a trip, and a small card shows its offers. It moves to a free corner so it never covers an open menu, and always stays in view.
+- **Live captions and "heard a gate change":** speech around you shows as two rows at the bottom, translated. When a caption names another gate ("…now boards at gate B14"), Pathpal asks **Re-route to Gate B14?**: Yes re-routes in your mode (Step-Free stays step-free), No keeps the trip. In the preview a sample Spanish announcement plays from **Control > Play announcement**; on Specs it is live speech. Nothing is recorded or stored.
 
 ### In progress or unproven
 
@@ -62,7 +66,7 @@ Each feature below passed its LEAF test, run inside the Lens and pressing the re
 npm test
 ```
 
-There are 551 tests (offline: 550 pass, 1 skipped). One downloads the maps from the public gist; offline, set `OFFLINE=1` to skip it. The run first checks that the Lens's copies of the core files match `src/core`; after editing `src/core`, run `npm run sync`.
+There are 558 tests (offline: 557 pass, 1 skipped). One downloads the maps from the public gist; offline, set `OFFLINE=1` to skip it. The run first checks that the Lens's copies of the core files match `src/core`; after editing `src/core`, run `npm run sync`.
 
 **LEAF tests** run inside the Lens:
 1. Select **LeafIndex** in the Scene Hierarchy and tick **autoRun**. To run only some, type their ids in **only**, separated by commas.
@@ -88,6 +92,7 @@ All tests run locally; no CI service is used.
 - **The building** is a stand-in model built from the map file. It shows in Lens Studio only, because on Specs you see the real building.
 - **Saved preferences** are a preset labelled as a demo.
 - **Shop names, offers and sponsored places** are invented demo data.
+- **Voice and captions:** the preview has no microphone. Talk types in a set sentence, and the captions play a sample announcement with a set translation. On Specs both use Snap's speech recognition; live translation needs the LLM gateway, which is not wired yet.
 - **Floor changes:** you walk up stand-in stairs and escalators, and lifts use a button, because the preview can't ride a lift.
 
 ## Credits

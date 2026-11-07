@@ -1161,3 +1161,31 @@ export function parseAskReply(map: FwMap, reply: string): string[] | null {
 
 // Look at a shop this long (s) and its offers show (at most 2, in a small card at the top right).
 export const OFFER_LOOK_S = 2;
+
+// Add-on D, "Heard a gate change": a gate of this map named in what was heard (the caption, in the
+// wearer's language), when it is not where the trip is going. The trip words in it are flagged.
+// Null: no gate of this map, or the gate you are already heading to. Never routes by itself: the
+// Lens asks "Re-route to Gate B14?" first and the router plans it in the current mode.
+export interface GateOffer {
+  gate: string;
+  label: string;
+  flags: string[];
+}
+
+const TRIP_FLAGS: [string, RegExp][] = [
+  ["boarding", /\b(board|boards|boarding)\b/],
+  ["delayed", /\b(delay|delayed)\b/],
+  ["cancelled", /\b(cancelled|canceled)\b/],
+];
+
+export function gateChangeOffer(map: FwMap, heard: string, current: string | null): GateOffer | null {
+  const said = joinCodes(words(heard));
+  for (const n of map.nodes) {
+    const m = n.kind === "destination" && n.label ? /^gate\s+([a-z]\d+)$/i.exec(n.label) : null;
+    if (!m || said.indexOf(m[1].toLowerCase()) < 0) continue;
+    if (n.id === current) return null;
+    const plain = words(heard).join(" ");
+    return { gate: n.id, label: n.label!, flags: TRIP_FLAGS.filter(([, re]) => re.test(plain)).map(([f]) => f) };
+  }
+  return null;
+}

@@ -45,6 +45,8 @@ import {FywB3Dc5LookScenario} from "./FywB3Dc5LookScenario"
 import {FywB3Dc6GoToScenario} from "./FywB3Dc6GoToScenario"
 import {FywReelScenario} from "./FywReelScenario"
 import {FywV1VoiceScenario} from "./FywV1VoiceScenario"
+import {FywMp1NoEmptyBandScenario} from "./FywMp1NoEmptyBandScenario"
+import {FywCaptionsRerouteScenario} from "./FywCaptionsRerouteScenario"
 import {FywPm1PickMapScenario} from "./FywPm1PickMapScenario"
 import {FywTr1TourScenario} from "./FywTr1TourScenario"
 import {FywSp1SeatedPlayScenario} from "./FywSp1SeatedPlayScenario"
@@ -136,6 +138,8 @@ export class FindYourWayLeafIndex extends BaseScriptComponent {
     {id: "demo-mall-pet", typename: FywDemoMallPetScenario.getTypeName()},
     {id: "demo-free-walk-robot", typename: FywDemoFreeWalkRobotScenario.getTypeName()},
     {id: "o1-offers-anywhere", typename: FywO1OffersAnywhereScenario.getTypeName()},
+    {id: "mp1-no-empty-band", typename: FywMp1NoEmptyBandScenario.getTypeName()},
+    {id: "cr1-heard-gate-change", typename: FywCaptionsRerouteScenario.getTypeName()},
     {id: "visual-reel", typename: FywReelScenario.getTypeName()},
     {id: "visual-demos", typename: FywDemoVideoScenario.getTypeName()},
     {id: "visual-check-places", typename: FywCheckPlacesScenario.getTypeName()},

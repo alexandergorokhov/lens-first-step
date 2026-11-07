@@ -5,7 +5,7 @@
 // Must not: decide routing or remember the choice (FindYourWayMain owns the profile).
 
 import Event, {PublicApi} from "SpectaclesInteractionKit.lspkg/Utils/Event"
-import {addButton, addRow, addText, LabeledButton, makePanel} from "./FindYourWayWidgetsUI"
+import {addButton, addRow, addText, LabeledButton, makePanel, Panel, setShownInLayout} from "./FindYourWayWidgetsUI"
 import {icon} from "./FindYourWayIconsUI"
 import {addPopIn} from "./FindYourWayPopIn"
 
@@ -67,6 +67,7 @@ export class FindYourWayModePanelUI extends BaseScriptComponent {
   private titleText: Text
   private interestsTitle: Text
   private interestRows: SceneObject[] = []
+  private panel: Panel
   private talkButton: LabeledButton
   private talkHint: Text
   get onSayIt(): PublicApi<void> { return this._onSayIt.publicApi() }
@@ -78,6 +79,7 @@ export class FindYourWayModePanelUI extends BaseScriptComponent {
   onAwake() {
     const width = this.buttonWidthCm + 4
     const panel = makePanel(this.sceneObject, width, 2.2, 1.4)
+    this.panel = panel
     addPopIn(this.sceneObject)
     this.titleText = addText(panel.content, "Title", this.title, "Title2", width - 3, 4, this.textColor, 100)
     this.destText = addText(panel.content, "Subtitle", this.subtitle, "Headline2", width - 3, 2.8,
@@ -90,7 +92,7 @@ export class FindYourWayModePanelUI extends BaseScriptComponent {
       () => this._onTalk.invoke(), this.textColor, 100, "Button")
     this.talkHint = addText(panel.content, "TalkHint", "", "Caption", width - 3, 1.8,
       new vec4(this.textColor.x, this.textColor.y, this.textColor.z, 0.9), 100)
-    this.talkHint.getSceneObject().enabled = false
+    setShownInLayout(this.talkHint.getSceneObject(), false)
     addButton(panel.content, "WhereToButton", "Where to?", this.buttonWidthCm, 4.2, icon("location_on"),
       () => this._onWhereTo.invoke(), this.textColor, 100, "Button")
     this.walkButton = addButton(panel.content, "WalkButton", this.walkLabel, this.buttonWidthCm, this.buttonHeightCm - 1.5,
@@ -139,21 +141,21 @@ export class FindYourWayModePanelUI extends BaseScriptComponent {
   setSimple(on: boolean): void {
     if (this.titleText) this.titleText.text = on ? "Where would you like to go?" : this.title
     if (this.talkButton) this.talkButton.label.text = on ? "Talk: say it your own way" : "Talk: say a place"
-    if (this.interestsTitle) this.interestsTitle.getSceneObject().enabled = !on
-    for (const r of this.interestRows) r.enabled = !on
+    if (this.interestsTitle) setShownInLayout(this.interestsTitle.getSceneObject(), !on)
+    for (const r of this.interestRows) setShownInLayout(r, !on)
   }
 
   // The demo presets: Talk is the way to say where to, so the "Say it" stand-in goes.
   setSayItShown(on: boolean): void {
-    if (this.sayIt) this.sayIt.button.getSceneObject().enabled = on
-    if (this.sayItHint) this.sayItHint.getSceneObject().enabled = on
+    if (this.sayIt) setShownInLayout(this.sayIt.button.getSceneObject(), on)
+    if (this.sayItHint) setShownInLayout(this.sayItHint.getSceneObject(), on)
   }
 
   // The line under Talk ("Preview: voice shown as typed. Live speech on Specs."); null hides it.
   setTalkHint(text: string | null): void {
     if (!this.talkHint) return
     if (text !== null) this.talkHint.text = text
-    this.talkHint.getSceneObject().enabled = text !== null
+    setShownInLayout(this.talkHint.getSceneObject(), text !== null)
   }
 
   getTalkHint(): string | null {
@@ -170,6 +172,9 @@ export class FindYourWayModePanelUI extends BaseScriptComponent {
   getPreselected(): string | null { return this.preselected }
 
   getWalkLabel(): string { return this.walkButton ? this.walkButton.label.text : "" }
+
+  // Test hook: the panel's laid-out height (cm, before the panel scale).
+  getHeight(): number { return this.panel ? this.panel.plate.size.y : 0 }
 
   show(): void { this.sceneObject.enabled = true }
   hide(): void { this.sceneObject.enabled = false }

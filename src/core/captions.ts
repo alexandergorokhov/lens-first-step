@@ -75,3 +75,12 @@ export const DEMO_SPEECH: { [map: string]: { heard: string; lang: string; englis
     english: "Hello! A table for two? There's room by the window.",
   },
 };
+
+// Add-on D: the preview's sample gate announcement (Spanish, shown in English), played from the Control
+// panel. Its gate (B14) is not the demo trip's (C12), so Pathpal offers to re-route.
+export const GATE_CHANGE_SPEECH = {
+  heard: "Atención: el vuelo 212 a Madrid embarca ahora por la puerta B14.",
+  lang: "es",
+  english: "Attention: flight 212 to Madrid now boards at gate B14.",
+  who: "Announcement",
+};

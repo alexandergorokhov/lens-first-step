@@ -4,7 +4,7 @@ import {expect} from "Leaf.lspkg/Utils/common/Expect"
 import {findSceneObjectByName, sleep} from "Leaf.lspkg/Utils/common/Utils"
 import {log, startTrip} from "./FindYourWayLeafSupport"
 
-// bg1 — in Lens Studio the stand-in turns solid and a shell hides the preview room; the route is
+// bg1 — in Lens Studio the stand-in turns solid and the airport's own model hides the preview room; the route is
 // the same either way (the backdrop is drawing only, and isEditor() keeps it off Specs).
 @component
 export class FywBg1BackdropScenario extends Scenario {
@@ -13,8 +13,9 @@ export class FywBg1BackdropScenario extends Scenario {
     await sleep(1000)
     const main = await startTrip(it, "walk")
     expect(main.isBackdropSolid(), "solid in the preview").toBe(true)
-    expect(!!findSceneObjectByName("Shell"), "the shell hides the room").toBe(true)
-    expect(!!findSceneObjectByName("Tiles"), "floor tiles").toBe(true)
+    // The airport shows its own model (the concept terminal) in the preview, not the boxes.
+    expect(main.usesPlaceModel(), "the airport's own model in the preview").toBe(true)
+    expect(!!findSceneObjectByName("Shell"), "no box shell over the airport model").toBe(false)
     expect(main.getRouteNodes().join(">"), "same route").toBe("sign>hall>escFoot>escTop>concourse>bJunction>gateB12")
     log("bg1 pass")
   }

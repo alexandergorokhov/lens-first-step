@@ -62,7 +62,7 @@ import {MultiStopTrip, orderStops} from "./FindYourWayTrip"
 import {mapLogLines, tripAfterSaving} from "./FindYourWayMapping"
 import {peekPlace} from "./FindYourWayPeek"
 import {demoSettings, DemoSettings, showingSettings, StartSettings} from "./FindYourWayDemo"
-import {destinationsOf, FreeWalk, interestList, LookBoxes, matchDestination, OfferDismissals, sayItPhrase, ShopLook, typedSoFar, typingSeconds, planAsk, VOICE_FALLBACK_S, walkableRoute, CLEAN_FREE_WALK, OFFER_LOOK_S} from "./FindYourWayFreeWalk"
+import {destinationsOf, FreeWalk, gateChangeOffer, interestList, LookBoxes, matchDestination, OfferDismissals, sayItPhrase, ShopLook, typedSoFar, typingSeconds, planAsk, VOICE_FALLBACK_S, walkableRoute, CLEAN_FREE_WALK, OFFER_LOOK_S} from "./FindYourWayFreeWalk"
 import {arrivalCardOn, cleanAllows, OptionsDock, routeLineAheadM, walkingHud} from "./FindYourWayDock"
 import {FindYourWayOfferBoxesUI} from "./FindYourWayOfferBoxesUI"
 import {FindYourWayHomePanelUI} from "./FindYourWayHomePanelUI"
@@ -91,6 +91,7 @@ import {FindYourWayPlaceBuilder, Ride} from "./FindYourWayPlaceBuilder"
 import {FindYourWayPlayTime} from "./FindYourWayPlayTime"
 import {FindYourWayPropsView} from "./FindYourWayPropsView"
 import {FindYourWayLiveCaptions} from "./FindYourWayLiveCaptions"
+import {GATE_CHANGE_SPEECH} from "./FindYourWayCaptions"
 import {FindYourWaySpeakerView} from "./FindYourWaySpeakerView"
 
 // scan -> loading -> choose (the three modes) -> prefs -> free (Free walk)
@@ -328,6 +329,8 @@ export class FindYourWayMain extends BaseScriptComponent {
   private speaker: FindYourWaySpeakerView | null = null
   // The conversation on arrival (preview): when the person speaks (0 = done, -1 = none yet).
   private talkAt = -1
+  // Add-on D: the gate a heard announcement offers to re-route to, until answered.
+  private rerouteOffer: string | null = null
   // The shop whose offers show in the card (looked at for 2 s).
   private offersShown: LookBoxes | null = null
   private playTime: FindYourWayPlayTime
@@ -572,6 +575,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.view.setup(this.standIn.material)
     this.view.setPrefabs({dog: this.dogModel || null, robot: this.robotModel || null})
     this.captions = new FindYourWayLiveCaptions(this.hud, this.captionLanguage)
+    this.captions.onFinal = (text) => this.heardLine(text)
     const sp = global.scene.createSceneObject("Speaker")
     sp.setParent(this.building)
     this.speaker = sp.createComponent(FindYourWaySpeakerView.getTypeName()) as FindYourWaySpeakerView
@@ -603,6 +607,7 @@ export class FindYourWayMain extends BaseScriptComponent {
       onRestartShowing: () => this.restartShowing(),
       onShowingMap: () => this.nextMap(),
       onShowingGate: () => this.changeDestination(),
+      onAnnouncement: () => this.playAnnouncement(),
     })
     if (global.deviceInfoSystem.isEditor()) this.appPanel.setBaseScale(PREVIEW_PANEL_SCALE)
     this.setCompanionModel(this.companionModel)
@@ -1180,6 +1185,8 @@ export class FindYourWayMain extends BaseScriptComponent {
   }
 
   restart(): void {
+    this.rerouteOffer = null
+    this.hud.setReroute(null)
     this.endMapping(false)
     this.clearFreeWalk()
     this.setMapShown(false)
@@ -1434,6 +1441,49 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.announce(ev.card || ev.button || "Destination changed", this.iconOfNode(ev.to))
     this.reportRoute("destination changed")
   }
+
+  // Add-on D, "Heard a gate change": the preview's sample announcement (Control panel). On Specs the
+  // same captions come from real speech around you.
+  playAnnouncement(): void {
+    if (!this.captions || !this.liveCaptions || !this.nav) {
+      print("[FYW] announcement: not now (captions " + this.liveCaptions + ", trip " + !!this.nav + ")")
+      return
+    }
+    // On a trip the captions are on anyway; right as it starts they switch on next frame.
+    this.captions.setOn(true)
+    print("[FYW] announcement: playing the sample gate change")
+    this.captions.playScript(GATE_CHANGE_SPEECH)
+  }
+
+  // A final caption line: when it names another gate of this map, ask before re-routing. The new
+  // route keeps the trip's mode (Step-Free stays step-free); sponsored places never change it.
+  private heardLine(text: string): void {
+    if (!this.nav || (this.phase !== "nav" && this.phase !== "arrived")) return
+    // Compared with where the trip ends (a multi-stop trip ends at its gate), not the next stop.
+    const stops = this.getStops()
+    const o = gateChangeOffer(this.nav.map as any, text, stops.length > 0 ? stops[stops.length - 1] : this.getDestinationId())
+    if (!o) return
+    this.rerouteOffer = o.gate
+    this.showBoxes(null)
+    print("[FYW] heard a gate change: " + o.label + (o.flags.length ? " (" + o.flags.join(", ") + ")" : ""))
+    this.hud.setReroute("Re-route to " + o.label + "?", (yes) => this.answerReroute(yes))
+  }
+
+  private answerReroute(yes: boolean): void {
+    const gate = this.rerouteOffer
+    this.rerouteOffer = null
+    if (!yes || !gate || !this.nav) return
+    this.endStops()
+    this.tripDestination = gate
+    if (this.nav.to !== gate) this.nav.setDestination(gate)
+    this.afterRouteChange(true)
+    const n = findNode(this.nav.map, gate)
+    this.announce("Re-routed to " + (n && n.label ? n.label : gate), this.iconOfNode(gate))
+    this.reportRoute("heard a gate change")
+  }
+
+  // Test hook: the re-route question on screen (null: none).
+  getRerouteText(): string | null { return this.hud.getRerouteText() }
 
   private closeConnection(edgeId: string): void {
     if (this.closed[edgeId]) return
@@ -1836,6 +1886,10 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.hud.setOffersAt(s.x, s.y)
   }
 
+  // Test hooks: the Go to a place panel's height and its demo (simple) look.
+  getModePanelHeight(): number { return this.modePanel.getHeight() }
+  debugSetModeSimple(on: boolean): void { this.modePanel.setSimple(on) }
+
   // Test hook: is the whole offers card inside the view (view.ts OFFER_VIEW)?
   isOfferCardInView(): boolean {
     const size = this.hud.getOffersSize()
@@ -2118,6 +2172,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (this.phase === "scan" || this.phase === "loading" || this.phase === "mapping" || this.phase === "error") this.showBoxes(null)
     if (!on) return
     const airport = this.getMapKey() === "airport"
+    this.appPanel.setAnnouncement(this.liveCaptions && airport && !!this.nav && global.deviceInfoSystem.isEditor())
     this.appPanel.setShowing(this.showingPreset, this.showingPreset && airport && !!this.nav && this.getDestinationId() !== "gateC3",
       this.showingPreset ? (airport ? "Map: Preview room" : "Map: Airport") : null)
     const offset = this.appPanel.isPlaying() ? this.playPanelOffset : global.deviceInfoSystem.isEditor() ? PREVIEW_PANEL_OFFSET : this.appPanelOffset
@@ -2331,6 +2386,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   getStops(): string[] { return this.stops ? this.stops.stops.slice() : [] }
   isAppPanelPlaying(): boolean { return !!this.appPanel && this.appPanel.isPlaying() }
   isBackdropSolid(): boolean { return this.standIn.isSolid() }
+  usesPlaceModel(): boolean { return this.standIn.usesModel() }
   isAppPanelShown(): boolean { return !!this.appPanel && this.appPanel.getSceneObject().isEnabledInHierarchy }
   // Simulates one raised hand (LEAF can't move tracked hands); used on the next frame.
   debugRaiseHand(): void { this.playTime.debugRaise = true }
