@@ -58,6 +58,11 @@ Root causes found:
 - [ ] R2-5 Companion 7 m ahead in all three demos. Core holds 7 m at wheelchair pace (pet.test P-R2); the Lens
       already has `companionLeadM` 7. Left: measure it in the new take (R2-8).
 - [ ] R2-6 Bigger transcript: live captions, "Heard: …" line, companion caption about 2x (sizes in core, test).
+      **Code done, `8f1658b` (not pushed: SSH to github timed out).** Sizes in `TRANSCRIPT` (`src/core/captions.ts`,
+      test CP-R2-6/6b): captions 2x, band 40 cm, 33 chars a row; Heard 1.5x (2x needs ~5 lines in the 31 cm
+      panel), grows to 3 rows via `setTextHeight`; companion 2x, 100 cm. npm test 581/581, TS compiles.
+      **Left (needs the Preview panel open):** run `visual-demos` / capture: band inside the view at y -11.5
+      (`FindYourWayHudUI.ts`), Heard panel grows and doesn't overlap, companion caption readable. Then tick.
 - [ ] R2-7 Voice-over: one line per beat, Kokoro clips (`tools/voice`), placed at the take's `[VID]` marks and
       mixed into the edit. Test: `narration.ts` (every beat has a line, no overlap, fits before the next beat).
 - [ ] R2-8 Stills check (`tools/demo-video/airport-shots.mjs`) at each demo pose, then Lens Studio: LEAF
