@@ -14,7 +14,7 @@ Find Your Way Inside puts the route on the floor in front of you. You scan the "
 
 ### Verified in the Lens Studio preview
 
-Each feature below passed its LEAF test, run inside the Lens and pressing the real buttons, in the full run of **2026-11-06**: of 60 scenarios, run in two batches of 30, 58 passed first time. 1 failed on timing in the long batch and passed when rerun; 1 test still looked for the box shell that the airport's own model replaced in the preview, was updated, and passed. That run includes the companion picker, walking up stairs, the offers card, the three demo presets and the heard gate change.
+Each feature below passed its LEAF test, run inside the Lens and pressing the real buttons, in the full run of **2026-11-07**: all 61 scenarios, run in two batches, passed first time. That run includes the companion picker, walking up stairs, the offers card, the three demo presets, the heard gate change and the AI picking a place (with a stand-in for the AI).
 
 - **Route line on the floor:** shows the next 10 m only, goes round corners, and has an arrow at the edge of the view when the next turn is out of view.
 - **Walk and Step-Free.** Walk takes the shortest route, escalators included. Step-Free never uses stairs or escalators.
@@ -41,7 +41,7 @@ Each feature below passed its LEAF test, run inside the Lens and pressing the re
 - **Ask in your own words:** "I need coffee and a bathroom before my flight at gate 12C" becomes Café, Accessible toilet, Gate C12, in the shortest order, each leg step-free. In the preview the sentence types itself in (no microphone there).
 - **The AI picks the place (Specs):** when the plain words find no place ("where can my kids run around"), an LLM (OpenAI through Snap's Remote Service Gateway) gets the sentence and the map's place list and answers with place ids only. The router checks them and plans the route, so Step-Free still holds (a toilet becomes the accessible toilet); no valid answer in 3 s and it says "didn't catch that". The gateway token stays on the PC: a test fails if one is saved in the scene. In the preview a LEAF test stands in for the LLM.
 - **Offers anywhere:** look at a shop for 2 s, before, during or after a trip, and a small card shows its offers. It moves to a free corner so it never covers an open menu, and always stays in view.
-- **Live captions and "heard a gate change":** speech around you shows as two rows at the bottom, translated. When a caption names another gate ("…now boards at gate B14"), Pathpal asks **Re-route to Gate B14?**: Yes re-routes in your mode (Step-Free stays step-free), No keeps the trip. In the preview a sample Spanish announcement plays from **Control > Play announcement**; on Specs it is live speech. Nothing is recorded or stored.
+- **Live captions and "heard a gate change":** speech around you shows as two rows at the bottom, translated. When a caption names another gate ("…now boards at gate B14"), the Lens asks **Re-route to Gate B14?**: Yes re-routes in your mode (Step-Free stays step-free), No keeps the trip. In the preview a sample Spanish announcement plays from **Control > Play announcement**; on Specs it is live speech. Nothing is recorded or stored.
 
 ### In progress or unproven
 

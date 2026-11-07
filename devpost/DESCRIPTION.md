@@ -16,16 +16,17 @@ There is no GPS indoors. In a big airport, hospital, campus or mall, a phone map
 
 You look at the "You are here" sign at the entrance. Its code tells the Lens where you stand, and its web address downloads the building's map. Then you choose:
 
-- **Go to a place.** Say where you're going, or pick it from a list or a floor-by-floor map. A blue line on the floor leads you there, showing only the next 10 m, with an arrow at the edge of your view when the next turn is out of sight. A pill shows your floor, the distance, the floors to go and the time, and a cue warns you before each floor change.
+- **Go to a place.** Say where you're going, or pick it from a list or a floor-by-floor map. You can say it in your own words: "I need coffee and a bathroom before my flight at gate 12C" becomes Café, Accessible toilet, Gate C12, in the shortest order. When the plain words find no place ("where can my kids run around"), an AI model picks from the building's place list on Specs; it can only name real places, and the route planner still plans every leg, so Step-Free stays step-free. A blue line on the floor leads you there, showing only the next 10 m, with an arrow at the edge of your view when the next turn is out of sight. A pill shows your floor, the distance, the floors to go and the time, and a cue warns you before each floor change.
   - **Walk** takes the shortest route, escalators included.
   - **Step-Free** never uses stairs or escalators. If a lift goes out of service, the line swings to another lift or a ramp. If no step-free route is left, it leads you to the assistance point instead of leaving you stuck.
   - If your gate changes, the line swings to the new one from where you're standing.
-- **Free walk.** No destination, just browsing. A small companion (a dog, a robot or a rover) walks ahead of you. It stops at the shops that match your preferences and points at them, and when there are matches on another floor it waits at the escalator and says "3 picks upstairs". Look at any shop to see up to three offers, or ignore it. Sponsored shops are always labelled, and paying never changes a route.
+  - **Live captions** show speech around you in two rows, translated into your language. When an announcement names another gate ("…now boards at gate B14"), the Lens asks **Re-route to Gate B14?** Yes re-routes in your mode; No keeps your trip. Nothing is recorded or stored.
+- **Free walk.** No destination, just browsing. A small animated companion (a dog or a robot) walks ahead of you. It stops at the shops that match your preferences and points at them, and when there are matches on another floor it waits at the escalator and says "3 picks upstairs". Look at any shop to see up to three offers, or ignore it. Sponsored shops are always labelled, and paying never changes a route.
 - **Tour.** You're shown round the shops you like, stop by stop, in the shortest order.
 - **Map builder (Learn this place).** Who makes the maps? You do, by walking. Your path records itself, a height change starts a new floor, and the **Mark shop** button marks the shop you're facing. Upload hands the map to a laptop tool that checks and publishes it, so the Lens never holds a publishing token.
 - **While you wait,** play with the companion: Hop (raise a hand and it jumps obstacles), catch (grab a treat, throw it, and it brings it back) and a seated version for the gate lounge. Play never changes your route, and a gate-change card ends it at once.
 
-The same Lens runs an airport, a hospital, a campus, a room and a two-floor shopping mall. Everything building-specific comes from one small JSON map file, never from code.
+The same Lens runs an airport, a hospital, a campus, a room and a two-floor shopping mall. Three demo presets show it end to end: an airport trip in a wheelchair, following the dog to the mall's food court, and a Free walk with the robot. Everything building-specific comes from one small JSON map file, never from code.
 
 ## Who it's for
 
@@ -47,6 +48,7 @@ Based on the public descriptions of each product, to be checked before submittin
 | Step-free | A wheelchair-accessible option | No | Never uses stairs or escalators; falls back to the assistance point |
 | Changes on the way | Re-route | No | Gate change and closed lift re-route from where you stand |
 | Company while you wait | No | No | A companion, plus games |
+| Announcements | No | No | Live captions, translated; a heard gate change offers to re-route |
 
 The "phone indoor AR navigation" column is Google Maps Indoor Live View, and the "Spectacles navigation sample" column is Snap's Navigation Kit. Name them on Devpost only after checking their current features.
 
@@ -56,7 +58,7 @@ The "phone indoor AR navigation" column is Google Maps Indoor Live View, and the
 - **Built with an AI coding agent** using Snap's CLAD plugin and the Lens Studio MCP server. I made the design calls, and the agent wrote the code test-first. Through the MCP, the agent ran the LEAF scenarios in the preview and read their results from the log, captured preview screenshots for review, and generated the companion models and the chime with CLAD's generators.
 - **A shared TypeScript core** (routing, maps, floors, companion, play) runs both in Node, with 564 unit tests (offline: 563 pass, 1 skipped), and inside the Lens, as byte-identical copies.
 - **Routing** is a plain Dijkstra search over the map graph. Step-Free is the same search with stairs and escalators left out, and a test checks that Walk is the shortest route between every pair of points. A* for big buildings is tested to give exactly the same routes.
-- **LEAF tests** run inside the Lens and press the real buttons. In the last full run (2026-11-03), 39 of 48 scenarios passed first time. The 8 that failed on timing in the long batches passed when rerun, and 1 test's own path check was too slow for Lens Studio and was fixed, after which it passed.
+- **LEAF tests** run inside the Lens and press the real buttons. In the last full run (2026-11-07), all 61 scenarios passed first time, in two batches of about 30.
 - **The demo video** is recorded from the Lens Studio preview, so every shot is the real Lens.
 
 ## What's simulated
@@ -64,10 +66,11 @@ The "phone indoor AR navigation" column is Google Maps Indoor Live View, and the
 No Specs hardware was used. Everything was built and shown in the Lens Studio preview.
 
 - **The sign scan** is a button labelled "on real Specs: look at the sign".
-- **The building** is a stand-in model built from the map, shown in Lens Studio only.
+- **The building** is shown in Lens Studio only: the airport is a concept model of the terminal, the other places are stand-ins built from the map.
 - **Lifts** use a button, because the preview can't ride one. You walk up the stand-in stairs and escalators.
 - **Shop names, offers, sponsored places and saved preferences** are invented demo data.
-- **Live speech** is wired to Snap's speech module but not yet tried with a microphone; the "Say it" button and the list do the same job.
+- **Live speech** is wired to Snap's speech module but not yet tried with a microphone. In the preview, Talk types the sentence in, and the announcement and the people you meet are scripted lines with a fixed translation.
+- **The AI model** (OpenAI through Snap's Remote Service Gateway) is wired for Specs but not run in the preview; the tests use a stand-in that answers like it, including a bad answer and no answer.
 - **Real-world feel isn't proven yet:** comfort, hand tracking, position drift on long walks and lift detection.
 
 ## Challenges
