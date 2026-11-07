@@ -28,6 +28,8 @@ export interface AppPanelHandlers {
   onShowingGate?: () => void
   // Live captions in the preview: the sample gate announcement (add-on D).
   onAnnouncement?: () => void
+  // The companion's voice on/off (add-on A).
+  onVoice?: () => void
 }
 
 const WIDTH = 22
@@ -53,6 +55,7 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
   private showingMap: LabeledButton
   private showingGate: LabeledButton
   private announcement: LabeledButton
+  private voice: LabeledButton
   private baseScale = 1
   private placesOn = true
   private panel: Panel
@@ -78,6 +81,7 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
     this.model = addButton(panel.content, "ModelButton", "Swap model", WIDTH, BUTTON_H, null, h.onModel, TEXT, FONT)
     this.places = addButton(panel.content, "PlacesButton", "Places: on", WIDTH, BUTTON_H, icon("location_on"),
       h.onPlaces, TEXT, FONT)
+    this.voice = addButton(panel.content, "VoiceButton", "Voice: on", WIDTH, BUTTON_H, null, h.onVoice || (() => {}), TEXT, FONT)
     this.seeMap = addButton(panel.content, "MiniMallButton", "See map", WIDTH, BUTTON_H, icon("location_on"), h.onMap, TEXT, FONT)
     this.play = addButton(panel.content, "PlayButton", "Play while you wait", WIDTH, BUTTON_H, null, h.onPlay, TEXT, FONT)
     // On Specs you raise a hand; in the preview this button does the same.
@@ -101,9 +105,9 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
     this.tabRoot = obj(this.sceneObject, "OptionsTab", new vec3(0, 0, 0.6))
     addButton(this.tabRoot, "OptionsTabButton", OptionsDock.TITLE, TAB_W, BUTTON_H, null, toggle, TEXT, FONT)
     this.tabRoot.enabled = false
-    this.rows = [title.getSceneObject(), this.info.getSceneObject(), this.hideBtn.so, this.companion.so, this.model.so, this.places.so, this.seeMap.so, this.play.so, this.jump.so,
+    this.rows = [title.getSceneObject(), this.info.getSceneObject(), this.hideBtn.so, this.companion.so, this.model.so, this.places.so, this.voice.so, this.seeMap.so, this.play.so, this.jump.so,
       this.throwBtn.so, this.nextStop.so, this.endWalk.so, this.showingGate.so, this.announcement.so, this.showingMap.so, this.restartShowing.so]
-    this.optionRows = [title.getSceneObject(), this.hideBtn.so, this.companion.so, this.model.so, this.places.so, this.seeMap.so]
+    this.optionRows = [title.getSceneObject(), this.hideBtn.so, this.companion.so, this.model.so, this.places.so, this.voice.so, this.seeMap.so]
     this.setShowing(false, false, null)
     this.setPlay(false, false, false)
     this.setNextStop(null)
@@ -155,6 +159,7 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
   setMapShown(on: boolean): void { this.seeMap.label.text = on ? "Hide map" : "See map" }
 
   setPlaces(on: boolean): void { this.places.label.text = "Places: " + (on ? "on" : "off") }
+  setVoice(on: boolean): void { this.voice.label.text = "Voice: " + (on ? "on" : "off") }
 
   // canPlay: standing still with the companion on; playing: Hop is running; canThrow: catch allowed.
   setPlay(canPlay: boolean, playing: boolean, canThrow: boolean): void {

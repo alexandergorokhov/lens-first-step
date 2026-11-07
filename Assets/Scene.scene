@@ -8533,6 +8533,7 @@
   Enabled: true
   ScriptAsset: !<reference> d0bdf33e-8bba-4454-9763-31fde3229a3d
   ScriptInputsDefault:
+    companionSpeaks: true
     tryOnlineMap: true
     startAtSign: true
     showDemoControls: true
@@ -8568,6 +8569,22 @@
       arrivalCard: !<MappingBased.AssignableType_8> 8885f245-15db-4224-a2ef-6afac601eb19
       internetModule: !<reference.InternetModule> 4ce0c535-05ea-4273-ab39-6e2d18686686
       chime: !<reference.AudioTrackAsset> fed4446f-8a97-484e-8dd6-713dc07e2d7c
+      voiceClips: !<reference.AudioTrackAsset[]>
+        - !<reference> e7ce5934-b142-4efa-9a92-3474507ae1e9
+        - !<reference> bc89df6f-70c6-490f-a695-7ee1699f32f7
+        - !<reference> 85ae384e-c2ed-4beb-a125-6bae4c1611ec
+        - !<reference> 9fdd7a9a-f4db-4228-a70a-0ce1b3332621
+        - !<reference> d6d3dd91-2727-4bfd-9cad-f1ec541e0c38
+        - !<reference> b1b3248e-a0ef-47a4-a359-52812ca91b42
+        - !<reference> 54bccb1a-7170-434f-a6d6-d7364ffa35eb
+        - !<reference> e8e1b95f-eeaa-498b-9dea-430522ec5cbd
+        - !<reference> b35392c9-5486-4147-a715-6eeba7f4c2ac
+        - !<reference> 23c7c3ab-5f27-46d9-8268-2dbcffcd9e34
+        - !<reference> d621a740-7efa-485e-9697-b806b92040b5
+        - !<reference> 38d44234-3566-4a5a-af66-65b55a97990c
+        - !<reference> 47841458-4a77-4c71-af22-5fcf66f29c29
+        - !<reference> f8fab634-609e-472c-9e4d-afe292e9a1eb
+      companionSpeaks: true
       dogModel: !<reference.ObjectPrefab> 2027287b-9c16-47db-b4eb-55d3f071f708
       propModels: !<reference.ObjectPrefab[]>
         - !<reference> 5c1ad9b7-460d-45df-9452-2621853e0a4c

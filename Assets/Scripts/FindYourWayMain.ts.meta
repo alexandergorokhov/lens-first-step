@@ -41,6 +41,7 @@
     companionLeadM: false
     companionModel: false
     companionOnAtStart: false
+    companionSpeaks: false
     demo: false
     demoControls: false
     demoOffset: false
@@ -73,6 +74,7 @@
     startAtSign: false
     tryOnlineMap: false
     turnArrow: false
+    voiceClips: false
     world: false
   ScriptTypesHidden:
     {}
@@ -96,6 +98,9 @@
       arrivalCard: !<MappingBased.AssignableType_8> 00000000-0000-0000-0000-000000000000
       internetModule: !<reference.InternetModule> 00000000-0000-0000-0000-000000000000
       chime: !<reference.AudioTrackAsset> 00000000-0000-0000-0000-000000000000
+      voiceClips: !<reference.AudioTrackAsset[]>
+        []
+      companionSpeaks: true
       dogModel: !<reference.ObjectPrefab> 00000000-0000-0000-0000-000000000000
       propModels: !<reference.ObjectPrefab[]>
         []
@@ -150,6 +155,8 @@
     - '// @input AssignableType_8 arrivalCard {"hint":"Card over the destination"}'
     - '// @input Asset.InternetModule internetModule {"hint":"Internet module used to download the map"}'
     - '// @input Asset.AudioTrackAsset chime {"hint":"Chime played with the notice card"}'
+    - "// @input Asset.AudioTrackAsset[] voiceClips {\"hint\":\"The companion's voice: Assets/Voice/<key>.wav, one per line in FindYourWaySpeech.ts (Kokoro af_heart)\"}"
+    - '// @input bool companionSpeaks = true {"hint":"The companion speaks: short lines at the lift, at shops you like, a gate change and arrival (Voice: off in the Control panel)"}'
     - "// @input Asset.ObjectPrefab dogModel {\"hint\":\"The dog's animated model (Assets/Models/Dog, Quaternius CC0); empty: the jointed primitives\"}"
     - '// @input Asset.ObjectPrefab[] propModels {"hint":"Props that dress the airport and the mall (Assets/Models/Props, CC0), found by name"}'
     - '// @input Asset.ObjectPrefab agentModel {"hint":"The gate agent who talks to you (live captions, Assets/Models/People, CC0)"}'

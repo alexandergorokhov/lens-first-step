@@ -30,6 +30,7 @@ export const CORE_MODULES = [
   { src: "src/core/props.ts", lens: "Assets/Scripts/FindYourWayProps.ts" },
   { src: "src/core/theme.ts", lens: "Assets/Scripts/FindYourWayTheme.ts" },
   { src: "src/core/captions.ts", lens: "Assets/Scripts/FindYourWayCaptions.ts" },
+  { src: "src/core/speech.ts", lens: "Assets/Scripts/FindYourWaySpeech.ts" },
 ];
 
 // The one list of bundled maps (key, file served/downloaded, Lens copy name).

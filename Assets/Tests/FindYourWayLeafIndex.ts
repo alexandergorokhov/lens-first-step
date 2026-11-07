@@ -47,6 +47,7 @@ import {FywReelScenario} from "./FywReelScenario"
 import {FywV1VoiceScenario} from "./FywV1VoiceScenario"
 import {FywMp1NoEmptyBandScenario} from "./FywMp1NoEmptyBandScenario"
 import {FywCaptionsRerouteScenario} from "./FywCaptionsRerouteScenario"
+import {FywSa1CompanionSpeaksScenario} from "./FywSa1CompanionSpeaksScenario"
 import {FywAsk2LlmPickScenario} from "./FywAsk2LlmPickScenario"
 import {FywPm1PickMapScenario} from "./FywPm1PickMapScenario"
 import {FywTr1TourScenario} from "./FywTr1TourScenario"
@@ -141,6 +142,7 @@ export class FindYourWayLeafIndex extends BaseScriptComponent {
     {id: "o1-offers-anywhere", typename: FywO1OffersAnywhereScenario.getTypeName()},
     {id: "mp1-no-empty-band", typename: FywMp1NoEmptyBandScenario.getTypeName()},
     {id: "cr1-heard-gate-change", typename: FywCaptionsRerouteScenario.getTypeName()},
+    {id: "sa1-companion-speaks", typename: FywSa1CompanionSpeaksScenario.getTypeName()},
     {id: "ask2-ai-picks-the-place", typename: FywAsk2LlmPickScenario.getTypeName()},
     {id: "visual-reel", typename: FywReelScenario.getTypeName()},
     {id: "visual-demos", typename: FywDemoVideoScenario.getTypeName()},

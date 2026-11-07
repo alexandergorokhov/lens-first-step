@@ -14,7 +14,7 @@ Find Your Way Inside puts the route on the floor in front of you. You scan the "
 
 ### Verified in the Lens Studio preview
 
-Each feature below passed its LEAF test, run inside the Lens and pressing the real buttons, in the full run of **2026-11-07**: all 61 scenarios, run in two batches, passed first time. That run includes the companion picker, walking up stairs, the offers card, the three demo presets, the heard gate change and the AI picking a place (with a stand-in for the AI).
+Each feature below passed its LEAF test, run inside the Lens and pressing the real buttons, in the full run of **2026-11-07**: all 62 scenarios, run in two batches, passed first time. That run includes the companion picker, walking up stairs, the offers card, the three demo presets, the heard gate change, the AI picking a place (with a stand-in for the AI) and the companion speaking.
 
 - **Route line on the floor:** shows the next 10 m only, goes round corners, and has an arrow at the edge of the view when the next turn is out of view.
 - **Walk and Step-Free.** Walk takes the shortest route, escalators included. Step-Free never uses stairs or escalators.
@@ -36,6 +36,7 @@ Each feature below passed its LEAF test, run inside the Lens and pressing the re
 - **Tour:** visit the shops you like, stop by stop. **Multi-stop:** pick several shops and they're visited in the shortest order.
 - **Go to a place:** say it, or pick from a list or a floor-by-floor map.
 - **While you wait:** Hop (raise a hand and the companion jumps obstacles), catch (grab a treat, throw it, it fetches) and seated play. None of these ever changes the route.
+- **The companion speaks:** short lines in a real voice, with the same words as a small caption at the companion: "Found you. Where to?", "Step-free route, no stairs.", the lift named once as you come up to it, "Wait here, I'll hold the lift.", "Up one floor.", coffee or clothes on your left or right, "Your gate moved. New route." and "You're here." One line at a time, never the same line within 8 s. **Voice: on/off** in the Control panel. The clips were made beforehand with Kokoro (open TTS, voice af_heart), so it works in the preview and offline.
 - **Peek ahead:** pinch and pull toward you for a small model of your route.
 - **Three demo presets** (Inspector **Demo preset**): airport in a wheelchair, mall following the dog, Free walk with the robot. Each opens ready, with a clean screen and the companion on. The panel closes up where the hidden options were.
 - **Ask in your own words:** "I need coffee and a bathroom before my flight at gate 12C" becomes Café, Accessible toilet, Gate C12, in the shortest order, each leg step-free. In the preview the sentence types itself in (no microphone there).
@@ -67,7 +68,7 @@ Each feature below passed its LEAF test, run inside the Lens and pressing the re
 npm test
 ```
 
-There are 564 tests (offline: 563 pass, 1 skipped). One downloads the maps from the public gist; offline, set `OFFLINE=1` to skip it. The run first checks that the Lens's copies of the core files match `src/core`; after editing `src/core`, run `npm run sync`.
+There are 570 tests (offline: 569 pass, 1 skipped). One downloads the maps from the public gist; offline, set `OFFLINE=1` to skip it. The run first checks that the Lens's copies of the core files match `src/core`; after editing `src/core`, run `npm run sync`.
 
 **LEAF tests** run inside the Lens:
 1. Select **LeafIndex** in the Scene Hierarchy and tick **autoRun**. To run only some, type their ids in **only**, separated by commas.
@@ -105,6 +106,7 @@ All tests run locally; no CI service is used.
   seat and screen by Kenney; gift box by CreativeTrio; suitcase by smallbigsquare.
 - The older planter models and the gate-change chime were generated in Lens Studio with CLAD's asset generators (`Assets/GeneratedMeshes`, `Assets/GeneratedSFX`).
 - UI icons in `Assets/Icons` are from an open-source icon set. Confirm the set and its licence before publishing.
+- **Companion voice** (`Assets/Voice`): made with Kokoro-82M (Apache 2.0), voice af_heart, by `tools/voice/make-clips.py`.
 - Lens Studio packages: Spectacles Interaction Kit, Spectacles UI Kit and Utilities, by Snap Inc.
 
 No pre-existing code; built from Oct 28, 2026, during the submission period.

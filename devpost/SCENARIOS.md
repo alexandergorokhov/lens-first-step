@@ -14,7 +14,7 @@ Every scenario and where it is tested.
   seated height and the scanned sign are simulated with test hooks on `FindYourWayMain`
   (LEAF cannot drive WASD/Q/E).
 
-Node 564 tests, all passing (with `OFFLINE=1` the live gist download is skipped).
+Node 570 tests, all passing (with `OFFLINE=1` the live gist download is skipped).
 `src/core/tests/docs.test.ts` checks this count, the test list and every test named below. LEAF
 scenarios have each passed in the preview; run them in short groups, because long batches can hit a
 tap timeout.
@@ -263,5 +263,6 @@ Dijkstra (`shortestTree`), which the Lens still uses; A* is for big maps (a mall
 | o1 | Look 2 s at a shop anywhere in the place: its offers; the card never covers an open menu and stays in view | LEAF `o1-offers-anywhere`, Node `offers-slot.test.ts` |
 | mp1 | The demo presets hide the interest chips and the panel closes up (no empty band) | LEAF `mp1-no-empty-band` |
 | cr1 | Heard a gate change: the announcement's caption names B14 -> "Re-route to Gate B14?"; No keeps the trip, Yes re-routes step-free | LEAF `cr1-heard-gate-change`, Node `gate-change.test.ts` |
+| sa1 | The companion speaks: "Found you", step-free, gate moved, the lift named once, "I'll hold the lift", up one floor, "You're here", each with its caption; Voice: off keeps it silent | LEAF `sa1-companion-speaks`, Node `speech.test.ts` SP1-SP6 |
 | ask2 | The AI picks the place when plain words find none: its ids are checked and routed (toilets -> accessible toilet, then the family lounge, step-free); a bad reply or no reply in 3 s -> "didn't catch that" | LEAF `ask2-ai-picks-the-place` (stand-in LLM), Node `ask.test.ts` AK8-AK10, `security.test.ts` R10 |
 | td1 | The airport model's toilet block has a door for Toilets and one for the Accessible toilet, where the legs end; nobody walks in | Node `airport-model.test.ts` AM7 |

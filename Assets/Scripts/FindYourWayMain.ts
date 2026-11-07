@@ -92,6 +92,8 @@ import {FindYourWayPlayTime} from "./FindYourWayPlayTime"
 import {FindYourWayPropsView} from "./FindYourWayPropsView"
 import {FindYourWayLiveCaptions} from "./FindYourWayLiveCaptions"
 import {GATE_CHANGE_SPEECH} from "./FindYourWayCaptions"
+import {sideOf, SpeechEvent, speechFor} from "./FindYourWaySpeech"
+import {FindYourWayCompanionSays} from "./FindYourWayCompanionSays"
 import {FindYourWaySpeakerView} from "./FindYourWaySpeakerView"
 import {AskLlm, FindYourWayAsk, withTimeout} from "./FindYourWayAsk"
 
@@ -165,6 +167,8 @@ export class FindYourWayMain extends BaseScriptComponent {
   @input @hint("Card over the destination") arrivalCard: FindYourWayArrivalUI
   @input @hint("Internet module used to download the map") internetModule: InternetModule
   @input @hint("Chime played with the notice card") chime: AudioTrackAsset
+  @input @allowUndefined @hint("The companion's voice: Assets/Voice/<key>.wav, one per line in FindYourWaySpeech.ts (Kokoro af_heart)") voiceClips: AudioTrackAsset[]
+  @input @hint("The companion speaks: short lines at the lift, at shops you like, a gate change and arrival (Voice: off in the Control panel)") companionSpeaks: boolean = true
   @input @allowUndefined @hint("The dog's animated model (Assets/Models/Dog, Quaternius CC0); empty: the jointed primitives") dogModel: ObjectPrefab
   @input @allowUndefined @hint("Props that dress the airport and the mall (Assets/Models/Props, CC0), found by name") propModels: ObjectPrefab[]
   @input @allowUndefined @hint("The gate agent who talks to you (live captions, Assets/Models/People, CC0)") agentModel: ObjectPrefab
@@ -392,6 +396,9 @@ export class FindYourWayMain extends BaseScriptComponent {
   private travelled = 0
   private lastFeet: Vec3 | null = null
   private trip: TripAhead | null = null
+  // Add-on A: the companion's voice, and the floor difference to the destination last frame.
+  private says: FindYourWayCompanionSays | null = null
+  private lastFloors: number | null = null
   private voice = new FindYourWayVoice()
   private voiceTry = 0
   private tourIds: string[] | null = null
@@ -578,6 +585,11 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.view = v.createComponent(FindYourWayCompanionView.getTypeName()) as FindYourWayCompanionView
     this.view.setup(this.standIn.material)
     this.view.setPrefabs({dog: this.dogModel || null, robot: this.robotModel || null})
+    const cs = global.scene.createSceneObject("CompanionSays")
+    cs.setParent(this.building)
+    this.says = cs.createComponent(FindYourWayCompanionSays.getTypeName()) as FindYourWayCompanionSays
+    this.says.setup(this.voiceClips || [])
+    this.says.setMuted(!this.companionSpeaks)
     this.captions = new FindYourWayLiveCaptions(this.hud, this.captionLanguage)
     // On Specs with a gateway token the captions are translated by the LLM; the preview plays a fixed sample.
     if (FindYourWayAsk.available() && !global.deviceInfoSystem.isEditor()) this.captions.translator = (prompt: string) => FindYourWayAsk.ask(prompt)
@@ -614,7 +626,9 @@ export class FindYourWayMain extends BaseScriptComponent {
       onShowingMap: () => this.nextMap(),
       onShowingGate: () => this.changeDestination(),
       onAnnouncement: () => this.playAnnouncement(),
+      onVoice: () => this.setCompanionMuted(!this.isCompanionMuted()),
     })
+    this.appPanel.setVoice(this.companionSpeaks)
     if (global.deviceInfoSystem.isEditor()) this.appPanel.setBaseScale(PREVIEW_PANEL_SCALE)
     this.setCompanionModel(this.companionModel)
     const mp = global.scene.createSceneObject("MappingPanel")
@@ -709,6 +723,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (this.phase !== "choose") return
     if (this.homePanel) this.homePanel.show(false)
     this.phase = "mode"
+    this.speak({kind: "found"})
     this.placeModePanel()
     this.modePanel.setSayItPhrase(sayItPhrase(this.map))
     this.modePanel.setDestination(nodeLabel(this.map, this.tripDestination || this.place.destination))
@@ -1248,6 +1263,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.rerouteOffer = null
     this.hud.setReroute(null)
     if (this.captions) this.captions.reset()
+    if (this.says) this.says.reset()
     this.endMapping(false)
     this.clearFreeWalk()
     this.setMapShown(false)
@@ -1488,6 +1504,8 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.lastLineKey = ""
     this.announce(this.stops ? this.stops.label((id) => nodeLabel(this.map, id)) : null, "location_on")
     this.reportRoute("scan")
+    this.lastFloors = null
+    this.speak({kind: "tripStart", stepFree: this.profile === "stepFree"})
   }
 
   private changeDestination(): void {
@@ -1540,6 +1558,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.afterRouteChange(true)
     const n = findNode(this.nav.map, gate)
     this.announce("Re-routed to " + (n && n.label ? n.label : gate), this.iconOfNode(gate))
+    this.speak({kind: "gateMoved"})
     this.reportRoute("heard a gate change")
   }
 
@@ -1883,6 +1902,7 @@ export class FindYourWayMain extends BaseScriptComponent {
         if (this.placesUI) this.placesUI.show([], null)
         if (this.view) this.view.setPost(null, true)
         print("[FYW] arrived at " + at)
+        this.speak({kind: "arrived"})
       }
       if (!arrivalCardOn(getTime() - this.arrivedAt, this.cleanScreen) && this.arrivalCard.getShownText() !== null) this.arrivalCard.hide()
       if (this.askTrip && this.stops && this.stops.index < this.stops.total - 1 && getTime() - this.arrivedAt > ASK_NEXT_S) {
@@ -1897,6 +1917,7 @@ export class FindYourWayMain extends BaseScriptComponent {
       this.arrivalCard.hide()
     }
     this.trip = tripAhead(this.nav.map, this.nav.route, pos)
+    this.speakOnTheWay(pos)
     this.updatePill()
     this.updateLine(pos)
     this.updateArrow(pos)
@@ -2025,6 +2046,8 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (p) {
       this.pointed = {place: p, until: now + POINT_SECONDS}
       this.guide.point(p, now)
+      const h = this.headingVector()
+      this.speak({kind: "passing", category: p.category, side: sideOf(pos.x, pos.z, h.x, h.z, p.x, p.z)})
       print("[FYW] pointing at " + p.id + " (" + placeTag(p) + ")")
     }
     if (!cleanAllows("placeIcons", this.cleanScreen, true)) {
@@ -2054,6 +2077,54 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (muted) this.pointed = null
     if (this.appPanel) this.appPanel.setPlaces(!muted)
   }
+
+  // ── Add-on A: the companion speaks ──────────────────────────────
+
+  // The line for an event (speechFor), shown at the companion and facing you; the gate keeps it to
+  // one line at a time and never the same line within 8 s.
+  private speak(e: SpeechEvent): void {
+    if (!this.says) return
+    const key = speechFor(e)
+    if (!key) return
+    const user = this.userPos()
+    const pet = this.guide.pet && this.guide.on ? this.guide.pet.pos : null
+    const h = this.headingVector()
+    const at = pet || {x: user.x + h.x * 1.2, y: user.y, z: user.z + h.z * 1.2}
+    this.says.say(key, this.local(at), this.local(user))
+  }
+
+  // A lift ahead (named once it is near, then "I'll hold the lift"), and a floor up or down.
+  private speakOnTheWay(pos: Vec3): void {
+    const trip = this.trip
+    if (!trip || !this.nav) return
+    if (this.lastFloors !== null && trip.floors !== this.lastFloors) {
+      const moved = this.lastFloors - trip.floors
+      this.speak({kind: "floorChanged", up: moved > 0, floors: Math.abs(moved)})
+    }
+    this.lastFloors = trip.floors
+    if (!trip.next) return
+    const lift = findNode(this.nav.map, trip.next.change.from)
+    const h = this.headingVector()
+    const side = lift ? sideOf(pos.x, pos.z, h.x, h.z, lift.x, lift.z) : "ahead"
+    this.speak({kind: "rideAhead", ride: trip.next.change.edge.kind, metres: trip.next.metres, side})
+  }
+
+  // Where you face, on the floor (userHeading: 0 = -Z).
+  private headingVector(): {x: number, z: number} {
+    const r = (this.userHeading() * Math.PI) / 180
+    return {x: Math.sin(r), z: -Math.cos(r)}
+  }
+
+  setCompanionMuted(muted: boolean): void {
+    if (this.says) this.says.setMuted(muted)
+    if (this.appPanel) this.appPanel.setVoice(!muted)
+  }
+
+  isCompanionMuted(): boolean { return !this.says || this.says.isMuted() }
+  // Tests: the lines said since the last restart, the caption at the companion, the clips loaded.
+  getCompanionSaid(): string[] { return this.says ? this.says.getSaid() : [] }
+  getCompanionCaption(): string | null { return this.says ? this.says.getCaption() : null }
+  getCompanionClipCount(): number { return this.says ? this.says.clipCount() : 0 }
 
   private resetGuide(): void {
     this.guide = new PetGuide()

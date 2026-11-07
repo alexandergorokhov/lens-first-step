@@ -272,7 +272,8 @@ export function offendingTexts(main: FindYourWayMain): string[] {
 }
 
 function allowed(main: FindYourWayMain, path: string): boolean {
-  if (path.indexOf("OffersCard") >= 0 || path.indexOf("Captions") >= 0) return true
+  // The offers card, live captions and the companion's words (add-on A) are allowed on the clean screen.
+  if (path.indexOf("OffersCard") >= 0 || path.indexOf("Captions") >= 0 || path.indexOf("CompanionSays") >= 0) return true
   if (path.indexOf("StandInBuilding") >= 0) return path.indexOf("PlaceIcons") < 0 && path.indexOf("CompanionBubble") < 0
   if (path.indexOf("AppPanel") === 0) return main.isOptionsCollapsed()
   if (path.indexOf("ModePanel") >= 0) return true

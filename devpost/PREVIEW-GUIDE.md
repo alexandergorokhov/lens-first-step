@@ -81,6 +81,7 @@ The **Options** panel sits at the left of your view (on Specs, at waist height):
 - **Dog: on/off** shows or hides the companion. The line stays.
 - **Change to …** goes dog → robot → rover, at any point in a walk.
 - **Places: on/off** mutes the icons and pointing (Go to a place only).
+- **Voice: on/off** mutes the companion's spoken lines and their caption.
 - **See map** shows the mini mall with your route on it.
 - **Play while you wait** appears on a trip when you stand still with the companion on. Raise a hand to jump, or click **Jump**.
 - **Throw a treat** throws for the companion to fetch.
@@ -121,7 +122,7 @@ Write **logic proven** next to what tests and the preview show working, and **fe
 npm test
 ```
 
-Expect `pass 564`, `fail 0`. One test downloads the maps from the public gist; with no internet, set `OFFLINE=1` to skip it (`pass 563`, `skipped 1`). The run first checks that the Lens copies match `src/core`. After editing `src/core`, run `npm run sync`.
+Expect `pass 570`, `fail 0`. One test downloads the maps from the public gist; with no internet, set `OFFLINE=1` to skip it (`pass 569`, `skipped 1`). The run first checks that the Lens copies match `src/core`. After editing `src/core`, run `npm run sync`.
 
 **LEAF tests** run inside the Lens, pressing the real buttons:
 
