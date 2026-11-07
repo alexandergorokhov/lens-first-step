@@ -1,6 +1,6 @@
 # Devpost description: Find Your Way Inside
 
-Draft for the Devpost project page. Check the comparison section against the current products before you submit, and write "What I learned" yourself.
+Draft for the Devpost project page. Check the comparison section against the current products before you submit, and check that "What I learned" sounds like you.
 
 ---
 
@@ -81,7 +81,12 @@ No Specs hardware was used. Everything was built and shown in the Lens Studio pr
 
 ## What I learned
 
-_(Alex: write this part in your own words.)_
+- **You can build for glasses without the glasses.** I never had Specs. Lens Studio's preview, a stand-in building and tests that press the real buttons were enough to build and check the whole trip. What I still can't know is how it feels on your face, and I say so.
+- **Tests first works for AR too.** Writing the LEAF scenario before the feature caught things I would never have seen by eye: a caption left over from the last demo, a gate question about the wrong gate, a route that crossed a shop.
+- **Step-free has to be a rule, not a filter.** If the AI picks a place, the router still checks it. In a wheelchair the bathroom becomes the accessible toilet, and a place with no step-free way in is dropped.
+- **An additive display changes the design.** Black is invisible, so there are no dark panels. Small text and anything off to the side get lost, so the screen stays almost empty while you walk.
+- **Working with an AI agent is a skill.** Claude did the typing through Lens Studio's MCP. My job was to decide what the product is, say no to extras, and check every claim against a test or the preview.
+- **Read the version before you install.** The newest Remote Service Gateway needed packages this project didn't have. The older 2.0.1 had everything I needed.
 
 ## What's next
 
