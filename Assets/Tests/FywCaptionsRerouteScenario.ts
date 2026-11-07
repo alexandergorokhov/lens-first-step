@@ -52,7 +52,19 @@ export class FywCaptionsRerouteScenario extends Scenario {
     main.playAnnouncement()
     await sleep(5500)
     expect(main.getRerouteText(), "no question for the gate you are going to").toBe(null)
+    // Close while an announcement is still typing in.
+    main.playAnnouncement()
+    await sleep(1000)
+    expect(main.getCaptionRows().join(" ").length > 0, "captions are showing").toBe(true)
     await closeDemo(main)
+    // The announcement was still playing: the next demo (Free walk, captions on) starts with no line
+    // left over from this one.
+    const next = await openDemo("freeWalkRobot")
+    if (!pressButton("PrefsKeepButton")) pressButton("PrefsStartButton")
+    await waitFor(() => next.main.getPhase() === "free", 3000, "Free walk starts")
+    await sleep(1500)
+    expect(next.main.getCaptionRows().join(" "), "no captions left over from the last demo").toBe("")
+    await closeDemo(next.main)
     log("cr1 pass")
   }
 }

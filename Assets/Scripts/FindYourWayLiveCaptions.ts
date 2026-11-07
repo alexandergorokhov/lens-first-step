@@ -44,6 +44,14 @@ export class FindYourWayLiveCaptions {
 
   isOn(): boolean { return this.on }
 
+  // A restart: nothing playing, nothing shown (the next trip starts with no leftover lines).
+  reset(): void {
+    this.demo = null
+    this.demoEndsAt = 0
+    this.feed.push("", true, -100)
+    this.hud.setCaptions([], "")
+  }
+
   // The preview's scripted announcement for this map (airport: Spanish; mall: French).
   playDemo(mapKey: string): void {
     const d = DEMO_SPEECH[mapKey]

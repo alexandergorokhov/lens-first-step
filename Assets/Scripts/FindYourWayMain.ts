@@ -1247,6 +1247,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   restart(): void {
     this.rerouteOffer = null
     this.hud.setReroute(null)
+    if (this.captions) this.captions.reset()
     this.endMapping(false)
     this.clearFreeWalk()
     this.setMapShown(false)
