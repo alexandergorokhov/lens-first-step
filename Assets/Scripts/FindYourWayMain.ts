@@ -1827,7 +1827,9 @@ export class FindYourWayMain extends BaseScriptComponent {
       }
       if (this.talkAt > 0 && getTime() >= this.talkAt) {
         this.talkAt = 0
-        this.captions.playDemo(this.getMapKey())
+        // The gate agent speaks of the gate you arrived at (never a gate change).
+        const dest = this.map.nodes.filter((n) => n.id === this.getDestinationId())[0] as any
+        this.captions.playDemo(this.getMapKey(), dest && dest.code ? dest.code : null)
       }
       if (this.speaker && this.speaker.isShown()) this.speaker.setSpeaking(this.captions.isDemoSpeaking())
       this.captions.tick()

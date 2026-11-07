@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 import { findRoute, parseMap } from "../router.ts";
 import type { MapData } from "../router.ts";
 import { gateChangeOffer } from "../freewalk.ts";
-import { GATE_CHANGE_SPEECH } from "../captions.ts";
+import { GATE_CHANGE_SPEECH, demoSpeechFor } from "../captions.ts";
 
 function airport(): MapData {
   const r = parseMap(readFileSync(new URL("../data/map.json", import.meta.url), "utf8"));
@@ -53,4 +53,17 @@ test("accepting keeps Step-Free: the route to B14 from the C pier has no stairs 
   assert.equal(r.status, "route");
   if (r.status !== "route") return;
   for (const e of r.edges) assert.ok(e.kind !== "stairs" && e.kind !== "escalator", "step-free edge: " + e.id + " " + e.kind);
+});
+
+test("GC8 the gate agent you meet on arrival speaks of the gate you are at, so no re-route is offered there", () => {
+  const m = airport();
+  for (const [gate, code] of [["gateC12", "C12"], ["gateB14", "B14"], ["gateB12", "B12"]]) {
+    const d = demoSpeechFor("airport", code)!;
+    assert.ok(d.heard.indexOf("puerta " + code) >= 0 && d.english.indexOf("gate " + code) >= 0, code);
+    assert.equal(gateChangeOffer(m, d.english, gate), null, "at " + gate);
+  }
+  // No gate (arriving somewhere else): the line as written; the mall's host is unchanged.
+  assert.ok(demoSpeechFor("airport", null)!.english.indexOf("gate C12") >= 0);
+  assert.ok(demoSpeechFor("mall", "B14")!.english.indexOf("table") >= 0);
+  assert.equal(demoSpeechFor("moon", null), null);
 });

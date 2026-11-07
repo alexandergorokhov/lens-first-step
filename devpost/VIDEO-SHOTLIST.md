@@ -4,6 +4,7 @@ The target is under 2:50 on YouTube. Every frame comes from the real Lens in the
 
 ## What exists
 
+- `devpost/video/pathpal-demos-v2.mp4` (**latest, Nov 7**): 2:55, no sound, the three demo presets in one take by LEAF `visual-demos` from the Lens Studio preview, cut and titled with ffmpeg (1.35x). Airport in a wheelchair: café, to the accessible toilet door, the gate change heard in Spanish and re-routed to B14 step-free; mall, follow the dog; Free walk with the robot (points at the café and Threads, offers on a look).
 - `devpost/video/find-your-way-demo-final.mp4`: 2:41, no sound, recorded from the preview on **Nov 1 around 02:00** by the LEAF scenario `visual-reel` (`Assets/Tests/FywReelScenario.ts`). It's a mall walkthrough, recorded before the Nov 1 and Nov 3–4 changes.
 - `visual-reel` was updated in `085880d`: its captions now name the gold offers button, and it walks up the stairs. It plays end to end on the Nov 3–4 code (230 s) but **hasn't been re-recorded**. Footage from it can fill beats 6 and 8 below if needed.
 - `[REEL] <seconds> <caption>` lines in the Logger give each beat's exact time. `npm run reel:edit -- <raw> <reel.log> <start> <out>` cuts the marked stretches and times the captions.

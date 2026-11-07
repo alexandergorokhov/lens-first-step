@@ -1,5 +1,6 @@
 import {Scenario} from "Leaf.lspkg/Scenarios/scenario/Scenario"
 import {sleep} from "Leaf.lspkg/Utils/common/Utils"
+import {expect} from "Leaf.lspkg/Utils/common/Expect"
 import {FindYourWayMain} from "../Scripts/FindYourWayMain"
 import {log} from "./FindYourWayLeafSupport"
 import {pressButton} from "../Scripts/FindYourWayWidgetsUI"
@@ -72,6 +73,8 @@ export class FywDemoVideoScenario extends Scenario {
     await this.airportWithGateChange(run)
     this.mark("arrived " + run.main.getArrivalText())
     await hold(run, 8.5)
+    // The gate agent at B14 speaks of B14: no "Re-route to …?" at the gate you are at.
+    expect(run.main.getRerouteText(), "no re-route question at the gate").toBe(null)
     await closeDemo(run.main)
 
     this.mark("demo 2: mall, follow the dog")

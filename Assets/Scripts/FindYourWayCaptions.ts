@@ -76,6 +76,15 @@ export const DEMO_SPEECH: { [map: string]: { heard: string; lang: string; englis
   },
 };
 
+// The scripted line for this map, its gate made the one you arrived at (code "B14"; null keeps it): the
+// gate agent you meet speaks of your own gate, so it never sounds like a gate change.
+export function demoSpeechFor(mapKey: string, gateCode: string | null): { heard: string; lang: string; english: string } | null {
+  const d = DEMO_SPEECH[mapKey];
+  if (!d) return null;
+  if (!gateCode || mapKey !== "airport") return { heard: d.heard, lang: d.lang, english: d.english };
+  return { heard: d.heard.replace(/puerta C12/, "puerta " + gateCode), lang: d.lang, english: d.english.replace(/gate C12/, "gate " + gateCode) };
+}
+
 // Add-on D: the preview's sample gate announcement (Spanish, shown in English), played from the Control
 // panel. Its gate (B14) is not the demo trip's (C12), so Pathpal offers to re-route.
 export const GATE_CHANGE_SPEECH = {

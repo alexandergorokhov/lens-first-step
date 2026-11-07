@@ -4,7 +4,7 @@
 // Gateway). Speech comes from Snap's ASR (Specs only). The preview has no microphone: playDemo() shows a
 // scripted announcement, labelled as such. Must not: route or decide anything; it only shows words.
 
-import {CaptionFeed, DEMO_SPEAKER, DEMO_SPEECH, parseTranslation, translatePrompt} from "./FindYourWayCaptions"
+import {CaptionFeed, DEMO_SPEAKER, demoSpeechFor, parseTranslation, translatePrompt} from "./FindYourWayCaptions"
 import {FindYourWayHudUI} from "./FindYourWayHudUI"
 
 export type Translator = (prompt: string) => Promise<string>
@@ -53,8 +53,8 @@ export class FindYourWayLiveCaptions {
   }
 
   // The preview's scripted announcement for this map (airport: Spanish; mall: French).
-  playDemo(mapKey: string): void {
-    const d = DEMO_SPEECH[mapKey]
+  playDemo(mapKey: string, gateCode: string | null = null): void {
+    const d = demoSpeechFor(mapKey, gateCode)
     if (d) this.playScript({heard: d.heard, english: d.english, lang: d.lang, who: DEMO_SPEAKER[mapKey] || ""})
   }
 
