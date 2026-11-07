@@ -166,3 +166,14 @@ test("R3 The demo-video server serves only its own files: no traversal, no crash
     server.close();
   }
 });
+
+// ---- #10 gateway tokens never leave the PC -----------------------------------------------------------
+
+test("R10 The scene holds no Remote Service Gateway token: only the placeholders (or nothing) are saved", () => {
+  const scene = readFileSync(new URL("../../../Assets/Scene.scene", import.meta.url), "utf8");
+  for (const field of ["openAIToken", "googleToken", "snapToken"]) {
+    for (const m of scene.matchAll(new RegExp(field + ': "([^"]*)"', "g"))) {
+      assert.ok(m[1] === "" || /^\[INSERT .* TOKEN HERE\]$/.test(m[1]), field + " is set in Scene.scene: clear it before committing");
+    }
+  }
+});

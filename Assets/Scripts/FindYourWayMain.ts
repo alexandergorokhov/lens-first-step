@@ -62,7 +62,7 @@ import {MultiStopTrip, orderStops} from "./FindYourWayTrip"
 import {mapLogLines, tripAfterSaving} from "./FindYourWayMapping"
 import {peekPlace} from "./FindYourWayPeek"
 import {demoSettings, DemoSettings, showingSettings, StartSettings} from "./FindYourWayDemo"
-import {destinationsOf, FreeWalk, gateChangeOffer, interestList, LookBoxes, matchDestination, OfferDismissals, sayItPhrase, ShopLook, typedSoFar, typingSeconds, planAsk, VOICE_FALLBACK_S, walkableRoute, CLEAN_FREE_WALK, OFFER_LOOK_S} from "./FindYourWayFreeWalk"
+import {destinationsOf, FreeWalk, gateChangeOffer, interestList, LookBoxes, matchDestination, OfferDismissals, sayItPhrase, ShopLook, typedSoFar, typingSeconds, planAsk, askPrompt, parseAskReply, llmStops, ASK_LLM_TIMEOUT_S, VOICE_FALLBACK_S, walkableRoute, CLEAN_FREE_WALK, OFFER_LOOK_S} from "./FindYourWayFreeWalk"
 import {arrivalCardOn, cleanAllows, OptionsDock, routeLineAheadM, walkingHud} from "./FindYourWayDock"
 import {FindYourWayOfferBoxesUI} from "./FindYourWayOfferBoxesUI"
 import {FindYourWayHomePanelUI} from "./FindYourWayHomePanelUI"
@@ -93,6 +93,7 @@ import {FindYourWayPropsView} from "./FindYourWayPropsView"
 import {FindYourWayLiveCaptions} from "./FindYourWayLiveCaptions"
 import {GATE_CHANGE_SPEECH} from "./FindYourWayCaptions"
 import {FindYourWaySpeakerView} from "./FindYourWaySpeakerView"
+import {AskLlm, FindYourWayAsk, withTimeout} from "./FindYourWayAsk"
 
 // scan -> loading -> choose (the three modes) -> prefs -> free (Free walk)
 //                                           -> mode -> nav -> arrived (Go to a place)
@@ -326,6 +327,9 @@ export class FindYourWayMain extends BaseScriptComponent {
   private placeBuilder: FindYourWayPlaceBuilder
   private propsView: FindYourWayPropsView | null = null
   private captions: FindYourWayLiveCaptions | null = null
+  // Add-on B: the LLM asked when plain words find no place (LEAF sets a stand-in; on Specs the gateway).
+  private askLlm: AskLlm | null = null
+  private askTry = 0
   private speaker: FindYourWaySpeakerView | null = null
   // The conversation on arrival (preview): when the person speaks (0 = done, -1 = none yet).
   private talkAt = -1
@@ -575,6 +579,8 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.view.setup(this.standIn.material)
     this.view.setPrefabs({dog: this.dogModel || null, robot: this.robotModel || null})
     this.captions = new FindYourWayLiveCaptions(this.hud, this.captionLanguage)
+    // On Specs with a gateway token the captions are translated by the LLM; the preview plays a fixed sample.
+    if (FindYourWayAsk.available() && !global.deviceInfoSystem.isEditor()) this.captions.translator = (prompt: string) => FindYourWayAsk.ask(prompt)
     this.captions.onFinal = (text) => this.heardLine(text)
     const sp = global.scene.createSceneObject("Speaker")
     sp.setParent(this.building)
@@ -777,8 +783,19 @@ export class FindYourWayMain extends BaseScriptComponent {
     }
     this.voice.stop()
     const plan = this.planSentence(text)
+    const one = plan.length === 0 ? matchDestination(this.map, text) : null
+    if (plan.length === 0 && !one && this.llmFor()) {
+      this.askTheLlm(text)
+      return
+    }
+    this.followPlan(text, one ? [one] : plan, false)
+  }
+
+  // Stops for what was heard: two or more make a trip in order, one is the destination.
+  private followPlan(text: string, plan: string[], byLlm: boolean): void {
+    const how = byLlm ? " (AI picked)" : ""
     if (plan.length >= 2) {
-      print("[FYW] heard: " + text.length + " characters -> " + plan.join(" > ")) // never what was said
+      print("[FYW] heard: " + text.length + " characters -> " + plan.join(" > ") + how) // never what was said
       this.tourIds = plan
       this.askTrip = true
       this.tripDestination = null
@@ -786,13 +803,56 @@ export class FindYourWayMain extends BaseScriptComponent {
       this.goOnAfterHeard()
       return
     }
-    const id = plan.length === 1 ? plan[0] : matchDestination(this.map, text)
-    print("[FYW] heard: " + text.length + " characters -> " + id) // never what was said
+    const id = plan.length === 1 ? plan[0] : null
+    print("[FYW] heard: " + text.length + " characters -> " + id + how) // never what was said
     if (id) {
       this.pickDestination(id)
-      if (this.demoSet) this.modePanel.setNote("Heard: " + text + "  →  " + nodeLabel(this.map, id))
+      if (this.demoSet || byLlm) this.modePanel.setNote("Heard: " + text + "  →  " + nodeLabel(this.map, id))
       this.goOnAfterHeard()
     } else this.modePanel.setNote("didn't catch that: try Where to?")
+  }
+
+  // The LLM to ask: a stand-in set by a test, else the gateway when a token is set (Specs), else none.
+  private llmFor(): AskLlm | null {
+    if (this.askLlm) return this.askLlm
+    return FindYourWayAsk.available() ? (prompt: string) => FindYourWayAsk.ask(prompt) : null
+  }
+
+  // Add-on B: the plain words found no place. The LLM picks place ids only; they are checked
+  // (parseAskReply), then ordered and routed by the router (llmStops), so Step-Free still holds. No
+  // valid answer within ASK_LLM_TIMEOUT_S: "didn't catch that".
+  private askTheLlm(text: string): void {
+    const llm = this.llmFor()
+    if (!llm) return
+    const attempt = ++this.askTry
+    const voiceTry = this.voiceTry
+    this.modePanel.setNote("Heard: " + text + "\nThinking…")
+    print("[FYW] ask: the AI picks the places")
+    const stale = (): boolean => attempt !== this.askTry || voiceTry !== this.voiceTry || this.phase !== "mode"
+    const fail = (why: string): void => {
+      if (stale()) return
+      print("[FYW] ask: " + why)
+      this.modePanel.setNote("didn't catch that: try Where to?")
+    }
+    let sent: Promise<string>
+    try {
+      sent = llm(askPrompt(this.map, text))
+    } catch (e) {
+      fail("" + e)
+      return
+    }
+    withTimeout(this, sent, ASK_LLM_TIMEOUT_S).then((reply) => {
+      if (stale()) return
+      const ids = parseAskReply(this.map, reply)
+      const profile: Profile = (this.profile || this.preselect || "walk") as Profile
+      const start = this.startOverride || this.tripStart || this.place.start
+      const plan = ids ? llmStops(this.map, ids, start, profile === "stepFree", (a, b) => {
+        const r = new Navigator(this.map, a, b, profile).route
+        return r.status === "route" ? r.length : r.status === "arrived" ? 0 : Infinity
+      }) : []
+      if (plan.length === 0) fail(ids ? "no route to what it picked" : "not a valid answer")
+      else this.followPlan(text, plan, true)
+    }, (e) => fail("" + e))
   }
 
   // A demo preset goes on with its mode by itself once you have read what was heard: one Talk, and
@@ -1888,6 +1948,9 @@ export class FindYourWayMain extends BaseScriptComponent {
 
   // Test hooks: the Go to a place panel's height and its demo (simple) look.
   getModePanelHeight(): number { return this.modePanel.getHeight() }
+  // LEAF: an LLM stand-in (null: back to the gateway), and a sentence as if heard by Talk.
+  debugSetLlm(llm: AskLlm | null): void { this.askLlm = llm }
+  debugHear(text: string): void { this.heard(text, true) }
   debugSetModeSimple(on: boolean): void { this.modePanel.setSimple(on) }
 
   // Test hook: is the whole offers card inside the view (view.ts OFFER_VIEW)?

@@ -3,7 +3,7 @@
 // shops, gates, signs and people. Positions come from the map's nodes, so the router's route
 // runs exactly through it. Map metres: x east, y up, z north -> three.js (x, y, -z).
 import * as THREE from "three";
-import { FURNITURE, LIFTS, LIFT_HALF, PEOPLE, SEATS, SHOPS, doorFace as faceOf } from "./layout.mjs";
+import { FURNITURE, LIFTS, LIFT_HALF, PEOPLE, SEATS, SHOPS, TOILET_DOORS, doorFace as faceOf } from "./layout.mjs";
 
 export const V = (x, y, z) => new THREE.Vector3(x, y, -z);
 const DEG = Math.PI / 180;
@@ -521,6 +521,17 @@ export function buildAirport(scene, map) {
     const fz = faceHeading === 180 ? z0 - 0.02 : faceHeading === 0 ? z1 + 0.02 : (z0 + z1) / 2;
     const w = faceHeading === 90 ? z1 - z0 : x1 - x0;
     signBoard(root, fx, y + 3.6, fz, faceHeading, w * 0.9, 0.7, signTex([name], { w: 1024, h: 200, bg: color, fg: "#ffffff", size: 120 }), false);
+    if (name === "Toilets") {
+      // No glass front: a tiled wall with two doors where the legs end (you go to the door, not in).
+      for (const [id, label, dw] of TOILET_DOORS) {
+        const n = node(id);
+        box(root, n.x - dw / 2 - 0.08, n.x + dw / 2 + 0.08, y, y + 2.3, z1, z1 + 0.06, lambert(0xd9dde2));
+        box(root, n.x - dw / 2, n.x + dw / 2, y, y + 2.2, z1 + 0.06, z1 + 0.1, lambert(0x36577a));
+        box(root, n.x + dw / 2 - 0.18, n.x + dw / 2 - 0.1, y + 0.95, y + 1.1, z1 + 0.1, z1 + 0.16, lambert(0xd8d8d8));
+        signBoard(root, n.x, y + 2.55, z1 + 0.04, 0, Math.max(dw, 1.4), 0.36, signTex([label], { w: 768, h: 200, bg: "#ffffff", fg: "#36577a", size: label.length > 10 ? 78 : 110 }), false);
+      }
+      return null;
+    }
     const glassFront = faceHeading === 90 ? beam(root, { x: x1 + 0.05, y: y + 1.4, z: z0 + 0.3 }, { x: x1 + 0.05, y: y + 1.4, z: z1 - 0.3 }, 0.04, 2.6, glass)
       : faceHeading === 0 ? beam(root, { x: x0 + 0.3, y: y + 1.4, z: z1 + 0.05 }, { x: x1 - 0.3, y: y + 1.4, z: z1 + 0.05 }, 0.04, 2.6, glass)
       : beam(root, { x: x0 + 0.3, y: y + 1.4, z: z0 - 0.05 }, { x: x1 - 0.3, y: y + 1.4, z: z0 - 0.05 }, 0.04, 2.6, glass);

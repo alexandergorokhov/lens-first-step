@@ -7,7 +7,8 @@
     - !<own> beae2714-1555-483e-8750-5ad8ad6d00ed
     - !<own> 49237bc4-f9e6-442f-b388-f2f7c7ddc103
     - !<own> abd7f7cc-fe64-4a6c-9229-15566f25581c
-    - !<own> 9a69daba-d052-4df7-befc-a7b8564e0d25
+    - !<own> 3ef4fa15-b586-4c6b-bd31-43816a7a42a0
+    - !<own> e95bf17a-c95e-48bd-888e-6a0d5cc30813
   layers: !<Layers/267ee9a7-aff2-4f9d-9a49-f71214747d03>
     userLayers:
       - id: 1
@@ -297,6 +298,30 @@
     index-2: !<reference> 9e877b75-1daf-46e2-8810-e8cf84bd891c
     thumb-3_end_end_end_end: !<reference> b1445528-7fff-4079-8cab-619efe28de08
     wrist_to_pinky: !<reference> 38a9306a-89ba-4e57-922b-488e7241444a
+- !<ScriptComponent/01fe3d99-b750-422e-879b-bf248dc1bb9d>
+  PrefabRemaps:
+    []
+  Name: RemoteServiceGatewayCredentials
+  Enabled: true
+  ScriptAsset: !<reference> 37976aca-6847-44c8-88d9-5edb6aadbbf2
+  ScriptInputsDefault:
+    openAIToken: true
+    googleToken: true
+    snapToken: true
+    enableLogging: true
+    enableLoggingLifecycle: true
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      openAIToken: "[INSERT OPENAI TOKEN HERE]"
+      googleToken: "[INSERT GOOGLE TOKEN HERE]"
+      snapToken: "[INSERT SNAP TOKEN HERE]"
+      enableLogging: false
+      enableLoggingLifecycle: false
+  ScriptTypes:
+    "":
+      {}
 - !<ScriptComponent/0253552a-90e8-4806-ba00-cbe5b839edec>
   PrefabRemaps:
     []
@@ -2326,6 +2351,21 @@
     []
   Components:
     - !<own> 5b683a2d-7991-4e8e-be36-807787dc8dd4
+- !<SceneObject/3ef4fa15-b586-4c6b-bd31-43816a7a42a0>
+  PrefabRemaps:
+    []
+  Name: LEAF Plugin Bridge
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> a2488960-0e8a-48de-9a5f-f470973944f3
 - !<ScriptComponent/400372e3-a564-4b13-a1fa-a73e5904005d>
   PrefabRemaps:
     []
@@ -5435,21 +5475,6 @@
   ScriptTypes:
     "":
       {}
-- !<SceneObject/9a69daba-d052-4df7-befc-a7b8564e0d25>
-  PrefabRemaps:
-    []
-  Name: LEAF Plugin Bridge
-  Enabled: true
-  Layers: 1
-  LocalTransform: !<TransformEntity>
-    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
-    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
-    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
-    HasSegmentScaleCompensation: false
-  Children:
-    []
-  Components:
-    - !<own> d491aa83-7dd0-4433-832e-88b7ae99c380
 - !<ScriptComponent/9a871616-805d-4668-82e7-6a948e06b8d8>
   PrefabRemaps:
     []
@@ -5776,6 +5801,22 @@
       _triggerStartAudioTrack: !<reference.AudioTrackAsset> edad7d53-55da-40b1-9025-fad0e7207862
       _playAudioOnTriggerEnd: true
       _triggerEndAudioTrack: !<reference.AudioTrackAsset> 82028831-1631-4d7b-b548-ff6be4e0a2ba
+  ScriptTypes:
+    "":
+      {}
+- !<ScriptComponent/a2488960-0e8a-48de-9a5f-f470973944f3>
+  PrefabRemaps:
+    []
+  Name: MessagingBridge
+  Enabled: true
+  ScriptAsset: !<reference> 4c470e55-3d80-4780-ba2b-d011215918a3
+  ScriptInputsDefault:
+    {}
+  ScriptTypesDefault:
+    {}
+  ScriptInputs:
+    "":
+      {}
   ScriptTypes:
     "":
       {}
@@ -7820,22 +7861,6 @@
     []
   Components:
     []
-- !<ScriptComponent/d491aa83-7dd0-4433-832e-88b7ae99c380>
-  PrefabRemaps:
-    []
-  Name: MessagingBridge
-  Enabled: true
-  ScriptAsset: !<reference> 4c470e55-3d80-4780-ba2b-d011215918a3
-  ScriptInputsDefault:
-    {}
-  ScriptTypesDefault:
-    {}
-  ScriptInputs:
-    "":
-      {}
-  ScriptTypes:
-    "":
-      {}
 - !<SceneObject/d649b43d-ee0e-4a74-b6c9-18af11bb299d>
   PrefabRemaps:
     []
@@ -8486,6 +8511,21 @@
     InvertRotation: false
   SurfaceOptions: !<SurfaceOptions>
     EnhanceWithNativeAR: false
+- !<SceneObject/e95bf17a-c95e-48bd-888e-6a0d5cc30813>
+  PrefabRemaps:
+    []
+  Name: GatewayCredentials
+  Enabled: true
+  Layers: 1
+  LocalTransform: !<TransformEntity>
+    Position: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Rotation: {x: 0.000000, y: 0.000000, z: 0.000000}
+    Scale: {x: 1.000000, y: 1.000000, z: 1.000000}
+    HasSegmentScaleCompensation: false
+  Children:
+    []
+  Components:
+    - !<own> 01fe3d99-b750-422e-879b-bf248dc1bb9d
 - !<ScriptComponent/e9c3f69a-bd88-461d-ade2-27d16c927262>
   PrefabRemaps:
     []

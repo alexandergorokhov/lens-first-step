@@ -39,6 +39,7 @@ Each feature below passed its LEAF test, run inside the Lens and pressing the re
 - **Peek ahead:** pinch and pull toward you for a small model of your route.
 - **Three demo presets** (Inspector **Demo preset**): airport in a wheelchair, mall following the dog, Free walk with the robot. Each opens ready, with a clean screen and the companion on. The panel closes up where the hidden options were.
 - **Ask in your own words:** "I need coffee and a bathroom before my flight at gate 12C" becomes Café, Accessible toilet, Gate C12, in the shortest order, each leg step-free. In the preview the sentence types itself in (no microphone there).
+- **The AI picks the place (Specs):** when the plain words find no place ("where can my kids run around"), an LLM (OpenAI through Snap's Remote Service Gateway) gets the sentence and the map's place list and answers with place ids only. The router checks them and plans the route, so Step-Free still holds (a toilet becomes the accessible toilet); no valid answer in 3 s and it says "didn't catch that". The gateway token stays on the PC: a test fails if one is saved in the scene. In the preview a LEAF test stands in for the LLM.
 - **Offers anywhere:** look at a shop for 2 s, before, during or after a trip, and a small card shows its offers. It moves to a free corner so it never covers an open menu, and always stays in view.
 - **Live captions and "heard a gate change":** speech around you shows as two rows at the bottom, translated. When a caption names another gate ("…now boards at gate B14"), Pathpal asks **Re-route to Gate B14?**: Yes re-routes in your mode (Step-Free stays step-free), No keeps the trip. In the preview a sample Spanish announcement plays from **Control > Play announcement**; on Specs it is live speech. Nothing is recorded or stored.
 
@@ -66,7 +67,7 @@ Each feature below passed its LEAF test, run inside the Lens and pressing the re
 npm test
 ```
 
-There are 558 tests (offline: 557 pass, 1 skipped). One downloads the maps from the public gist; offline, set `OFFLINE=1` to skip it. The run first checks that the Lens's copies of the core files match `src/core`; after editing `src/core`, run `npm run sync`.
+There are 563 tests (offline: 562 pass, 1 skipped). One downloads the maps from the public gist; offline, set `OFFLINE=1` to skip it. The run first checks that the Lens's copies of the core files match `src/core`; after editing `src/core`, run `npm run sync`.
 
 **LEAF tests** run inside the Lens:
 1. Select **LeafIndex** in the Scene Hierarchy and tick **autoRun**. To run only some, type their ids in **only**, separated by commas.

@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { Navigator, parseMap } from "../router.ts";
 import type { MapData, Profile } from "../router.ts";
-import { askNeeds, planAsk, askPrompt, parseAskReply, sayItPhrase } from "../freewalk.ts";
+import { askNeeds, planAsk, askPrompt, parseAskReply, sayItPhrase, matchDestination, llmStops, chatReplyContent, ASK_LLM_TIMEOUT_S, ASK_LLM_MODEL } from "../freewalk.ts";
 
 function load(file: string): MapData {
   const r = parseMap(readFileSync(new URL("../data/" + file, import.meta.url), "utf8"));
@@ -82,4 +82,41 @@ test("AK7 the LLM only picks places: its prompt lists the map's places; its repl
   assert.equal(parseAskReply(m, "not json"), null);
   assert.equal(parseAskReply(m, '{"stops": []}'), null);
   assert.equal(parseAskReply(m, '{"stops": "cafeD"}'), null);
+});
+
+// Add-on B: the LLM only when the plain words find nothing; its places go through the router.
+test("AK8 'somewhere quiet to sit' finds nothing in plain words: that is when the LLM is asked", () => {
+  const m = load("map.json");
+  for (const said of ["somewhere quiet to sit down", "where can my kids run around"]) {
+    assert.deepEqual(planAsk(m, said, "sign", true, dist(m, "stepFree")), [], said);
+    assert.equal(matchDestination(m, said), null, said);
+  }
+  assert.equal(ASK_LLM_TIMEOUT_S, 3);
+  assert.ok(ASK_LLM_MODEL.length > 0);
+});
+
+test("AK9 the LLM's places, checked and ordered by the router: gate last, toilets step-free for a wheelchair, repeats dropped", () => {
+  const m = load("map.json");
+  const sf = dist(m, "stepFree");
+  assert.deepEqual(llmStops(m, ["familyLounge"], "sign", true, sf), ["familyLounge"]);
+  // The LLM gave the gate first and the plain toilets: the gate goes last, the toilet becomes the accessible one.
+  const s = llmStops(m, ["gateC12", "toiletsD", "cafeD", "cafeD"], "sign", true, sf);
+  assert.equal(s[s.length - 1], "gateC12");
+  assert.equal(s.length, 3);
+  assert.ok(s.indexOf("accToiletD") >= 0 && s.indexOf("toiletsD") < 0, s.join(","));
+  // Walking keeps the plain toilets.
+  assert.ok(llmStops(m, ["toiletsD", "gateC12"], "sign", false, dist(m, "walk")).indexOf("toiletsD") >= 0);
+  // A place it can't reach (no route) is dropped; nothing left: [].
+  assert.deepEqual(llmStops(m, ["moonBase"], "sign", true, sf), []);
+  assert.deepEqual(llmStops(m, [], "sign", true, sf), []);
+  // Shortest order for the stops before the end.
+  const two = llmStops(m, ["cafeD", "juiceG"], "sign", false, dist(m, "walk"));
+  assert.equal(two[0], "juiceG", "the juice bar is on the way, on the ground floor");
+});
+
+test("AK10 the gateway's chat reply: the message text, or null for anything else", () => {
+  assert.equal(chatReplyContent({ choices: [{ message: { content: '{"stops": ["cafeD"]}' } }] }), '{"stops": ["cafeD"]}');
+  assert.equal(chatReplyContent({ choices: [] }), null);
+  assert.equal(chatReplyContent(null), null);
+  assert.equal(chatReplyContent({ choices: [{ message: { content: 3 } }] }), null);
 });

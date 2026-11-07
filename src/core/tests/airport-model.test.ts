@@ -120,3 +120,24 @@ test("AM3 walking by hand stops at the model's solids: the Lens's airport-solids
     }
   }
 });
+
+test("AM7 the toilet block has a door for Toilets and one for the Accessible toilet, each right where its leg ends", async () => {
+  const { SHOPS, TOILET_DOORS } = await import("../../../tools/demo-video/layout.mjs");
+  const m = load();
+  const block = SHOPS.find((s: any[]) => s[5] === "Toilets");
+  assert.ok(block, "the toilet block");
+  const [x0, x1, , z1, y, , , face] = block;
+  assert.equal(face, 0, "its front faces north (+z)");
+  assert.deepEqual(TOILET_DOORS.map((d: any[]) => d[0]).sort(), ["accToiletD", "toiletsD"]);
+  for (const [id, label, w] of TOILET_DOORS) {
+    const n = m.nodes.find((q) => q.id === id)!;
+    assert.ok(label.length > 0, id + " has a sign");
+    assert.ok(n.x - w / 2 >= x0 && n.x + w / 2 <= x1, id + ": the door is in the block's front");
+    assert.equal(n.y, y, id + ": same floor");
+    const out = n.z - z1;
+    assert.ok(out > 0 && out < 1, id + ": the node stands just outside its door (" + out.toFixed(2) + " m)");
+  }
+  const [a, b] = TOILET_DOORS;
+  const na = m.nodes.find((q) => q.id === a[0])!, nb = m.nodes.find((q) => q.id === b[0])!;
+  assert.ok(Math.abs(na.x - nb.x) >= (a[2] + b[2]) / 2 + 0.3, "the two doors don't overlap");
+});

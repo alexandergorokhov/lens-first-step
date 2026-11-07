@@ -17,6 +17,13 @@ export const SHOPS = [
   [87, 93, 21.5, 25.8, 6, "Family lounge", "#2f7d4f", 0],
 ];
 
+// The toilet block's two doors, on its front, where the legs end: [node id, sign, door width m].
+// The route and the demo go to the door; nobody walks inside.
+export const TOILET_DOORS = [
+  ["toiletsD", "Toilets", 1.0],
+  ["accToiletD", "Accessible toilet", 1.3],
+];
+
 // Solid furniture the route must stay clear of: [x0, x1, z0, z1, floor y, height, colour, label].
 export const FURNITURE = [
   // gate desks (beside each gate, like B12's)

@@ -1159,6 +1159,53 @@ export function parseAskReply(map: FwMap, reply: string): string[] | null {
   return v.stops.slice();
 }
 
+// Add-on B: when the plain words find nothing ("somewhere quiet to sit"), the LLM is asked (on Specs,
+// through Snap's Remote Service Gateway) with askPrompt; no answer in this long (s) and the Lens says
+// "didn't catch that". Its reply is only place ids (parseAskReply); llmStops checks and orders them.
+export const ASK_LLM_TIMEOUT_S = 3;
+export const ASK_LLM_MODEL = "gpt-4.1-nano";
+
+// The LLM's places as a trip: repeats dropped, toilets made accessible for a wheelchair, places with no
+// route dropped, a destination it named last stays last (a gate), the rest in the shortest order.
+export function llmStops(map: FwMap, ids: string[], start: string, accessible: boolean, dist: (a: string, b: string) => number): string[] {
+  const byId = (id: string) => map.nodes.filter((n) => n.id === id)[0];
+  const cache: { [k: string]: number } = {};
+  const d = (a: string, b: string): number => {
+    const k = a + ">" + b;
+    if (!(k in cache)) cache[k] = a === b ? 0 : dist(a, b);
+    return cache[k];
+  };
+  const out: string[] = [];
+  for (const raw of ids) {
+    const n = byId(raw);
+    if (!n) continue;
+    let id = raw;
+    if (accessible && n.category === "toilet") {
+      const acc = placesFor(map, "toilet", true).map((p) => p.id).sort((a, b) => d(start, a) - d(start, b));
+      if (acc.length > 0) id = acc[0];
+    }
+    if (out.indexOf(id) < 0 && d(start, id) < Infinity) out.push(id);
+  }
+  if (out.length === 0) return [];
+  const lastRaw = byId(ids[ids.length - 1]);
+  const final = lastRaw && lastRaw.kind === "destination" && out.indexOf(lastRaw.id) >= 0 ? lastRaw.id : null;
+  const rest = out.filter((id) => id !== final).slice(0, 4);
+  let best: string[] = [], bestLen = Infinity;
+  for (const order of permutations(rest)) {
+    const seq = final ? order.concat([final]) : order;
+    let len = 0, at = start;
+    for (const id of seq) { len += d(at, id); at = id; }
+    if (len < bestLen) { bestLen = len; best = seq; }
+  }
+  return best;
+}
+
+// The text of a chat completion from the gateway ({choices: [{message: {content}}]}), or null.
+export function chatReplyContent(resp: any): string | null {
+  const c = resp && resp.choices && resp.choices[0] && resp.choices[0].message ? resp.choices[0].message.content : null;
+  return typeof c === "string" ? c : null;
+}
+
 // Look at a shop this long (s) and its offers show (at most 2, in a small card at the top right).
 export const OFFER_LOOK_S = 2;
 
