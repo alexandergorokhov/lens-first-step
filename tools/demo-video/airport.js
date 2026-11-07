@@ -3,7 +3,7 @@
 // shops, gates, signs and people. Positions come from the map's nodes, so the router's route
 // runs exactly through it. Map metres: x east, y up, z north -> three.js (x, y, -z).
 import * as THREE from "three";
-import { FURNITURE, LIFTS, LIFT_HALF, PEOPLE, SEATS, SHOPS, TOILET_DOORS, doorFace as faceOf } from "./layout.mjs";
+import { DEPARTURES, FURNITURE, LIFTS, RAILS, LIFT_HALF, PEOPLE, SEATS, SHOPS, TOILET_DOORS, doorFace as faceOf } from "./layout.mjs";
 
 export const V = (x, y, z) => new THREE.Vector3(x, y, -z);
 const DEG = Math.PI / 180;
@@ -241,6 +241,114 @@ function plane3d() {
 }
 
 // ── the building ─────────────────────────────────────────────────────────────
+// A shop you can see into (Alex, Nov 7: "the café needs more details"): walls, ceiling and a floor behind
+// the glass front, lit inside; a café gets a counter, an espresso machine, a pastry case, a menu board, a
+// barista and pendant lights; other shops get shelves of goods and a till. (u, v) = along the front, and in
+// from it; `face` is the heading the front looks to (180: south, 0: north, 90: east).
+function shopInterior(root, x0, x1, z0, z1, y, name, color, face) {
+  const W = face === 90 ? z1 - z0 : x1 - x0, D = face === 90 ? x1 - x0 : z1 - z0;
+  const at = (u, v) => face === 180 ? [x0 + u, z0 + v] : face === 0 ? [x1 - u, z1 - v] : [x1 - v, z0 + u];
+  const lbox = (u0, u1, v0, v1, y0, y1, mat, label) => {
+    const [ax, az] = at(u0, v0), [bx, bz] = at(u1, v1);
+    const m = box(root, Math.min(ax, bx), Math.max(ax, bx), y + y0, y + y1, Math.min(az, bz), Math.max(az, bz), mat);
+    if (label) m.name = label;
+    return m;
+  };
+  const accent = lambert(new THREE.Color(color).getHex());
+  const wall = lambert(0xf3eee6);
+  lbox(0, W, D - 0.12, D, 0, 3.2, wall); // back
+  lbox(0, 0.12, 0, D, 0, 3.2, wall); // sides
+  lbox(W - 0.12, W, 0, D, 0, 3.2, wall);
+  lbox(0, W, 0, D, 3.05, 3.2, lambert(0xfaf8f4)); // ceiling
+  lbox(0, W, 0, 0.25, 2.75, 3.05, accent); // fascia over the glass
+  lbox(0.12, W - 0.12, 0, D - 0.12, 0, 0.02, lambert(name === "Café" ? 0xa47148 : 0xd8d2c8)); // floor
+  lbox(0.12, W - 0.12, D - 0.2, D - 0.12, 0, 0.12, accent); // skirting
+  for (let u = 1; u < W - 0.5; u += 1.6) lbox(u - 0.2, u + 0.2, 0.6, 1.0, 2.98, 3.03, lambert(0xfff6dd)); // ceiling lights
+  if (name === "Café") {
+    const wood = lambert(0x6b4226), top = lambert(0xf2efe9), steel = lambert(0xc4cad1), dark = lambert(0x2a2a2c);
+    const cu0 = 0.6, cu1 = Math.min(W - 0.6, 5.2), cv0 = 0.75, cv1 = 1.3;
+    lbox(cu0, cu1, cv0, cv1, 0, 1.0, wood, "cafe counter");
+    lbox(cu0 - 0.05, cu1 + 0.05, cv0 - 0.05, cv1 + 0.05, 1.0, 1.05, top);
+    lbox(cu0, cu1, cv0 - 0.06, cv0 - 0.02, 0.15, 0.9, accent); // front panel stripe
+    // Espresso machine with two group heads, cups on top, and a grinder.
+    lbox(cu0 + 0.3, cu0 + 1.1, cv0 + 0.1, cv1 - 0.05, 1.05, 1.5, steel, "cafe espresso machine");
+    lbox(cu0 + 0.3, cu0 + 1.1, cv0 + 0.08, cv0 + 0.12, 1.2, 1.4, dark);
+    for (const k of [0.45, 0.85]) lbox(cu0 + k, cu0 + k + 0.1, cv0, cv0 + 0.08, 1.12, 1.2, dark);
+    for (const k of [0.4, 0.6, 0.8, 1.0]) lbox(cu0 + k - 0.04, cu0 + k + 0.04, cv0 + 0.3, cv0 + 0.38, 1.5, 1.57, top);
+    lbox(cu0 + 1.3, cu0 + 1.6, cv0 + 0.15, cv0 + 0.45, 1.05, 1.35, dark);
+    // Pastry case on the counter: two rows of pastries behind a glass front.
+    const pu0 = cu1 - 1.7, pu1 = cu1 - 0.2;
+    lbox(pu0, pu1, cv0 + 0.02, cv1 - 0.02, 1.05, 1.08, steel, "cafe pastry case");
+    const pastry = [0xd99a4e, 0xf1d3a2, 0x8b4a2b, 0xe7b7c8, 0xc58b3c];
+    for (let i = 0; i < 6; i++) {
+      lbox(pu0 + 0.1 + i * 0.23, pu0 + 0.28 + i * 0.23, cv0 + 0.12, cv0 + 0.32, 1.08, 1.16, lambert(pastry[i % pastry.length]));
+      lbox(pu0 + 0.1 + i * 0.23, pu0 + 0.28 + i * 0.23, cv0 + 0.12, cv0 + 0.32, 1.3, 1.37, lambert(pastry[(i + 2) % pastry.length]));
+    }
+    lbox(pu0, pu1, cv0, cv0 + 0.02, 1.08, 1.5, new THREE.MeshLambertMaterial({ color: 0xcfe6f5, transparent: true, opacity: 0.25, depthWrite: false }));
+    lbox(cu1 - 0.15, cu1 - 0.05, cv0 + 0.2, cv0 + 0.5, 1.05, 1.25, dark); // till
+    // Back bar with shelves of cups and jars; the menu board above.
+    lbox(0.4, W - 0.4, D - 0.45, D - 0.12, 0, 0.95, wood);
+    lbox(0.4, W - 0.4, D - 0.47, D - 0.12, 0.95, 1.0, top);
+    for (const sy of [1.45, 1.8]) {
+      lbox(0.6, W - 0.6, D - 0.35, D - 0.12, sy, sy + 0.04, wood);
+      for (let u = 0.8; u < W - 0.8; u += 0.32) lbox(u, u + 0.12, D - 0.3, D - 0.18, sy + 0.04, sy + 0.16, lambert([0xffffff, 0xe9dfcf, 0x7a4b2a][Math.round(u * 3) % 3]));
+    }
+    const menuW = Math.min(W - 1.2, 3.6);
+    const [mx, mz] = at(W / 2, D - 0.13);
+    const menu = new THREE.Mesh(new THREE.PlaneGeometry(menuW, 0.8), new THREE.MeshBasicMaterial({
+      map: signTex(["Espresso 2.40   Latte 3.20", "Cappuccino 3.10   Tea 2.60", "Croissant 2.80   Muffin 2.90"], { w: 1536, h: 340, bg: "#2b2420", fg: "#f4ead8", size: 76 }),
+    }));
+    menu.name = "cafe menu board";
+    menu.position.copy(V(mx, y + 2.35, mz));
+    menu.rotation.y = Math.PI - face * DEG;
+    root.add(menu);
+    // A barista behind the counter, facing out.
+    const b = person(31, {});
+    const [bx, bz] = at(cu0 + 2.0, (cv1 + D - 0.45) / 2);
+    b.position.copy(V(bx, y, bz));
+    b.rotation.y = Math.PI - face * DEG;
+    b.name = "cafe barista";
+    root.add(b);
+    // Pendant lights over the counter.
+    for (const k of [0.3, 0.55, 0.8]) {
+      const u = cu0 + (cu1 - cu0) * k;
+      lbox(u - 0.01, u + 0.01, 1.0, 1.02, 2.4, 3.05, dark);
+      lbox(u - 0.12, u + 0.12, 0.9, 1.12, 2.25, 2.4, lambert(0xffe7b0));
+    }
+  } else {
+    const shelf = lambert(0xe2ddd4);
+    const goods = [0xc0392b, 0x2e86c1, 0xf1c40f, 0x27ae60, 0x8e44ad, 0xe67e22, 0xecf0f1];
+    lbox(0.3, W - 0.3, D - 0.55, D - 0.12, 0, 2.1, shelf);
+    for (const sy of [0.4, 0.85, 1.3, 1.75]) {
+      for (let u = 0.45; u < W - 0.5; u += 0.28) lbox(u, u + 0.2, D - 0.5, D - 0.3, sy, sy + 0.25 + (Math.round(u * 7) % 3) * 0.04, lambert(goods[Math.round(u * 5 + sy * 3) % goods.length]));
+    }
+    lbox(0.6, 1.8, 0.8, 1.3, 0, 1.0, accent); // till counter
+    lbox(0.55, 1.85, 0.75, 1.35, 1.0, 1.04, lambert(0xf2efe9));
+  }
+}
+
+// A round café table with two chairs, in its FURNITURE footprint ("café table ...").
+function cafeTable(root, x0, x1, z0, z1, y) {
+  const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+  const dark = lambert(0x2a2a2c), seat = lambert(0x7a4b2a);
+  const top = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.04, 20), lambert(0xf2efe9));
+  top.position.copy(V(cx, y + 0.74, cz));
+  const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.72, 8), dark);
+  leg.position.copy(V(cx, y + 0.36, cz));
+  const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.03, 16), dark);
+  foot.position.copy(V(cx, y + 0.015, cz));
+  const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.035, 0.08, 10), lambert(0xffffff));
+  cup.position.copy(V(cx + 0.1, y + 0.8, cz));
+  root.add(top, leg, foot, cup);
+  for (const side of [-1, 1]) {
+    const sx = cx + side * ((x1 - x0) / 2 - 0.22);
+    box(root, sx - 0.2, sx + 0.2, y + 0.44, y + 0.48, cz - 0.2, cz + 0.2, seat);
+    box(root, side > 0 ? sx + 0.17 : sx - 0.21, side > 0 ? sx + 0.21 : sx - 0.17, y + 0.48, y + 0.9, cz - 0.2, cz + 0.2, seat);
+    for (const [lx, lz] of [[-0.17, -0.17], [0.17, -0.17], [-0.17, 0.17], [0.17, 0.17]]) box(root, sx + lx - 0.02, sx + lx + 0.02, y, y + 0.44, cz + lz - 0.02, cz + lz + 0.02, dark);
+  }
+}
+
+
 export function buildAirport(scene, map) {
   const node = (id) => map.nodes.find((n) => n.id === id);
   const root = new THREE.Group();
@@ -280,9 +388,7 @@ export function buildAirport(scene, map) {
 
   // Departures (y 6) with the atrium edge, escalator and stairs openings, the lift 1 bridge
   // and a notch where the C pier stairs go down.
-  const dep = [[4, 18], [12, 18], [12, 22], [26.4, 22], [26.4, 28.6], [31.5, 28.6], [31.5, 22], [32.8, 22], [32.8, 24],
-    [35.2, 24], [35.2, 22], [44, 22], [44, 8], [52, 8], [52, 22], [96, 22], [96, 40], [13, 40], [13, 33.6], [15.1, 33.2],
-    [15.1, 31.2], [13, 31.4], [13, 30.5], [4, 30.5]];
+  const dep = DEPARTURES;
   const shaftHole = (id) => {
     const n = node(id);
     return [[n.x - 1.3, n.z - 1.3], [n.x + 1.3, n.z - 1.3], [n.x + 1.3, n.z + 1.3], [n.x - 1.3, n.z + 1.3]];
@@ -304,15 +410,8 @@ export function buildAirport(scene, map) {
     beam(root, a, b, 0.03, 1.1, glass);
     beam(root, { ...a, y: y + 1.12 }, { ...b, y: y + 1.12 }, 0.07, 0.06, frame);
   };
-  for (const [ax, az, bx, bz] of [[4, 18, 12, 18], [12, 18, 12, 22], [12, 22, 26.4, 22], [26.4, 22, 26.4, 28.6], [31.5, 28.6, 31.5, 22],
-    [31.5, 22, 32.8, 22], [32.8, 22, 32.8, 24], [35.2, 24, 35.2, 22], [35.2, 22, 44, 22], [44, 22, 44, 8], [52, 8, 52, 22],
-    [52, 22, 62.9, 22], [65.1, 22, 96, 22], [62.9, 22, 62.9, 25.2], [65.1, 22, 65.1, 25.2],
-    [13, 40, 13, 33.6], [13, 31.4, 13, 30.5]]) rail(ax, az, bx, bz, 6);
-  // Sky Lounge edges and its stair opening (open on the side you step off, south).
-  for (const [ax, az, bx, bz] of [[69, 31.5, 80.7, 31.5], [83.3, 31.5, 84, 31.5], [69, 20, 69, 31.5], [84, 20, 84, 31.5],
-    [70.9, 30.2, 73.1, 30.2], [70.9, 25.8, 70.9, 30.2], [73.1, 25.8, 73.1, 30.2]]) rail(ax, az, bx, bz, 9);
+  for (const [ax, az, bx, bz, y] of RAILS) rail(ax, az, bx, bz, y);
   box(root, 69, 84, 9, 12, 19.6, 20, lambert(0xd9cbb6)); // lounge back wall, up to the roof (12 m)
-  rail(4, 30.5, 4, 40, 5); // C pier west edge has the wall; this is the pier's inner rail line
 
   // Outer walls: glass on the airside (north, east), entrance glass (south), solid west.
   const H = 12;
@@ -516,7 +615,8 @@ export function buildAirport(scene, map) {
 
   // Shops along the west wall (ground) and the north side of departures.
   const shop = (x0, x1, z0, z1, y, name, color, faceHeading) => {
-    box(root, x0, x1, y, y + 3.2, z0, z1, lambert(0xf8f5ef));
+    if (name === "Toilets") box(root, x0, x1, y, y + 3.2, z0, z1, lambert(0xf8f5ef));
+    else shopInterior(root, x0, x1, z0, z1, y, name, color, faceHeading);
     const fx = faceHeading === 90 ? x1 + 0.02 : (x0 + x1) / 2;
     const fz = faceHeading === 180 ? z0 - 0.02 : faceHeading === 0 ? z1 + 0.02 : (z0 + z1) / 2;
     const w = faceHeading === 90 ? z1 - z0 : x1 - x0;
@@ -538,7 +638,10 @@ export function buildAirport(scene, map) {
     return glassFront;
   };
   for (const s of SHOPS) shop(...s);
-  for (const [x0, x1, z0, z1, y, h, color] of FURNITURE) box(root, x0, x1, y, y + h, z0, z1, lambert(color));
+  for (const [x0, x1, z0, z1, y, h, color, label] of FURNITURE) {
+    if (/^café table/.test(label)) cafeTable(root, x0, x1, z0, z1, y);
+    else box(root, x0, x1, y, y + h, z0, z1, lambert(color));
+  }
   for (const [x0, x1, y, z, south] of SEATS) chairRow(root, x0, x1, y, z, south);
   // B pier gates: seating and gate boards (B12's are below).
   for (const [id, code, dest] of [["gateB14", "B14", "Oslo 09:30"], ["gateB16", "B16", "Vienna 09:45"], ["gateB18", "B18", "Dublin 09:20"]]) {

@@ -27,6 +27,7 @@ const PAGE = `<!doctype html><html><body>
 import * as THREE from "three";
 import { GLTFExporter } from "/node_modules/three/examples/jsm/exporters/GLTFExporter.js";
 import { mergeGeometries } from "/node_modules/three/examples/jsm/utils/BufferGeometryUtils.js";
+import { meshParts } from "/glb-parts.mjs";
 globalThis.AIRPORT_EXPORT = true;
 const { buildAirport } = await import("/airport.js");
 const map = await (await fetch("/map.json")).json();
@@ -38,17 +39,12 @@ scene.updateMatrixWorld(true);
 const groups = new Map();
 scene.traverse((o) => {
   if (!o.isMesh || !o.visible) return;
-  const mats = Array.isArray(o.material) ? o.material : [o.material];
-  if (mats.length !== 1) return;
+  // Every material of the mesh (a floor slab has two): see glb-parts.mjs.
   const add = (matrix) => {
-    let g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
-    for (const k of Object.keys(g.attributes)) if (k !== "position" && k !== "normal" && k !== "uv") g.deleteAttribute(k);
-    if (!g.attributes.normal) g.computeVertexNormals();
-    if (!g.attributes.uv) g.setAttribute("uv", new THREE.BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
-    g.applyMatrix4(matrix);
-    const key = mats[0].uuid;
-    if (!groups.has(key)) groups.set(key, { mat: mats[0], geos: [] });
-    groups.get(key).geos.push(g);
+    for (const { mat, geo } of meshParts(THREE, o, matrix)) {
+      if (!groups.has(mat.uuid)) groups.set(mat.uuid, { mat, geos: [] });
+      groups.get(mat.uuid).geos.push(geo);
+    }
   };
   if (o.isInstancedMesh) {
     const m = new THREE.Matrix4();
@@ -72,6 +68,7 @@ window.done = true;
 const FILES = {
   "/airport.js": path.join(HERE, "airport.js"),
   "/layout.mjs": path.join(HERE, "layout.mjs"),
+  "/glb-parts.mjs": path.join(HERE, "glb-parts.mjs"),
   "/node_modules/three/build/three.module.js": path.join(ROOT, "node_modules/three/build/three.module.js"),
   "/node_modules/three/build/three.core.js": path.join(ROOT, "node_modules/three/build/three.core.js"),
   "/node_modules/three/examples/jsm/exporters/GLTFExporter.js": path.join(ROOT, "node_modules/three/examples/jsm/exporters/GLTFExporter.js"),

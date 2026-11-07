@@ -33,6 +33,10 @@ export const FURNITURE = [
   [91.5, 93.8, 38.2, 39, 6, 1.05, 0x2f3a4a, "B18 desk"],
   [94.6, 95.4, 33.5, 35.8, 6, 1.05, 0x2f3a4a, "B20 desk"],
   [8.8, 10.8, 38.7, 39.4, 5, 1.05, 0x2f3a4a, "C12 desk"],
+  // tables outside the departures café (39-47), west of the way in: a table with a chair each side
+  [39.4, 40.8, 35.6, 36.4, 6, 0.9, 0xf2efe9, "café table 1"],
+  [41.0, 42.4, 35.6, 36.4, 6, 0.9, 0xf2efe9, "café table 2"],
+  [39.4, 40.8, 34.2, 35.0, 6, 0.9, 0xf2efe9, "café table 3"],
   // Sky Lounge (y 9): reception desk, sofas
   [78.8, 81.2, 20.6, 21.6, 9, 1.05, 0x5b4636, "Sky Lounge desk"],
   [76.5, 79, 27, 28, 9, 0.75, 0x7a8fa6, "sofa"],
@@ -86,3 +90,27 @@ export function doorFace(liftNode, other) {
   const dx = other.x - liftNode.x, dz = other.z - liftNode.z;
   return Math.abs(dx) > Math.abs(dz) ? (dx > 0 ? "E" : "W") : dz > 0 ? "N" : "S";
 }
+
+// The departures floor (y 6) outline: the atrium edge, the escalator and stairs openings, the lift 1
+// bridge, and the notch where the C pier stairs go down. Lift shafts are cut from it in airport.js.
+export const DEPARTURES = [[4, 18], [12, 18], [12, 22], [26.4, 22], [26.4, 28.6], [31.5, 28.6], [31.5, 22], [32.8, 22], [32.8, 24],
+  [35.2, 24], [35.2, 22], [44, 22], [44, 8], [52, 8], [52, 22], [96, 22], [96, 40], [13, 40], [13, 33.6], [15.1, 33.2],
+  [15.1, 31.2], [13, 31.4], [13, 30.5], [4, 30.5]];
+// The upper floors besides departures: [polygon, y]. The Sky Lounge mezzanine and the C pier.
+export const UPPER_FLOORS = [
+  [DEPARTURES, 6],
+  [[[69, 20], [84, 20], [84, 31.5], [69, 31.5]], 9],
+  [[[0, 30.5], [13, 30.5], [13, 40], [0, 40]], 5],
+];
+
+// Glass balustrades: [ax, az, bx, bz, floor y]. Nobody walks through one.
+export const RAILS = [
+  ...[[4, 18, 12, 18], [12, 18, 12, 22], [12, 22, 26.4, 22], [26.4, 22, 26.4, 28.6], [31.5, 28.6, 31.5, 22],
+    [31.5, 22, 32.8, 22], [32.8, 22, 32.8, 24], [35.2, 24, 35.2, 22], [35.2, 22, 44, 22], [44, 22, 44, 8], [52, 8, 52, 22],
+    [52, 22, 62.9, 22], [65.1, 22, 96, 22], [62.9, 22, 62.9, 25.2], [65.1, 22, 65.1, 25.2],
+    [13, 40, 13, 33.6], [13, 31.4, 13, 30.5]].map((r) => [...r, 6]),
+  // Sky Lounge edges and its stair opening (open on the side you step off, south).
+  ...[[69, 31.5, 80.7, 31.5], [83.3, 31.5, 84, 31.5], [69, 20, 69, 31.5], [84, 20, 84, 31.5],
+    [70.9, 30.2, 73.1, 30.2], [70.9, 25.8, 70.9, 30.2], [73.1, 25.8, 73.1, 30.2]].map((r) => [...r, 9]),
+  [4, 30.5, 4, 40, 5], // the C pier's inner rail line (its west edge has the wall)
+];

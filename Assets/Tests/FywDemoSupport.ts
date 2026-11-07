@@ -141,8 +141,8 @@ export async function walkLeg(run: DemoRun): Promise<string[]> {
     const nodes = all.slice(at)
     const k = main.getRouteEdgeKinds().slice(at).indexOf("lift")
     if (k < 0) {
-      // Stop at the door, not on the shop's node (inside the airport model's shop or gate desk).
-      await walk(run, shortOfEnd([me].concat(nodes.slice(1).map((id) => nodePos(main, id))), 1.8), () => main.getPhase() === "arrived")
+      // Stop 2.7 m from the door, inside the 3 m arrival radius (airport-model.test.ts DOOR_STOP_M, AM10): the front and its sign in view, not one wall.
+      await walk(run, shortOfEnd([me].concat(nodes.slice(1).map((id) => nodePos(main, id))), 2.7), () => main.getPhase() === "arrived")
       break
     }
     const lift = nodes[k]

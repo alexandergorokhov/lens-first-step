@@ -130,9 +130,9 @@ test("D1 three demo presets, plus off", () => {
   assert.equal(demoSettings("nonsense"), null);
 });
 
-test("D2 airportWheelchair: airport, dog, Step-Free, seated (45 cm lower), Go to a place open", () => {
+test("D2 airportWheelchair: airport, robot (Alex, Nov 7), Step-Free, seated (45 cm lower), Go to a place open", () => {
   const s = demoSettings("airportWheelchair")!;
-  assert.deepEqual(s, { mapKey: "airport", companionModel: "dog", preselect: "stepFree", seatedDropCm: 45, open: "goTo", interests: [] });
+  assert.deepEqual(s, { mapKey: "airport", companionModel: "robot", preselect: "stepFree", seatedDropCm: 45, open: "goTo", interests: [] });
 });
 
 test("D3 mallPet: mall, dog, Walk, standing, Go to a place open", () => {

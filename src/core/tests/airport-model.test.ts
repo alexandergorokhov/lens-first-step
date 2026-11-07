@@ -9,7 +9,9 @@ import type { MapData, Profile } from "../router.ts";
 import { planAsk, sayItPhrase } from "../freewalk.ts";
 
 const BODY = 0.3; // half a wheelchair's width
-const DOOR_STOP_M = 1.8; // a leg ends at the door, this far out (the Lens demo stops there too)
+// A leg ends this far from the door (the Lens demo stops there too): 2.7 m, inside the 3 m arrival radius, so the camera sees the front
+// and its sign, not one flat wall (Alex, Nov 7).
+const DOOR_STOP_M = 2.7;
 
 function load(): MapData {
   const r = parseMap(readFileSync(new URL("../data/map.json", import.meta.url), "utf8"));
@@ -140,4 +142,70 @@ test("AM7 the toilet block has a door for Toilets and one for the Accessible toi
   const [a, b] = TOILET_DOORS;
   const na = m.nodes.find((q) => q.id === a[0])!, nb = m.nodes.find((q) => q.id === b[0])!;
   assert.ok(Math.abs(na.x - nb.x) >= (a[2] + b[2]) / 2 + 0.3, "the two doors don't overlap");
+});
+
+// Round 2 (Alex, Nov 7): "you walk through walls, it feels like you walk over stuff". The demo's trip
+// as the take plays it: the three stops, then the gate change on the way to C12 sends you to B14.
+const takeLegs = (m: MapData) => {
+  const d = (a: string, b: string) => { const r = new Navigator(m, a, b, "stepFree").route; return r.status === "route" ? r.length : Infinity; };
+  return legs(m, [...planAsk(m, sayItPhrase(m), "sign", true, d), "gateB14"], "stepFree");
+};
+
+function inPoly(x: number, z: number, poly: number[][]): boolean {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, zi] = poly[i], [xj, zj] = poly[j];
+    if ((zi > z) !== (zj > z) && x < ((xj - xi) * (z - zi)) / (zj - zi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+function crosses(a: { x: number; z: number }, b: { x: number; z: number }, c: number[], d: number[]): boolean {
+  const o = (p: number[], q: number[], r: number[]) => Math.sign((q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]));
+  const A = [a.x, a.z], B = [b.x, b.z];
+  return o(A, B, c) * o(A, B, d) < 0 && o(c, d, A) * o(c, d, B) < 0;
+}
+
+test("AM8 the demo take never goes through a glass balustrade", async () => {
+  const { RAILS } = await import("../../../tools/demo-video/layout.mjs");
+  const m = load();
+  for (const leg of takeLegs(m)) {
+    const pts = leg.pts;
+    for (let i = 1; i < pts.length; i++) {
+      for (const [ax, az, bx, bz, y] of RAILS) {
+        if (Math.abs(pts[i - 1].y - y) > 0.5 || Math.abs(pts[i].y - y) > 0.5) continue;
+        assert.ok(!crosses(pts[i - 1], pts[i], [ax, az], [bx, bz]), "to " + leg.to + ": through the rail " + [ax, az, bx, bz].join(","));
+      }
+    }
+  }
+});
+
+test("AM9 on an upper floor there is always floor under you (nothing walked over the atrium)", async () => {
+  const { UPPER_FLOORS, LIFTS, LIFT_HALF } = await import("../../../tools/demo-video/layout.mjs");
+  const m = load();
+  const shafts = LIFTS.map((l: string[]) => m.nodes.find((n) => n.id === l[1])!).filter(Boolean);
+  for (const leg of takeLegs(m)) {
+    for (const p of samples(leg.pts)) {
+      if (shafts.some((g) => Math.abs(p.x - g.x) <= LIFT_HALF + 0.05 && Math.abs(p.z - g.z) <= LIFT_HALF + 0.05)) continue; // in the lift
+      const level = UPPER_FLOORS.find(([, y]: [number[][], number]) => Math.abs(p.y - y) < 0.01);
+      if (!level) continue;
+      assert.ok(inPoly(p.x, p.z, level[0]), "to " + leg.to + ": over the void at " + p.x.toFixed(1) + "," + p.z.toFixed(1) + " (y " + p.y + ")");
+    }
+  }
+});
+
+test("AM10 each stop of the take ends at least 2.5 m from the shop's front, so the view isn't one wall", async () => {
+  const { SHOPS } = await import("../../../tools/demo-video/layout.mjs");
+  const m = load();
+  for (const leg of takeLegs(m)) {
+    const end = samples(leg.pts).pop()!;
+    const goal = leg.pts[leg.pts.length - 1];
+    const shop = SHOPS.filter((s: any[]) => Math.abs(s[4] - goal.y) < 0.01)
+      .map((s: any[]) => ({ s, d: Math.hypot(Math.max(s[0] - goal.x, 0, goal.x - s[1]), Math.max(s[2] - goal.z, 0, goal.z - s[3])) }))
+      .sort((a: any, b: any) => a.d - b.d)[0];
+    if (!shop || shop.d > 1) continue; // a gate, not a shop
+    const [x0, x1, z0, z1] = shop.s;
+    const gap = Math.hypot(Math.max(x0 - end.x, 0, end.x - x1), Math.max(z0 - end.z, 0, end.z - z1));
+    assert.ok(gap >= 2.5, "to " + leg.to + " (" + shop.s[5] + "): " + gap.toFixed(2) + " m from its front");
+  }
 });

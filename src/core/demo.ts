@@ -228,7 +228,7 @@ export interface DemoSettings {
 }
 
 export function demoSettings(preset: string): DemoSettings | null {
-  if (preset === "airportWheelchair") return { mapKey: "airport", companionModel: "dog", preselect: "stepFree", seatedDropCm: 45, open: "goTo", interests: [] };
+  if (preset === "airportWheelchair") return { mapKey: "airport", companionModel: "robot", preselect: "stepFree", seatedDropCm: 45, open: "goTo", interests: [] };
   if (preset === "mallPet") return { mapKey: "mall", companionModel: "dog", preselect: "walk", seatedDropCm: 0, open: "goTo", interests: [] };
   if (preset === "freeWalkRobot") return { mapKey: "mall", companionModel: "robot", preselect: null, seatedDropCm: 0, open: "freeWalk", interests: ["coffee", "clothes"] };
   return null;

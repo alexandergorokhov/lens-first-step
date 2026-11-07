@@ -217,3 +217,20 @@ test("P7 Turning the pet off keeps the score; a re-route lays new treats and kee
   assert.equal(g.found >= found, true);
   assert.ok(g.total > g.found);
 });
+
+test("P-R2 With the Lens's lead (7 m, Alex Nov 7) the companion keeps about 7 m ahead while you roll at a wheelchair's pace, and never waits", () => {
+  const route: Vec3[] = [{ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 60 }];
+  const g = new PetGuide();
+  g.lead = 7;
+  let user: Vec3 = { x: 0, y: 0, z: 0 };
+  g.setOn(true, route, user, "r");
+  const ds: number[] = [];
+  for (let t = 0; t < 20; t += 1 / 30) {
+    user = { x: 0, y: 0, z: Math.min(40, user.z + 1.3 / 30) };
+    g.update(route, user, 1 / 30, "r", false, t);
+    if (t > 3) ds.push(d3(g.pet!.pos, user));
+    assert.notEqual(g.pet!.mood, "wait", "it doesn't stop to wait for you at " + t.toFixed(1) + " s");
+  }
+  const min = Math.min(...ds), max = Math.max(...ds);
+  assert.ok(min > 6.3 && max < 7.7, "between 6.3 and 7.7 m ahead (" + min.toFixed(2) + " to " + max.toFixed(2) + ")");
+});
