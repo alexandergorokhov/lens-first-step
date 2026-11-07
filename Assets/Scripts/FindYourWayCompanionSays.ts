@@ -6,12 +6,14 @@
 
 import {SPEECH_LINES, SpeechGate} from "./FindYourWaySpeech"
 import {addText, obj} from "./FindYourWayWidgetsUI"
+import {TRANSCRIPT} from "./FindYourWayCaptions"
 
 // The caption stays this long after the clip ends (s); its size, and its height over the companion's feet (cm):
 // just over a dog or robot, below eye level.
 const CAPTION_AFTER_S = 0.8
-const CAPTION_W = 60
-const CAPTION_H = 8
+// About 2x the v2 size (TRANSCRIPT.companion, R2-6).
+const CAPTION_W = TRANSCRIPT.companion.widthCm
+const CAPTION_H = TRANSCRIPT.companion.heightCm
 const CAPTION_ABOVE_CM = 55
 // Read at about this distance (cm): the companion walks a metre or two ahead.
 const CAPTION_DISTANCE_CM = 200
@@ -32,7 +34,7 @@ export class FindYourWayCompanionSays extends BaseScriptComponent {
     this.audio = this.sceneObject.createComponent("Component.AudioComponent") as AudioComponent
     try { this.audio.playbackMode = Audio.PlaybackMode.LowLatency } catch (e) { /* editor */ }
     this.captionRoot = obj(this.sceneObject, "CompanionSaysCaption")
-    this.caption = addText(this.captionRoot, "CompanionSaysText", "", "Caption", CAPTION_W, CAPTION_H, new vec4(1, 1, 1, 1), CAPTION_DISTANCE_CM)
+    this.caption = addText(this.captionRoot, "CompanionSaysText", "", "Caption", CAPTION_W, CAPTION_H, new vec4(1, 1, 1, 1), CAPTION_DISTANCE_CM * TRANSCRIPT.companion.scale)
     this.caption.text = ""
     this.captionRoot.enabled = false
     this.createEvent("UpdateEvent").bind(() => {

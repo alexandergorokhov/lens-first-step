@@ -155,6 +155,16 @@ export function addText(parent: SceneObject, name: string, value: string, role: 
   return t
 }
 
+// Gives a text made by addText a new height (cm) and lays its column out again, so the panel grows with it.
+export function setTextHeight(t: Text, heightCm: number): void {
+  const r = t.layoutRect
+  if (Math.abs((r.top - r.bottom) - heightCm) < 0.01) return
+  t.layoutRect = Rect.create(r.left, r.right, -heightCm / 2, heightCm / 2)
+  const parent = t.getSceneObject().getParent()
+  const layout = parent ? (parent.getComponent(FlexLayout.getTypeName()) as FlexLayout | null) : null
+  if (layout) layout.markDirty()
+}
+
 export function addIcon(parent: SceneObject, name: string, icon: Texture, sizeCm: number,
     tint: vec4): Image {
   const so = obj(parent, name)

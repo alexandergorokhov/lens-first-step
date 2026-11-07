@@ -108,7 +108,7 @@ heard in the preview. So:
 ## How to run this plan
 
 1. Open Lens Studio with `first-step.esproj` first.
-2. In PowerShell: `cd C:\Sasha\Projects\Lens\first-step\first-step` then `claude` (use `npx.cmd` if you need npx).
+2. In PowerShell: `cd` into the project folder (the one with first-step.esproj), then `claude` (use `npx.cmd` if you need npx).
 3. Check `/mcp` shows **lens-studio** connected and `/plugin` shows **ls-clad**.
 4. Say: `Follow POLISH-PLAN.md. Do the next unchecked task. Stop at the end of each task and show me.`
 

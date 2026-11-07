@@ -6,7 +6,38 @@
 // The final words stay this long (s), then the captions clear.
 export const CAPTION_HOLD_S = 4;
 // Characters in a row (the bottom band is about this wide at its text size).
-export const CAPTION_ROW_CHARS = 44;
+export const CAPTION_ROW_CHARS = 33;
+// Width of one character (cm) per unit of Text size: the v2 band fit 44 characters on 26 cm at Body
+// (39) seen at 70 cm, size 39 * 70 / 110.
+export const CHAR_CM_PER_SIZE = 26 / 44 / (39 * 70 / 110);
+// Height of one line (cm) per unit of Text size: a v2 caption row took 1.7 cm.
+export const LINE_CM_PER_SIZE = 1.7 / (39 * 70 / 110);
+
+// How many lines the text wraps to in widthCm at Text size `size` (word wrap; a new line starts a line).
+export function textLines(text: string, widthCm: number, size: number): number {
+  const chars = Math.max(1, Math.floor(widthCm / (CHAR_CM_PER_SIZE * size)));
+  let n = 0;
+  for (const para of text.split("\n")) n += Math.max(1, wrapCount(para, chars));
+  return n;
+}
+function wrapCount(text: string, width: number): number {
+  let n = 0;
+  let row = 0;
+  for (const w of text.split(/\s+/).filter((x) => x !== "")) {
+    if (row === 0) { row = w.length; n++; }
+    else if (row + 1 + w.length <= width) row += 1 + w.length;
+    else { row = w.length; n++; }
+  }
+  return n;
+}
+
+// The transcript (ROUND2.md R2-6): text about twice the v2 size. scale multiplies the text role's size
+// (live captions: Body at 70 cm; Heard: Headline2 at 100 cm; companion: Caption at 200 cm).
+export const TRANSCRIPT = {
+  captions: { scale: 2, rowWidthCm: 40, rowHeightCm: 3.4 },
+  heard: { scale: 1.5, lines: 3, heightCm: 13.5 },
+  companion: { scale: 2, widthCm: 100, heightCm: 16, rowChars: 30 },
+};
 
 // The words as rows of at most `width` characters; only the last two rows (the newest words).
 export function captionRows(text: string, width: number = CAPTION_ROW_CHARS): string[] {

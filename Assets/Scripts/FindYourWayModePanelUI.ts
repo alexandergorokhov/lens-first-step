@@ -5,7 +5,8 @@
 // Must not: decide routing or remember the choice (FindYourWayMain owns the profile).
 
 import Event, {PublicApi} from "SpectaclesInteractionKit.lspkg/Utils/Event"
-import {addButton, addRow, addText, LabeledButton, makePanel, Panel, setShownInLayout} from "./FindYourWayWidgetsUI"
+import {addButton, addRow, addText, LabeledButton, makePanel, Panel, setShownInLayout, setTextHeight} from "./FindYourWayWidgetsUI"
+import {LINE_CM_PER_SIZE, TRANSCRIPT, textLines} from "./FindYourWayCaptions"
 import {icon} from "./FindYourWayIconsUI"
 import {addPopIn} from "./FindYourWayPopIn"
 
@@ -84,6 +85,8 @@ export class FindYourWayModePanelUI extends BaseScriptComponent {
     this.titleText = addText(panel.content, "Title", this.title, "Title2", width - 3, 4, this.textColor, 100)
     this.destText = addText(panel.content, "Subtitle", this.subtitle, "Headline2", width - 3, 2.8,
       new vec4(this.textColor.x, this.textColor.y, this.textColor.z, 0.85), 100)
+    this.destText.size *= TRANSCRIPT.heard.scale
+    this.setNote(this.subtitle)
     this.sayIt = addButton(panel.content, "SayItButton", "Say it", this.buttonWidthCm, 4.2, null,
       () => this._onSayIt.invoke(), this.textColor, 100, "Button")
     this.sayItHint = addText(panel.content, "SayItHint", "stand-in: a preset phrase", "Caption", width - 3, 1.8,
@@ -115,8 +118,14 @@ export class FindYourWayModePanelUI extends BaseScriptComponent {
   }
 
   // The destination line ("To: Bolt Hardware") and the phrase on the "Say it" button.
-  setDestination(label: string): void { this.destText.text = "To: " + label }
-  setNote(text: string): void { this.destText.text = text }
+  setDestination(label: string): void { this.setNote("To: " + label) }
+  // The note ("Heard: …") is 1.5x Headline2 (TRANSCRIPT.heard, R2-6); the line grows to at most 3 rows.
+  setNote(text: string): void {
+    this.destText.text = text
+    const w = this.buttonWidthCm + 1
+    const lines = Math.min(TRANSCRIPT.heard.lines, textLines(text, w, this.destText.size))
+    setTextHeight(this.destText, lines * LINE_CM_PER_SIZE * this.destText.size)
+  }
   getDestinationText(): string { return this.destText.text }
   setSayItPhrase(phrase: string): void { this.sayIt.label.text = phrase ? 'Say it: "' + phrase + '"' : "Say it" }
 

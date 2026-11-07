@@ -7,6 +7,7 @@
 import {cardClock} from "./FindYourWayPlace"
 import {addButton, addIcon, addRow, addText, CARD_TINT, easeOutCubic, makePanel, obj, Panel, PANEL_SCALE, TAB_TINT} from "./FindYourWayWidgetsUI"
 import {THEME} from "./FindYourWayTheme"
+import {TRANSCRIPT} from "./FindYourWayCaptions"
 import {addPopIn} from "./FindYourWayPopIn"
 import {icon} from "./FindYourWayIconsUI"
 
@@ -161,11 +162,13 @@ export class FindYourWayHudUI extends BaseScriptComponent {
     this.reroute.enabled = false
 
     // Captions: two rows at the bottom, below the line of sight.
-    this.captions = obj(this.sceneObject, "Captions", new vec3(0, -10.4, -70))
-    const cp = makePanel(this.captions, 27, 0.5, 0.1, undefined, TAB_TINT)
-    this.captionLang = addText(cp.content, "CaptionLang", "", "Caption", 26, 1.2, new vec4(0.8, 0.95, 1, 1), 70, HorizontalAlignment.Left)
+    // About 2x the v2 size (TRANSCRIPT.captions, R2-6): CAPTION_ROW_CHARS fit a row.
+    const cap = TRANSCRIPT.captions
+    this.captions = obj(this.sceneObject, "Captions", new vec3(0, -11.5, -70))
+    const cp = makePanel(this.captions, cap.rowWidthCm + 1, 0.5, 0.1, undefined, TAB_TINT)
+    this.captionLang = addText(cp.content, "CaptionLang", "", "Caption", cap.rowWidthCm, 1.8, new vec4(0.8, 0.95, 1, 1), 70 * 1.5, HorizontalAlignment.Left)
     for (let i = 0; i < 2; i++) {
-      this.captionRows.push(addText(cp.content, "CaptionRow" + i, "", "Body", 26, 1.7, this.textColor, 70, HorizontalAlignment.Left))
+      this.captionRows.push(addText(cp.content, "CaptionRow" + i, "", "Body", cap.rowWidthCm, cap.rowHeightCm, this.textColor, 70 * cap.scale, HorizontalAlignment.Left))
     }
     this.captions.enabled = false
 
