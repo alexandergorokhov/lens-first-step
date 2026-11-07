@@ -86,22 +86,22 @@ Root causes found:
 ## Open for iteration (the other session edits these)
 
 ### Voice-over script (R2-7 reads this table)
-Short, plain, one or two sentences a beat; about 2.5 words per second. Beat = the `[VID]` mark it starts on.
+Updated Nov 7 by the pitch session to match the story (pitch/pathpal-story.md). Short, plain, one or two sentences a beat; about 2.5 words per second. Beat = the `[VID]` mark it starts on.
 
 | Beat | Line |
 | --- | --- |
-| demo 1: airport, wheelchair | Pathpal guides you indoors on Snap Specs. Here, an airport, in a wheelchair. |
+| demo 1: airport, wheelchair | There's no GPS indoors. Pathpal guides you on Snap Specs, hands free. Here, an airport, in a wheelchair. |
 | talk | I just say what I need: coffee, a bathroom, then my gate. |
-| leg 1 | It plans the stops in order, step-free: lifts only, no stairs or escalators. My robot leads seven metres ahead. |
-| announcement | An announcement in Spanish. Pathpal captions it in English, and catches the gate change. |
-| question | It asks before changing anything. Yes: re-routed to B14, still step-free. |
-| arrived | At the gate, the agent speaks Spanish; I read it in English. |
-| demo 2: mall, follow the dog | In a mall, I follow my dog. |
+| leg 1 | It plans the stops in order, step-free: lifts only, never stairs or escalators. I just follow my robot. |
+| announcement | An announcement in Spanish, captioned in English. It names a new gate. |
+| question | Pathpal asks first; it never changes my trip on its own. Yes: re-routed to B14, still step-free. |
+| arrived | The gate agent speaks Spanish; I read it in English. Captions help if you can't hear, too. |
+| demo 2: mall, follow the dog | In a mall, I just follow my dog. Easier than reading a map. |
 | leg | It waits for me at the escalator, then leads on to the food court. |
-| arrived | The host speaks French; captions translate. |
-| demo 3: Free walk with the robot | No destination: Free walk. The robot points out places I care about. |
-| pointed | I look at a shop for two seconds and its offers appear. Nothing else on screen. |
-| END | Pathpal. Your companion indoors. |
+| arrived | The host speaks French; I read it in English. |
+| demo 3: Free walk with the robot | No destination? Free walk. The robot suggests places I'll like. |
+| pointed | I look at a shop for two seconds and its offers appear, always labelled as sponsored. |
+| END | Pathpal. No GPS indoors? Follow your companion. |
 
 ### Café look (R2-3)
 Ideas welcome: colours, a name ("Café" today), what's on the counter, seating.
