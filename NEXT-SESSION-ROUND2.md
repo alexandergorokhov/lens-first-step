@@ -12,19 +12,27 @@ Plan: `ROUND2.md` (builder checklist). Branch: `companion-polish`. Work test fir
     (`setNote` in `FindYourWayModePanelUI.ts`, `setTextHeight` in `FindYourWayWidgetsUI.ts`).
   - Companion caption 2x, 100 cm wide (`FindYourWayCompanionSays.ts`).
   - **Not checked in the Preview yet** (the Preview panel was closed), so R2-6 is not ticked.
-- **Not pushed:** SSH to GitHub (port 22) timed out.
+- Pushed (the SSH timeout cleared).
+- **R2-7 voice-over: Node side done** (see the R2-7 note in `ROUND2.md`). npm test 590/590.
+  - Lines: `src/core/narration.ts` (= the `ROUND2.md` table; test N1 checks). Clips made:
+    `devpost/video/narration/00..11.wav` + `lengths.json` (git-ignored, re-make with `make-narration.py`;
+    the Kokoro model and venv are in an earlier session's scratchpad `tts` folder, or download as in `make-clips.py`).
+  - Mix: `node tools/voice/narration-mix.mjs <raw.mp4> <take.log> <T0 s> <out.mp4>`.
+  - The take `Assets/Tests/FywDemoVideoScenario.ts` (+ `mallPetTrip(run, beforeWalk)` in `FywDemoSupport.ts`)
+    now marks "talk" and the demo-2 "leg" and waits for each line. **Not compiled in Lens yet.**
+- lens-studio MCP was down this session: run `/mcp` -> Reconnect.
 
 ## Do next, in order
-1. `git push` (once the connection to GitHub works).
+1. `/mcp` reconnect lens-studio; recompile; fix any TS errors in `FywDemoVideoScenario.ts` / `FywDemoSupport.ts`.
 2. Open the Preview panel in Lens Studio. Check:
    - the caption band fits on screen;
    - the "Heard" panel grows without covering anything;
    - the companion caption is easy to read.
    Adjust if needed, then tick R2-6 in `ROUND2.md` and commit.
 3. R2-5: measure that the companion stays 7 m ahead in the new take.
-4. R2-7 voice-over: write the `narration.ts` test first (every beat has a line, no overlap, fits before the next beat).
-   The lines are in the `ROUND2.md` voice-over table. Kokoro clips via `tools/voice`.
-5. R2-8: stills check, LEAF `visual-demos`, re-record, edit with the voice-over -> `devpost/video/pathpal-demos-v3.mp4`.
+4. R2-8: stills check, LEAF `visual-demos` (record the screen), save the take's `[VID]` lines from the Lens log,
+   find T0 in the recording, `narration-mix.mjs` -> `devpost/video/pathpal-demos-v3.mp4`. Check the mix prints
+   no "no mark for" / "late" warnings. Then tick R2-7 and R2-8.
 6. R2-10 (gate change only for my flight), then R2-11 (Sushi Bar in demo 2).
 
 ## Don't touch

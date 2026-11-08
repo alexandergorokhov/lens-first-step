@@ -7,15 +7,31 @@ import {pressButton} from "../Scripts/FindYourWayWidgetsUI"
 import {waitFor} from "./FindYourWayLeafSupport"
 import {closeDemo, DemoRun, freeWalkRobotTrip, hold, mallPetTrip, openDemo, talk, turnTo, walkLeg} from "./FywDemoSupport"
 import {nodePos} from "./FywBrief2Support"
+import {isBeat, NARRATION, NARRATION_GAP_S, speakSeconds} from "../Scripts/FindYourWayNarration"
+
+// The voice-over clips may run a little slower than the 2.5 words a second estimate.
+const LINE_PAD = 1.1
 
 // visual-demos — the three demos in one take (demo 1 with the gate change heard on the way), at walking pace, for the video: the preview camera follows
 // the walk. "[VID] <t> <what>" lines mark each beat (seconds since the take began).
 @component
 export class FywDemoVideoScenario extends Scenario {
   private t0 = 0
+  // The voice-over (R2-7): the next line's index, and when the line now being said ends (getTime()).
+  private line = 0
+  private lineEnds = 0
 
   private mark(what: string): void {
     print("[VID] " + (getTime() - this.t0).toFixed(2) + " " + what)
+    if (!isBeat(this.line, what)) return
+    const start = Math.max(getTime(), this.lineEnds + NARRATION_GAP_S)
+    this.lineEnds = start + speakSeconds(NARRATION[this.line].line) * LINE_PAD
+    this.line++
+  }
+
+  // Waits until the voice-over line being said is done, at least `atLeast` s (the view stays as it is).
+  private async lineDone(run: DemoRun, atLeast: number = 0): Promise<void> {
+    await hold(run, Math.max(atLeast, this.lineEnds + NARRATION_GAP_S - getTime()))
   }
 
   // A last look at the destination with the companion in view.
@@ -33,19 +49,23 @@ export class FywDemoVideoScenario extends Scenario {
   // leads on to B14, still step-free.
   private async airportWithGateChange(run: DemoRun): Promise<void> {
     const main = run.main
-    await hold(run, 0.8)
+    await this.lineDone(run, 0.8)
+    this.mark("talk")
     await talk(run)
     const stops = main.getStops()
     for (let i = 0; i < stops.length; i++) {
       await waitFor(() => main.getPhase() === "nav" && main.getDestinationId() === stops[i], 9000, "leg " + (i + 1))
+      if (i === 0) await this.lineDone(run)
       this.mark("leg " + (i + 1) + " to " + stops[i])
       if (i === stops.length - 1) {
-        await hold(run, 1.5)
+        await this.lineDone(run, 1.5)
         main.playAnnouncement()
         this.mark("announcement")
         await waitFor(() => main.getRerouteText() !== null, 9000, "Re-route to Gate B14?")
         this.mark("question " + main.getRerouteText())
+        // The question's line ends on "Yes: re-routed": press Yes as it is said.
         await hold(run, 2.5)
+        await this.lineDone(run, 0)
         pressButton("RerouteYesButton")
         await waitFor(() => main.getDestinationId() === "gateB14", 3000, "re-routed")
         this.mark("re-routed to Gate B14")
@@ -73,6 +93,7 @@ export class FywDemoVideoScenario extends Scenario {
     await this.airportWithGateChange(run)
     this.mark("arrived " + run.main.getArrivalText())
     await hold(run, 8.5)
+    await this.lineDone(run)
     // The gate agent at B14 speaks of B14: no "Re-route to …?" at the gate you are at.
     expect(run.main.getRerouteText(), "no re-route question at the gate").toBe(null)
     await closeDemo(run.main)
@@ -80,20 +101,27 @@ export class FywDemoVideoScenario extends Scenario {
     this.mark("demo 2: mall, follow the dog")
     run = await openDemo("mallPet", 1.7)
     await hold(run, 2)
-    await mallPetTrip(run)
+    await mallPetTrip(run, async () => {
+      await this.lineDone(run)
+      this.mark("leg to the food court")
+    })
     this.mark("arrived " + run.main.getArrivalText())
     await hold(run, 8.5)
+    await this.lineDone(run)
     await closeDemo(run.main)
 
     this.mark("demo 3: Free walk with the robot")
     run = await openDemo("freeWalkRobot", 1.5)
-    await hold(run, 2.5)
+    await this.lineDone(run, 2.5)
     const r = await freeWalkRobotTrip(run)
     this.mark("pointed " + r.pointed.join(",") + " boxes " + r.boxes.join(","))
     await turnTo(run, 0, 1)
-    await hold(run, 2)
-    await closeDemo(run.main)
+    await this.lineDone(run, 1)
+    // The last line is said over the last view, then the take ends.
     this.mark("END")
+    await this.lineDone(run, 0.5)
+    await closeDemo(run.main)
+    print("[VID] " + (getTime() - this.t0).toFixed(2) + " CUT")
     log("visual-demos done")
   }
 }

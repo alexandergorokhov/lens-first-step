@@ -178,11 +178,13 @@ export async function airportTrip(run: DemoRun): Promise<{stops: string[]; kinds
 }
 
 // Demo 2: the food court by voice, Walk, the dog waits at the foot of the escalator.
-export async function mallPetTrip(run: DemoRun): Promise<{waitedAt: string | null; dogNearFoot: boolean}> {
+// beforeWalk: awaited after Talk, before the first step (the video take marks its "leg" beat there).
+export async function mallPetTrip(run: DemoRun, beforeWalk?: () => Promise<void>): Promise<{waitedAt: string | null; dogNearFoot: boolean}> {
   const main = run.main
   await hold(run, 0.8)
   await talk(run)
   if (main.getDestinationId() !== "foodCourt") throw new Error("destination " + main.getDestinationId())
+  if (beforeWalk) await beforeWalk()
   const nodes = main.getRouteNodes()
   const kinds = main.getRouteEdgeKinds()
   const k = kinds.indexOf("escalator")

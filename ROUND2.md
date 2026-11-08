@@ -65,6 +65,13 @@ Root causes found:
       (`FindYourWayHudUI.ts`), Heard panel grows and doesn't overlap, companion caption readable. Then tick.
 - [ ] R2-7 Voice-over: one line per beat, Kokoro clips (`tools/voice`), placed at the take's `[VID]` marks and
       mixed into the edit. Test: `narration.ts` (every beat has a line, no overlap, fits before the next beat).
+      **Node side done** (`narration.test.ts` N1-N8): `src/core/narration.ts` holds this file's table (N1 fails if
+      they differ: after editing the table, update `NARRATION` and re-run `make-narration.py`). A line starts on
+      its mark, or just after the line before (at most 1.5 s late). Clips: `tools/voice/make-narration.py`
+      -> `devpost/video/narration/` (12 clips, 2.4-6.9 s). Mix: `tools/voice/narration-mix.mjs <raw> <take.log>
+      <T0 s> <out>` (smoke-tested on the v2 raw). The v2 take had no "talk" and no demo-2 "leg" mark: the take
+      (`FywDemoVideoScenario.ts`) now marks both and waits for each line before the next action it controls.
+      **Left:** compile the take in Lens (not compiled yet: lens-studio MCP was down) and record it (R2-8).
 - [ ] R2-8 Stills check (`tools/demo-video/airport-shots.mjs`) at each demo pose, then Lens Studio: LEAF
       `visual-demos`, re-record, edit with voice-over -> `pathpal-demos-v3.mp4`. Needs the lens-studio MCP.
 
