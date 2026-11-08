@@ -22,6 +22,15 @@ Plan: `ROUND2.md` (builder checklist). Branch: `companion-polish`. Work test fir
     now marks "talk" and the demo-2 "leg" and waits for each line. **Not compiled in Lens yet.**
 - lens-studio MCP was down this session: run `/mcp` -> Reconnect.
 
+## Nov 8 update
+- v3 recorded and mixed: `devpost/video/pathpal-demos-v3.mp4` (4:25, voice-over, git-ignored). Take passed (270 s),
+  mix: no missing or late lines. Raw: `demos-raw6.mp4` + `demos-raw7.mp4` (joined at offset 249.7 s) -> `demos-take6.mp4`,
+  starting at T0 + 5.6 s (the preview froze ~6 s while the airport loaded); marks shifted by -5.6 s, T0 0.
+- Record with the Preview tab visible; gdigrab `title=` fails if the title has `*`: save first, then start ffmpeg, then
+  PreviewPanelTool refresh (a recompile did not reset the preview). The take starts ~2 min after the refresh.
+- Last night's 41-min freeze at the take's start did not come back today (sp1 and visual-demos both ran fine).
+- Seen in v3: during the gate change (about 1:10-1:25) the view faces a flat blue wall; fix the pose (R2-2).
+
 ## Do next, in order
 1. `/mcp` reconnect lens-studio; recompile; fix any TS errors in `FywDemoVideoScenario.ts` / `FywDemoSupport.ts`.
 2. Open the Preview panel in Lens Studio. Check:
