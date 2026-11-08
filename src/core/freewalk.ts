@@ -57,6 +57,7 @@ export interface FreeSettings {
   listAwayM: number; // walking this far from where it was opened closes the list
   cooldownSeconds: number; // at least this long between two stops
   asideM: number; // at a stop it steps at most this far from its lead spot toward the shop
+  pointNearM: number; // it points from at least this far from you, so you see it and what it points at
 }
 
 export const FREE_DEFAULTS: FreeSettings = {
@@ -77,6 +78,8 @@ export const FREE_DEFAULTS: FreeSettings = {
   listAwayM: 5,
   cooldownSeconds: 10,
   asideM: 1.2,
+  // A few steps out (ROUND2.md R2-34): close up it hides under the view and its pointer goes unseen.
+  pointNearM: 3.5,
 };
 
 // How fast it may turn (deg/s): it turns like a walker, not a spinning top.
@@ -863,8 +866,21 @@ export class FreeWalk {
     const dz = st.spot.z - lead.z;
     const d = Math.sqrt(dx * dx + dz * dz);
     const k = d <= this.settings.asideM || d < 1e-6 ? 1 : this.settings.asideM / d;
-    const spot = { x: lead.x + dx * k, y: pos.y, z: lead.z + dz * k };
-    return this.keepInView ? this.keepInView(spot, pos, heading) : spot;
+    let spot: FwXYZ = { x: lead.x + dx * k, y: pos.y, z: lead.z + dz * k };
+    if (this.keepInView) spot = this.keepInView(spot, pos, heading);
+    // Never closer than pointNearM: out along where you look, or along the line from you to the spot.
+    const near = this.settings.pointNearM;
+    const d0 = flat(spot, pos);
+    if (d0 < near) {
+      const r = (heading * Math.PI) / 180;
+      const u = d0 > 0.5 ? { x: (spot.x - pos.x) / d0, z: (spot.z - pos.z) / d0 } : { x: Math.sin(r), z: Math.cos(r) };
+      const out = { x: pos.x + u.x * near, z: pos.z + u.z * near };
+      let far: FwXYZ = clampToPaths(this.map, out, pos.y) || { x: out.x, y: pos.y, z: out.z };
+      // Still in view after keeping to the walkways; never nearer than it was.
+      if (this.keepInView) far = this.keepInView(far, pos, heading);
+      if (flat(far, pos) > d0) spot = far;
+    }
+    return spot;
   }
 
   update(pos: FwXYZ, heading: number, dt: number, now: number): FreeFrame {
@@ -900,7 +916,9 @@ export class FreeWalk {
         if (st.until === null) {
           const stepped = this.move(pet, spot, pos, dt, true);
           pet = { pos: stepped.pos, heading: stepped.heading, mood: "point" };
-          if (flat(pet.pos, spot) < 0.15 || flat(spot, pos) < this.settings.clearM || now >= st.giveUp) {
+          // There, or near it and already a few steps out (the spot moves on with you as you walk).
+          const outThere = flat(pet.pos, pos) >= this.settings.pointNearM - 1 && flat(pet.pos, spot) < 1.2;
+          if (flat(pet.pos, spot) < 0.15 || outThere || flat(spot, pos) < this.settings.clearM || now >= st.giveUp) {
             st.until = now + st.seconds;
             stopped = st.id;
             this.pointState = "point";

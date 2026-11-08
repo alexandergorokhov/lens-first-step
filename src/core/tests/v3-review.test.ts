@@ -19,7 +19,8 @@ function mall(): MapData {
 const dist = (a: { x: number; z: number }, b: { x: number; z: number }) => Math.hypot(a.x - b.x, a.z - b.z);
 
 test("R12 the folded Control tab is see-through: the view shows behind it", () => {
-  assert.ok(CONTROL_TAB_OPACITY >= 0.3 && CONTROL_TAB_OPACITY <= 0.6, "opacity " + CONTROL_TAB_OPACITY);
+  // More see-through since v6 (R2-33, test R33).
+  assert.ok(CONTROL_TAB_OPACITY >= 0.15 && CONTROL_TAB_OPACITY <= 0.6, "opacity " + CONTROL_TAB_OPACITY);
 });
 
 test("R14 the pointing line names the preference that picked the shop", () => {

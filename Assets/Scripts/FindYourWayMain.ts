@@ -63,7 +63,7 @@ import {mapLogLines, tripAfterSaving} from "./FindYourWayMapping"
 import {peekPlace} from "./FindYourWayPeek"
 import {demoSettings, DemoSettings, showingSettings, StartSettings} from "./FindYourWayDemo"
 import {destinationsOf, FreeWalk, gateChangeOffer, interestList, LookBoxes, matchDestination, OfferDismissals, sayItPhrase, ShopLook, typedSoFar, typingSeconds, planAsk, askPrompt, parseAskReply, llmStops, ASK_LLM_TIMEOUT_S, VOICE_FALLBACK_S, walkableRoute, CLEAN_FREE_WALK, OFFER_LOOK_S, parseFlight, rerouteQuestion, parsePrefs, parsePrefsReply, prefsPrompt, prefsQuestion} from "./FindYourWayFreeWalk"
-import {arrivalCardOn, cleanAllows, connectivity, notCaught, OptionsDock, SEE_MAP, tripTarget, routeLineAheadM, walkingHud} from "./FindYourWayDock"
+import {arrivalCardOn, cleanAllows, CONTROL_TAB_CORNER, connectivity, notCaught, OptionsDock, SEE_MAP, tripTarget, routeLineAheadM, walkingHud} from "./FindYourWayDock"
 import {FindYourWayOfferBoxesUI} from "./FindYourWayOfferBoxesUI"
 import {FindYourWayHomePanelUI} from "./FindYourWayHomePanelUI"
 import {FindYourWayPrefsUI} from "./FindYourWayPrefsUI"
@@ -2461,8 +2461,12 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.appPanel.setAnnouncement(this.liveCaptions && airport && !!this.nav && global.deviceInfoSystem.isEditor())
     this.appPanel.setShowing(this.showingPreset, this.showingPreset && airport && !!this.nav && this.getDestinationId() !== "gateC3",
       this.showingPreset ? (airport ? "Map: Preview room" : "Map: Airport") : null)
-    const offset = this.appPanel.isPlaying() ? this.playPanelOffset : global.deviceInfoSystem.isEditor() ? PREVIEW_PANEL_OFFSET : this.appPanelOffset
-    this.panels.follow(this.appPanel.getSceneObject(), offset, wasOn)
+    const editor = global.deviceInfoSystem.isEditor()
+    // Folded in the preview: the tab in the upper-left corner (R2-33).
+    const corner = editor && this.appPanel.isCollapsed() ? new vec3(CONTROL_TAB_CORNER.x, CONTROL_TAB_CORNER.y, CONTROL_TAB_CORNER.z) : null
+    const offset = corner ? corner : this.appPanel.isPlaying() ? this.playPanelOffset : editor ? PREVIEW_PANEL_OFFSET : this.appPanelOffset
+    // The corner tab stays put in the corner (no lag that would swing it out of view on a turn).
+    this.panels.follow(this.appPanel.getSceneObject(), offset, wasOn && !corner)
   }
 
   private petRoutePoints(): Vec3[] {

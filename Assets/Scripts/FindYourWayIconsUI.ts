@@ -23,6 +23,7 @@ const ICONS: {[name: string]: Texture} = {
   checkroom: requireAsset("../Icons/checkroom.png") as Texture,
   local_cafe: requireAsset("../Icons/local_cafe.png") as Texture,
   sports_soccer: requireAsset("../Icons/sports_soccer.png") as Texture,
+  mic: requireAsset("../Icons/mic.png") as Texture,
 }
 
 // The small set of pictures an offer's "image" can pick (the map file is text; remote images are

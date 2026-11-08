@@ -95,6 +95,8 @@ export class RaiseDetector {
 // ---- Hop: the jump game ----
 
 export const HOP_LANE = 6; // lane length (m)
+// The lane starts this far ahead of you (m): a couple of steps, so the whole game shows in the view (R2-32).
+export const HOP_AHEAD_M = 3;
 export const JUMP_SPEED = 4.2; // m/s up: ~0.63 m high, ~0.6 s in the air
 export const HOP_GRAVITY = 14; // m/s²
 export const SHAKE_SECONDS = 1.2;

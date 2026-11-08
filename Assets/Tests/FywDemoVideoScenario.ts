@@ -85,6 +85,28 @@ export class FywDemoVideoScenario extends Scenario {
     }
   }
 
+  // Waiting for a table: a quick game with the dog (R2-27, R2-32). Turned along the hall, so the lane
+  // (HOP_AHEAD_M ahead, a couple of steps) shows whole with the dog on it.
+  private async playWithTheDog(run: DemoRun): Promise<void> {
+    await turnTo(run, 90, 1.5)
+    const t = getTime()
+    while (!run.main.canPlayNow() && getTime() - t < 5) await hold(run, 0.1)
+    run.main.debugTogglePlay()
+    while (run.main.getHopPhase() !== "running" && getTime() - t < 8) await hold(run, 0.1)
+    if (run.main.getHopPhase() !== "running") {
+      log("visual-demos: Hop did not start at the Bakery (" + run.main.getHopPhase() + ")")
+      return
+    }
+    this.mark("play")
+    for (let k = 0; k < 5; k++) {
+      await hold(run, 1.1)
+      run.main.jump()
+    }
+    await this.lineDone(run, 1)
+    run.main.debugTogglePlay()
+    await hold(run, 0.8)
+  }
+
   async run(): Promise<void> {
     await sleep(1500)
     // LEAF's own log line at the top of the view is not part of the Lens.
@@ -105,20 +127,6 @@ export class FywDemoVideoScenario extends Scenario {
     await this.lineDone(run)
     // The gate agent at B14 speaks of B14: no "Re-route to …?" at the gate you are at.
     expect(run.main.getRerouteText(), "no re-route question at the gate").toBe(null)
-    // Waiting to board: a quick game with the companion (R2-27).
-    run.main.debugTogglePlay()
-    const t = getTime()
-    while (run.main.getHopPhase() !== "running" && getTime() - t < 3) await hold(run, 0.1)
-    if (run.main.getHopPhase() === "running") {
-      this.mark("play")
-      for (let k = 0; k < 4; k++) {
-        await hold(run, 1.1)
-        run.main.jump()
-      }
-      await this.lineDone(run, 1)
-      run.main.debugTogglePlay()
-      await hold(run, 0.8)
-    } else log("visual-demos: Hop did not start at the gate (" + run.main.getHopPhase() + ")")
     await closeDemo(run.main)
 
     this.mark("demo 2: mall, follow the dog")
@@ -132,6 +140,7 @@ export class FywDemoVideoScenario extends Scenario {
     this.mark("arrived " + run.main.getArrivalText())
     await hold(run, 8.5)
     await this.lineDone(run)
+    await this.playWithTheDog(run)
     await closeDemo(run.main)
 
     this.mark("demo 3: Free walk with the robot")

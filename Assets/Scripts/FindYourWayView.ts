@@ -29,6 +29,9 @@ export const OUT_OF_VIEW_S = 2;
 export const ARROW_OPACITY = 0.2;
 export const TRIGGER_RADIUS_M = 8;
 export const NEAR_PATH_M = 3;
+// The reason card over the companion's pointer ("Clothes · your pick"; R2-14, R2-25, R2-35): its size (cm),
+// text role, and the distance (cm) its text is sized to be read from.
+export const REASON_CARD = { wCm: 80, hCm: 14, role: "Headline1", distanceCm: 600 };
 // A shop further behind you than this (m, along your path) is not pointed at.
 const BEHIND_M = 0.5;
 const SAME_FLOOR_M = 1;

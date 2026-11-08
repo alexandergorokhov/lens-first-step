@@ -91,18 +91,20 @@ export class FindYourWayModePanelUI extends BaseScriptComponent {
       () => this._onSayIt.invoke(), this.textColor, 100, "Button")
     this.sayItHint = addText(panel.content, "SayItHint", "stand-in: a preset phrase", "Caption", width - 3, 1.8,
       new vec4(this.textColor.x, this.textColor.y, this.textColor.z, 0.9), 100)
-    this.talkButton = addButton(panel.content, "TalkButton", "Talk: say a place", this.buttonWidthCm, 4.2, null,
-      () => this._onTalk.invoke(), this.textColor, 100, "Button")
-    this.talkHint = addText(panel.content, "TalkHint", "", "Caption", width - 3, 1.8,
-      new vec4(this.textColor.x, this.textColor.y, this.textColor.z, 0.9), 100)
-    setShownInLayout(this.talkHint.getSceneObject(), false)
-    addButton(panel.content, "WhereToButton", "Where to?", this.buttonWidthCm, 4.2, icon("location_on"),
-      () => this._onWhereTo.invoke(), this.textColor, 100, "Button")
+    // One order, one look (R2-36): the two ways to say where (Talk, Where to?) alike, then the two ways
+    // to go (Walk, Step-Free) alike, and the preview's note as a footnote at the bottom.
+    this.talkButton = addButton(panel.content, "TalkButton", "Talk: say a place", this.buttonWidthCm, 5.5, icon("mic"),
+      () => this._onTalk.invoke(), this.textColor, 100, "Headline2")
+    addButton(panel.content, "WhereToButton", "Where to?", this.buttonWidthCm, 5.5, icon("location_on"),
+      () => this._onWhereTo.invoke(), this.textColor, 100, "Headline2")
     this.walkButton = addButton(panel.content, "WalkButton", this.walkLabel, this.buttonWidthCm, this.buttonHeightCm - 1.5,
-      icon("directions_walk"), () => this._onWalk.invoke(), this.textColor, 100, "HeadlineXL", "Primary")
+      icon("directions_walk"), () => this._onWalk.invoke(), this.textColor, 100, "Headline1", "Primary")
     this.stepFreeButton = addButton(panel.content, "StepFreeButton", this.stepFreeLabel, this.buttonWidthCm,
       this.buttonHeightCm - 1.5, icon("accessible"), () => this._onStepFree.invoke(), this.textColor, 100,
       "Headline1", "Primary")
+    this.talkHint = addText(panel.content, "TalkHint", "", "Caption", width - 3, 2.4,
+      new vec4(this.textColor.x, this.textColor.y, this.textColor.z, 0.7), 100)
+    setShownInLayout(this.talkHint.getSceneObject(), false)
     this.interestsTitle = addText(panel.content, "InterestsTitle", "Point out (optional):", "Caption", width - 3, 2,
       new vec4(this.textColor.x, this.textColor.y, this.textColor.z, 0.85), 100)
     const rows = [["coffee", "food", "shopping"], ["toilet", "pharmacy", "accessibleToilet"]]
@@ -149,7 +151,7 @@ export class FindYourWayModePanelUI extends BaseScriptComponent {
   // The demo presets: one question, Talk first; no "Say it" stand-in and no interest chips.
   setSimple(on: boolean): void {
     if (this.titleText) this.titleText.text = on ? "Where would you like to go?" : this.title
-    if (this.talkButton) this.talkButton.label.text = on ? "Talk: say it your own way" : "Talk: say a place"
+    if (this.talkButton) this.talkButton.label.text = on ? "Talk" : "Talk: say a place"
     if (this.interestsTitle) setShownInLayout(this.interestsTitle.getSceneObject(), !on)
     for (const r of this.interestRows) setShownInLayout(r, !on)
   }

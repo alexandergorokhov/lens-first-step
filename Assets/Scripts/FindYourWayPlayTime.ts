@@ -4,15 +4,13 @@
 
 import {MapData, Navigator, TripAhead, Vec3} from "./FindYourWayRouter"
 import {Companion, PetGuide} from "./FindYourWayPet"
-import {CatchGame, canThrow, HOP_LANE, HopGame, hopText, landingSpot, PlayGate, PlayXYZ, RaiseDetector, releaseVelocity, SEATED_LANE, SEATED_THROW_MAX, SeatedDetector, seatedPlaySpot, THROW_MAX} from "./FindYourWayPlay"
+import {CatchGame, canThrow, HOP_AHEAD_M, HOP_LANE, HopGame, hopText, landingSpot, PlayGate, PlayXYZ, RaiseDetector, releaseVelocity, SEATED_LANE, SEATED_THROW_MAX, SeatedDetector, seatedPlaySpot, THROW_MAX} from "./FindYourWayPlay"
 import {mapLevels} from "./FindYourWayTour"
 import {FindYourWayAppPanelUI} from "./FindYourWayAppPanelUI"
 import {FindYourWayCompanionView} from "./FindYourWayCompanionView"
 import {FindYourWayHudUI} from "./FindYourWayHudUI"
 import SIK from "SpectaclesInteractionKit.lspkg/SIK"
 
-// Hop lane: starts this far ahead of you (m), so you see the companion from behind.
-const HOP_AHEAD_M = 1.3
 // Catch: the treat leaves your hand at this height above the floor (m) and speed (m/s).
 const THROW_FROM_M = 1.2
 const THROW_SPEED = 6

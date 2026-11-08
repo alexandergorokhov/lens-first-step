@@ -156,6 +156,16 @@ Root causes found:
 
 ## Open for iteration (the other session edits these)
 
+### Alex's review of v6 (Nov 8)
+- [ ] R2-32 The play moment: we did not see the game. The Hop lane starts a couple of steps ahead
+      (`HOP_AHEAD_M` 3 m), and it moves to the mall: after the Bakery, a game with the dog (tests R32, R32b).
+- [ ] R2-33 The folded Control tab: upper-left corner, more see-through (0.25; test R33).
+- [ ] R2-34 Free walk: the robot points from at least 3.5 m ahead, in view (`pointNearM`; test R34); the take
+      walks the middle of the hall, so the shops show from a few metres.
+- [ ] R2-35 The reason card over the pointer bigger (`REASON_CARD`, Headline1, 80 cm; test R35).
+- [ ] R2-36 The Go to a place panel more ordered: Talk (mic icon) and Where to? alike, Walk and Step-Free
+      alike, the preview note as a footnote at the bottom.
+
 ### Voice-over script (R2-7 reads this table)
 Updated Nov 7 by the pitch session to match the story (pitch/pathpal-story.md). Short, plain, one or two sentences a beat; about 2.5 words per second. Beat = the `[VID]` mark it starts on.
 
@@ -167,10 +177,10 @@ Updated Nov 7 by the pitch session to match the story (pitch/pathpal-story.md). 
 | announcement | An announcement in Spanish, captioned in English. It names a new gate. |
 | question | Pathpal asks first; it never changes my trip on its own. Yes: re-routed to B14, still step-free. |
 | arrived | The gate agent speaks Spanish; I read it in English. Captions help if you can't hear, too. |
-| play | Waiting to board? A quick game with my robot. |
 | demo 2: mall, follow the dog | In a mall, I just follow my dog. Easier than reading a map. |
 | leg | It leads the way to the bakery, and waits for me whenever I stop. |
 | arrived | The baker speaks French; I read it in English. |
+| play | Waiting for a table? A quick game with my dog. |
 | demo 3: Free walk with the robot | No destination? Free walk. It asks what I'm into today, and I just say it. |
 | pointed | It points at shops that match, and says why. A two-second look shows offers, always marked sponsored. |
 | END | Pathpal. No GPS indoors? Follow your companion. |

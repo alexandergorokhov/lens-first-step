@@ -14,7 +14,7 @@ Every scenario and where it is tested.
   seated height and the scanned sign are simulated with test hooks on `FindYourWayMain`
   (LEAF cannot drive WASD/Q/E).
 
-Node 622 tests, all passing (with `OFFLINE=1` the live gist download is skipped).
+Node 627 tests, all passing (with `OFFLINE=1` the live gist download is skipped).
 `src/core/tests/docs.test.ts` checks this count, the test list and every test named below. LEAF
 scenarios have each passed in the preview; run them in short groups, because long batches can hit a
 tap timeout.
@@ -124,7 +124,7 @@ with a tracked hand.
 
 ## Play while you wait: Hop
 
-While you stand still with the companion on, a short lane appears on the floor ~1.3 m ahead with
+While you stand still with the companion on, a short lane appears on the floor ~3 m ahead with
 the companion at the near end, seen from behind. Obstacles come from the far end; raise a hand (on
 Specs: either wrist near head height, once per raise; in the preview: the Jump button) and it jumps.
 A hit: it shakes; raise a hand again (or Play again) to restart. Walking off ends it. Logic:

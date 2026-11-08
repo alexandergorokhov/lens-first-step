@@ -20,7 +20,7 @@ companion off SHALL end it at once.
 - Verified by: G1–G9 (Node) | g1-hop-jump-bump-restart
 
 ### Requirement: Hop
-The lane SHALL start ~1.3 m ahead along where the traveller looked, the companion at its near end
+The lane SHALL start ~3 m ahead (`HOP_AHEAD_M`, a couple of steps, so the whole game shows) along where the traveller looked, the companion at its near end
 seen from behind. Obstacles appear at the far end (6 m) and come toward it, speeding up slightly per
 obstacle cleared (3 → 5 m/s); gaps always leave time to land and jump again. A raised hand (either
 wrist within 20 cm of head height, once per raise, re-armed below 45 cm; preview: the Jump button)

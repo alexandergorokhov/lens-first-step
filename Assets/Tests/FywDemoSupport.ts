@@ -349,11 +349,12 @@ export async function freeWalkRobotTrip(run: DemoRun, beforeWalk?: () => Promise
   }
   const cafe = nodePos(main, "cafe"), threads = nodePos(main, "threads")
   // In from the sign, west past the café (look at it), then east past Threads (look at it).
-  await walk(run, [pose(run), {x: 30, y: 0, z: 7}, {x: cafe.x + 1, y: 0, z: 7.5}])
+  // Along the middle of the hall (z 10), so the shops and the robot pointing at them show from a few metres (R2-34).
+  await walk(run, [pose(run), {x: 30, y: 0, z: 10}, {x: cafe.x + 1, y: 0, z: 10}])
   await hold(run, 1.5)
   await turnTo(run, 180, 0.8)
   await hold(run, 2.5)
-  await walk(run, [pose(run), {x: threads.x, y: 0, z: 7.5}])
+  await walk(run, [pose(run), {x: threads.x, y: 0, z: 10}])
   await hold(run, 1.5)
   await turnTo(run, 180, 0.8)
   await hold(run, 2.5)

@@ -8,8 +8,8 @@
 import {Boxes, shadeTexture, whiteTexture} from "./FindYourWayStandIn"
 import {RigMood, clipFor, poseFor, rigOf, COMPANION_ALPHA} from "./FindYourWayAnim"
 import {LiveRig} from "./FindYourWayRigMesh"
-import {ARROW_OPACITY} from "./FindYourWayView"
-import {addText, makePanel, obj, CARD_TINT} from "./FindYourWayWidgetsUI"
+import {ARROW_OPACITY, REASON_CARD} from "./FindYourWayView"
+import {addText, makePanel, obj, CARD_TINT, TextRole} from "./FindYourWayWidgetsUI"
 import {Interactable} from "SpectaclesInteractionKit.lspkg/Components/Interaction/Interactable/Interactable"
 import {InteractableManipulation} from "SpectaclesInteractionKit.lspkg/Components/Interaction/InteractableManipulation/InteractableManipulation"
 
@@ -60,12 +60,8 @@ const SHAKE_CM = 4
 // While it points: a thin bar from its chest, forward.
 const POINTER_HEIGHT_CM = 55
 const POINTER_LENGTH_CM = 110
-// The reason card (R2-14): its size (cm), its height over the pointer's tip, read from a few metres.
-// About 1.5x the first version (R2-25, "make it a bit bigger so it is easier to read").
-const REASON_W_CM = 52
-const REASON_H_CM = 9
-const REASON_ABOVE_CM = 28
-const REASON_DISTANCE_CM = 450
+// The reason card (R2-14): its height over the pointer's tip; its size is REASON_CARD (R2-35).
+const REASON_ABOVE_CM = 36
 // The floor arrow near your feet toward the companion when it is out of view.
 const FLOOR_ARROW_CM = 34
 const FLOOR_ARROW_COLOR = new vec4(0.4, 0.85, 1, ARROW_OPACITY)
@@ -215,8 +211,9 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
     const on = !!text && this.isPointing()
     if (on && !this.reasonRoot) {
       this.reasonRoot = obj(this.sceneObject, "PointReason")
-      const p = makePanel(this.reasonRoot, REASON_W_CM + 2, 0.5, 0, undefined, CARD_TINT)
-      this.reasonText = addText(p.content, "PointReasonText", "", "Caption", REASON_W_CM, REASON_H_CM, new vec4(1, 1, 1, 1), REASON_DISTANCE_CM)
+      const p = makePanel(this.reasonRoot, REASON_CARD.wCm + 2, 0.5, 0, undefined, CARD_TINT)
+      this.reasonText = addText(p.content, "PointReasonText", "", REASON_CARD.role as TextRole, REASON_CARD.wCm, REASON_CARD.hCm,
+        new vec4(1, 1, 1, 1), REASON_CARD.distanceCm)
     }
     if (this.reasonRoot) this.reasonRoot.enabled = on
     if (on && this.reasonText && this.reasonText.text !== text) this.reasonText.text = text as string

@@ -109,10 +109,12 @@ the picks show under **Heard**; the walk starts after a short read. Picks are sa
 ### Requirement: The pointer says why (R2-14)
 While the companion points at a shop it SHALL show a small card at the pointer's tip naming the
 preference that matched, by the map's label: "Clothes · your pick" (`pointReason`). Floor hints show no card.
+The card SHALL be big enough to read from where it points (`REASON_CARD`, R2-35), and the companion SHALL
+point from at least `pointNearM` (3.5 m) ahead, in view, so you see it and what it points at (R2-34).
 
 #### Scenario: FW-R14 Reason card
 - **THEN** pointing at Threads with Clothes picked shows "Clothes · your pick"
-- Verified by: R14, R14b (Node) | demo-free-walk-robot
+- Verified by: R14, R14b, R34, R35 (Node) | demo-free-walk-robot
 
 ### Requirement: A calm companion (R2-17)
 In Free walk the companion SHALL walk, never run: normal pace 1.5 m/s, catching up at most 2.6 m/s, its pace

@@ -65,7 +65,7 @@ test("N4 placed on the marks in order: a beat matches the next mark starting wit
 
 test("N5 the v2 take misses three beats (no play then); the question slides past the announcement line, within the limit", () => {
   const p = placeNarration(parseMarks(V2));
-  assert.deepEqual(p.missing, ["talk", "play", "leg"], "no talk, play or demo-2 leg mark");
+  assert.deepEqual(p.missing, ["talk", "leg", "play"], "no talk, demo-2 leg or play mark");
   assert.deepEqual(p.late, []);
   const q = p.placed.find((x) => x.beat === "question")!;
   const a = p.placed.find((x) => x.beat === "announcement")!;
