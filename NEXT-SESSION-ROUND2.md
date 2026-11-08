@@ -58,6 +58,15 @@ unstaged; stage with `git hash-object` + `git update-index` as done for `4161355
   frame; café stop farther out; escalator top facing a wall; Free walk brushes a vending fridge); voice-over
   talk line mentions the flight number; then re-record (save, start ffmpeg by screen region, refresh).
 
+## Nov 8, evening
+- v6: `devpost/video/pathpal-demos-v6.mp4` (2:39): flight 212 named on Talk, play moment at B14, demo 2 to the
+  Bakery on one floor, toolbar cropped. Edit: `node tools/voice/narration-mix.mjs devpost/video/demos-raw10.mp4
+  <take10 marks shifted -5.6 s> 37.1 out.mp4 1156:1258:20:86`. Record region: gdigrab desktop offset 1566,351
+  size 1176x1344 (Lens maximized on the main 4K screen, Preview 1 tab showing).
+- Pushed `55bd6be`; npm test 622/622. Still open: far shops popping in and out (not found in code: no
+  distance hiding, camera far 100 m; check in the preview by hand), the mall map's fBW-fBM corridor over the up
+  escalator (needs a gist map update, Alex's OK), the Free walk robot near a vending fridge.
+
 ## Do next, in order
 1. `/mcp` reconnect lens-studio; recompile; fix any TS errors in `FywDemoVideoScenario.ts` / `FywDemoSupport.ts`.
 2. Open the Preview panel in Lens Studio. Check:
