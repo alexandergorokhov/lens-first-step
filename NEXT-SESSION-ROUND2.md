@@ -31,6 +31,22 @@ Plan: `ROUND2.md` (builder checklist). Branch: `companion-polish`. Work test fir
 - Last night's 41-min freeze at the take's start did not come back today (sp1 and visual-demos both ran fine).
 - Seen in v3: during the gate change (about 1:10-1:25) the view faces a flat blue wall; fix the pose (R2-2).
 
+## Nov 8, later: Alex's v3 review (plan in ROUND2.md "Alex's review of v3")
+Done and pushed (`cbd820f`, `b87a364`, `4161355`; npm test 609/609; tests in `src/core/tests/v3-review.test.ts`):
+R2-12 see-through Control tab; R2-14 pointer card "Clothes · your pick"; R2-15 Free walk asks for preferences
+by voice (demo: last time Books, says "A coffee, and I'm into fashion today"); R2-17 calm companion; R2-11 food
+court that looks like one (stalls, boards, tables; map unchanged because the gist test compares mall.json);
+R2-18 Offline mode (LEAF `offline-mode` passes); R2-19 Hide demo controls; R2-20 See map on the left,
+see-through, gate labels; R2-23 pick a place first; R2-24 all places reachable; R2-21 airport stairs contrast
+(GLB re-exported). LEAF `demo-free-walk-robot` and `demo-mall-pet` pass on the new code.
+**Not yet looked at in the preview:** the new food court tables (refined after the first look), See map on
+the left with labels, Hide demo controls, the darker stairs. Boxes not ticked in ROUND2.md until seen.
+**Left:** R2-13 smooth camera in the take (lift: stop facing the doors + dissolve in the edit; escalator:
+straight on/off along its axis; café/toilet: stop 4+ m out; turn away from the toilet door before the gate
+change), then R2-16 v4 under 3 minutes (narration table: demo 3 lines for voice preferences).
+`Assets/Tests/FindYourWayLeafIndex.ts`: only my offline-mode lines are committed (the other session's edits stay
+unstaged; stage with `git hash-object` + `git update-index` as done for `4161355`'s parent).
+
 ## Do next, in order
 1. `/mcp` reconnect lens-studio; recompile; fix any TS errors in `FywDemoVideoScenario.ts` / `FywDemoSupport.ts`.
 2. Open the Preview panel in Lens Studio. Check:
