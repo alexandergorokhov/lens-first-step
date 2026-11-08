@@ -95,6 +95,33 @@ Root causes found:
       Optics, also y 5, "how much are the Acme sunglasses?") needs a shop-assistant reply and a price in the
       offers data: more work. Tests: matcher -> sushi, host line on arrival, LEAF take.
 
+### Alex's review of v3 (Nov 8): "I like how it starts to settle. The airport coffee is great."
+
+- [ ] R2-12 The "Control" dock rectangle semi-transparent (`FindYourWayDock.ts`; alpha in core, test).
+- [ ] R2-13 Smooth, elegant recording: no walking through objects, no flat-wall views, no rendering glitches; the
+      lift ride (airport) and the escalator ride (mall) smooth: slow in/out, no snaps or jumps, steady heading.
+      Test the take's path in core (no jumps in pose or heading between frames, rides eased); stills check.
+- [ ] R2-14 Free walk: the pointing line names the preference that picked the shop ("Clothes · your pick"), from
+      the map's interest labels (core `pointReason`, test).
+- [ ] R2-15 Free walk starts by asking for preferences: "Same as last time: Café, Clothes? Or tell me what
+      you're into." You answer in free text (voice); the answer maps to the map's interest categories (LLM on
+      Specs, offline matcher in the preview, like Talk); "same as last time" keeps the saved ones. The companion
+      then watches for shops in those categories. Core: `parsePrefs`, `prefsPrompt`, `parsePrefsReply` (tests).
+- [ ] R2-11 (above) now: demo 2 goes to the **Sushi Bar** (small restaurant look: counter, stools, lanterns,
+      menu) and the host asks in French "A table for two?" with English captions.
+- [ ] R2-17 Calm companion in Free walk ("it runs all over the place; it's a helper, not a child to chase"):
+      no running around you when you turn, no dashes; it walks at about your pace, turns gently and goes to a
+      shop only to point. Core `FreeCompanion` (tests: max speed, max turn rate, no side switch on a glance).
+- [ ] R2-16 Re-record v4 with the voice-over table updated for R2-11 and R2-15.
+      **Contest rules (hard limits):** under 3 minutes, posted on YouTube, the real Lens running in the Lens
+      Studio preview (a narrated screen recording of the preview is fine). No renders made outside Lens Studio
+      (no three.js shots), no trademarks, no copyrighted music (own or CC0 only, or none).
+      v3 is 4:25, so v4 must lose ~1:30. Budget: demo 1 ~75 s, demo 2 ~40 s, demo 3 ~45 s, open + end ~10 s
+      (= 2:50). How: shorter holds in the take; walking at a brisk pace; long plain-walking stretches sped up
+      in the edit (between marks, never under a voice-over line); lift ride as a short dissolve.
+      Test: the take's planned length (marks + lines) is under 170 s; the edit tool refuses a cut over 179 s;
+      no outside footage in the edit (only the Preview recording, title cards made in the edit).
+
 ## Open for iteration (the other session edits these)
 
 ### Voice-over script (R2-7 reads this table)

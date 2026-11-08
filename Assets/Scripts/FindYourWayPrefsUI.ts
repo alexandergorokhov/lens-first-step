@@ -11,6 +11,8 @@ import {pickChip} from "./FindYourWayDock"
 
 export interface PrefsHandlers {
   onStart: () => void
+  // Say what you are into (R2-15): the companion asked; Main listens and maps it to the categories.
+  onTalk: () => void
   onCompanion: () => void
   onPickModel: (id: string) => void
 }
@@ -27,6 +29,8 @@ export class FindYourWayPrefsUI extends BaseScriptComponent {
   private ask: SceneObject | null = null
   private change: SceneObject | null = null
   private summary: Text
+  private question: Text
+  private heard: Text
   private companionBtn: LabeledButton | null = null
   private companionAsk: LabeledButton | null = null
   private modelBoxes: {[id: string]: LabeledButton} = {}
@@ -45,7 +49,7 @@ export class FindYourWayPrefsUI extends BaseScriptComponent {
 
   // Builds the panels for this map's list, starting from the preset. They are rebuilt only when
   // the list changes, later than the pinch that may have led here.
-  open(list: {id: string; label: string}[], preset: string[], companionName: string, companionOn: boolean, modelId: string): void {
+  open(list: {id: string; label: string}[], preset: string[], companionName: string, companionOn: boolean, modelId: string, question: string = "Your preferences"): void {
     this.list = list
     this.companionName = companionName
     this.companionOn = companionOn
@@ -60,6 +64,8 @@ export class FindYourWayPrefsUI extends BaseScriptComponent {
     for (const i of this.list) this.paint(i.id)
     this.paintCompanion()
     this.refreshSummary()
+    if (this.question) this.question.text = question
+    this.setHeard("")
     this.showStage(false)
     this.sceneObject.enabled = true
   }
@@ -76,10 +82,13 @@ export class FindYourWayPrefsUI extends BaseScriptComponent {
     this.modelBoxes = {}
     const a = obj(this.sceneObject, "PrefsAsk")
     const p = makePanel(a, WIDTH + 4, 1.8, 1)
-    addText(p.content, "PrefsTitle", "Your preferences", "Headline1", WIDTH, 3.6, TEXT, 100)
-    addText(p.content, "PrefsPresetTag", "Saved preset (demo)", "Body", WIDTH, 2.2, SOFT, 100)
+    // The companion asks (R2-15): "Same as last time: Books? Or tell me what you're into."
+    this.question = addText(p.content, "PrefsTitle", "Your preferences", "Headline2", WIDTH, 7, TEXT, 100)
+    addText(p.content, "PrefsPresetTag", "Last time", "Body", WIDTH, 2.2, SOFT, 100)
     this.summary = addText(p.content, "PrefsSummary", "", "Headline2", WIDTH, 3, TEXT, 100)
-    addButton(p.content, "PrefsKeepButton", "Keep them and walk", WIDTH, 6, icon("directions_walk"), () => this.h.onStart(), TEXT, 100, "Headline1", "Primary")
+    addButton(p.content, "PrefsTalkButton", "Talk: say what you like", WIDTH, 6, null, () => this.h.onTalk(), TEXT, 100, "Headline1", "Primary")
+    this.heard = addText(p.content, "PrefsHeard", "", "Body", WIDTH, 5, SOFT, 100)
+    addButton(p.content, "PrefsKeepButton", "Same as last time", WIDTH, 4.5, icon("directions_walk"), () => this.h.onStart(), TEXT, 100, "Headline2")
     addButton(p.content, "PrefsViewButton", "View or change", WIDTH, 4.5, null, () => this.showStage(true), TEXT, 100, "Headline2")
     this.companionAsk = addButton(p.content, "PrefsCompanionAskButton", "Companion: on", WIDTH, 4.5, null, () => this.h.onCompanion(), TEXT, 100, "Headline2")
     const choices = companionChoices()
@@ -140,6 +149,17 @@ export class FindYourWayPrefsUI extends BaseScriptComponent {
     this.modelId = modelId
     this.paintCompanion()
   }
+
+  // What was heard, and the picks it made ("Heard: … → Café, Clothes").
+  setHeard(text: string): void { if (this.heard) this.heard.text = text }
+  getHeard(): string { return this.heard ? this.heard.text : "" }
+  setPicked(ids: string[]): void {
+    this.picked = {}
+    for (const id of ids) this.picked[id] = true
+    for (const i of this.list) this.paint(i.id)
+    this.refreshSummary()
+  }
+  pickedLabels(ids: string[]): string[] { return this.list.filter((i) => ids.indexOf(i.id) >= 0).map((i) => i.label) }
 
   getPicked(): string[] { return this.list.filter((i) => this.picked[i.id]).map((i) => i.id) }
   getSummary(): string { return this.summary ? this.summary.text : "" }

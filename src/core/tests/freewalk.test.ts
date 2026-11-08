@@ -148,17 +148,17 @@ test("F3 the bubble: '3 picks upstairs' / '1 pick downstairs'", () => {
   assert.equal(floorBubble(1, false), "1 pick downstairs");
 });
 
-test("A1 ahead is your walking direction while walking, your head direction after 1 s still", () => {
+test("A1 ahead is your walking direction while walking, your head direction once held still for 2.5 s (R2-17)", () => {
   const a = new AheadTracker();
   let dir = a.update({ x: 0, y: 0, z: 0 }, 90, 0.1);
   assert.ok(Math.abs(dir.x - 1) < 1e-6, "starts with the head direction");
   // Walking north with the head turned east: ahead stays north.
   for (let i = 1; i <= 10; i++) dir = a.update({ x: 0, y: 0, z: i * 0.15 }, 90, 0.1);
   assert.ok(dir.z > 0.99, JSON.stringify(dir));
-  // Standing still less than 1 s: still north; after: east.
-  for (let i = 0; i < 8; i++) dir = a.update({ x: 0, y: 0, z: 1.5 }, 90, 0.1);
+  // Standing still less than 2.5 s: still north; after: east.
+  for (let i = 0; i < 22; i++) dir = a.update({ x: 0, y: 0, z: 1.5 }, 90, 0.1);
   assert.ok(dir.z > 0.99);
-  for (let i = 0; i < 4; i++) dir = a.update({ x: 0, y: 0, z: 1.5 }, 90, 0.1);
+  for (let i = 0; i < 6; i++) dir = a.update({ x: 0, y: 0, z: 1.5 }, 90, 0.1);
   assert.ok(dir.x > 0.99);
 });
 
@@ -255,7 +255,7 @@ test("C4 with the companion off nothing is pointed at, and dots still come", () 
   assert.ok(t > 0);
 });
 
-test("C5 turning around: it runs around you, never closer than 1 m, and ends ahead", () => {
+test("C5 turning around: it walks round you calmly (no running, R2-17), never closer than 1 m, and ends ahead", () => {
   const m = mall();
   const fw = new FreeWalk(m, []);
   const pos = { x: 30, y: 0, z: 16 };
@@ -264,12 +264,12 @@ test("C5 turning around: it runs around you, never closer than 1 m, and ends ahe
   assert.ok(fw.pet!.pos.z > 17.5, "ahead (north): " + JSON.stringify(fw.pet));
   let closest = Infinity;
   let ran = false;
-  t = stand(fw, pos, 180, t, 5, (f) => {
+  t = stand(fw, pos, 180, t, 10, (f) => {
     closest = Math.min(closest, dist(f.pet!.pos, pos));
     if (f.pet!.mood === "run") ran = true;
   });
   assert.ok(closest >= 1 - 1e-6, "closest " + closest);
-  assert.ok(ran, "it ran");
+  assert.ok(!ran, "it walked");
   assert.ok(fw.pet!.pos.z < 14.5, "ahead (south): " + JSON.stringify(fw.pet));
   assert.ok(Math.abs(fw.pet!.pos.x - 30) < 0.5, "back on the path");
 });

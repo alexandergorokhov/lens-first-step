@@ -9,6 +9,7 @@ import {Boxes, shadeTexture, whiteTexture} from "./FindYourWayStandIn"
 import {RigMood, clipFor, poseFor, rigOf, COMPANION_ALPHA} from "./FindYourWayAnim"
 import {LiveRig} from "./FindYourWayRigMesh"
 import {ARROW_OPACITY} from "./FindYourWayView"
+import {addText, makePanel, obj, CARD_TINT} from "./FindYourWayWidgetsUI"
 import {Interactable} from "SpectaclesInteractionKit.lspkg/Components/Interaction/Interactable/Interactable"
 import {InteractableManipulation} from "SpectaclesInteractionKit.lspkg/Components/Interaction/InteractableManipulation/InteractableManipulation"
 
@@ -59,6 +60,11 @@ const SHAKE_CM = 4
 // While it points: a thin bar from its chest, forward.
 const POINTER_HEIGHT_CM = 55
 const POINTER_LENGTH_CM = 110
+// The reason card (R2-14): its size (cm), its height over the pointer's tip, read from a few metres.
+const REASON_W_CM = 34
+const REASON_H_CM = 6
+const REASON_ABOVE_CM = 22
+const REASON_DISTANCE_CM = 300
 // The floor arrow near your feet toward the companion when it is out of view.
 const FLOOR_ARROW_CM = 34
 const FLOOR_ARROW_COLOR = new vec4(0.4, 0.85, 1, ARROW_OPACITY)
@@ -84,6 +90,10 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
   private grab: SceneObject | null = null
   private grabHandling: InteractableManipulation | null = null
   private pointer: SceneObject | null = null
+  // Why it points there ("Clothes · your pick", R2-14): a small card at the pointer's tip, facing you.
+  private reasonRoot: SceneObject | null = null
+  private reasonText: Text | null = null
+  private reasonFaceTo: vec3 | null = null
   private floorArrow: SceneObject | null = null
   private spin = 0
   private shown = false
@@ -194,9 +204,25 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
   // The pointer bar: it follows the model's pose while on.
   setPointing(on: boolean): void {
     if (this.pointer) this.pointer.enabled = on && this.shown
+    if (!on && this.reasonRoot) this.reasonRoot.enabled = false
   }
 
   isPointing(): boolean { return !!this.pointer && this.pointer.enabled }
+
+  // The reason card at the pointer's tip while it points; null hides it. faceTo: your place (same space).
+  setPointReason(text: string | null, faceTo: vec3 | null): void {
+    const on = !!text && this.isPointing()
+    if (on && !this.reasonRoot) {
+      this.reasonRoot = obj(this.sceneObject, "PointReason")
+      const p = makePanel(this.reasonRoot, REASON_W_CM + 2, 0.5, 0, undefined, CARD_TINT)
+      this.reasonText = addText(p.content, "PointReasonText", "", "Caption", REASON_W_CM, REASON_H_CM, new vec4(1, 1, 1, 1), REASON_DISTANCE_CM)
+    }
+    if (this.reasonRoot) this.reasonRoot.enabled = on
+    if (on && this.reasonText && this.reasonText.text !== text) this.reasonText.text = text as string
+    this.reasonFaceTo = faceTo
+  }
+
+  getPointReason(): string | null { return this.reasonRoot && this.reasonRoot.enabled && this.reasonText ? this.reasonText.text : null }
 
   isVisible(): boolean { return this.shown && !!this.model && this.model.enabled }
 
@@ -377,6 +403,16 @@ export class FindYourWayCompanionView extends BaseScriptComponent {
     if (this.pointer && this.pointer.enabled) {
       this.pointer.getTransform().setLocalPosition(pos)
       this.pointer.getTransform().setLocalRotation(rot)
+      if (this.reasonRoot && this.reasonRoot.enabled) {
+        const tip = pos.add(rot.multiplyVec3(new vec3(0, POINTER_HEIGHT_CM + REASON_ABOVE_CM, -POINTER_LENGTH_CM)))
+        const rt = this.reasonRoot.getTransform()
+        rt.setLocalPosition(tip)
+        if (this.reasonFaceTo) {
+          const d = this.reasonFaceTo.sub(tip)
+          const flat = new vec3(d.x, 0, d.z)
+          if (flat.length > 0.01) rt.setLocalRotation(quat.lookAt(flat.normalize(), vec3.up()))
+        }
+      }
     }
   }
 

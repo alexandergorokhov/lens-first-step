@@ -61,10 +61,11 @@ export interface FreeSettings {
 
 export const FREE_DEFAULTS: FreeSettings = {
   aheadM: 2.5,
-  stillSeconds: 1,
+  // A calm helper (ROUND2.md R2-17): it walks, never dashes; a look around doesn't send it round you.
+  stillSeconds: 2.5,
   clearM: 1,
-  speed: 2.4,
-  runSpeed: 4.5,
+  speed: 1.5,
+  runSpeed: 2.6,
   pointSeconds: 3,
   pointRadiusM: 8,
   hintRadiusM: 12,
@@ -77,6 +78,11 @@ export const FREE_DEFAULTS: FreeSettings = {
   cooldownSeconds: 10,
   asideM: 1.2,
 };
+
+// How fast it may turn (deg/s): it turns like a walker, not a spinning top.
+export const FREE_TURN_DEG_S = 120;
+// While standing, your head counts as "ahead" only once held this steady (deg) for stillSeconds.
+const HOLD_DEG = 25;
 
 // At most this many picks on a floor-change list; more shows "and more".
 export const MAX_PICKS = 3;
@@ -425,6 +431,7 @@ export class AheadTracker {
   private dir: { x: number; z: number } | null = null;
   private anchor: FwXYZ | null = null;
   private still = 0;
+  private held: number | null = null;
   private stillSeconds: number;
 
   constructor(stillSeconds: number = FREE_DEFAULTS.stillSeconds) {
@@ -442,7 +449,13 @@ export class AheadTracker {
       this.dir = { x: (pos.x - this.anchor.x) / moved, z: (pos.z - this.anchor.z) / moved };
       this.anchor = { x: pos.x, y: pos.y, z: pos.z };
       this.still = 0;
+      this.held = null;
       return this.dir;
+    }
+    // Standing: your head direction counts once you have held it steady for stillSeconds.
+    if (this.held === null || Math.abs(((heading - this.held + 540) % 360) - 180) > HOLD_DEG) {
+      this.held = heading;
+      this.still = 0;
     }
     this.still += dt;
     if (this.still >= this.stillSeconds) this.dir = headingDir(heading);
@@ -657,6 +670,7 @@ export interface FreeFrame {
   open: string | null;
   pet: FreePet | null;
   pointing: string | null; // the stop it is walking to or pointing at
+  reason: string | null; // why it points there: the preference that picked it ("Clothes · your pick")
   bubble: string | null;
   stopped: string | null; // set on the frame it reaches a stop (the chime)
 }
@@ -810,11 +824,18 @@ export class FreeWalk {
         sz = -sz;
       }
       const out = s.clearM + 0.3;
-      goal = { x: pos.x + sx * out, z: pos.z + sz * out };
+      // Beside you and a little on toward where it is going, so at a walk it still gets past you.
+      const tl = Math.max(1e-6, flat(target, pos));
+      const on = { x: (target.x - pos.x) / tl, z: (target.z - pos.z) / tl };
+      goal = { x: pos.x + sx * out + on.x * out, z: pos.z + sz * out + on.z * out };
     }
     const away = flat(pet.pos, goal);
+    // Brisker when it has ground to make up, but always a walk (R2-17).
     const running = run || around || flat(pet.pos, target) > s.aheadM + 1;
-    const step = (running ? s.runSpeed : s.speed) * dt;
+    // Its pace eases with the distance to its spot: slows to a stop as it arrives, up to runSpeed when far
+    // behind, so it settles without dashing or jitter.
+    const pace = Math.min(s.runSpeed, s.speed * Math.min(1, away / 0.6) + Math.max(0, away - 1) * 0.6);
+    const step = (running ? Math.max(pace, s.speed) : pace) * dt;
     const k = away <= step ? 1 : step / away;
     const next = { x: pet.pos.x + (goal.x - pet.pos.x) * k, y: pos.y, z: pet.pos.z + (goal.z - pet.pos.z) * k };
     // Never inside the clear circle: pushed out straight away from you.
@@ -826,7 +847,7 @@ export class FreeWalk {
       next.z = pos.z + uz * s.clearM;
     }
     const h = headingTo(pet.pos, next);
-    return { pos: next, heading: h === null ? pet.heading : h, mood: running ? "run" : "lead" };
+    return { pos: next, heading: h === null || flat(pet.pos, next) < 0.002 ? pet.heading : turnToward(pet.heading, h, dt), mood: "lead" };
   }
 
   // The same place with a change (a connection closed): what is ahead changes, the walk doesn't.
@@ -886,14 +907,14 @@ export class FreeWalk {
           }
         } else {
           // It keeps pace beside you while it points, facing the shop.
-          const stepped = this.move(pet, spot, pos, dt, false);
+          const stepped = this.move(pet, spot, pos, dt, true);
           const h = headingTo(stepped.pos, st.at);
-          pet = { pos: stepped.pos, heading: h === null ? pet.heading : h, mood: "point" };
+          pet = { pos: stepped.pos, heading: h === null ? pet.heading : turnToward(pet.heading, h, dt), mood: "point" };
         }
       } else {
         const lead = this.spotAhead(pos, dir);
         pet = this.move(pet, lead, pos, dt, false);
-        if (this.pointState === "return" && flat(pet.pos, lead) < 0.3) this.pointState = "lead";
+        if (this.pointState === "return" && flat(pet.pos, lead) < 1.2) this.pointState = "lead";
       }
       this.pet = pet;
     }
@@ -903,10 +924,82 @@ export class FreeWalk {
       open: this.dots.open,
       pet,
       pointing: st ? st.id : null,
+      reason: st && !st.bubble ? pointReason(this.map, st.id, this.prefs) : null,
       bubble: st && st.until !== null ? st.bubble : null,
       stopped,
     };
   }
+}
+
+// From heading `from` toward `to`, at most FREE_TURN_DEG_S this frame.
+function turnToward(from: number, to: number, dt: number): number {
+  const d = ((to - from + 540) % 360) - 180;
+  const max = FREE_TURN_DEG_S * dt;
+  return from + Math.max(-max, Math.min(max, d));
+}
+
+// Why it points at a shop: the preference it matched, by the map's own label ("Clothes · your pick").
+export function pointReason(map: FwMap, id: string, prefs: string[]): string | null {
+  const n = map.nodes.filter((x) => x.id === id)[0];
+  if (!n || !matches(n, prefs)) return null;
+  const i = interestList(map).filter((x) => x.id === n.category)[0];
+  return (i ? i.label : (n.category as string)) + " · your pick";
+}
+
+// ── Preferences in your own words (R2-15) ────────────────────────────────────
+
+// Words that name an interest, by interest id: generic words only, never a shop's name. The map's own
+// label for each interest counts too.
+const PREF_WORDS: { [id: string]: string[] } = {
+  coffee: ["coffee", "cafe", "café", "latte", "espresso", "cappuccino", "tea"],
+  food: ["food", "eat", "hungry", "lunch", "dinner", "snack", "restaurant", "meal"],
+  clothes: ["clothes", "clothing", "fashion", "jeans", "shirt", "dress", "jacket", "outfit"],
+  sport: ["sport", "sports", "gym", "fitness", "sneakers", "trainers", "running", "yoga"],
+  hardware: ["hardware", "tools", "tool", "diy", "drill"],
+  books: ["book", "books", "reading", "novel", "novels", "magazine", "magazines"],
+  kids: ["kids", "kid", "children", "child", "toys", "toy", "games"],
+  beauty: ["beauty", "makeup", "cosmetics", "skincare", "perfume"],
+  shopping: ["shopping", "shops", "groceries"],
+  toilet: ["toilet", "toilets", "bathroom", "restroom", "loo"],
+  pharmacy: ["pharmacy", "medicine", "chemist"],
+};
+const SAME_RE = /\b(same|usual|as before|last time|like before)\b/;
+
+function prefWords(text: string): string[] {
+  return text.toLowerCase().split(/[^a-zà-ÿ]+/).filter((w) => w !== "");
+}
+
+// What you said, as the map's interest ids (in the map's order); keep: "same as last time" with
+// nothing new named. Offline: the Lens's matcher in the preview, and the fallback when the LLM is slow.
+export function parsePrefs(map: FwMap, phrase: string): { ids: string[]; keep: boolean } {
+  const said = prefWords(phrase);
+  const has = (w: string) => said.indexOf(w) >= 0;
+  const ids = interestList(map)
+    .filter((i) => (PREF_WORDS[i.id] || []).concat(prefWords(i.label)).some(has))
+    .map((i) => i.id);
+  return { ids, keep: ids.length === 0 && SAME_RE.test(phrase.toLowerCase()) };
+}
+
+// The companion's question as the walk begins: last time's picks, or a fresh ask.
+export function prefsQuestion(savedLabels: string[]): string {
+  return savedLabels.length > 0 ? "Same as last time: " + savedLabels.join(", ") + "? Or tell me what you're into." : "What are you into today?";
+}
+
+// The LLM's prompt (on Specs): the map's categories and what you said; it answers with ids only.
+export function prefsPrompt(map: FwMap, phrase: string): string {
+  const list = interestList(map).map((i) => i.id + " (" + i.label + ")").join(", ");
+  return "Categories in this place: " + list + ". The visitor said: \"" + phrase + "\". " +
+    'Which categories does the visitor want? Reply with JSON only: {"interests": ["<id>", ...]} using ids from the list.';
+}
+
+// The LLM's reply as interest ids the map has (map order), or null when it isn't the JSON asked for.
+export function parsePrefsReply(map: FwMap, reply: string): string[] | null {
+  const m = /\{[\s\S]*\}/.exec(reply);
+  if (!m) return null;
+  let v: any;
+  try { v = JSON.parse(m[0]); } catch (e) { return null; }
+  if (!v || !Array.isArray(v.interests)) return null;
+  return interestList(map).map((i) => i.id).filter((id) => v.interests.indexOf(id) >= 0);
 }
 
 function floorKey(y: number, up: boolean): string {

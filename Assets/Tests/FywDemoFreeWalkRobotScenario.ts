@@ -14,14 +14,19 @@ export class FywDemoFreeWalkRobotScenario extends Scenario {
     const main = run.main
     expect(main.getPhase(), "preferences open").toBe("prefs")
     log("demo-free-walk-robot prefs: " + main.getPrefsSummary())
+    // Last time was Books (R2-15); you say coffee and fashion, and the walk uses those.
+    expect(main.getPrefsSummary(), "last time").toBe("Books")
     const r = await freeWalkRobotTrip(run)
-    log("demo-free-walk-robot: pointed " + r.pointed.join(",") + "; boxes " + r.boxes.join(","))
+    log("demo-free-walk-robot: heard " + main.getPrefsHeard() + "; pointed " + r.pointed.join(",") + "; boxes " + r.boxes.join(",") + "; reasons " + r.reasons.join(" | "))
     expect(main.getCompanionModel(), "the robot").toBe("robot")
     expect(main.getFreePrefs().join(","), "coffee and clothes").toBe("coffee,clothes")
     expect(r.pointed.indexOf("cafe") >= 0, "pointed at Bean There Café").toBe(true)
     expect(r.pointed.indexOf("threads") >= 0, "pointed at Threads").toBe(true)
     expect(r.boxes.indexOf("cafe") >= 0, "café offer boxes").toBe(true)
     expect(r.boxes.indexOf("threads") >= 0, "Threads offer boxes").toBe(true)
+    // The pointing line says why (R2-14).
+    expect(r.reasons.indexOf("Café · your pick") >= 0, "reason at the café").toBe(true)
+    expect(r.reasons.indexOf("Clothes · your pick") >= 0, "reason at Threads").toBe(true)
     await closeDemo(main)
     log("demo-free-walk-robot pass")
   }

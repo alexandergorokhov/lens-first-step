@@ -62,7 +62,7 @@ import {MultiStopTrip, orderStops} from "./FindYourWayTrip"
 import {mapLogLines, tripAfterSaving} from "./FindYourWayMapping"
 import {peekPlace} from "./FindYourWayPeek"
 import {demoSettings, DemoSettings, showingSettings, StartSettings} from "./FindYourWayDemo"
-import {destinationsOf, FreeWalk, gateChangeOffer, interestList, LookBoxes, matchDestination, OfferDismissals, sayItPhrase, ShopLook, typedSoFar, typingSeconds, planAsk, askPrompt, parseAskReply, llmStops, ASK_LLM_TIMEOUT_S, VOICE_FALLBACK_S, walkableRoute, CLEAN_FREE_WALK, OFFER_LOOK_S} from "./FindYourWayFreeWalk"
+import {destinationsOf, FreeWalk, gateChangeOffer, interestList, LookBoxes, matchDestination, OfferDismissals, sayItPhrase, ShopLook, typedSoFar, typingSeconds, planAsk, askPrompt, parseAskReply, llmStops, ASK_LLM_TIMEOUT_S, VOICE_FALLBACK_S, walkableRoute, CLEAN_FREE_WALK, OFFER_LOOK_S, parsePrefs, parsePrefsReply, prefsPrompt, prefsQuestion} from "./FindYourWayFreeWalk"
 import {arrivalCardOn, cleanAllows, OptionsDock, routeLineAheadM, walkingHud} from "./FindYourWayDock"
 import {FindYourWayOfferBoxesUI} from "./FindYourWayOfferBoxesUI"
 import {FindYourWayHomePanelUI} from "./FindYourWayHomePanelUI"
@@ -128,6 +128,8 @@ const TYPED_HOLD_S = 0.6
 const ASK_NEXT_S = 4.5
 // What was heard stays on the panel this long before a demo sets off (s).
 const HEARD_READ_S = 2.2
+// Free walk preferences kept on this device, per map (R2-15).
+const PREFS_KEY = "fyw.prefs."
 // In the preview the scripted announcement plays this long into a trip (s).
 const CAPTION_DEMO_AFTER_S = 0.8
 // Learn this place: the saved map lives in the device's persistent storage under this key.
@@ -668,6 +670,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.prefsPanel = pp.createComponent(FindYourWayPrefsUI.getTypeName()) as FindYourWayPrefsUI
     this.prefsPanel.setup({
       onStart: () => this.startFreeWalk(),
+      onTalk: () => this.talkPrefs(),
       onCompanion: () => {
         this.freeCompanion = !this.freeCompanion
         if (this.prefsPanel) this.prefsPanel.setCompanion(this.companion.name, this.freeCompanion)
@@ -918,6 +921,17 @@ export class FindYourWayMain extends BaseScriptComponent {
   // One frame of the preview fallback: the phrase appears word by word, then it is "heard".
   private tickTyping(): void {
     if (!this.typing) return
+    if (this.phase === "prefs" && this.prefsPanel) {
+      const tp = getTime() - this.typing.t0
+      const sp = typingSeconds(this.typing.phrase)
+      const sh = typedSoFar(this.typing.phrase, tp, sp)
+      this.prefsPanel.setHeard("Heard: " + sh + (sh === this.typing.phrase ? "" : "…"))
+      if (tp < sp + TYPED_HOLD_S) return
+      const said = this.typing.phrase
+      this.typing = null
+      this.heardPrefs(said, true)
+      return
+    }
     if (this.phase !== "mode") {
       this.typing = null
       return
@@ -961,7 +975,24 @@ export class FindYourWayMain extends BaseScriptComponent {
 
   // ── Free walk ────────────────────────────────────────────────────────────
 
+  // The companion's question as Free walk begins: last time's picks by name, or a fresh ask (R2-15).
+  private prefsAsk(): string {
+    const saved = this.presetList()
+    return prefsQuestion(interestList(this.map).filter((i) => saved.indexOf(i.id) >= 0).map((i) => i.label))
+  }
+
+  // Last time's picks: the demo preset's, else what this device saved for this map, else the Inspector's.
   private presetList(): string[] {
+    if (!this.demoSet) {
+      try {
+        const kept = global.persistentStorageSystem.store.getString(PREFS_KEY + this.getMapKey())
+        if (kept) {
+          const known = interestList(this.map).map((i) => i.id)
+          const ids = kept.split(",").filter((x) => known.indexOf(x) >= 0)
+          if (ids.length > 0) return ids
+        }
+      } catch (e) { /* no storage in this build */ }
+    }
     const known = interestList(this.map).map((i) => i.id)
     return this.presetPreferences.split(",").map((x) => x.trim()).filter((x) => known.indexOf(x) >= 0)
   }
@@ -972,7 +1003,86 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.phase = "prefs"
     this.tourPending = false
     this.panels.placeAhead(this.prefsPanel.getSceneObject())
-    this.prefsPanel.open(interestList(this.map), this.presetList(), this.companion.name, this.freeCompanion, this.companion.id)
+    this.prefsPanel.open(interestList(this.map), this.presetList(), this.companion.name, this.freeCompanion, this.companion.id, this.prefsAsk())
+  }
+
+  // Free walk preferences by voice (R2-15): what you say is matched to the map's categories (plain
+  // words first; on Specs the LLM when they name none). "Same as last time" keeps the saved ones. In the
+  // preview, nothing heard within VOICE_FALLBACK_S, the demo's phrase types itself in.
+  private talkPrefs(): void {
+    if (this.phase !== "prefs" || !this.prefsPanel) return
+    this.prefsPanel.setHeard("Listening…")
+    this.heardAny = false
+    this.typing = null
+    const attempt = ++this.voiceTry
+    this.voice.start((text, final) => this.heardPrefs(text, final), (why) => {
+      print("[FYW] voice: " + why)
+      if (this.prefsPanel && attempt === this.voiceTry) this.prefsPanel.setHeard("didn't catch that: try again")
+    })
+    const fb = this.createEvent("DelayedCallbackEvent")
+    fb.bind(() => {
+      this.removeEvent(fb)
+      if (attempt !== this.voiceTry || this.heardAny || this.phase !== "prefs") return
+      const phrase = this.demoSet ? this.demoSet.prefsPhrase : ""
+      if (!phrase) return
+      this.voice.stop()
+      this.typing = {phrase, t0: getTime()}
+    })
+    fb.reset(VOICE_FALLBACK_S)
+  }
+
+  private heardPrefs(text: string, final: boolean): void {
+    if (this.phase !== "prefs" || !this.prefsPanel) return
+    if (text) this.heardAny = true
+    if (!final) {
+      this.prefsPanel.setHeard("Heard: " + text)
+      return
+    }
+    this.voice.stop()
+    const got = parsePrefs(this.map, text)
+    if (got.keep) {
+      this.prefsPanel.setHeard("Heard: " + text + "\n→ same as last time")
+      this.startFreeWalkSoon()
+      return
+    }
+    if (got.ids.length > 0) {
+      this.usePrefs(text, got.ids, false)
+      return
+    }
+    const llm = this.llmFor()
+    if (!llm) {
+      this.prefsPanel.setHeard("didn't catch that: try again")
+      return
+    }
+    const attempt = this.voiceTry
+    this.prefsPanel.setHeard("Heard: " + text + "\nThinking…")
+    let sent: Promise<string>
+    try { sent = llm(prefsPrompt(this.map, text)) } catch (e) { this.prefsPanel.setHeard("didn't catch that: try again"); return }
+    withTimeout(this, sent, ASK_LLM_TIMEOUT_S).then((reply) => {
+      if (attempt !== this.voiceTry || this.phase !== "prefs" || !this.prefsPanel) return
+      const ids = parsePrefsReply(this.map, reply)
+      if (ids && ids.length > 0) this.usePrefs(text, ids, true)
+      else this.prefsPanel.setHeard("didn't catch that: try again")
+    }, () => { if (this.prefsPanel && attempt === this.voiceTry) this.prefsPanel.setHeard("didn't catch that: try again") })
+  }
+
+  private usePrefs(text: string, ids: string[], byLlm: boolean): void {
+    if (!this.prefsPanel) return
+    this.prefsPanel.setPicked(ids)
+    this.prefsPanel.setHeard("Heard: " + text + "\n→ " + this.prefsPanel.pickedLabels(ids).join(", ") + (byLlm ? " (AI picked)" : ""))
+    print("[FYW] prefs heard: " + text.length + " characters -> " + ids.join(",") + (byLlm ? " (AI picked)" : "")) // never what was said
+    this.startFreeWalkSoon()
+  }
+
+  // Once you have read what was heard, the walk starts with those picks.
+  private startFreeWalkSoon(): void {
+    const attempt = this.voiceTry
+    const ev = this.createEvent("DelayedCallbackEvent")
+    ev.bind(() => {
+      this.removeEvent(ev)
+      if (attempt === this.voiceTry && this.phase === "prefs") this.startFreeWalk()
+    })
+    ev.reset(HEARD_READ_S)
   }
 
   // Tour: the same preferences, then the shops they match, stop by stop.
@@ -982,7 +1092,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.phase = "prefs"
     this.tourPending = true
     this.panels.placeAhead(this.prefsPanel.getSceneObject())
-    this.prefsPanel.open(interestList(this.map), this.presetList(), this.companion.name, this.freeCompanion, this.companion.id)
+    this.prefsPanel.open(interestList(this.map), this.presetList(), this.companion.name, this.freeCompanion, this.companion.id, this.prefsAsk())
   }
 
   private startTour(): void {
@@ -1010,6 +1120,10 @@ export class FindYourWayMain extends BaseScriptComponent {
       return
     }
     this.prefsPanel.show(false)
+    // Saved for next time on this device (not in the demos: their "last time" is fixed).
+    if (!this.demoSet) {
+      try { global.persistentStorageSystem.store.putString(PREFS_KEY + this.getMapKey(), this.prefsPanel.getPicked().join(",")) } catch (e) { /* none */ }
+    }
     this.free = new FreeWalk(this.map, this.prefsPanel.getPicked(), {
       aheadM: this.companionLeadM,
       pointSeconds: this.pointSeconds,
@@ -2568,7 +2682,11 @@ export class FindYourWayMain extends BaseScriptComponent {
   }
   getBubbleText(): string | null { return this.bubble ? this.bubble.getText() : null }
   getStopId(): string | null { return this.free ? this.free.pointingAt() : null }
+  getPrefsHeard(): string { return this.prefsPanel ? this.prefsPanel.getHeard() : "" }
+  getPrefsPicked(): string[] { return this.prefsPanel ? this.prefsPanel.getPicked() : [] }
   isCompanionPointing(): boolean { return !!this.view && this.view.isPointing() }
+  // The reason card at the pointer while it points ("Clothes · your pick"), or null.
+  getPointReason(): string | null { return this.view ? this.view.getPointReason() : null }
   debugMarkPointed(ids: string[]): void { if (this.free) this.free.markDone(ids) }
   getDestinationLabel(): string { return this.modePanel.getDestinationText() }
   isWhereToShown(): boolean { return !!this.whereTo && this.whereTo.isShown() }

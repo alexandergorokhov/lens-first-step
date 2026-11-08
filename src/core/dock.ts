@@ -73,3 +73,6 @@ export const CLEAN_ARRIVAL_S = 3;
 export function arrivalCardOn(secondsSinceArrival: number, clean: boolean): boolean {
   return !clean || secondsSinceArrival < CLEAN_ARRIVAL_S;
 }
+
+// The folded Control tab is see-through (ROUND2.md R2-12): the view stays visible behind it.
+export const CONTROL_TAB_OPACITY = 0.45;

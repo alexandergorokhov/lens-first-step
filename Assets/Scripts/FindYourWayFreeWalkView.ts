@@ -87,6 +87,7 @@ export class FindYourWayFreeWalkView {
     if (this.host.view && pet) {
       const pointing = pet.mood === "point"
       this.host.view.setPointing(pointing)
+      this.host.view.setPointReason(pointing ? f.reason : null, this.host.local(pos))
       this.host.view.setMood(pet.mood)
       this.host.view.setPose(this.host.local(pet.pos), pet.heading)
     }

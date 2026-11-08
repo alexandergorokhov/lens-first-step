@@ -223,13 +223,15 @@ export interface DemoSettings {
   seatedDropCm: number;
   // What opens after the sign is scanned: Go to a place (Talk ready) or Free walk.
   open: "goTo" | "freeWalk";
-  // Free walk's preferences (category ids).
+  // Free walk's preferences (category ids): what was saved last time.
   interests: string[];
+  // Free walk: what you say when the companion asks for preferences (the preview types it in; R2-15).
+  prefsPhrase: string;
 }
 
 export function demoSettings(preset: string): DemoSettings | null {
-  if (preset === "airportWheelchair") return { mapKey: "airport", companionModel: "robot", preselect: "stepFree", seatedDropCm: 45, open: "goTo", interests: [] };
-  if (preset === "mallPet") return { mapKey: "mall", companionModel: "dog", preselect: "walk", seatedDropCm: 0, open: "goTo", interests: [] };
-  if (preset === "freeWalkRobot") return { mapKey: "mall", companionModel: "robot", preselect: null, seatedDropCm: 0, open: "freeWalk", interests: ["coffee", "clothes"] };
+  if (preset === "airportWheelchair") return { mapKey: "airport", companionModel: "robot", preselect: "stepFree", seatedDropCm: 45, open: "goTo", interests: [], prefsPhrase: "" };
+  if (preset === "mallPet") return { mapKey: "mall", companionModel: "dog", preselect: "walk", seatedDropCm: 0, open: "goTo", interests: [], prefsPhrase: "" };
+  if (preset === "freeWalkRobot") return { mapKey: "mall", companionModel: "robot", preselect: null, seatedDropCm: 0, open: "freeWalk", interests: ["books"], prefsPhrase: "A coffee, and I'm into fashion today" };
   return null;
 }

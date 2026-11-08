@@ -213,15 +213,19 @@ export async function mallPetTrip(run: DemoRun, beforeWalk?: () => Promise<void>
 
 // Demo 3: Free walk with the robot for coffee and clothes: it points at Bean There Café and Threads,
 // and looking at each shows its offer boxes.
-export async function freeWalkRobotTrip(run: DemoRun): Promise<{pointed: string[]; boxes: string[]}> {
+export async function freeWalkRobotTrip(run: DemoRun, beforeWalk?: () => Promise<void>): Promise<{pointed: string[]; boxes: string[]; reasons: string[]; picks: string[]}> {
   const main = run.main
   // At walking pace: the robot walks ahead of you and stops at the shops it passes.
   run.speed = Math.min(run.speed, 1.6)
   await hold(run, 0.8)
-  if (!pressButton("PrefsKeepButton") && !pressButton("PrefsStartButton")) throw new Error("no Start in the preferences")
-  await waitFor(() => main.getPhase() === "free", 3000, "Free walk starts")
+  // The companion asks; you say what you like (R2-15): the preview types the demo phrase in.
+  if (!pressButton("PrefsTalkButton")) throw new Error("no Talk in the preferences")
+  await waitFor(() => main.getPhase() === "free", 15000, "Free walk starts once the preferences are heard")
+  const picks = main.getPrefsPicked()
+  if (beforeWalk) await beforeWalk()
   const pointed: string[] = []
   const boxes: string[] = []
+  const reasons: string[] = []
   const watch = run.onStep
   run.onStep = () => {
     watch()
@@ -229,6 +233,8 @@ export async function freeWalkRobotTrip(run: DemoRun): Promise<{pointed: string[
     if (id && main.isCompanionPointing() && pointed.indexOf(id) < 0) pointed.push(id)
     const b = main.getOfferBoxesId()
     if (b && boxes.indexOf(b) < 0) boxes.push(b)
+    const why = main.getPointReason()
+    if (why && reasons.indexOf(why) < 0) reasons.push(why)
   }
   let n = 0
   const watch2 = run.onStep
@@ -247,7 +253,7 @@ export async function freeWalkRobotTrip(run: DemoRun): Promise<{pointed: string[
   await turnTo(run, 180, 0.8)
   await hold(run, 2.5)
   run.onStep = watch
-  return {pointed, boxes}
+  return {pointed, boxes, reasons, picks}
 }
 
 // ── The clean screen ──────────────────────────────────────────────────────

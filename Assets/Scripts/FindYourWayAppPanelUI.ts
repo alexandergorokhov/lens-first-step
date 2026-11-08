@@ -8,7 +8,7 @@
 import {FlexItem} from "SpectaclesUIKit.lspkg/Scripts/Components/Layout2D/Flex/FlexItem"
 import {addButton, addText, LabeledButton, makePanel, obj, Panel} from "./FindYourWayWidgetsUI"
 import {icon} from "./FindYourWayIconsUI"
-import {OptionsDock} from "./FindYourWayDock"
+import {CONTROL_TAB_OPACITY, OptionsDock} from "./FindYourWayDock"
 
 export interface AppPanelHandlers {
   onCompanion: () => void
@@ -103,7 +103,9 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
     const toggle = h.onToggleOptions || none
     this.hideBtn = addButton(panel.content, "HideOptionsButton", "Hide", WIDTH, BUTTON_H, null, toggle, TEXT, FONT)
     this.tabRoot = obj(this.sceneObject, "OptionsTab", new vec3(0, 0, 0.6))
-    addButton(this.tabRoot, "OptionsTabButton", OptionsDock.TITLE, TAB_W, BUTTON_H, null, toggle, TEXT, FONT)
+    const tab = addButton(this.tabRoot, "OptionsTabButton", OptionsDock.TITLE, TAB_W, BUTTON_H, null, toggle, TEXT, FONT)
+    // See-through, so the view shows behind it (R2-12).
+    tab.button.onInitialized.add(() => { tab.button.opacity = CONTROL_TAB_OPACITY })
     this.tabRoot.enabled = false
     this.rows = [title.getSceneObject(), this.info.getSceneObject(), this.hideBtn.so, this.companion.so, this.model.so, this.places.so, this.voice.so, this.seeMap.so, this.play.so, this.jump.so,
       this.throwBtn.so, this.nextStop.so, this.endWalk.so, this.showingGate.so, this.announcement.so, this.showingMap.so, this.restartShowing.so]
