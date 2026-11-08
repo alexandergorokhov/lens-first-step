@@ -5,6 +5,13 @@
 
 import {Boxes, whiteTexture} from "./FindYourWayStandIn"
 import {PeekMapModel, PeekPlaceModel, PlaceGroup} from "./FindYourWayPeek"
+import {addText} from "./FindYourWayWidgetsUI"
+
+// The gate names over the map (R2-22): small, read at arm's length.
+const LABEL_W_CM = 6
+const LABEL_H_CM = 2
+const LABEL_ABOVE_CM = 2.5
+const LABEL_DISTANCE_CM = 60
 
 const LINE_CM = 0.8
 const DOT_CM = 2.2
@@ -32,6 +39,9 @@ export class FindYourWayPeekView extends BaseScriptComponent {
   // The floors stay while only the route and your dot move.
   private floors: SceneObject[] = []
   private floorsKey = ""
+  // See map draws see-through (R2-20): every colour's alpha times this.
+  private alpha = 1
+  private labels: SceneObject[] = []
 
   setup(material: Material): void {
     this.material = material
@@ -43,9 +53,28 @@ export class FindYourWayPeekView extends BaseScriptComponent {
     this.parts = []
   }
 
+  setAlpha(a: number): void {
+    if (a === this.alpha) return
+    this.alpha = a
+    this.floorsKey = ""
+  }
+
+  // Turns the gate names to face you (world position of your head).
+  faceLabels(eye: vec3): void {
+    for (const l of this.labels) {
+      const t = l.getTransform()
+      const d = eye.sub(t.getWorldPosition())
+      const flat = new vec3(d.x, 0, d.z)
+      if (flat.length > 0.01) t.setWorldRotation(quat.lookAt(flat.normalize(), vec3.up()))
+    }
+  }
+
+  getLabels(): string[] { return this.labels.map((l) => (l.getComponent("Component.Text") as Text).text) }
+
   private clearFloors(): void {
     for (const p of this.floors) p.destroy()
     this.floors = []
+    this.labels = []
     this.floorsKey = ""
   }
 
@@ -114,6 +143,14 @@ export class FindYourWayPeekView extends BaseScriptComponent {
     for (const l of model.links) (l.open ? open : shut).slab(cmOf(l.a), cmOf(l.b), CORRIDOR_CM, CORRIDOR_CM)
     this.addTo(this.floors, "PeekLinks", open, OPEN_LINK)
     this.addTo(this.floors, "PeekClosed", shut, CLOSED_LINK)
+    for (const l of model.labels || []) {
+      const holder = global.scene.createSceneObject("PeekLabel")
+      holder.setParent(this.sceneObject)
+      holder.getTransform().setLocalPosition(cmOf(l.at).add(new vec3(0, LABEL_ABOVE_CM, 0)))
+      const t = addText(holder, "PeekLabelText", l.text, "Caption", LABEL_W_CM, LABEL_H_CM, new vec4(1, 1, 1, this.alpha), LABEL_DISTANCE_CM)
+      this.floors.push(holder)
+      this.labels.push(t.getSceneObject())
+    }
   }
 
   // "See my map": the whole walked map, every stretch, a dot per shop and one for you (null hides).
@@ -151,7 +188,7 @@ export class FindYourWayPeekView extends BaseScriptComponent {
     rmv.mesh = boxes.mesh()
     const m = (this.material as Material).clone()
     m.mainPass.baseTex = whiteTexture()
-    m.mainPass.baseColor = color
+    m.mainPass.baseColor = new vec4(color.x, color.y, color.z, color.w * this.alpha)
     m.mainPass.blendMode = BlendMode.Normal
     m.mainPass.depthWrite = false
     m.mainPass.twoSided = true

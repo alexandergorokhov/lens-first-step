@@ -114,3 +114,7 @@ export const RAILS = [
     [70.9, 30.2, 73.1, 30.2], [70.9, 25.8, 70.9, 30.2], [73.1, 25.8, 73.1, 30.2]].map((r) => [...r, 9]),
   [4, 30.5, 4, 40, 5], // the C pier's inner rail line (its west edge has the wall)
 ];
+
+// Stairs that read against the pale floors (ROUND2.md R2-21: "stairs almost invisible"): darker treads,
+// bright full-width nosings, dark stringers along both sides.
+export const STAIR_COLORS = { tread: 0x8c857a, nose: 0xf2b705, stringer: 0x33373d, floor: 0xe6e1d8 };

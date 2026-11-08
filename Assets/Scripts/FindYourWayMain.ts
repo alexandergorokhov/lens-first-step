@@ -63,7 +63,7 @@ import {mapLogLines, tripAfterSaving} from "./FindYourWayMapping"
 import {peekPlace} from "./FindYourWayPeek"
 import {demoSettings, DemoSettings, showingSettings, StartSettings} from "./FindYourWayDemo"
 import {destinationsOf, FreeWalk, gateChangeOffer, interestList, LookBoxes, matchDestination, OfferDismissals, sayItPhrase, ShopLook, typedSoFar, typingSeconds, planAsk, askPrompt, parseAskReply, llmStops, ASK_LLM_TIMEOUT_S, VOICE_FALLBACK_S, walkableRoute, CLEAN_FREE_WALK, OFFER_LOOK_S, parsePrefs, parsePrefsReply, prefsPrompt, prefsQuestion} from "./FindYourWayFreeWalk"
-import {arrivalCardOn, cleanAllows, connectivity, notCaught, OptionsDock, routeLineAheadM, walkingHud} from "./FindYourWayDock"
+import {arrivalCardOn, cleanAllows, connectivity, notCaught, OptionsDock, SEE_MAP, tripTarget, routeLineAheadM, walkingHud} from "./FindYourWayDock"
 import {FindYourWayOfferBoxesUI} from "./FindYourWayOfferBoxesUI"
 import {FindYourWayHomePanelUI} from "./FindYourWayHomePanelUI"
 import {FindYourWayPrefsUI} from "./FindYourWayPrefsUI"
@@ -455,6 +455,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   private demoSet: DemoSettings | null = null
   // Offline mode (R2-18), from the Control panel.
   private offline = false
+  private demoControlsHidden = false
   private demoAutoPending = false
   private authoredEyeCm = 180
   private authoredOnline = true
@@ -632,6 +633,7 @@ export class FindYourWayMain extends BaseScriptComponent {
       onAnnouncement: () => this.playAnnouncement(),
       onVoice: () => this.setCompanionMuted(!this.isCompanionMuted()),
       onOffline: () => this.setOffline(!this.offline),
+      onDemoControls: () => this.setDemoControlsHidden(!this.demoControlsHidden),
     })
     this.appPanel.setVoice(this.companionSpeaks)
     if (global.deviceInfoSystem.isEditor()) this.appPanel.setBaseScale(PREVIEW_PANEL_SCALE)
@@ -1354,10 +1356,13 @@ export class FindYourWayMain extends BaseScriptComponent {
       const t = this.camera.getTransform()
       const yaw = this.headYaw()
       const so = this.peekView.getSceneObject().getTransform()
-      const spot = this.mapShown ? new vec3(SEE_MAP_RIGHT_CM, -SEE_MAP_BELOW_CM, -SEE_MAP_AHEAD_CM) : new vec3(0, -PEEK_BELOW_CM, -PEEK_AHEAD_CM)
+      // See map: at the left of the view, see-through (R2-20).
+      const spot = this.mapShown ? new vec3(SEE_MAP.sideCm, -SEE_MAP.belowCm, -SEE_MAP.aheadCm) : new vec3(0, -PEEK_BELOW_CM, -PEEK_AHEAD_CM)
+      this.peekView.setAlpha(this.mapShown ? SEE_MAP.alpha : 1)
       so.setWorldPosition(t.getWorldPosition().add(yaw.multiplyVec3(spot)))
       // Map north points where the building's north points.
       so.setWorldRotation(this.building.getTransform().getWorldRotation())
+      this.peekView.faceLabels(t.getWorldPosition())
     }
   }
 
@@ -1507,12 +1512,19 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.mapIndex = idx >= 0 ? idx : 0
     this.setCompanionModel(this.companionModel)
     this.restart()
-    this.demoControls.getSceneObject().enabled = this.showDemoControls || this.demoControlsForced
+    this.demoControls.getSceneObject().enabled = !this.demoControlsHidden && (this.showDemoControls || this.demoControlsForced)
     print("[FYW] restart showing")
   }
 
   private chooseMode(profile: Profile): void {
     if (this.phase !== "mode") return
+    // No place picked yet: pick one first, never a guessed route (R2-23).
+    const tour = this.askTrip || (!!this.tourIds && this.tourIds.length > 0) || !!this.stops
+    if (tripTarget({picked: this.tripDestination, override: this.destinationOverride, tour}) === null) {
+      this.modePanel.setNote("Pick a place first: Talk, Where to? or Pick on the map")
+      this.openWhereTo()
+      return
+    }
     this.profile = profile
     this.voice.stop()
     this.modePanel.hide()
@@ -2660,7 +2672,13 @@ export class FindYourWayMain extends BaseScriptComponent {
   debugGoHere(id: string): void { this.goHere(id) }
   debugShowDemoControls(on: boolean): void {
     this.demoControlsForced = on
-    this.demoControls.getSceneObject().enabled = this.showDemoControls || on
+    this.demoControls.getSceneObject().enabled = !this.demoControlsHidden && (this.showDemoControls || on)
+  }
+  // Hide demo controls (R2-19): out of sight for a walk shown by hand; the Control panel brings them back.
+  setDemoControlsHidden(hidden: boolean): void {
+    this.demoControlsHidden = hidden
+    if (this.appPanel) this.appPanel.setDemoControlsHidden(hidden)
+    this.demoControls.getSceneObject().enabled = !hidden && (this.showDemoControls || this.demoControlsForced)
   }
   // World position of the start sign's foot (where you stand with startAtSign).
   getStartWorldPos(): vec3 {
@@ -2732,6 +2750,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   debugPeek(on: boolean): void { this.peekForced = on }
   debugSeeMap(on: boolean): void { this.setMapShown(on) }
   isPeekShown(): boolean { return !!this.peekView && this.peekView.isShown() }
+  getMapLabels(): string[] { return this.peekView ? this.peekView.getLabels() : [] }
   isShowingPreset(): boolean { return this.showingPreset }
   isCleanScreen(): boolean { return this.cleanScreen }
   getDemoPreset(): string { return this.demoSet ? this.demo : "off" }
@@ -2792,6 +2811,8 @@ export class FindYourWayMain extends BaseScriptComponent {
   debugSetCameraDropCm(cm: number): void { this.cameraDropCm = cm }
   debugSetStartOverride(signId: string | null): void { this.startOverride = signId }
   debugSetDestinationOverride(nodeId: string | null): void { this.destinationOverride = nodeId }
+  // Test hook: picks the map's default destination, as a user would before pressing a mode (R2-23).
+  debugPickDefaultDestination(): void { if (this.phase === "mode" && !this.tripDestination && this.place.destination) this.pickDestination(this.place.destination) }
   debugSetStops(ids: string | null): void { this.stopsOverride = ids }
   // Closes any connection by edge id, exactly as pinching its red sign would.
   debugCloseEdge(edgeId: string): void { this.closeConnection(edgeId) }

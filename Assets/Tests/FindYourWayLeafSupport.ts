@@ -67,6 +67,8 @@ export async function afterRestartGo(interactor: DefaultLeafInteractor, main: Fi
   if (main.getPhase() === "error") return
   await tap(interactor, "GoToPlaceButton")
   await waitFor(() => main.getPhase() === "mode", 3000, "Go to a place panel")
+  // A place is picked before a mode starts the trip (R2-23): the map's default one.
+  main.debugPickDefaultDestination()
   await tap(interactor, button)
 }
 

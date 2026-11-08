@@ -75,6 +75,19 @@ says "Didn't catch that (offline). Try Where to? or Pick on the map.":
 
 Both work without voice and without internet. On Specs you pinch instead of clicking.
 
+## Map and demo switches (Control panel)
+
+- **See map** puts the map at the left of your view, semi-transparent, with you, the route and the gate
+  names (C12, B14, ...). The button then says **Hide map**; click it to take the map away.
+- **Hide demo controls** takes the Demo controls panel out of sight, for showing a walk by hand (for example
+  a Free walk in the mall). **Show demo controls** brings it back.
+- The **online map / offline map** badge after the scan says where the map came from: downloaded from the
+  web (online), or the copy inside the Lens (offline). Both are the same place.
+
+In Go to a place, pick the place first (Talk, **Where to?** or **Pick on the map**). Walk or Step-Free with
+no place picked opens **Where to?** instead of guessing a route. Every place on every map can be reached,
+walking and step-free (test R24).
+
 ## Tour
 
 Click **Tour**, then keep your preferences. The companion leads you through the matching shops one by one. Click **Next stop** at each.
@@ -141,7 +154,7 @@ Write **logic proven** next to what tests and the preview show working, and **fe
 npm test
 ```
 
-Expect `pass 604`, `fail 0`. One test downloads the maps from the public gist; with no internet, set `OFFLINE=1` to skip it (`pass 578`, `skipped 1`). The run first checks that the Lens copies match `src/core`. After editing `src/core`, run `npm run sync`.
+Expect `pass 609`, `fail 0`. One test downloads the maps from the public gist; with no internet, set `OFFLINE=1` to skip it (`pass 578`, `skipped 1`). The run first checks that the Lens copies match `src/core`. After editing `src/core`, run `npm run sync`.
 
 **LEAF tests** run inside the Lens, pressing the real buttons:
 

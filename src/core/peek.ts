@@ -155,10 +155,12 @@ export interface PeekPlaceModel {
   current: number;
   // Stays the same while only the route and your dot move, so the floors need no rebuilding.
   key: string;
+  // Names over the places with a short code (gates "C12", "B14"), so they can be pointed out (R2-22).
+  labels: { text: string; at: PeekPoint }[];
 }
 
 interface PlaceMap {
-  nodes: (PeekPoint & { id: string; kind: string; category?: string })[];
+  nodes: (PeekPoint & { id: string; kind: string; category?: string; code?: string })[];
   edges: { from: string; to: string; kind: string; open?: boolean }[];
 }
 
@@ -234,7 +236,10 @@ export function peekPlace(map: PlaceMap, route: PeekPoint[], user: PeekPoint, op
     else links.push({ a: toModel(a), b: toModel(b), kind: e.kind, open: e.open !== false });
   }
   const line = route.map(toModel);
+  const labels = map.nodes.filter((n) => typeof n.code === "string" && n.code.length > 0 && n.code.length <= 4)
+    .map((n) => ({ text: n.code as string, at: toModel(n) }));
   return {
+    labels,
     scale,
     floors,
     links,

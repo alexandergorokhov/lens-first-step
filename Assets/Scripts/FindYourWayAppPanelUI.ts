@@ -32,6 +32,8 @@ export interface AppPanelHandlers {
   onVoice?: () => void
   // Offline mode (R2-18): simulates no internet; the map stays, no LLM, no map download.
   onOffline?: () => void
+  // Hide demo controls (R2-19).
+  onDemoControls?: () => void
 }
 
 const WIDTH = 22
@@ -59,6 +61,7 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
   private announcement: LabeledButton
   private voice: LabeledButton
   private offline: LabeledButton
+  private demoCtl: LabeledButton
   private baseScale = 1
   private placesOn = true
   private panel: Panel
@@ -86,6 +89,7 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
       h.onPlaces, TEXT, FONT)
     this.voice = addButton(panel.content, "VoiceButton", "Voice: on", WIDTH, BUTTON_H, null, h.onVoice || (() => {}), TEXT, FONT)
     this.offline = addButton(panel.content, "OfflineButton", "Offline: off", WIDTH, BUTTON_H, null, h.onOffline || (() => {}), TEXT, FONT)
+    this.demoCtl = addButton(panel.content, "DemoControlsButton", "Hide demo controls", WIDTH, BUTTON_H, null, h.onDemoControls || (() => {}), TEXT, FONT)
     this.seeMap = addButton(panel.content, "MiniMallButton", "See map", WIDTH, BUTTON_H, icon("location_on"), h.onMap, TEXT, FONT)
     this.play = addButton(panel.content, "PlayButton", "Play while you wait", WIDTH, BUTTON_H, null, h.onPlay, TEXT, FONT)
     // On Specs you raise a hand; in the preview this button does the same.
@@ -111,9 +115,9 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
     // See-through, so the view shows behind it (R2-12).
     tab.button.onInitialized.add(() => { tab.button.opacity = CONTROL_TAB_OPACITY })
     this.tabRoot.enabled = false
-    this.rows = [title.getSceneObject(), this.info.getSceneObject(), this.hideBtn.so, this.companion.so, this.model.so, this.places.so, this.voice.so, this.offline.so, this.seeMap.so, this.play.so, this.jump.so,
+    this.rows = [title.getSceneObject(), this.info.getSceneObject(), this.hideBtn.so, this.companion.so, this.model.so, this.places.so, this.voice.so, this.offline.so, this.demoCtl.so, this.seeMap.so, this.play.so, this.jump.so,
       this.throwBtn.so, this.nextStop.so, this.endWalk.so, this.showingGate.so, this.announcement.so, this.showingMap.so, this.restartShowing.so]
-    this.optionRows = [title.getSceneObject(), this.hideBtn.so, this.companion.so, this.model.so, this.places.so, this.voice.so, this.offline.so, this.seeMap.so]
+    this.optionRows = [title.getSceneObject(), this.hideBtn.so, this.companion.so, this.model.so, this.places.so, this.voice.so, this.offline.so, this.demoCtl.so, this.seeMap.so]
     this.setShowing(false, false, null)
     this.setPlay(false, false, false)
     this.setNextStop(null)
@@ -165,6 +169,7 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
   setMapShown(on: boolean): void { this.seeMap.label.text = on ? "Hide map" : "See map" }
 
   setPlaces(on: boolean): void { this.places.label.text = "Places: " + (on ? "on" : "off") }
+  setDemoControlsHidden(hidden: boolean): void { this.demoCtl.label.text = hidden ? "Show demo controls" : "Hide demo controls" }
   setOffline(on: boolean): void { this.offline.label.text = "Offline: " + (on ? "on" : "off") }
   getOfflineLabel(): string { return this.offline.label.text }
   setVoice(on: boolean): void { this.voice.label.text = "Voice: " + (on ? "on" : "off") }

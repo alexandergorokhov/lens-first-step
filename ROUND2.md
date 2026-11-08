@@ -120,6 +120,16 @@ Root causes found:
       to the no-voice ways: **Where to?** (a list of the map's places) and **Pick on the map** (tap a
       place on the floor plan). Core: `offlineMode` decides what is used (test); documented in README and
       devpost/PREVIEW-GUIDE.md.
+- [ ] R2-19 **Hide demo controls** (Alex: "I'd like to show the Free walk tour myself in the mall"): a switch in
+      the Control panel hides the Demo controls panel (and shows it again).
+- [ ] R2-20 **Map on the left**: the "online map / offline map" badge only says where the map came from
+      (downloaded from the web, or the copy inside the Lens): make that plain or drop it. **See map** shows the
+      map at the left of your view, semi-transparent, following your head, with you and the route on it;
+      the same button then says **Hide map** and removes it.
+- [ ] R2-21 Airport stairs almost invisible on Go to a place: give them contrast (tread nosings, darker risers,
+      handrails) in the airport model (`tools/demo-video/airport.js`, then `npm run airport:glb`).
+- [ ] R2-22 The airport map shows a couple of gates by name (C12, B14, ...) so they can be pointed out on the
+      map panel.
 - [ ] R2-16 Re-record v4 with the voice-over table updated for R2-11 and R2-15.
       **Contest rules (hard limits):** under 3 minutes, posted on YouTube, the real Lens running in the Lens
       Studio preview (a narrated screen recording of the preview is fine). No renders made outside Lens Studio

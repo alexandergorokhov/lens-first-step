@@ -88,3 +88,15 @@ export function connectivity(offline: boolean, llmAvailable: boolean): { llm: bo
 export function notCaught(offline: boolean): string {
   return offline ? "Didn't catch that (offline). Try Where to? or Pick on the map." : "didn't catch that: try Where to?";
 }
+
+// See map (R2-20): the mini map at the left of your view, semi-transparent, so the way ahead stays clear.
+export const SEE_MAP = { sideCm: -30, belowCm: 6, aheadCm: 110, alpha: 0.55 };
+
+// What a mode button (Walk / Step-Free) starts toward (R2-23): the Inspector's override, else the place you
+// picked (Talk, Where to?, the map), else a planned trip or tour ("tour"); nothing picked: null, and the Lens
+// asks you to pick a place first instead of guessing one.
+export function tripTarget(s: { picked: string | null; override: string | null; tour: boolean }): string | null {
+  if (s.override) return s.override;
+  if (s.picked) return s.picked;
+  return s.tour ? "tour" : null;
+}

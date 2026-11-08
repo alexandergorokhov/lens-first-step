@@ -192,3 +192,63 @@ test("R18c offline and not understood: the reply points to the no-voice ways", a
   assert.equal(notCaught(true), "Didn't catch that (offline). Try Where to? or Pick on the map.");
   assert.equal(notCaught(false), "didn't catch that: try Where to?");
 });
+
+test("R20 See map: at the left of the view, semi-transparent; the button then says Hide map", async () => {
+  const { SEE_MAP } = await import("../dock.ts");
+  assert.ok(SEE_MAP.sideCm < -10, "left of the view: " + SEE_MAP.sideCm);
+  assert.ok(SEE_MAP.alpha >= 0.4 && SEE_MAP.alpha <= 0.7, "see-through: " + SEE_MAP.alpha);
+  assert.ok(SEE_MAP.aheadCm >= 80 && SEE_MAP.aheadCm <= 130);
+});
+
+test("R22 the map names the gates (and other coded places) so they can be pointed out", async () => {
+  const { peekPlace } = await import("../peek.ts");
+  const r = parseMap(readFileSync(new URL("../data/map.json", import.meta.url), "utf8"));
+  if (!r.ok) throw new Error("airport");
+  const m = r.map as any;
+  const start = m.nodes.filter((n: any) => n.id === m.place.start)[0];
+  const model = peekPlace(m, [], start, { size: 0.26, gap: 0.075 });
+  const texts = model.labels.map((l: any) => l.text);
+  for (const g of ["C12", "B14", "B12"]) assert.ok(texts.indexOf(g) >= 0, "label " + g + " in " + texts.join(","));
+  // Each label sits over its gate on the map model.
+  const c12 = model.labels.filter((l: any) => l.text === "C12")[0];
+  assert.ok(Math.abs(c12.at.x) <= 0.13 + 1e-9 && Math.abs(c12.at.z) <= 0.13 + 1e-9);
+});
+
+test("R23 Walk or Step-Free with no place picked doesn't start a trip: you pick the place first", async () => {
+  const { tripTarget } = await import("../dock.ts");
+  assert.equal(tripTarget({ picked: null, override: null, tour: false }), null);
+  assert.equal(tripTarget({ picked: "foodCourt", override: null, tour: false }), "foodCourt");
+  assert.equal(tripTarget({ picked: "foodCourt", override: "gateC12", tour: false }), "gateC12");
+  // A planned trip (several stops) or a tour has its own stops.
+  assert.equal(tripTarget({ picked: null, override: null, tour: true }), "tour");
+});
+
+test("R24 every place and destination on every map can be reached and guided to from the start, walking and step-free", async () => {
+  const { Navigator } = await import("../router.ts");
+  const index = JSON.parse(readFileSync(new URL("../data/index.json", import.meta.url), "utf8"));
+  const bad: string[] = [];
+  for (const e of index.maps) {
+    const r = parseMap(readFileSync(new URL("../data/" + e.file, import.meta.url), "utf8"));
+    if (!r.ok) { bad.push(e.key + ": invalid"); continue; }
+    const m = r.map;
+    const start = m.place && m.place.start ? m.place.start : m.nodes[0].id;
+    for (const n of m.nodes) {
+      if (n.kind !== "place" && n.kind !== "destination") continue;
+      for (const profile of ["walk", "stepFree"] as const) {
+        const route = new Navigator(m, start, n.id, profile).route;
+        if (route.status !== "route" && route.status !== "arrived") bad.push(e.key + ": " + n.id + " (" + profile + ") " + route.status);
+      }
+    }
+  }
+  assert.deepEqual(bad, []);
+});
+
+test("R21 the airport stairs stand out from the floor: darker treads, bright nosings, dark stringers", async () => {
+  const { STAIR_COLORS } = await import("../../../tools/demo-video/layout.mjs");
+  const lum = (c: number) => { const r = ((c >> 16) & 255) / 255, g = ((c >> 8) & 255) / 255, b = (c & 255) / 255; return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+  assert.ok(lum(STAIR_COLORS.floor) - lum(STAIR_COLORS.tread) >= 0.3, "tread vs floor");
+  assert.ok(lum(STAIR_COLORS.floor) - lum(STAIR_COLORS.stringer) >= 0.6, "stringer vs floor");
+  assert.ok(lum(STAIR_COLORS.nose) - lum(STAIR_COLORS.tread) >= 0.15, "nosing vs tread");
+  const src = readFileSync(new URL("../../../tools/demo-video/airport.js", import.meta.url), "utf8");
+  assert.ok(src.indexOf("STAIR_COLORS.tread") >= 0 && src.indexOf("STAIR_COLORS.nose") >= 0 && src.indexOf("STAIR_COLORS.stringer") >= 0, "airport.js uses them");
+});

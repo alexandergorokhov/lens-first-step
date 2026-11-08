@@ -3,7 +3,7 @@
 // shops, gates, signs and people. Positions come from the map's nodes, so the router's route
 // runs exactly through it. Map metres: x east, y up, z north -> three.js (x, y, -z).
 import * as THREE from "three";
-import { DEPARTURES, FURNITURE, LIFTS, RAILS, LIFT_HALF, PEOPLE, SEATS, SHOPS, TOILET_DOORS, doorFace as faceOf } from "./layout.mjs";
+import { DEPARTURES, FURNITURE, LIFTS, RAILS, LIFT_HALF, PEOPLE, SEATS, SHOPS, STAIR_COLORS, TOILET_DOORS, doorFace as faceOf } from "./layout.mjs";
 
 export const V = (x, y, z) => new THREE.Vector3(x, y, -z);
 const DEG = Math.PI / 180;
@@ -493,19 +493,21 @@ export function buildAirport(scene, map) {
       step.position.copy(V(cx, (topY + bottom) / 2, cz));
       step.rotation.y = Math.PI - ang;
       g.add(step);
-      const nose = new THREE.Mesh(new THREE.BoxGeometry(width, 0.02, 0.06), lambert(0xd8b13a));
+      const nose = new THREE.Mesh(new THREE.BoxGeometry(width, 0.025, 0.09), lambert(STAIR_COLORS.nose));
       nose.position.copy(V(cx + (dx / L) * (rise > 0 ? -L / 2 : L / 2) * (rise > 0 ? 1 : 1), topY + 0.005, cz + (dz / L) * (rise > 0 ? -L / 2 : L / 2)));
       nose.rotation.y = Math.PI - ang;
       g.add(nose);
     }
     root.add(g);
     const px = Math.cos(ang) * (width / 2 + 0.05), pz = -Math.sin(ang) * (width / 2 + 0.05);
+    // Dark stringers along both sides, so the flight reads from afar (R2-21).
+    for (const s of [-1, 1]) beam(root, { x: a.x + px * s, y: a.y + 0.12, z: a.z + pz * s }, { x: b.x + px * s, y: b.y + 0.12, z: b.z + pz * s }, 0.08, 0.3, lambert(STAIR_COLORS.stringer));
     for (const s of [-1, 1]) {
       beam(root, { x: a.x + px * s, y: a.y + 0.55, z: a.z + pz * s }, { x: b.x + px * s, y: b.y + 0.55, z: b.z + pz * s }, 0.03, 1.1, glass);
       beam(root, { x: a.x + px * s, y: a.y + 1.1, z: a.z + pz * s }, { x: b.x + px * s, y: b.y + 1.1, z: b.z + pz * s }, 0.06, 0.05, frame);
     }
   };
-  const stone = lambert(0xcfcac0);
+  const stone = lambert(STAIR_COLORS.tread);
   stairs(node("stairsFoot"), node("stairsTop"), 1.8, stone);
   stairs(node("cTop"), node("cJunction"), 1.8, stone);
 
