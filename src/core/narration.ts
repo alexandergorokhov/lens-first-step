@@ -15,8 +15,8 @@ export const NARRATION: { beat: string; line: string }[] = [
   { beat: "demo 2: mall, follow the dog", line: "In a mall, I just follow my dog. Easier than reading a map." },
   { beat: "leg", line: "It waits for me at the escalator, then leads on to the food court." },
   { beat: "arrived", line: "The host speaks French; I read it in English." },
-  { beat: "demo 3: Free walk with the robot", line: "No destination? Free walk. The robot suggests places I'll like." },
-  { beat: "pointed", line: "I look at a shop for two seconds and its offers appear, always labelled as sponsored." },
+  { beat: "demo 3: Free walk with the robot", line: "No destination? Free walk. It asks what I'm into today, and I just say it." },
+  { beat: "pointed", line: "It points at shops that match, and says why. A two-second look shows offers, always marked sponsored." },
   { beat: "END", line: "Pathpal. No GPS indoors? Follow your companion." },
 ];
 
@@ -73,4 +73,66 @@ export function placeNarration(marks: Mark[], seconds?: number[]): { placed: Pla
     free = start + len + NARRATION_GAP_S;
   });
   return { placed, missing, late };
+}
+
+// ── The edit (ROUND2.md R2-16: the video must be under 3 minutes) ─────────────────────────────────
+// Quiet stretches (no voice-over line, no beat on screen) play faster; a lift ride ("ride in" .. "ride
+// out" marks) is cut out and joined with a short dissolve. Everything said and every beat plays at 1x.
+export const EDIT = { fast: 3, padS: 0.6, beatBeforeS: 0.8, beatAfterS: 1.6, minQuietS: 2.5, rideTrimS: 0.2, xfadeS: 0.5, maxS: 179 };
+export type EditSeg = { from: number; to: number; speed: number; dissolve: boolean };
+
+// Segments of the take (seconds since its T0, up to end) to keep, each at its speed; dissolve: joined to
+// the one before by a dissolve. outAt maps a take second to the edited video's second.
+export function editPlan(marks: Mark[], seconds: number[] | undefined, end: number): { segs: EditSeg[]; length: number; outAt: (t: number) => number; lines: { index: number; at: number }[] } {
+  const placed = placeNarration(marks, seconds).placed;
+  const busy: [number, number][] = placed.map((p) => [p.start - EDIT.padS, p.end + EDIT.padS]);
+  const cuts: [number, number][] = [];
+  let rideIn: number | null = null;
+  for (const m of marks) {
+    if (m.what === "ride in") { rideIn = m.t; continue; }
+    if (m.what === "ride out" && rideIn !== null) { cuts.push([rideIn + EDIT.rideTrimS, m.t - EDIT.rideTrimS / 2]); rideIn = null; continue; }
+    if (/^(T0|CUT)/.test(m.what)) continue;
+    busy.push([m.t - EDIT.beatBeforeS, m.t + EDIT.beatAfterS]);
+  }
+  // Every boundary, then each piece: cut, 1x (busy) or fast (quiet and long enough).
+  const edges = [0, end];
+  for (const [a, b] of busy.concat(cuts)) edges.push(Math.max(0, Math.min(end, a)), Math.max(0, Math.min(end, b)));
+  const xs = Array.from(new Set(edges)).sort((a, b) => a - b);
+  type Piece = { from: number; to: number; kind: "cut" | "busy" | "quiet" };
+  const pieces: Piece[] = [];
+  for (let i = 0; i < xs.length - 1; i++) {
+    const a = xs[i], b = xs[i + 1], mid = (a + b) / 2;
+    if (b - a < 1e-6) continue;
+    const kind = cuts.some(([c, d]) => mid > c && mid < d) ? "cut" : busy.some(([c, d]) => mid > c && mid < d) ? "busy" : "quiet";
+    const last = pieces[pieces.length - 1];
+    if (last && last.kind === kind) last.to = b;
+    else pieces.push({ from: a, to: b, kind });
+  }
+  // Short quiet gaps stay at 1x (no flicker of speed).
+  for (const p of pieces) if (p.kind === "quiet" && p.to - p.from < EDIT.minQuietS) p.kind = "busy";
+  const segs: EditSeg[] = [];
+  let dissolve = false;
+  for (const p of pieces) {
+    if (p.kind === "cut") { dissolve = segs.length > 0; continue; }
+    const speed = p.kind === "quiet" ? EDIT.fast : 1;
+    const last = segs[segs.length - 1];
+    if (last && !dissolve && last.speed === speed && Math.abs(last.to - p.from) < 1e-9) last.to = p.to;
+    else segs.push({ from: p.from, to: p.to, speed, dissolve });
+    dissolve = false;
+  }
+  const starts: number[] = [];
+  let acc = 0;
+  for (const s of segs) {
+    if (s.dissolve) acc -= EDIT.xfadeS;
+    starts.push(acc);
+    acc += (s.to - s.from) / s.speed;
+  }
+  const outAt = (t: number): number => {
+    for (let i = 0; i < segs.length; i++) {
+      const s = segs[i];
+      if (t <= s.to + 1e-9) return starts[i] + Math.max(0, t - s.from) / s.speed;
+    }
+    return acc;
+  };
+  return { segs, length: acc, outAt, lines: placed.map((p) => ({ index: p.index, at: outAt(p.start) })) };
 }

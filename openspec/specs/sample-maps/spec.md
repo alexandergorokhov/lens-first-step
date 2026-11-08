@@ -81,3 +81,12 @@ assistance, lifts, "Escalator ↑", "Stairs", "Ramp"), and a sign with the stand
 - The preview room sets its own trip distances (`arrivalRadius 0.6`, `offRouteDistance 1.5`, X48).
 - The one list of maps is `src/core/data/index.json` (tests, sync tool, map server); the Lens
   needs literal `requireAsset` paths, so `MAP_SOURCES` and the picker are checked against it.
+
+### Requirement: The food court looks like one; stairs that show (R2-11, R2-21)
+A destination with the "restaurant" icon SHALL be dressed as a food court: an open front, three stalls with
+bright menu boards, stools, and tables for two with chairs either side of the way in, never within 0.5 m of
+the walk from the sign (`foodHallParts`). The airport stairs SHALL read against the floor: darker treads,
+bright nosings, dark stringers (`STAIR_COLORS`).
+
+#### Scenario: SM-R11 Food court and stairs
+- Verified by: R11, R11b, R21 (Node)

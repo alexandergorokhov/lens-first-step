@@ -103,17 +103,42 @@ test("N7 real clip lengths replace the estimate", () => {
 });
 
 // The mix (tools/voice/narration-mix.mjs): each clip delayed to its place in the raw recording.
-import { mixClips, mixFilter } from "../../../tools/voice/narration-mix.mjs";
+import { mixClips, mixFilter, videoFilter } from "../../../tools/voice/narration-mix.mjs";
 
-test("N8 mix: clips at their placed start plus where the take's T0 is in the recording", () => {
-  const lens = NARRATION.map(() => 2);
-  const clips = mixClips(parseMarks(V2), lens, 3.5);
-  assert.equal(clips[0].file, "00.wav");
-  assert.equal(clips[0].delayMs, 3500, "demo 1 at T0");
-  const end = clips.find((c) => c.file === "11.wav")!;
-  assert.equal(end.delayMs, Math.round((244.49 + 3.5) * 1000));
-  assert.ok(!clips.some((c) => c.file === "01.wav"), "a missing beat has no clip");
-  const f = mixFilter(clips, true);
-  assert.ok(f.includes("adelay=" + clips[0].delayMs + "|" + clips[0].delayMs), "both channels delayed");
-  assert.ok(/amix=inputs=\d+:normalize=0/.test(f), "voice not turned down by the mix");
+test("N8 mix: each clip where its line lands in the edit; the picture trimmed from T0, sped, joined", () => {
+  const clips = mixClips([{ index: 0, at: 0 }, { index: 11, at: 160.25 }]);
+  assert.deepEqual(clips, [{ file: "00.wav", delayMs: 0 }, { file: "11.wav", delayMs: 160250 }]);
+  const f = mixFilter(clips);
+  assert.ok(f.includes("adelay=160250|160250"), "both channels delayed");
+  assert.ok(/amix=inputs=2:normalize=0/.test(f), "voice not turned down by the mix");
+  const v = videoFilter([{ from: 0, to: 10, speed: 1, dissolve: false }, { from: 10, to: 40, speed: 3, dissolve: false }, { from: 45, to: 50, speed: 1, dissolve: true }], 3.5);
+  assert.ok(v.includes("trim=start=3.500:end=13.500"), "from T0 in the recording");
+  assert.ok(v.includes("setpts=(PTS-STARTPTS)/3"), "quiet stretch sped up");
+  assert.ok(v.includes("xfade=transition=fade"), "the lift ride a dissolve");
+  assert.ok(v.endsWith("format=yuv420p[vout]"));
+});
+
+test("N9 the edit: quiet walking plays faster, every line and beat at 1x, a lift ride is a dissolve, under 3 minutes", async () => {
+  const { editPlan, EDIT, NARRATION, speakSeconds } = await import("../narration.ts");
+  // A long take shaped like v3 (4:29), with a lift ride in demo 1.
+  const marks = parseMarks([
+    "[VID] 0.00 demo 1: airport, wheelchair", "[VID] 18.0 talk", "[VID] 25.5 leg 1 to cafeD", "[VID] 40.0 ride in", "[VID] 42.0 ride out",
+    "[VID] 60.4 arrived at cafeD", "[VID] 65.0 leg 2 to accToiletD", "[VID] 70.1 arrived at accToiletD", "[VID] 74.7 leg 3 to gateC12",
+    "[VID] 86.4 announcement", "[VID] 90.5 question Re-route to Gate B14?", "[VID] 99.8 re-routed to Gate B14", "[VID] 116.6 arrived Gate B14.",
+    "[VID] 131.8 demo 2: mall, follow the dog", "[VID] 155.3 leg to the food court", "[VID] 190.0 arrived Food court.",
+    "[VID] 203.8 demo 3: Free walk with the robot", "[VID] 258.4 pointed cafe,threads", "[VID] 265.9 END", "[VID] 278.8 CUT",
+  ].join("\n"));
+  const plan = editPlan(marks, undefined, 278.8);
+  assert.ok(plan.length < EDIT.maxS, "edited length " + plan.length.toFixed(1) + " s");
+  assert.ok(plan.segs.some((s) => s.speed > 1), "quiet stretches sped up");
+  assert.ok(plan.segs.some((s) => s.dissolve), "the lift ride is a dissolve");
+  assert.ok(!plan.segs.some((s) => s.from < 41 && s.to > 41), "the ride itself is cut");
+  // Every line plays at 1x, whole.
+  for (const l of plan.lines) {
+    const len = speakSeconds(NARRATION[l.index].line);
+    const seg = plan.segs.filter((s) => s.speed === 1 && plan.outAt(s.from) <= l.at + 1e-6 && plan.outAt(s.to) >= l.at + len - 1e-6);
+    assert.ok(seg.length > 0, "line " + l.index + " at 1x");
+  }
+  // Lines stay in order and never overlap in the edit.
+  for (let i = 1; i < plan.lines.length; i++) assert.ok(plan.lines[i].at >= plan.lines[i - 1].at + speakSeconds(NARRATION[plan.lines[i - 1].index].line) - 1e-6, "overlap at " + i);
 });

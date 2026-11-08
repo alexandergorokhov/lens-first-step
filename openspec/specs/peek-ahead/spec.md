@@ -38,3 +38,11 @@ The "You are here" board SHALL draw your floor flat, north up, with places in th
 
 #### Scenario: BM1–BM5 The board
 - Verified by: BM1–BM5 (Node) | s1-start-at-sign-controls-hidden
+
+### Requirement: See map at the left, see-through, gates named (R2-20, R2-22)
+**See map** SHALL show the map at the left of the view (30 cm left, 110 cm ahead), at alpha 0.55, with
+you, the route, and the short codes of coded places (gates "C12", "B14") as labels facing you. The
+button then says **Hide map**, which removes it.
+
+#### Scenario: PA-R20 Map on the left
+- Verified by: R20, R22 (Node); by eye in the preview

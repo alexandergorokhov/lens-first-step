@@ -90,3 +90,36 @@ the companion off.
 - Real head direction and position drift on Specs: nothing has run on real hardware.
 - The light chime when it stops at a match and the turn arrow pointing to an
   out-of-view companion: no test for this in Free walk.
+
+### Requirement: Preferences in your own words (R2-15)
+Free walk SHALL open with the companion's question: "Same as last time: <labels>? Or tell me what you're
+into." (or "What are you into today?" with nothing saved). **Talk** listens; the words SHALL be mapped to
+the map's own interest categories by plain words first (`parsePrefs`: generic words per category plus the
+map's labels, never a shop name), and on Specs by the LLM when they name none (`prefsPrompt`,
+`parsePrefsReply`: ids from the map only). "Same as last time" keeps the saved picks. The heard words and
+the picks show under **Heard**; the walk starts after a short read. Picks are saved per map on the device
+(not in the demo presets). In the preview the demo sentence types itself in.
+
+#### Scenario: FW-R15 Say it, walk with it
+- **GIVEN** the mall Free walk demo, last time Books
+- **WHEN** "A coffee, and I'm into fashion today" is said
+- **THEN** the picks are Café and Clothes and the walk starts with them
+- Verified by: R15, R15b, R15c, R15d (Node, v3-review.test.ts) | demo-free-walk-robot
+
+### Requirement: The pointer says why (R2-14)
+While the companion points at a shop it SHALL show a small card at the pointer's tip naming the
+preference that matched, by the map's label: "Clothes · your pick" (`pointReason`). Floor hints show no card.
+
+#### Scenario: FW-R14 Reason card
+- **THEN** pointing at Threads with Clothes picked shows "Clothes · your pick"
+- Verified by: R14, R14b (Node) | demo-free-walk-robot
+
+### Requirement: A calm companion (R2-17)
+In Free walk the companion SHALL walk, never run: normal pace 1.5 m/s, catching up at most 2.6 m/s, its pace
+easing with the distance to its spot, turning at most 120°/s. Looking around while standing SHALL NOT move
+it: your head direction counts as "ahead" only once held within 25° for 2.5 s.
+
+#### Scenario: FW-R17 No dashing
+- **THEN** turning round and walking back, it walks round you calmly and leads again; a look left, right
+  and behind while standing moves it less than 1.5 m
+- Verified by: R17, R17b, C5, A1, D5, V15 (Node)

@@ -27,6 +27,7 @@ export const CORE_MODULES = [
   { src: "src/core/anim.ts", lens: "Assets/Scripts/FindYourWayAnim.ts" },
   { src: "src/core/view.ts", lens: "Assets/Scripts/FindYourWayView.ts" },
   { src: "src/core/dock.ts", lens: "Assets/Scripts/FindYourWayDock.ts" },
+  { src: "src/core/camera.ts", lens: "Assets/Scripts/FindYourWayCamera.ts" },
   { src: "src/core/props.ts", lens: "Assets/Scripts/FindYourWayProps.ts" },
   { src: "src/core/theme.ts", lens: "Assets/Scripts/FindYourWayTheme.ts" },
   { src: "src/core/captions.ts", lens: "Assets/Scripts/FindYourWayCaptions.ts" },

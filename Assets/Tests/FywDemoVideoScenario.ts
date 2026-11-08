@@ -5,7 +5,7 @@ import {FindYourWayMain} from "../Scripts/FindYourWayMain"
 import {log} from "./FindYourWayLeafSupport"
 import {pressButton} from "../Scripts/FindYourWayWidgetsUI"
 import {waitFor} from "./FindYourWayLeafSupport"
-import {closeDemo, DemoRun, freeWalkRobotTrip, hold, mallPetTrip, openDemo, talk, turnTo, walkLeg} from "./FywDemoSupport"
+import {closeDemo, cutAt, DemoRun, freeWalkRobotTrip, glide, hold, mallPetTrip, openDemo, routeAhead, talk, turnTo, walkLeg} from "./FywDemoSupport"
 import {nodePos} from "./FywBrief2Support"
 import {isBeat, NARRATION, NARRATION_GAP_S, speakSeconds} from "../Scripts/FindYourWayNarration"
 
@@ -20,6 +20,12 @@ export class FywDemoVideoScenario extends Scenario {
   // The voice-over (R2-7): the next line's index, and when the line now being said ends (getTime()).
   private line = 0
   private lineEnds = 0
+
+  // The smooth camera for the video (R2-13); lift rides marked for the dissolve in the edit.
+  private smoothRun(run: DemoRun): void {
+    run.smooth = true
+    run.onRide = (w) => this.mark(w)
+  }
 
   private mark(what: string): void {
     print("[VID] " + (getTime() - this.t0).toFixed(2) + " " + what)
@@ -58,6 +64,8 @@ export class FywDemoVideoScenario extends Scenario {
       if (i === 0) await this.lineDone(run)
       this.mark("leg " + (i + 1) + " to " + stops[i])
       if (i === stops.length - 1) {
+        // Away from the toilet door first: the gate change is heard on the way, looking down the hall.
+        await glide(run, cutAt(routeAhead(run), 9))
         await this.lineDone(run, 1.5)
         main.playAnnouncement()
         this.mark("announcement")
@@ -89,6 +97,7 @@ export class FywDemoVideoScenario extends Scenario {
 
     this.mark("demo 1: airport, wheelchair")
     let run = await openDemo("airportWheelchair", 1.7)
+    this.smoothRun(run)
     await hold(run, 2)
     await this.airportWithGateChange(run)
     this.mark("arrived " + run.main.getArrivalText())
@@ -100,6 +109,7 @@ export class FywDemoVideoScenario extends Scenario {
 
     this.mark("demo 2: mall, follow the dog")
     run = await openDemo("mallPet", 1.7)
+    this.smoothRun(run)
     await hold(run, 2)
     await mallPetTrip(run, async () => {
       await this.lineDone(run)
@@ -112,6 +122,7 @@ export class FywDemoVideoScenario extends Scenario {
 
     this.mark("demo 3: Free walk with the robot")
     run = await openDemo("freeWalkRobot", 1.5)
+    this.smoothRun(run)
     await this.lineDone(run, 2.5)
     const r = await freeWalkRobotTrip(run)
     this.mark("pointed " + r.pointed.join(",") + " boxes " + r.boxes.join(","))

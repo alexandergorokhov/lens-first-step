@@ -7,6 +7,7 @@ import {Vec3} from "../Scripts/FindYourWayRouter"
 import {pressButton} from "../Scripts/FindYourWayWidgetsUI"
 import {getMain, log, waitFor} from "./FindYourWayLeafSupport"
 import {nodePos} from "./FywBrief2Support"
+import {CAM, CamPose, liftApproach, planWalk, rideLine} from "../Scripts/FindYourWayCamera"
 
 export interface DemoRun {
   main: FindYourWayMain
@@ -14,6 +15,55 @@ export interface DemoRun {
   onStep: () => void
   // Metres per second of the simulated walk.
   speed: number
+  // The video take (R2-13): every walk is the smooth camera (eased, rounded, capped turns); escalators
+  // straight along their axis; lifts a stop facing the doors, marked for a dissolve (onRide).
+  smooth?: boolean
+  onRide?: (what: string) => void
+}
+
+// Plays planned poses in real time (frame drops never slow the walk); stop() ends it early.
+export async function playPoses(run: DemoRun, poses: CamPose[], stop?: () => boolean): Promise<void> {
+  const main = run.main
+  const t0 = getTime()
+  for (;;) {
+    const f = (getTime() - t0) / CAM.dt
+    const i = Math.floor(f)
+    if (i >= poses.length - 1) {
+      const e = poses[poses.length - 1]
+      main.debugSetPose(e.x, e.y, e.z, e.heading)
+      return
+    }
+    const a = poses[i], b = poses[i + 1], t = f - i
+    const dh = ((b.heading - a.heading + 540) % 360) - 180
+    main.debugSetPose(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t, a.heading + dh * t)
+    await sleep(1)
+    run.onStep()
+    if (stop && stop()) return
+  }
+}
+
+// The smooth camera along these points (pts[0] is where you stand now).
+export async function glide(run: DemoRun, pts: Vec3[], stop?: () => boolean, ride?: {rideFrom: number; rideTo: number}): Promise<void> {
+  const p = run.main.getDebugPose()
+  await playPoses(run, planWalk(pts, p ? p.heading : 0, ride), stop)
+}
+
+// The points cut off m metres along (for a stop partway, eased like any other).
+export function cutAt(pts: Vec3[], m: number): Vec3[] {
+  const out: Vec3[] = [pts[0]]
+  let left = m
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1], b = pts[i]
+    const len = Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2 + (b.z - a.z) ** 2)
+    if (len >= left) {
+      const t = len > 0 ? left / len : 0
+      out.push({x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, z: a.z + (b.z - a.z) * t})
+      return out
+    }
+    out.push(b)
+    left -= len
+  }
+  return out
 }
 
 // Opens a demo preset exactly as Reset preview does with it picked in the Inspector.
@@ -43,6 +93,7 @@ export async function closeDemo(main: FindYourWayMain): Promise<void> {
 
 // Walks the pose along the points at run.speed, facing the way it goes; stop() ends it early.
 export async function walk(run: DemoRun, pts: Vec3[], stop?: () => boolean): Promise<void> {
+  if (run.smooth) return glide(run, pts, stop)
   const main = run.main
   let h = main.getDebugPose() ? main.getDebugPose()!.heading : 0
   for (let i = 1; i < pts.length; i++) {
@@ -86,11 +137,14 @@ export async function turnTo(run: DemoRun, heading: number, seconds: number): Pr
   const p = run.main.getDebugPose()!
   const from = p.heading
   const by = ((heading - from + 540) % 360) - 180
+  // The smooth take: no faster than the camera's turn cap, eased in and out.
+  if (run.smooth) seconds = Math.max(seconds, (Math.abs(by) / CAM.maxTurnDegS) * 1.5)
   const s = getTime()
   let f = 0
   while (f < 1) {
     f = Math.min(1, (getTime() - s) / seconds)
-    run.main.debugSetPose(p.pos.x, p.pos.y, p.pos.z, from + by * f)
+    const e = run.smooth ? f * f * (3 - 2 * f) : f
+    run.main.debugSetPose(p.pos.x, p.pos.y, p.pos.z, from + by * e)
     await sleep(1)
     run.onStep()
   }
@@ -98,6 +152,20 @@ export async function turnTo(run: DemoRun, heading: number, seconds: number): Pr
 
 export function pose(run: DemoRun): Vec3 {
   return run.main.getDebugPose()!.pos
+}
+
+// Where you stand, then the current route's nodes after the nearest one on this floor.
+export function routeAhead(run: DemoRun): Vec3[] {
+  const main = run.main
+  const all = main.getRouteNodes()
+  const me = pose(run)
+  let at = 0, bestD = Infinity
+  all.forEach((id, i) => {
+    const n = nodePos(main, id)
+    const d = Math.abs(n.y - me.y) < 0.6 ? Math.hypot(n.x - me.x, n.z - me.z) : Infinity
+    if (d < bestD) { bestD = d; at = i }
+  })
+  return [me].concat(all.slice(at + 1).map((id) => nodePos(main, id)))
 }
 
 // Talk in the preview: the demo phrase types itself in, the matcher picks the place, the preset's mode
@@ -148,6 +216,30 @@ export async function walkLeg(run: DemoRun): Promise<string[]> {
     const lift = nodes[k]
     const to = nodePos(main, lift)
     const before = nodes.slice(1, k).map((id) => nodePos(main, id))
+    if (run.smooth) {
+      // Stop in front of the lift, facing its doors; the floor change is a dissolve in the edit.
+      const from = before.length > 0 ? before[before.length - 1] : pose(run)
+      const stand = liftApproach(to, from)
+      await glide(run, [pose(run)].concat(before).concat([{x: stand.x, y: stand.y, z: stand.z}]))
+      await turnTo(run, stand.heading, 0.8)
+      await hold(run, 0.8)
+      if (run.onRide) run.onRide("ride in")
+      main.debugSetPose(to.x, to.y, to.z, stand.heading)
+      const rideId = main.getRideIdFor(lift, "lift")
+      if (!rideId || !pressButton("RideButton_" + rideId)) throw new Error("no ride button at " + lift)
+      await hold(run, 0.6)
+      // Out on the new floor, a step out of the lift, facing the way on.
+      const here = pose(run)
+      const ahead = main.getRouteNodes().map((id) => nodePos(main, id)).filter((n) => Math.abs(n.y - here.y) < 0.6 && Math.hypot(n.x - here.x, n.z - here.z) > 2)[0]
+      if (ahead) {
+        const l = Math.hypot(ahead.x - here.x, ahead.z - here.z)
+        const h = (Math.atan2(ahead.x - here.x, ahead.z - here.z) * 180) / Math.PI
+        main.debugSetPose(here.x + ((ahead.x - here.x) / l) * 1.4, here.y, here.z + ((ahead.z - here.z) / l) * 1.4, h)
+      }
+      await hold(run, 0.3)
+      if (run.onRide) run.onRide("ride out")
+      continue
+    }
     await walk(run, [pose(run)].concat(before).concat([{x: to.x, y: to.y, z: to.z - 1.2}]))
     await hold(run, 1.2)
     main.debugSetPose(to.x, to.y, to.z - 0.4, main.getUserHeading())
@@ -197,6 +289,19 @@ export async function mallPetTrip(run: DemoRun, beforeWalk?: () => Promise<void>
     const d = Math.sqrt((foot.x - prev.x) ** 2 + (foot.z - prev.z) ** 2)
     const f = d > 0 ? Math.max(0, 1 - 2 / d) : 0
     const short = {x: prev.x + (foot.x - prev.x) * f, y: foot.y, z: prev.z + (foot.z - prev.z) * f}
+    if (run.smooth) {
+      // Up the escalator straight along its axis: step on in line, ride, step off in line (R2-13).
+      const line = rideLine(foot, nodePos(main, nodes[k + 1]))
+      await glide(run, [pose(run)].concat(nodes.slice(1, k).map((id) => nodePos(main, id))).concat([line[0]]))
+      await hold(run, 3)
+      const p0 = main.getCompanionMapPos()
+      dogNearFoot = !!p0 && Math.sqrt((p0.x - foot.x) ** 2 + (p0.z - foot.z) ** 2) < 1.5 && Math.abs(p0.y - foot.y) < 0.5
+      waitedAt = footId
+      await glide(run, [pose(run)].concat(line.slice(1)), undefined, {rideFrom: 1, rideTo: 2})
+      await walk(run, [pose(run)].concat(nodes.slice(k + 2).map((id) => nodePos(main, id))), () => main.getPhase() === "arrived")
+      await waitFor(() => main.getPhase() === "arrived", 8000, "arrived at the food court")
+      return {waitedAt, dogNearFoot}
+    }
     await walk(run, [pose(run)].concat(nodes.slice(1, k).map((id) => nodePos(main, id))).concat([short]))
     await hold(run, 3)
     const p = main.getCompanionMapPos()

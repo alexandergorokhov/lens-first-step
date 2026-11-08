@@ -65,3 +65,31 @@ room for 24 dots.
 - Whether the laptop microphone reaches ASR in the Lens Studio preview, and recognition quality in a
   noisy mall: manual only.
 - Step-Free stays an option in Go to a place; its rules are in `accessibility` and `routing`.
+
+### Requirement: Pick a place first (R2-23)
+Walk or Step-Free SHALL start a trip only toward a place that was picked (Talk, Where to?, Pick on the map,
+or the Inspector's override) or a planned multi-stop trip (`tripTarget`). With nothing picked the Lens SHALL
+say "Pick a place first" and open **Where to?**; it never guesses a route.
+
+#### Scenario: GT-R23 Walk with nothing picked
+- **WHEN** Walk is pressed before a place is picked
+- **THEN** no trip starts and Where to? opens
+- Verified by: R23 (Node)
+
+### Requirement: Every place reachable (R2-24)
+Every place and destination on every map SHALL route from the map's start, walking and step-free.
+
+#### Scenario: GT-R24 All maps
+- Verified by: R24 every place and destination on every map can be reached (Node)
+
+### Requirement: Offline mode (R2-18)
+The Control panel's **Offline** switch SHALL simulate no internet: the map stays (built in or last copy),
+the map download and the LLM are off (`connectivity`). Voice SHALL still work from the map's own data
+(names, categories, interest words, codes such as "12C"). Not understood offline, it SHALL say "Didn't catch
+that (offline). Try Where to? or Pick on the map." (`notCaught`).
+
+#### Scenario: GT-R18 Talk offline
+- **GIVEN** Offline on, the mall demo
+- **WHEN** "Take me to the food court" is said
+- **THEN** the food court is picked with no LLM
+- Verified by: R18, R18b, R18c (Node) | offline-mode

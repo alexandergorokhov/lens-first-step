@@ -1,37 +1,56 @@
-// Mixes the voice-over (ROUND2.md R2-7) into a screen recording of the visual-demos take: each clip
-// from tools/voice/make-narration.py starts where src/core/narration.ts places it on the take's marks.
+// Edits and voices the visual-demos take (ROUND2.md R2-7, R2-16): from a screen recording of the take, the
+// edit keeps every voice-over line and beat at 1x, plays quiet walking EDIT.fast times faster, and cuts each
+// lift ride into a short dissolve (src/core/narration.ts editPlan); each clip from
+// tools/voice/make-narration.py starts where its line lands in the edit. The edit must be under 3 minutes
+// (contest rule): longer, and it stops with an error.
 //   node tools/voice/narration-mix.mjs <raw.mp4> <take.log> <T0 in the recording, s> <out.mp4>
 // take.log: the Lens log of the take (its "[VID] <s> <what>" lines). T0: the recording second where the
-// take's "[VID] 0.00 demo 1" view shows. The Lens sound (captions' speech, companion) stays under the voice.
+// take's "[VID] 0.00 demo 1" view shows.
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import ffmpeg from "ffmpeg-static";
-import { parseMarks, placeNarration } from "../../src/core/narration.ts";
+import { EDIT, editPlan, parseMarks, placeNarration } from "../../src/core/narration.ts";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const CLIPS = path.join(HERE, "..", "..", "devpost", "video", "narration");
-const LENS_LEVEL = 0.45;
 
-// The clips to mix: file name and delay (ms) from the recording's start.
-export function mixClips(marks, lengths, t0) {
-  return placeNarration(marks, lengths).placed.map((p) => ({
-    file: String(p.index).padStart(2, "0") + ".wav",
-    delayMs: Math.round((p.start + t0) * 1000),
-  }));
+// The clips to mix: file name and delay (ms) in the edited video.
+export function mixClips(lines) {
+  return lines.map((l) => ({ file: String(l.index).padStart(2, "0") + ".wav", delayMs: Math.round(l.at * 1000) }));
 }
 
-// ffmpeg filter: input 0 is the recording, inputs 1.. the clips in order.
-export function mixFilter(clips, rawHasAudio) {
-  const parts = clips.map((c, i) => `[${i + 1}:a]aformat=channel_layouts=stereo,adelay=${c.delayMs}|${c.delayMs}[v${i}]`);
-  const ins = clips.map((_, i) => `[v${i}]`);
-  if (rawHasAudio) {
-    parts.push(`[0:a]volume=${LENS_LEVEL}[lens]`);
-    ins.unshift("[lens]");
+// ffmpeg filter for the picture: input 0 is the recording; each segment trimmed (take time + t0), sped,
+// then joined in order: a dissolve where the segment says so, else a plain cut.
+export function videoFilter(segs, t0) {
+  const parts = [];
+  segs.forEach((s, i) => {
+    parts.push(`[0:v]trim=start=${(s.from + t0).toFixed(3)}:end=${(s.to + t0).toFixed(3)},setpts=(PTS-STARTPTS)/${s.speed},fps=24,format=yuv420p,settb=AVTB[s${i}]`);
+  });
+  let cur = "s0";
+  let len = (segs[0].to - segs[0].from) / segs[0].speed;
+  for (let i = 1; i < segs.length; i++) {
+    const out = "j" + i;
+    const segLen = (segs[i].to - segs[i].from) / segs[i].speed;
+    if (segs[i].dissolve) {
+      parts.push(`[${cur}][s${i}]xfade=transition=fade:duration=${EDIT.xfadeS}:offset=${(len - EDIT.xfadeS).toFixed(3)}[${out}]`);
+      len += segLen - EDIT.xfadeS;
+    } else {
+      parts.push(`[${cur}][s${i}]concat=n=2:v=1:a=0[${out}]`);
+      len += segLen;
+    }
+    cur = out;
   }
-  parts.push(`${ins.join("")}amix=inputs=${ins.length}:normalize=0:duration=first[aout]`);
+  parts.push(`[${cur}]format=yuv420p[vout]`);
+  return parts.join(";\n");
+}
+
+// ffmpeg filter for the sound: inputs 1.. the clips in order.
+export function mixFilter(clips) {
+  const parts = clips.map((c, i) => `[${i + 1}:a]aformat=channel_layouts=stereo,adelay=${c.delayMs}|${c.delayMs}[v${i}]`);
+  parts.push(`${clips.map((_, i) => `[v${i}]`).join("")}amix=inputs=${clips.length}:normalize=0:duration=longest[aout]`);
   return parts.join(";\n");
 }
 
@@ -48,14 +67,22 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const p = placeNarration(marks, lengths);
   if (p.missing.length) console.warn("no mark for:", p.missing.join(", "));
   for (const l of p.late) console.warn("late:", l.beat, "by", l.by.toFixed(2), "s");
-  const clips = mixClips(marks, lengths, Number(t0));
-  const probe = spawnSync(ffmpeg, ["-hide_banner", "-i", raw], { encoding: "utf8" }).stderr;
-  const rawHasAudio = /Stream #0:\d.*Audio/.test(probe);
-  const script = path.join(mkdtempSync(path.join(tmpdir(), "narr-")), "mix.txt");
-  writeFileSync(script, mixFilter(clips, rawHasAudio));
+  const cut = marks.filter((m) => m.what === "CUT")[0];
+  const end = cut ? cut.t : marks[marks.length - 1].t + 3;
+  const plan = editPlan(marks, lengths, end);
+  console.log("edit: " + plan.length.toFixed(1) + " s from " + end.toFixed(1) + " s, " + plan.segs.length + " segments");
+  if (plan.length >= EDIT.maxS) {
+    console.error("too long for the contest (under 3 minutes): " + plan.length.toFixed(1) + " s");
+    process.exit(2);
+  }
+  const clips = mixClips(plan.lines);
+  const dir = mkdtempSync(path.join(tmpdir(), "narr-"));
+  const script = path.join(dir, "edit.txt");
+  writeFileSync(script, videoFilter(plan.segs, Number(t0)) + ";\n" + mixFilter(clips));
   const r = spawnSync(ffmpeg, ["-y", "-hide_banner", "-loglevel", "error", "-i", raw,
     ...clips.flatMap((c) => ["-i", path.join(CLIPS, c.file)]),
-    "-filter_complex_script", script, "-map", "0:v", "-map", "[aout]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", out],
+    "-filter_complex_script", script, "-map", "[vout]", "-map", "[aout]", "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p",
+    "-c:a", "aac", "-b:a", "192k", "-t", plan.length.toFixed(2), out],
     { stdio: "inherit" });
   process.exit(r.status ?? 1);
 }
