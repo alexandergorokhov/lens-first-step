@@ -130,6 +130,13 @@ Root causes found:
       handrails) in the airport model (`tools/demo-video/airport.js`, then `npm run airport:glb`).
 - [ ] R2-22 The airport map shows a couple of gates by name (C12, B14, ...) so they can be pointed out on the
       map panel.
+- [ ] R2-25 The "· your pick" card bigger, easy to read (Alex: "I like how it landed").
+- [ ] R2-26 Mall floor change: you can still walk through the stairs/escalator sides by hand, and the floor
+      line cuts through you going up. Fix (solid sides, line drawn on the treads) or keep demo 2 on one floor.
+- [ ] R2-27 The video shows a short "play with the pet" moment (Hop / catch while you wait).
+- [ ] R2-28 v4 review (2:40, `pathpal-demos-v4.mp4`): the crop shows a sliver of the preview toolbar; a white
+      blank frame at the lift; the camera ends inside the café front (stop farther out); at the escalator top
+      it faces a wall close up; in Free walk it brushes a vending fridge.
 - [ ] R2-16 Re-record v4 with the voice-over table updated for R2-11 and R2-15.
       **Contest rules (hard limits):** under 3 minutes, posted on YouTube, the real Lens running in the Lens
       Studio preview (a narrated screen recording of the preview is fine). No renders made outside Lens Studio
