@@ -47,6 +47,17 @@ change), then R2-16 v4 under 3 minutes (narration table: demo 3 lines for voice 
 `Assets/Tests/FindYourWayLeafIndex.ts`: only my offline-mode lines are committed (the other session's edits stay
 unstaged; stage with `git hash-object` + `git update-index` as done for `4161355`'s parent).
 
+## Nov 8, end of session (Lens Studio quit at the end: reopen first-step, Preview 1 tab, /mcp reconnect)
+- Pushed up to `452cfbc`; npm test 619/619. v4 video: `devpost/video/pathpal-demos-v4.mp4` (2:40, Alex likes
+  it and the voice). Edit: `node tools/voice/narration-mix.mjs <raw> <take.log shifted> <T0 s> <out>`.
+- **First:** recompile in Lens: R2-10 Lens wiring (trip flight in Main, `rerouteQuestion`) is not compiled yet.
+- Then, in order: R2-30 (floor changes: walking through stairs/escalator sides, the floor line cutting through
+  you going up; far shops popping in and out: check the stand-in shop meshes / camera far plane) or keep
+  demo 2 on one floor; R2-25 bigger pointer card; R2-27 a short "play with the pet" moment in the video;
+  R2-28 v4 fixes (crop shows a toolbar sliver: record region offset 1524,351 or crop 14 px; lift white
+  frame; café stop farther out; escalator top facing a wall; Free walk brushes a vending fridge); voice-over
+  talk line mentions the flight number; then re-record (save, start ffmpeg by screen region, refresh).
+
 ## Do next, in order
 1. `/mcp` reconnect lens-studio; recompile; fix any TS errors in `FywDemoVideoScenario.ts` / `FywDemoSupport.ts`.
 2. Open the Preview panel in Lens Studio. Check:
