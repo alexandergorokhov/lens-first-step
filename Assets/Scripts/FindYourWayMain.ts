@@ -63,7 +63,7 @@ import {mapLogLines, tripAfterSaving} from "./FindYourWayMapping"
 import {peekPlace} from "./FindYourWayPeek"
 import {demoSettings, DemoSettings, showingSettings, StartSettings} from "./FindYourWayDemo"
 import {destinationsOf, FreeWalk, gateChangeOffer, interestList, LookBoxes, matchDestination, OfferDismissals, sayItPhrase, ShopLook, typedSoFar, typingSeconds, planAsk, askPrompt, parseAskReply, llmStops, ASK_LLM_TIMEOUT_S, VOICE_FALLBACK_S, walkableRoute, CLEAN_FREE_WALK, OFFER_LOOK_S, parsePrefs, parsePrefsReply, prefsPrompt, prefsQuestion} from "./FindYourWayFreeWalk"
-import {arrivalCardOn, cleanAllows, OptionsDock, routeLineAheadM, walkingHud} from "./FindYourWayDock"
+import {arrivalCardOn, cleanAllows, connectivity, notCaught, OptionsDock, routeLineAheadM, walkingHud} from "./FindYourWayDock"
 import {FindYourWayOfferBoxesUI} from "./FindYourWayOfferBoxesUI"
 import {FindYourWayHomePanelUI} from "./FindYourWayHomePanelUI"
 import {FindYourWayPrefsUI} from "./FindYourWayPrefsUI"
@@ -453,6 +453,8 @@ export class FindYourWayMain extends BaseScriptComponent {
   private preselect: string | null = null
   // The demo preset in use (null: off), and whether it still has to scan and open its mode.
   private demoSet: DemoSettings | null = null
+  // Offline mode (R2-18), from the Control panel.
+  private offline = false
   private demoAutoPending = false
   private authoredEyeCm = 180
   private authoredOnline = true
@@ -629,6 +631,7 @@ export class FindYourWayMain extends BaseScriptComponent {
       onShowingGate: () => this.changeDestination(),
       onAnnouncement: () => this.playAnnouncement(),
       onVoice: () => this.setCompanionMuted(!this.isCompanionMuted()),
+      onOffline: () => this.setOffline(!this.offline),
     })
     this.appPanel.setVoice(this.companionSpeaks)
     if (global.deviceInfoSystem.isEditor()) this.appPanel.setBaseScale(PREVIEW_PANEL_SCALE)
@@ -744,7 +747,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     const phrase = sayItPhrase(this.map)
     const id = matchDestination(this.map, phrase)
     if (!id) {
-      this.modePanel.setDestination("didn't catch that: try Where to?")
+      this.modePanel.setDestination(notCaught(this.offline))
       return
     }
     print("[FYW] said: " + phrase + " -> " + id)
@@ -764,7 +767,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.typing = null
     this.voice.start((text, final) => this.heard(text, final), (why) => {
       print("[FYW] voice: " + why)
-      this.modePanel.setNote("didn't catch that: try Where to?")
+      this.modePanel.setNote(notCaught(this.offline))
     })
     print("[FYW] voice: " + (this.voice.listening ? "listening" : "not available"))
     const attempt = ++this.voiceTry
@@ -787,7 +790,7 @@ export class FindYourWayMain extends BaseScriptComponent {
       this.removeEvent(ev)
       if (attempt !== this.voiceTry || !this.voice.listening || this.typing) return
       this.voice.stop()
-      this.modePanel.setNote("didn't catch that: try Where to?")
+      this.modePanel.setNote(notCaught(this.offline))
     })
     ev.reset(VOICE_TIMEOUT_S)
   }
@@ -827,11 +830,24 @@ export class FindYourWayMain extends BaseScriptComponent {
       this.pickDestination(id)
       if (this.demoSet || byLlm) this.modePanel.setNote("Heard: " + text + "  →  " + nodeLabel(this.map, id))
       this.goOnAfterHeard()
-    } else this.modePanel.setNote("didn't catch that: try Where to?")
+    } else this.modePanel.setNote(notCaught(this.offline))
   }
 
   // The LLM to ask: a stand-in set by a test, else the gateway when a token is set (Specs), else none.
+  // Offline mode (R2-18): no internet simulated. The map stays; the LLM and the map download are off;
+  // voice goes on with the plain matcher on the map's own names, categories and words.
+  setOffline(on: boolean): void {
+    this.offline = on
+    if (this.appPanel) this.appPanel.setOffline(on)
+    const c = connectivity(on, !!this.askLlm || FindYourWayAsk.available())
+    this.hud.showCard(c.label, on ? "info" : "info", 3)
+    print("[FYW] " + c.label)
+  }
+  isOffline(): boolean { return this.offline }
+  getOfflineLabel(): string { return this.appPanel ? this.appPanel.getOfflineLabel() : "" }
+
   private llmFor(): AskLlm | null {
+    if (this.offline) return null
     if (this.askLlm) return this.askLlm
     return FindYourWayAsk.available() ? (prompt: string) => FindYourWayAsk.ask(prompt) : null
   }
@@ -850,7 +866,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     const fail = (why: string): void => {
       if (stale()) return
       print("[FYW] ask: " + why)
-      this.modePanel.setNote("didn't catch that: try Where to?")
+      this.modePanel.setNote(notCaught(this.offline))
     }
     let sent: Promise<string>
     try {
@@ -1515,7 +1531,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.hud.setBadge("loading map…")
     const src = this.source()
     // A place you walked yourself stays yours: no download ever replaces it.
-    const url = !this.tryOnlineMap || !src ? "" : mapUrl(this.mapBaseUrl, src)
+    const url = !this.tryOnlineMap || this.offline || !src ? "" : mapUrl(this.mapBaseUrl, src)
     print("[FYW] map download: " + (url || "(none, built-in map)"))
     const override = this.downloadOverride
     const delay = this.downloadDelayMs

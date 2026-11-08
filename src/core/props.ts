@@ -184,3 +184,44 @@ export function propPlan(map: PropMap, kit: string, clear: (p: PropXYZ) => boole
   }
   return out;
 }
+
+// ── A food court that looks like one (ROUND2.md R2-11, Alex's v3 review) ──────────────────────────
+// Destinations with the "restaurant" icon get an open front (no glass): three food stalls with bright
+// menu boards inside, and tables with chairs outside, to either side of the way in, so the approach
+// (and the demo's walk, which stops 2.7 m out) never crosses them. Parts are boxes in cm on the front:
+// side along the front (the Lens's `at` x), up from the floor, out toward the hall (+ outside).
+export interface DressPart { part: "counter" | "board" | "table" | "leg" | "chair" | "back" | "stool" | "lamp"; side: number; up: number; out: number; w: number; h: number; d: number; tint: number }
+// The way in is kept clear this far each side of the front's middle (cm).
+export const DINING_AISLE_CM = 150;
+export function foodHallParts(halfCm: number): DressPart[] {
+  const out: DressPart[] = [];
+  const stall = (2 * halfCm - 40) / 3;
+  for (let i = 0; i < 3; i++) {
+    const side = -halfCm + 20 + stall * (i + 0.5);
+    out.push({ part: "counter", side, up: 52, out: -90, w: stall - 30, h: 104, d: 60, tint: i });
+    // The menu board over each stall, below the fascia so it shows from the hall.
+    out.push({ part: "board", side, up: 172, out: -118, w: stall - 50, h: 62, d: 5, tint: i });
+    out.push({ part: "lamp", side, up: 140, out: -60, w: 26, h: 14, d: 26, tint: i });
+    for (const k of [-1, 1]) out.push({ part: "stool", side: side + k * stall * 0.22, up: 33, out: -35, w: 30, h: 66, d: 30, tint: i });
+  }
+  // Tables for two under the awning, either side of the way in: a top on one leg, a chair each side.
+  for (const s of [-1, 1]) {
+    for (const side of [200, 320]) {
+      const o = 90;
+      out.push({ part: "table", side: s * side, up: 74, out: o, w: 66, h: 4, d: 66, tint: 0 });
+      out.push({ part: "leg", side: s * side, up: 37, out: o, w: 8, h: 72, d: 8, tint: 0 });
+      for (const c of [-1, 1]) {
+        out.push({ part: "chair", side: s * side + c * 52, up: 45, out: o, w: 38, h: 5, d: 38, tint: 0 });
+        out.push({ part: "back", side: s * side + c * 70, up: 68, out: o, w: 4, h: 42, d: 38, tint: 0 });
+        out.push({ part: "leg", side: s * side + c * 52, up: 22, out: o, w: 6, h: 44, d: 6, tint: 0 });
+      }
+    }
+  }
+  return out;
+}
+
+// A part's middle in map metres, given its front (x, y, z on the floor, facing into the hall).
+export function partAt(front: PropFront, p: DressPart): PropXYZ {
+  const f = front.facing;
+  return { x: front.x + (f.z * p.side + f.x * p.out) / 100, y: front.y + p.up / 100, z: front.z + (-f.x * p.side + f.z * p.out) / 100 };
+}

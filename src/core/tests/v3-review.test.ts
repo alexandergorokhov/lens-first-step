@@ -137,3 +137,58 @@ test("R15d the Free walk demo: last time was Books; what you say picks Café and
   assert.equal(prefsQuestion(d.interests.map((id) => m.place!.interests!.filter((i) => i.id === id)[0].label)), "Same as last time: Books? Or tell me what you're into.");
   assert.deepEqual(parsePrefs(m, d.prefsPhrase), { ids: ["coffee", "clothes"], keep: false });
 });
+
+test("R11 the food court looks like one: three stalls with menu boards, tables and chairs outside", async () => {
+  const { foodHallParts } = await import("../props.ts");
+  const parts = foodHallParts(280);
+  assert.equal(parts.filter((p) => p.part === "counter").length, 3);
+  assert.equal(parts.filter((p) => p.part === "board").length, 3);
+  assert.ok(parts.filter((p) => p.part === "table").length >= 4);
+  assert.ok(parts.filter((p) => p.part === "chair").length >= 8);
+});
+
+test("R11b nothing of it stands in the way: the walk from the sign to the food court never comes within 0.5 m of a table or chair", async () => {
+  const { foodHallParts, partAt } = await import("../props.ts");
+  const { shopFrontPose } = await import("../freewalk.ts");
+  const { Navigator } = await import("../router.ts");
+  const m = mall();
+  const front = shopFrontPose(m as any, "foodCourt")!;
+  const r = new Navigator(m, "sign", "foodCourt", "walk").route;
+  assert.equal(r.status, "route");
+  const at: { [id: string]: any } = {};
+  for (const n of m.nodes) at[n.id] = n;
+  const pts = (r as any).nodes.map((id: string) => at[id]).filter((n: any) => Math.abs(n.y - front.y) < 0.5);
+  const solids = foodHallParts(280).filter((p) => p.part === "table" || p.part === "chair").map((p) => ({ c: partAt(front, p), r: Math.max(p.w, p.d) / 200 }));
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1], b = pts[i];
+    const len = Math.hypot(b.x - a.x, b.z - a.z);
+    for (let s = 0; s <= len; s += 0.1) {
+      const q = { x: a.x + ((b.x - a.x) * s) / len, z: a.z + ((b.z - a.z) * s) / len };
+      for (const o of solids) assert.ok(Math.hypot(q.x - o.c.x, q.z - o.c.z) > o.r + 0.5, "too near a table/chair at " + JSON.stringify(q));
+    }
+  }
+});
+
+test("R18 Offline mode: the map stays, no LLM and no map download; the Control panel says so", async () => {
+  const { connectivity } = await import("../dock.ts");
+  assert.deepEqual(connectivity(true, true), { llm: false, downloadMap: false, label: "Offline: map on this device, no AI" });
+  assert.deepEqual(connectivity(false, true), { llm: true, downloadMap: true, label: "Online" });
+  assert.deepEqual(connectivity(false, false), { llm: false, downloadMap: true, label: "Online (no AI here)" });
+});
+
+test("R18b offline, voice still works from the map's own data: names, categories, interest words, gate codes", async () => {
+  const { matchDestination, planAsk } = await import("../freewalk.ts");
+  const m = mall();
+  assert.equal(matchDestination(m as any, "take me to the food court"), "foodCourt");
+  assert.deepEqual(parsePrefs(m, "I'm into fashion").ids, ["clothes"]);
+  const r = parseMap(readFileSync(new URL("../data/map.json", import.meta.url), "utf8"));
+  if (!r.ok) throw new Error("airport");
+  assert.equal(matchDestination(r.map as any, "gate 12C"), "gateC12");
+  assert.ok(planAsk(r.map as any, "coffee and a bathroom before my flight at gate 12C", r.map.place!.start!, true, () => 1).length >= 3);
+});
+
+test("R18c offline and not understood: the reply points to the no-voice ways", async () => {
+  const { notCaught } = await import("../dock.ts");
+  assert.equal(notCaught(true), "Didn't catch that (offline). Try Where to? or Pick on the map.");
+  assert.equal(notCaught(false), "didn't catch that: try Where to?");
+});

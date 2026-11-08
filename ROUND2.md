@@ -112,6 +112,14 @@ Root causes found:
 - [ ] R2-17 Calm companion in Free walk ("it runs all over the place; it's a helper, not a child to chase"):
       no running around you when you turn, no dashes; it walks at about your pace, turns gently and goes to a
       shop only to point. Core `FreeCompanion` (tests: max speed, max turn rate, no side switch on a glance).
+- [ ] R2-18 Offline mode (Alex, Nov 8): a switch in the Control panel that simulates no internet. The map
+      stays (bundled with the Lens / last copy); no LLM and no map download. Voice still works: the plain
+      matcher reads the map's own data (place names, categories, interest words, destination codes like
+      "12C"), so "take me to the food court", "coffee and a bathroom", "I'm into fashion" all work offline.
+      Phrases only the LLM would get ("somewhere to sit and eat sushi") say "didn't catch that" and point
+      to the no-voice ways: **Where to?** (a list of the map's places) and **Pick on the map** (tap a
+      place on the floor plan). Core: `offlineMode` decides what is used (test); documented in README and
+      devpost/PREVIEW-GUIDE.md.
 - [ ] R2-16 Re-record v4 with the voice-over table updated for R2-11 and R2-15.
       **Contest rules (hard limits):** under 3 minutes, posted on YouTube, the real Lens running in the Lens
       Studio preview (a narrated screen recording of the preview is fine). No renders made outside Lens Studio

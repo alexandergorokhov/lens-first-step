@@ -10,6 +10,7 @@ import {boardModel, PlaceGroup} from "./FindYourWayPeek"
 import {MapData, MapNode, findNode} from "./FindYourWayRouter"
 import {approachDir, PlaceInfo} from "./FindYourWayMapLibrary"
 import {bayCovered, FrontPose, FwMap, shopFrontPose} from "./FindYourWayFreeWalk"
+import {foodHallParts} from "./FindYourWayProps"
 
 type ToLocal = (x: number, y: number, z: number) => vec3
 
@@ -34,6 +35,9 @@ const CEILING = new vec4(0.74, 0.74, 0.71, 1)
 const GOODS_SHELVES_CM = [70, 135]
 const GOODS_ALONG = [0.5, 0.67, 0.84]
 const GARDEN_ICON = "park"
+// A destination with this icon is dressed as a food court (R2-11): stalls, menu boards, tables outside.
+const FOOD_HALL_ICON = "restaurant"
+const HALL_BOARD_TINTS = [new vec4(0.86, 0.36, 0.18, 1), new vec4(0.2, 0.55, 0.36, 1), new vec4(0.92, 0.7, 0.2, 1)]
 const GARDEN_PLANTERS_CM = [-420, -280, 280, 420]
 const BOARD_W_CM = 66
 const MAP_W_CM = 56
@@ -449,10 +453,26 @@ export class FindYourWayStandIn extends BaseScriptComponent {
     const gallery = new Boxes()
     const glass = new Boxes()
     const planters: vec3[] = []
-    const shopFront = (back: vec3, fwd: vec3, k: number, half: number, named: boolean = false): ((x: number, y: number, z: number) => vec3) => {
+    const hallWood = new Boxes(), hallWhite = new Boxes(), hallDark = new Boxes(), hallWarm = new Boxes(), hallInside = new Boxes()
+    const hallBoards = HALL_BOARD_TINTS.map(() => new Boxes())
+    const shopFront = (back: vec3, fwd: vec3, k: number, half: number, named: boolean = false, hall: boolean = false): ((x: number, y: number, z: number) => vec3) => {
       const side = new vec3(-fwd.z, 0, fwd.x)
       const at = (x: number, y: number, z: number) => back.add(side.uniformScale(x)).add(new vec3(0, y, 0)).add(fwd.uniformScale(z))
       fronts[k].boxAxes(at(0, 260, 0), side.uniformScale(half), new vec3(0, 40, 0), fwd.uniformScale(12)) // fascia, for the name
+      if (hall) {
+        // Open front (no glass, no door): the stalls, their boards and the tables are the front (R2-11).
+        for (const x of [-1, 1]) frames.boxAxes(at(x * half, 125, 2), side.uniformScale(8), new vec3(0, 125, 0), fwd.uniformScale(10))
+        hallInside.boxAxes(at(0, 150, -300), side.uniformScale(half), new vec3(0, 150, 0), fwd.uniformScale(4)) // back wall
+        for (const x of [-1, 1]) hallInside.boxAxes(at(x * half, 150, -150), side.uniformScale(4), new vec3(0, 150, 0), fwd.uniformScale(150))
+        for (const p of foodHallParts(half)) {
+          const box = p.part === "board" ? hallBoards[p.tint % hallBoards.length] : p.part === "table" ? hallWhite
+            : p.part === "lamp" ? hallWarm : p.part === "stool" || p.part === "leg" ? hallDark : hallWood
+          box.boxAxes(at(p.side, p.up, p.out), side.uniformScale(p.w / 2), new vec3(0, p.h / 2, 0), fwd.uniformScale(p.d / 2))
+          if (p.part === "counter") hallWhite.boxAxes(at(p.side, p.up + p.h / 2 + 2, p.out), side.uniformScale(p.w / 2 + 4), new vec3(0, 2, 0), fwd.uniformScale(p.d / 2 + 4)) // worktop
+        }
+        awnings.boxAxes(at(0, 215, 30), side.uniformScale(half + 10), new vec3(0, 6, 0), fwd.uniformScale(30))
+        return at
+      }
       windows[k].boxAxes(at(0, 125, 0), side.uniformScale(half), new vec3(0, 95, 0), fwd.uniformScale(8))
       frames.boxAxes(at(0, 15, 0), side.uniformScale(half + 4), new vec3(0, 15, 0), fwd.uniformScale(12)) // plinth
       for (const x of [-1, -0.34, 0.34, 1]) {
@@ -484,7 +504,8 @@ export class FindYourWayStandIn extends BaseScriptComponent {
       if (!pose) return
       namedFronts.push(pose)
       const fwd = new vec3(pose.facing.x, 0, -pose.facing.z)
-      const at = shopFront(toLocal(pose.x, pose.y, pose.z), fwd, i % fronts.length, 280, n.kind === "place")
+      const hall = n.kind === "destination" && n.icon === FOOD_HALL_ICON
+      const at = shopFront(toLocal(pose.x, pose.y, pose.z), fwd, i % fronts.length, 280, n.kind === "place", hall)
       if (i % PLANT_EVERY === 0) planters.push(at(340, 0, 50))
       // A garden gets its planters.
       if (n.icon === GARDEN_ICON) for (const x of GARDEN_PLANTERS_CM) planters.push(at(x, 0, 130))
@@ -555,6 +576,12 @@ export class FindYourWayStandIn extends BaseScriptComponent {
       vec4.lerp(SHOP_COLORS[i], new vec4(1, 0.98, 0.92, 1), GLAZING)))
     this.addMesh("ShopFrames", frames, this.wallColor, TRIM)
     this.addMesh("Awnings", awnings, this.wallColor, new vec4(0.2, 0.24, 0.3, 1))
+    this.addMesh("HallInside", hallInside, this.wallColor, new vec4(0.93, 0.89, 0.8, 1))
+    this.addMesh("HallWood", hallWood, this.wallColor, new vec4(0.55, 0.37, 0.22, 1))
+    this.addMesh("HallWhite", hallWhite, this.wallColor, new vec4(0.96, 0.95, 0.92, 1))
+    this.addMesh("HallDark", hallDark, this.wallColor, new vec4(0.2, 0.22, 0.26, 1))
+    this.addMesh("HallLamps", hallWarm, this.wallColor, new vec4(1, 0.85, 0.55, 1))
+    hallBoards.forEach((b, i) => this.addMesh("HallBoard" + i, b, this.wallColor, HALL_BOARD_TINTS[i]))
     if (this.planterPrefab && this.model) {
       for (const p of planters) {
         const so = this.planterPrefab.instantiate(this.model)

@@ -76,3 +76,15 @@ export function arrivalCardOn(secondsSinceArrival: number, clean: boolean): bool
 
 // The folded Control tab is see-through (ROUND2.md R2-12): the view stays visible behind it.
 export const CONTROL_TAB_OPACITY = 0.45;
+
+// Offline mode (ROUND2.md R2-18): simulates no internet. The map stays (bundled with the Lens or the last
+// copy); the LLM and the map download are off. Voice still works: the plain matcher reads the map itself.
+export function connectivity(offline: boolean, llmAvailable: boolean): { llm: boolean; downloadMap: boolean; label: string } {
+  if (offline) return { llm: false, downloadMap: false, label: "Offline: map on this device, no AI" };
+  return { llm: llmAvailable, downloadMap: true, label: llmAvailable ? "Online" : "Online (no AI here)" };
+}
+
+// What Talk says when nothing matched; offline it points to the no-voice ways.
+export function notCaught(offline: boolean): string {
+  return offline ? "Didn't catch that (offline). Try Where to? or Pick on the map." : "didn't catch that: try Where to?";
+}

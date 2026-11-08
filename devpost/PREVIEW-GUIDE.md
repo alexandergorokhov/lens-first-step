@@ -48,13 +48,32 @@ Click **Scan sign**, the panel straight ahead. On real Specs you would look at t
 
 ## Free walk
 
-1. Click **Free walk**. **Your preferences** opens.
-2. Pick **Dog**, **Robot** or **Rover**. Picking one turns the companion on. **View or change** lets you tick what you like.
-3. Click **Keep them and walk**, then walk with W.
-4. The companion walks ahead, stops at shops that match and points at them.
+1. Click **Free walk**. The companion asks: "Same as last time: Books? Or tell me what you're into."
+2. Click **Talk: say what you like** and say it in your own words ("A coffee, and I'm into fashion today").
+   The preview has no microphone, so the demo sentence types itself in. Your words become the map's own
+   categories (Café, Clothes), shown under **Heard**, and the walk starts. Or click **Same as last time**,
+   or **View or change** to tick categories by hand. Your picks are saved on the device for next time.
+3. Pick **Dog**, **Robot** or **Rover** on the same panel. Then walk with W.
+4. The companion walks ahead at your pace, stops at shops that match and points at them. A card at the
+   pointer says why: **Clothes · your pick**.
 5. Look at any shop for a moment: a gold button such as **Offers: Bolt Hardware** appears. Click it to see the shop's offers.
-6. Turn around: the companion runs round you to stay in front.
+6. Turn around and walk: the companion walks calmly round you to lead again. Just looking around doesn't move it.
 7. Matches upstairs: it waits at the escalator with a bubble such as "3 picks upstairs".
+
+## Offline mode
+
+**Offline: on** in the Control panel simulates no internet. The map stays (it ships with the Lens, or
+the last copy downloaded); the map download and the AI (LLM) are off.
+
+Voice search still works offline. The plain matcher reads the map's own data: place names ("take me
+to the food court"), categories and interest words ("coffee and a bathroom", "I'm into fashion") and
+codes ("gate 12C"). Only phrases that need the AI ("somewhere my kids can run around") fail. Then it
+says "Didn't catch that (offline). Try Where to? or Pick on the map.":
+
+- **Where to?** lists the map's places by name; click one.
+- **Pick on the map** shows the floor plan; click a place on it.
+
+Both work without voice and without internet. On Specs you pinch instead of clicking.
 
 ## Tour
 
@@ -122,7 +141,7 @@ Write **logic proven** next to what tests and the preview show working, and **fe
 npm test
 ```
 
-Expect `pass 599`, `fail 0`. One test downloads the maps from the public gist; with no internet, set `OFFLINE=1` to skip it (`pass 578`, `skipped 1`). The run first checks that the Lens copies match `src/core`. After editing `src/core`, run `npm run sync`.
+Expect `pass 604`, `fail 0`. One test downloads the maps from the public gist; with no internet, set `OFFLINE=1` to skip it (`pass 578`, `skipped 1`). The run first checks that the Lens copies match `src/core`. After editing `src/core`, run `npm run sync`.
 
 **LEAF tests** run inside the Lens, pressing the real buttons:
 

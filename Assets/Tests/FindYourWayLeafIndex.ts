@@ -64,6 +64,7 @@ import {FywV2VoiceFallbackScenario} from "./FywV2VoiceFallbackScenario"
 import {FywDemoAirportScenario} from "./FywDemoAirportScenario"
 import {FywDemoMallPetScenario} from "./FywDemoMallPetScenario"
 import {FywDemoFreeWalkRobotScenario} from "./FywDemoFreeWalkRobotScenario"
+import {FywOfflineModeScenario} from "./FywOfflineModeScenario"
 import {FywDemoVideoScenario} from "./FywDemoVideoScenario"
 import {FywO1OffersAnywhereScenario} from "./FywO1OffersAnywhereScenario"
 import {FywCheckPlacesScenario} from "./FywCheckPlacesScenario"
@@ -139,6 +140,7 @@ export class FindYourWayLeafIndex extends BaseScriptComponent {
     {id: "demo-airport", typename: FywDemoAirportScenario.getTypeName()},
     {id: "demo-mall-pet", typename: FywDemoMallPetScenario.getTypeName()},
     {id: "demo-free-walk-robot", typename: FywDemoFreeWalkRobotScenario.getTypeName()},
+    {id: "offline-mode", typename: FywOfflineModeScenario.getTypeName()},
     {id: "o1-offers-anywhere", typename: FywO1OffersAnywhereScenario.getTypeName()},
     {id: "mp1-no-empty-band", typename: FywMp1NoEmptyBandScenario.getTypeName()},
     {id: "cr1-heard-gate-change", typename: FywCaptionsRerouteScenario.getTypeName()},
