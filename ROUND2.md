@@ -169,8 +169,8 @@ Updated Nov 7 by the pitch session to match the story (pitch/pathpal-story.md). 
 | arrived | The gate agent speaks Spanish; I read it in English. Captions help if you can't hear, too. |
 | play | Waiting to board? A quick game with my robot. |
 | demo 2: mall, follow the dog | In a mall, I just follow my dog. Easier than reading a map. |
-| leg | It waits for me at the escalator, then leads on to the food court. |
-| arrived | The host speaks French; I read it in English. |
+| leg | It leads the way to the bakery, and waits for me whenever I stop. |
+| arrived | The baker speaks French; I read it in English. |
 | demo 3: Free walk with the robot | No destination? Free walk. It asks what I'm into today, and I just say it. |
 | pointed | It points at shops that match, and says why. A two-second look shows offers, always marked sponsored. |
 | END | Pathpal. No GPS indoors? Follow your companion. |

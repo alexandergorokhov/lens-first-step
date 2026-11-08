@@ -137,7 +137,7 @@ test("D2 airportWheelchair: airport, robot (Alex, Nov 7), Step-Free, seated (45 
 
 test("D3 mallPet: mall, dog, Walk, standing, Go to a place open", () => {
   const s = demoSettings("mallPet")!;
-  assert.deepEqual(s, { mapKey: "mall", companionModel: "dog", preselect: "walk", seatedDropCm: 0, open: "goTo", interests: [], prefsPhrase: "", talkPhrase: "" });
+  assert.deepEqual(s, { mapKey: "mall", companionModel: "dog", preselect: "walk", seatedDropCm: 0, open: "goTo", interests: [], prefsPhrase: "", talkPhrase: "Take me to the Bakery" });
 });
 
 test("D4 freeWalkRobot: mall, robot, Free walk; last time it was books, and you say coffee and fashion (R2-15)", () => {

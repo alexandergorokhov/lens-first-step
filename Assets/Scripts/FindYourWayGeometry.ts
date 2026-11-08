@@ -242,8 +242,52 @@ function onWalkway(map: WallMap, p: XYZ): boolean {
   return false;
 }
 
+// The drawn half-widths of the stand-in's connectors (FindYourWayStandIn: 120 / 180 / 160 cm wide).
+// Ramps rise gently and corridors run beside them (hospital): only stairs and escalators block here.
+export const DRAWN_HALF_M: { [kind: string]: number } = { escalator: 0.6, stairs: 0.9 };
+
+// Does a walkway on p's floor, near p, run across this connector's footprint? (A map may lead a corridor
+// under a staircase, as the hospital does: that corridor stays walkable.)
+function walkwayCrosses(map: WallMap, c: WallEdge, p: XYZ, half: number): boolean {
+  const ca = map.nodes.filter((n) => n.id === c.from)[0];
+  const cb = map.nodes.filter((n) => n.id === c.to)[0];
+  if (!ca || !cb) return false;
+  for (const e of map.edges) {
+    if (e.kind !== "walk") continue;
+    const a = map.nodes.filter((n) => n.id === e.from)[0];
+    const b = map.nodes.filter((n) => n.id === e.to)[0];
+    if (!a || !b || Math.abs(a.y - p.y) > SAME_FLOOR_M || Math.abs(b.y - p.y) > SAME_FLOOR_M) continue;
+    const dx = b.x - a.x, dz = b.z - a.z, len2 = dx * dx + dz * dz;
+    const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.z - a.z) * dz) / len2));
+    if (Math.hypot(p.x - a.x - dx * t, p.z - a.z - dz * t) >= PATH_HALF_M) continue;
+    // Sample the walkway: does it pass inside the connector's drawn body, away from both of its ends?
+    for (let k = 1; k < 20; k++) {
+      const q = { x: a.x + (dx * k) / 20, y: p.y, z: a.z + (dz * k) / 20 };
+      const s = besideSlope(map, c, q, half);
+      if (s && s.offFloor > SLAB_NEAR_M) return true;
+    }
+  }
+  return false;
+}
+
+function slabInTheWay(map: WallMap, p: XYZ): boolean {
+  for (const e of map.edges) {
+    const half = DRAWN_HALF_M[e.kind];
+    if (!half) continue;
+    const s = besideSlope(map, e, p, half);
+    if (!s) continue;
+    const above = s.h - p.y;
+    if (Math.abs(above) > SLAB_NEAR_M && above < HEADROOM_M && above > -HEADROOM_M && !walkwayCrosses(map, e, p, half)) return true;
+  }
+  return false;
+}
+
 // True when you can stand at p.
 export function isClear(map: WallMap, p: XYZ): boolean {
+  // A stair or escalator body blocks even next to a walkway (R2-30): beside it mid-height, or over
+  // its opening on the floor above. On the slope itself you are fine.
+  if (feetOnSlope(map, p) !== null) return true;
+  if (slabInTheWay(map, p)) return false;
   if (onWalkway(map, p)) return true;
   const box = map.place && map.place.footprint;
   if (box && (p.x < box.minX + BODY_M || p.x > box.maxX - BODY_M || p.z < box.minZ + BODY_M || p.z > box.maxZ - BODY_M)) return false;

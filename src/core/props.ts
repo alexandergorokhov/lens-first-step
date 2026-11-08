@@ -220,6 +220,13 @@ export function foodHallParts(halfCm: number): DressPart[] {
   return out;
 }
 
+// Which places get the dining dressing: the "restaurant" destinations (food court) and food places
+// (the Bakery, demo 2's one-floor destination, R2-31).
+export function foodPlace(n: { kind: string; icon?: string; category?: string }): boolean {
+  return (n.kind === "destination" && n.icon === "restaurant") || (n.kind === "place" && n.category === "food");
+}
+export const dressedAsDining = foodPlace;
+
 // A part's middle in map metres, given its front (x, y, z on the floor, facing into the hall).
 export function partAt(front: PropFront, p: DressPart): PropXYZ {
   const f = front.facing;

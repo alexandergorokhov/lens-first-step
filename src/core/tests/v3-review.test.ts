@@ -307,3 +307,72 @@ test("R10d demo 1 says its flight, so its gate change is for this trip; planning
   assert.equal(plan[plan.length - 1], "gateC12");
   assert.ok(plan.length >= 3, plan.join(","));
 });
+
+test("R30 walking by hand: no standing inside or over a stair or escalator body in the mall (beside it mid-height, or over its opening)", async () => {
+  const { isClear, feetOnSlope, DRAWN_HALF_M } = await import("../geometry.ts");
+  const m: any = mall();
+  const at: any = {};
+  for (const n of m.nodes) at[n.id] = n;
+  const bad: string[] = [];
+  for (const e of m.edges) {
+    if (["stairs", "escalator"].indexOf(e.kind) < 0) continue;
+    const a = at[e.from], b = at[e.to];
+    const dx = b.x - a.x, dz = b.z - a.z, L = Math.hypot(dx, dz), nx = -dz / L, nz = dx / L;
+    const half = DRAWN_HALF_M[e.kind];
+    for (let t = 0.15; t <= 0.86; t += 0.1) for (const off of [-0.8 * half, -0.4 * half, 0, 0.4 * half, 0.8 * half]) for (const y of [a.y, b.y]) {
+      const above = a.y + (b.y - a.y) * t - y;
+      if (Math.abs(above) <= 0.5 || Math.abs(above) >= 2.2) continue;
+      const p = { x: a.x + dx * t + nx * off, y, z: a.z + dz * t + nz * off };
+      // The mall map leads one first-floor corridor (fBW-fBM) over the up escalator's top: that corridor
+      // stays walkable (changing it means a new gist map); demo 2 now keeps to one floor (R31).
+      const onCorridor = m.edges.some((w: any) => {
+        if (w.kind !== "walk") return false;
+        const u = at[w.from], v = at[w.to];
+        if (Math.abs(u.y - y) > 1 || Math.abs(v.y - y) > 1) return false;
+        const ex = v.x - u.x, ez = v.z - u.z, l2 = ex * ex + ez * ez;
+        const k = l2 === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - u.x) * ex + (p.z - u.z) * ez) / l2));
+        return Math.hypot(p.x - u.x - ex * k, p.z - u.z - ez * k) < 0.5;
+      });
+      if (!onCorridor && feetOnSlope(m, p) === null && isClear(m, p)) bad.push(e.from + " t" + t.toFixed(2) + " off" + off + " floor " + y);
+    }
+  }
+  assert.deepEqual(bad, []);
+});
+
+test("R31 demo 2 stays on one floor (Alex: drop the floor change): Talk says the Bakery, the route never leaves the ground floor", async () => {
+  const { matchDestination } = await import("../freewalk.ts");
+  const { Navigator } = await import("../router.ts");
+  const m = mall();
+  const d = demoSettings("mallPet")!;
+  assert.equal(d.talkPhrase, "Take me to the Bakery");
+  const id = matchDestination(m as any, d.talkPhrase);
+  assert.equal(id, "bakery");
+  const r: any = new Navigator(m, "sign", id!, "walk").route;
+  assert.equal(r.status, "route");
+  const at: any = {};
+  for (const n of m.nodes) at[n.id] = n;
+  assert.ok(r.nodes.every((n: string) => at[n].y === 0), "ground floor only: " + r.nodes.join(","));
+});
+
+test("R31b the Bakery is dressed as a little café (counters, boards, tables outside) and nothing of it is in the way in", async () => {
+  const { dressedAsDining, foodHallParts, partAt } = await import("../props.ts");
+  const { shopFrontPose } = await import("../freewalk.ts");
+  const { Navigator } = await import("../router.ts");
+  const m: any = mall();
+  const bakery = m.nodes.filter((n: any) => n.id === "bakery")[0];
+  assert.equal(dressedAsDining(bakery), true);
+  assert.equal(dressedAsDining(m.nodes.filter((n: any) => n.id === "threads")[0]), false);
+  const front = shopFrontPose(m, "bakery")!;
+  const r: any = new Navigator(m, "sign", "bakery", "walk").route;
+  const at: any = {};
+  for (const n of m.nodes) at[n.id] = n;
+  const pts = r.nodes.map((id: string) => at[id]);
+  const solids = foodHallParts(280).filter((p: any) => p.part === "table" || p.part === "chair").map((p: any) => ({ c: partAt(front, p), r: Math.max(p.w, p.d) / 200 }));
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1], b = pts[i], len = Math.hypot(b.x - a.x, b.z - a.z);
+    for (let s = 0; s <= len; s += 0.1) {
+      const q = { x: a.x + ((b.x - a.x) * s) / len, z: a.z + ((b.z - a.z) * s) / len };
+      for (const o of solids) assert.ok(Math.hypot(q.x - o.c.x, q.z - o.c.z) > o.r + 0.5, "too near a table/chair at " + JSON.stringify(q));
+    }
+  }
+});

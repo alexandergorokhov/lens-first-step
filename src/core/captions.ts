@@ -92,7 +92,7 @@ export function parseTranslation(reply: string): string | null {
 
 // The preview has no microphone: a scripted announcement shows how the captions look (labelled as such).
 // Who says it (the person standing in front of you as the caption shows).
-export const DEMO_SPEAKER: { [map: string]: string } = { airport: "Gate agent", mall: "Food court host" };
+export const DEMO_SPEAKER: { [map: string]: string } = { airport: "Gate agent", mall: "Host" };
 
 export const DEMO_SPEECH: { [map: string]: { heard: string; lang: string; english: string } } = {
   airport: {

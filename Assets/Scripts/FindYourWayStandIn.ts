@@ -10,7 +10,7 @@ import {boardModel, PlaceGroup} from "./FindYourWayPeek"
 import {MapData, MapNode, findNode} from "./FindYourWayRouter"
 import {approachDir, PlaceInfo} from "./FindYourWayMapLibrary"
 import {bayCovered, FrontPose, FwMap, shopFrontPose} from "./FindYourWayFreeWalk"
-import {foodHallParts} from "./FindYourWayProps"
+import {dressedAsDining, foodHallParts} from "./FindYourWayProps"
 
 type ToLocal = (x: number, y: number, z: number) => vec3
 
@@ -504,7 +504,7 @@ export class FindYourWayStandIn extends BaseScriptComponent {
       if (!pose) return
       namedFronts.push(pose)
       const fwd = new vec3(pose.facing.x, 0, -pose.facing.z)
-      const hall = n.kind === "destination" && n.icon === FOOD_HALL_ICON
+      const hall = dressedAsDining(n)
       const at = shopFront(toLocal(pose.x, pose.y, pose.z), fwd, i % fronts.length, 280, n.kind === "place", hall)
       if (i % PLANT_EVERY === 0) planters.push(at(340, 0, 50))
       // A garden gets its planters.

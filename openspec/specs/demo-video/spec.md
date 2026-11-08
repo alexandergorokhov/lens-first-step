@@ -25,3 +25,13 @@ The edit SHALL keep every line and beat at 1x, play quiet stretches 3x faster, c
 
 #### Scenario: VID-R16 Under 3 minutes
 - Verified by: N1-N9 (Node, narration.test.ts)
+
+### Requirement: Demo 2 on one floor; no walking inside stairs (R2-30, R2-31)
+Demo 2 SHALL go to the Bakery on the ground floor ("Take me to the Bakery"), so the video and a by-hand
+showing have no floor change; the Bakery is dressed as a little café (`dressedAsDining`). Walking by hand,
+a stair or escalator body SHALL block (beside it mid-height, or over its opening above), by its drawn width,
+except along a map corridor that the map itself leads across it (the mall's fBW-fBM over the up escalator,
+kept until the gist map is updated).
+
+#### Scenario: VID-R31 One floor
+- Verified by: R30, R31, R31b (Node) | demo-mall-pet

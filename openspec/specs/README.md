@@ -34,11 +34,11 @@ Capabilities of "Find Your Way Inside" (see `../project.md` for context and conv
 | Seated play and catch by hand | [seated-and-hand-play/spec.md](seated-and-hand-play/spec.md) |
 | Floor-plan draft to map (`npm run map:from-plan`) | [map-from-plan/spec.md](map-from-plan/spec.md) |
 | Solid walkable backdrop in Lens Studio; companion models | [preview-backdrop/spec.md](preview-backdrop/spec.md) |
-| Demo video: smooth camera, voice-over, edit under 3 minutes | [demo-video/spec.md](demo-video/spec.md) |
+| Demo video: smooth camera, voice-over, edit under 3 minutes, demo 2 on one floor | [demo-video/spec.md](demo-video/spec.md) |
 
 ## Traceability
 
-Status: **Pass (auto)** = covered by a passing Node test and/or LEAF scenario (Node 619 tests, all passing / 0 todo;
+Status: **Pass (auto)** = covered by a passing Node test and/or LEAF scenario (Node 622 tests, all passing / 0 todo;
 LEAF scenarios listed in `devpost/SCENARIOS.md`); **Partial** = logic tested but
 part of the behaviour only manual or untested; **Manual** = checked by hand in the preview only;
 **Gap** = no test.

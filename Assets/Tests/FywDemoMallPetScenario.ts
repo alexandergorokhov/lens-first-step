@@ -4,7 +4,7 @@ import {sleep} from "Leaf.lspkg/Utils/common/Utils"
 import {log} from "./FindYourWayLeafSupport"
 import {closeDemo, mallPetTrip, openDemo} from "./FywDemoSupport"
 
-// demo-mall-pet — preset 2: mall, Walk, Talk "the food court"; the dog waits at the escalator; arrival.
+// demo-mall-pet — preset 2: mall, Walk, Talk "the Bakery" (ground floor, no floor change: R2-31); the dog leads; arrival.
 @component
 export class FywDemoMallPetScenario extends Scenario {
   async run(): Promise<void> {
@@ -14,9 +14,8 @@ export class FywDemoMallPetScenario extends Scenario {
     expect(main.getMapKey(), "mall").toBe("mall")
     expect(main.getPreselectedMode(), "Walk").toBe("walk")
     const r = await mallPetTrip(run)
-    expect(r.waitedAt !== null, "the route takes an escalator").toBe(true)
-    expect(r.dogNearFoot, "the dog waited at the escalator foot").toBe(true)
-    expect(main.getArrivalText() !== null && main.getArrivalText()!.toLowerCase().indexOf("food court") >= 0, "arrived: " + main.getArrivalText()).toBe(true)
+    expect(r.waitedAt, "no floor change on the way").toBe(null)
+    expect(main.getArrivalText() !== null && main.getArrivalText()!.toLowerCase().indexOf("bakery") >= 0, "arrived: " + main.getArrivalText()).toBe(true)
     await closeDemo(main)
     log("demo-mall-pet pass")
   }

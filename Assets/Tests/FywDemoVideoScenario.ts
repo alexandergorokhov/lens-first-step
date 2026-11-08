@@ -127,7 +127,7 @@ export class FywDemoVideoScenario extends Scenario {
     await hold(run, 2)
     await mallPetTrip(run, async () => {
       await this.lineDone(run)
-      this.mark("leg to the food court")
+      this.mark("leg to the bakery")
     })
     this.mark("arrived " + run.main.getArrivalText())
     await hold(run, 8.5)

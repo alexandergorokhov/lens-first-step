@@ -269,13 +269,13 @@ export async function airportTrip(run: DemoRun): Promise<{stops: string[]; kinds
   return {stops, kinds}
 }
 
-// Demo 2: the food court by voice, Walk, the dog waits at the foot of the escalator.
+// Demo 2: by voice, Walk; the dog leads (the Bakery, on the ground floor, R2-31; an escalator, if the route has one, it waits at its foot).
 // beforeWalk: awaited after Talk, before the first step (the video take marks its "leg" beat there).
 export async function mallPetTrip(run: DemoRun, beforeWalk?: () => Promise<void>): Promise<{waitedAt: string | null; dogNearFoot: boolean}> {
   const main = run.main
   await hold(run, 0.8)
   await talk(run)
-  if (main.getDestinationId() !== "foodCourt") throw new Error("destination " + main.getDestinationId())
+  if (main.getDestinationId() !== "bakery") throw new Error("destination " + main.getDestinationId())
   if (beforeWalk) await beforeWalk()
   const nodes = main.getRouteNodes()
   const kinds = main.getRouteEdgeKinds()
@@ -299,7 +299,7 @@ export async function mallPetTrip(run: DemoRun, beforeWalk?: () => Promise<void>
       waitedAt = footId
       await glide(run, [pose(run)].concat(line.slice(1)), undefined, {rideFrom: 1, rideTo: 2})
       await walk(run, [pose(run)].concat(nodes.slice(k + 2).map((id) => nodePos(main, id))), () => main.getPhase() === "arrived")
-      await waitFor(() => main.getPhase() === "arrived", 8000, "arrived at the food court")
+      await waitFor(() => main.getPhase() === "arrived", 8000, "arrived at " + main.getDestinationId())
       return {waitedAt, dogNearFoot}
     }
     await walk(run, [pose(run)].concat(nodes.slice(1, k).map((id) => nodePos(main, id))).concat([short]))
@@ -312,7 +312,7 @@ export async function mallPetTrip(run: DemoRun, beforeWalk?: () => Promise<void>
   } else {
     await walk(run, routeFrom(run, null), () => main.getPhase() === "arrived")
   }
-  await waitFor(() => main.getPhase() === "arrived", 5000, "arrived at the food court")
+  await waitFor(() => main.getPhase() === "arrived", 5000, "arrived at " + main.getDestinationId())
   return {waitedAt, dogNearFoot}
 }
 
