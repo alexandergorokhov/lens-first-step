@@ -163,6 +163,7 @@ Root causes found:
 - [ ] R2-34 Free walk: the robot points from at least 3.5 m ahead, in view (`pointNearM`; test R34); the take
       walks the middle of the hall, so the shops show from a few metres.
 - [ ] R2-35 The reason card over the pointer bigger (`REASON_CARD`, Headline1, 80 cm; test R35).
+- [ ] R2-37 No ring: the chime on notices, stops and catches is off (`CHIME_ON`; test R37).
 - [ ] R2-36 The Go to a place panel more ordered: Talk (mic icon) and Where to? alike, Walk and Step-Free
       alike, the preview note as a footnote at the bottom.
 

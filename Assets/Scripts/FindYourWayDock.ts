@@ -76,6 +76,9 @@ export function arrivalCardOn(secondsSinceArrival: number, clean: boolean): bool
 
 // The folded Control tab is see-through (ROUND2.md R2-12, R2-33): the view stays visible behind it.
 export const CONTROL_TAB_OPACITY = 0.25;
+// No ring (R2-37, "really annoying"): the chime on notices, stops and catches stays off; the cards and
+// the companion's voice carry the news.
+export const CHIME_ON = false;
 // In the preview the folded tab sits in the upper-left corner of the view, out of the way (R2-33):
 // its offset from the camera (cm; x right, y up, -z ahead).
 export const CONTROL_TAB_CORNER = { x: -21, y: 22, z: -100 };

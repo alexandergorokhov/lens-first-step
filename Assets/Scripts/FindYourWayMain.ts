@@ -63,7 +63,7 @@ import {mapLogLines, tripAfterSaving} from "./FindYourWayMapping"
 import {peekPlace} from "./FindYourWayPeek"
 import {demoSettings, DemoSettings, showingSettings, StartSettings} from "./FindYourWayDemo"
 import {destinationsOf, FreeWalk, gateChangeOffer, interestList, LookBoxes, matchDestination, OfferDismissals, sayItPhrase, ShopLook, typedSoFar, typingSeconds, planAsk, askPrompt, parseAskReply, llmStops, ASK_LLM_TIMEOUT_S, VOICE_FALLBACK_S, walkableRoute, CLEAN_FREE_WALK, OFFER_LOOK_S, parseFlight, rerouteQuestion, parsePrefs, parsePrefsReply, prefsPrompt, prefsQuestion} from "./FindYourWayFreeWalk"
-import {arrivalCardOn, cleanAllows, CONTROL_TAB_CORNER, connectivity, notCaught, OptionsDock, SEE_MAP, tripTarget, routeLineAheadM, walkingHud} from "./FindYourWayDock"
+import {arrivalCardOn, CHIME_ON, cleanAllows, CONTROL_TAB_CORNER, connectivity, notCaught, OptionsDock, SEE_MAP, tripTarget, routeLineAheadM, walkingHud} from "./FindYourWayDock"
 import {FindYourWayOfferBoxesUI} from "./FindYourWayOfferBoxesUI"
 import {FindYourWayHomePanelUI} from "./FindYourWayHomePanelUI"
 import {FindYourWayPrefsUI} from "./FindYourWayPrefsUI"
@@ -1868,7 +1868,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   }
 
   private playChime(): void {
-    if (this.chime) this.audio.play(1)
+    if (CHIME_ON && this.chime) this.audio.play(1)
   }
 
   private notify(text: string, iconName: string | null): void {

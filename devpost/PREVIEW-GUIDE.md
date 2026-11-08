@@ -141,7 +141,7 @@ These are the things only a person can judge:
 - Every panel and card is readable and inside the view, standing and seated (Q).
 - Buttons respond to a click.
 - Ride buttons only work when you are next to them.
-- The card and chime at a route change are noticeable.
+- The card at a route change is noticeable (no chime: it is off, R2-37).
 - The line turns round to the next turn, with an arrow at the bottom of your view when the turn is out of view.
 
 Write **logic proven** next to what tests and the preview show working, and **feel unproven** next to what only real glasses can tell.
@@ -154,7 +154,7 @@ Write **logic proven** next to what tests and the preview show working, and **fe
 npm test
 ```
 
-Expect `pass 627`, `fail 0`. One test downloads the maps from the public gist; with no internet, set `OFFLINE=1` to skip it (`pass 578`, `skipped 1`). The run first checks that the Lens copies match `src/core`. After editing `src/core`, run `npm run sync`.
+Expect `pass 628`, `fail 0`. One test downloads the maps from the public gist; with no internet, set `OFFLINE=1` to skip it (`pass 578`, `skipped 1`). The run first checks that the Lens copies match `src/core`. After editing `src/core`, run `npm run sync`.
 
 **LEAF tests** run inside the Lens, pressing the real buttons:
 

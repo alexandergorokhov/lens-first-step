@@ -29,13 +29,14 @@ point.", "Map couldn't load", "This sign isn't in the map", "Walk to <place> fir
 - Verified by: closure-card-signs-and-5s-hide (card up at ~4 s, gone after 5 s)
 
 ### Requirement: Chime with attention notices
-A short chime SHALL play with the destination-change card and the connection-closed card
-(the things that need attention while the user may be looking elsewhere).
+A short chime played with the destination-change card and the connection-closed card. **Now off**
+(R2-37, Alex: "really annoying"): `CHIME_ON` is false, so no chime SHALL play with any card, stop or
+catch; the card and the companion's voice carry the news (test R37).
 
 #### Scenario: X42 Chime with the gate-change card
 - **WHEN** the user pinches "Gate change B12 → C3"
-- **THEN** a chime plays together with the card
-- Verified by: manual (preview) — PREVIEW-GUIDE "Checks by hand" "gate-change card and chime are noticeable"
+- **THEN** the card shows, with no chime
+- Verified by: R37 (Node) | manual (preview) — PREVIEW-GUIDE "Checks by hand"
 
 ### Requirement: Map badge
 A small badge SHALL show top-left in the view (−8, 8, −70 cm): "loading map…" during the load, then

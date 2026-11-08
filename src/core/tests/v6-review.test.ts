@@ -76,3 +76,8 @@ test("R35 the reason card over the pointer is big enough to read from where it p
   // Read from where it stands: at least as far as it points from.
   assert.ok(REASON_CARD.distanceCm >= FREE_DEFAULTS.pointNearM * 100);
 });
+
+test("R37 no ring: the chime (notices, stops, catches) is off", async () => {
+  const { CHIME_ON } = await import("../dock.ts");
+  assert.equal(CHIME_ON, false);
+});
