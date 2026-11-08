@@ -62,7 +62,7 @@ import {MultiStopTrip, orderStops} from "./FindYourWayTrip"
 import {mapLogLines, tripAfterSaving} from "./FindYourWayMapping"
 import {peekPlace} from "./FindYourWayPeek"
 import {demoSettings, DemoSettings, showingSettings, StartSettings} from "./FindYourWayDemo"
-import {destinationsOf, FreeWalk, gateChangeOffer, interestList, LookBoxes, matchDestination, OfferDismissals, sayItPhrase, ShopLook, typedSoFar, typingSeconds, planAsk, askPrompt, parseAskReply, llmStops, ASK_LLM_TIMEOUT_S, VOICE_FALLBACK_S, walkableRoute, CLEAN_FREE_WALK, OFFER_LOOK_S, parsePrefs, parsePrefsReply, prefsPrompt, prefsQuestion} from "./FindYourWayFreeWalk"
+import {destinationsOf, FreeWalk, gateChangeOffer, interestList, LookBoxes, matchDestination, OfferDismissals, sayItPhrase, ShopLook, typedSoFar, typingSeconds, planAsk, askPrompt, parseAskReply, llmStops, ASK_LLM_TIMEOUT_S, VOICE_FALLBACK_S, walkableRoute, CLEAN_FREE_WALK, OFFER_LOOK_S, parseFlight, rerouteQuestion, parsePrefs, parsePrefsReply, prefsPrompt, prefsQuestion} from "./FindYourWayFreeWalk"
 import {arrivalCardOn, cleanAllows, connectivity, notCaught, OptionsDock, SEE_MAP, tripTarget, routeLineAheadM, walkingHud} from "./FindYourWayDock"
 import {FindYourWayOfferBoxesUI} from "./FindYourWayOfferBoxesUI"
 import {FindYourWayHomePanelUI} from "./FindYourWayHomePanelUI"
@@ -341,6 +341,8 @@ export class FindYourWayMain extends BaseScriptComponent {
   private talkAt = -1
   // Add-on D: the gate a heard announcement offers to re-route to, until answered.
   private rerouteOffer: string | null = null
+  // The trip's flight, from what you said ("before my flight 212"); null: any gate change asks, as beta.
+  private tripFlight: string | null = null
   // The shop whose offers show in the card (looked at for 2 s).
   private offersShown: LookBoxes | null = null
   private playTime: FindYourWayPlayTime
@@ -780,7 +782,7 @@ export class FindYourWayMain extends BaseScriptComponent {
     fb.bind(() => {
       this.removeEvent(fb)
       if (attempt !== this.voiceTry || this.heardAny || this.phase !== "mode") return
-      const phrase = sayItPhrase(this.map)
+      const phrase = (this.demoSet && this.demoSet.talkPhrase) || sayItPhrase(this.map)
       if (!phrase) return
       this.voice.stop()
       this.typing = {phrase, t0: getTime()}
@@ -805,6 +807,9 @@ export class FindYourWayMain extends BaseScriptComponent {
       return
     }
     this.voice.stop()
+    // Your flight, if you named it: only its announcements can change the gate (R2-10).
+    const flight = parseFlight(text)
+    if (flight) this.tripFlight = flight
     const plan = this.planSentence(text)
     const one = plan.length === 0 ? matchDestination(this.map, text) : null
     if (plan.length === 0 && !one && this.llmFor()) {
@@ -1396,6 +1401,7 @@ export class FindYourWayMain extends BaseScriptComponent {
 
   restart(): void {
     this.rerouteOffer = null
+    this.tripFlight = null
     this.hud.setReroute(null)
     if (this.captions) this.captions.reset()
     if (this.says) this.says.reset()
@@ -1682,12 +1688,12 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (!this.nav || (this.phase !== "nav" && this.phase !== "arrived")) return
     // Compared with where the trip ends (a multi-stop trip ends at its gate), not the next stop.
     const stops = this.getStops()
-    const o = gateChangeOffer(this.nav.map as any, text, stops.length > 0 ? stops[stops.length - 1] : this.getDestinationId())
+    const o = gateChangeOffer(this.nav.map as any, text, stops.length > 0 ? stops[stops.length - 1] : this.getDestinationId(), this.tripFlight)
     if (!o) return
     this.rerouteOffer = o.gate
     this.showBoxes(null)
     print("[FYW] heard a gate change: " + o.label + (o.flags.length ? " (" + o.flags.join(", ") + ")" : ""))
-    this.hud.setReroute("Re-route to " + o.label + "?", (yes) => this.answerReroute(yes))
+    this.hud.setReroute(rerouteQuestion(o), (yes) => this.answerReroute(yes))
   }
 
   private answerReroute(yes: boolean): void {
@@ -1706,6 +1712,7 @@ export class FindYourWayMain extends BaseScriptComponent {
 
   // Test hook: the re-route question on screen (null: none).
   getRerouteText(): string | null { return this.hud.getRerouteText() }
+  getTripFlight(): string | null { return this.tripFlight }
 
   private closeConnection(edgeId: string): void {
     if (this.closed[edgeId]) return

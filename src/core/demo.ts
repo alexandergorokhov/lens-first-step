@@ -227,11 +227,14 @@ export interface DemoSettings {
   interests: string[];
   // Free walk: what you say when the companion asks for preferences (the preview types it in; R2-15).
   prefsPhrase: string;
+  // Go to a place: what you say on Talk (the preview types it in); "" uses the map's own phrase. The
+  // airport one names the flight, so only its announcements count (R2-10).
+  talkPhrase: string;
 }
 
 export function demoSettings(preset: string): DemoSettings | null {
-  if (preset === "airportWheelchair") return { mapKey: "airport", companionModel: "robot", preselect: "stepFree", seatedDropCm: 45, open: "goTo", interests: [], prefsPhrase: "" };
-  if (preset === "mallPet") return { mapKey: "mall", companionModel: "dog", preselect: "walk", seatedDropCm: 0, open: "goTo", interests: [], prefsPhrase: "" };
-  if (preset === "freeWalkRobot") return { mapKey: "mall", companionModel: "robot", preselect: null, seatedDropCm: 0, open: "freeWalk", interests: ["books"], prefsPhrase: "A coffee, and I'm into fashion today" };
+  if (preset === "airportWheelchair") return { mapKey: "airport", companionModel: "robot", preselect: "stepFree", seatedDropCm: 45, open: "goTo", interests: [], prefsPhrase: "", talkPhrase: "I need coffee and a bathroom before my flight 212 at gate 12C" };
+  if (preset === "mallPet") return { mapKey: "mall", companionModel: "dog", preselect: "walk", seatedDropCm: 0, open: "goTo", interests: [], prefsPhrase: "", talkPhrase: "" };
+  if (preset === "freeWalkRobot") return { mapKey: "mall", companionModel: "robot", preselect: null, seatedDropCm: 0, open: "freeWalk", interests: ["books"], prefsPhrase: "A coffee, and I'm into fashion today", talkPhrase: "" };
   return null;
 }

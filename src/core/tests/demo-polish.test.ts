@@ -132,17 +132,17 @@ test("D1 three demo presets, plus off", () => {
 
 test("D2 airportWheelchair: airport, robot (Alex, Nov 7), Step-Free, seated (45 cm lower), Go to a place open", () => {
   const s = demoSettings("airportWheelchair")!;
-  assert.deepEqual(s, { mapKey: "airport", companionModel: "robot", preselect: "stepFree", seatedDropCm: 45, open: "goTo", interests: [], prefsPhrase: "" });
+  assert.deepEqual(s, { mapKey: "airport", companionModel: "robot", preselect: "stepFree", seatedDropCm: 45, open: "goTo", interests: [], prefsPhrase: "", talkPhrase: "I need coffee and a bathroom before my flight 212 at gate 12C" });
 });
 
 test("D3 mallPet: mall, dog, Walk, standing, Go to a place open", () => {
   const s = demoSettings("mallPet")!;
-  assert.deepEqual(s, { mapKey: "mall", companionModel: "dog", preselect: "walk", seatedDropCm: 0, open: "goTo", interests: [], prefsPhrase: "" });
+  assert.deepEqual(s, { mapKey: "mall", companionModel: "dog", preselect: "walk", seatedDropCm: 0, open: "goTo", interests: [], prefsPhrase: "", talkPhrase: "" });
 });
 
 test("D4 freeWalkRobot: mall, robot, Free walk; last time it was books, and you say coffee and fashion (R2-15)", () => {
   const s = demoSettings("freeWalkRobot")!;
-  assert.deepEqual(s, { mapKey: "mall", companionModel: "robot", preselect: null, seatedDropCm: 0, open: "freeWalk", interests: ["books"], prefsPhrase: "A coffee, and I'm into fashion today" });
+  assert.deepEqual(s, { mapKey: "mall", companionModel: "robot", preselect: null, seatedDropCm: 0, open: "freeWalk", interests: ["books"], prefsPhrase: "A coffee, and I'm into fashion today", talkPhrase: "" });
 });
 
 test("D5 Free walk for coffee and clothes from the mall sign: with the clean screen's settings the robot stops at Bean There Café, then Threads", () => {

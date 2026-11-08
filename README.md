@@ -70,7 +70,7 @@ Each feature below passed its LEAF test, run inside the Lens and pressing the re
 npm test
 ```
 
-There are 614 tests (offline: 578 pass, 1 skipped). One downloads the maps from the public gist; offline, set `OFFLINE=1` to skip it. The run first checks that the Lens's copies of the core files match `src/core`; after editing `src/core`, run `npm run sync`.
+There are 619 tests (offline: 578 pass, 1 skipped). One downloads the maps from the public gist; offline, set `OFFLINE=1` to skip it. The run first checks that the Lens's copies of the core files match `src/core`; after editing `src/core`, run `npm run sync`.
 
 **LEAF tests** run inside the Lens:
 1. Select **LeafIndex** in the Scene Hierarchy and tick **autoRun**. To run only some, type their ids in **only**, separated by commas.

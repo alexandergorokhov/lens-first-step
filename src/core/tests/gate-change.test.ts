@@ -22,7 +22,7 @@ test("the sample announcement: Spanish heard, English shown, naming gate B14", (
 
 test("heading to C12, the announcement offers Gate B14, flagged boarding", () => {
   const o = gateChangeOffer(airport(), GATE_CHANGE_SPEECH.english, "gateC12");
-  assert.deepEqual(o, { gate: "gateB14", label: "Gate B14", flags: ["boarding"] });
+  assert.deepEqual(o, { gate: "gateB14", label: "Gate B14", flags: ["boarding"], beta: true });
 });
 
 test("no offer when the heard gate is already the destination", () => {

@@ -252,3 +252,58 @@ test("R21 the airport stairs stand out from the floor: darker treads, bright nos
   const src = readFileSync(new URL("../../../tools/demo-video/airport.js", import.meta.url), "utf8");
   assert.ok(src.indexOf("STAIR_COLORS.tread") >= 0 && src.indexOf("STAIR_COLORS.nose") >= 0 && src.indexOf("STAIR_COLORS.stringer") >= 0, "airport.js uses them");
 });
+
+test("R29 the gate agent speaks of your own flight: 212 to Madrid, the same flight as the gate change", async () => {
+  const { DEMO_SPEECH, GATE_CHANGE_SPEECH, demoSpeechFor } = await import("../captions.ts");
+  for (const s of [DEMO_SPEECH.airport.heard, DEMO_SPEECH.airport.english]) {
+    assert.ok(s.indexOf("212") >= 0 && s.indexOf("Madrid") >= 0, s);
+    assert.ok(s.indexOf("Lisboa") < 0 && s.indexOf("Lisbon") < 0 && s.indexOf("IB3104") < 0, s);
+  }
+  assert.ok(GATE_CHANGE_SPEECH.english.indexOf("212") >= 0 && GATE_CHANGE_SPEECH.english.indexOf("Madrid") >= 0);
+  assert.equal(demoSpeechFor("airport", "B14")!.english, "Attention please: flight 212 to Madrid is now boarding at gate B14.");
+});
+
+// R2-10: the gate change only for MY flight (beta). The flight comes from what you say, parsed in core.
+function airportMap(): any {
+  const r = parseMap(readFileSync(new URL("../data/map.json", import.meta.url), "utf8"));
+  if (!r.ok) throw new Error("airport");
+  return r.map;
+}
+
+test("R10 the flight is parsed from what you say (no LLM)", async () => {
+  const { parseFlight } = await import("../freewalk.ts");
+  assert.equal(parseFlight("coffee and a bathroom before my flight 212 at gate 12C"), "212");
+  assert.equal(parseFlight("my flight is IB3104"), "IB3104");
+  assert.equal(parseFlight("flight number ib 3104 please"), "IB3104");
+  assert.equal(parseFlight("take me to gate 12C"), null);
+});
+
+test("R10b with my flight set: offer only when the announcement names my flight and another gate", async () => {
+  const { gateChangeOffer } = await import("../freewalk.ts");
+  const m = airportMap();
+  const mine = "Attention: flight 212 to Madrid now boards at gate B14.";
+  const other = "Attention: flight 845 to Paris now boards at gate B16.";
+  assert.equal(gateChangeOffer(m, mine, "gateC12", "212")!.gate, "gateB14");
+  assert.equal(gateChangeOffer(m, mine, "gateC12", "212")!.beta, false);
+  assert.equal(gateChangeOffer(m, other, "gateC12", "212"), null, "someone else's flight");
+  assert.equal(gateChangeOffer(m, "Attention: flight 212 now boards at gate C12.", "gateC12", "212"), null, "my own gate");
+});
+
+test("R10c with no flight set: today's behaviour, labelled beta", async () => {
+  const { gateChangeOffer, rerouteQuestion } = await import("../freewalk.ts");
+  const o = gateChangeOffer(airportMap(), "Attention: flight 845 to Paris now boards at gate B16.", "gateC12", null)!;
+  assert.equal(o.gate, "gateB16");
+  assert.equal(o.beta, true);
+  assert.equal(rerouteQuestion(o), "Re-route to Gate B16? Beta: is this your flight?");
+  assert.equal(rerouteQuestion({ ...o, beta: false }), "Re-route to Gate B16?");
+});
+
+test("R10d demo 1 says its flight, so its gate change is for this trip; planning still finds the stops", async () => {
+  const { planAsk, parseFlight } = await import("../freewalk.ts");
+  const d = demoSettings("airportWheelchair")!;
+  assert.equal(parseFlight(d.talkPhrase), "212");
+  const m = airportMap();
+  const plan = planAsk(m, d.talkPhrase, m.place.start, true, () => 1);
+  assert.equal(plan[plan.length - 1], "gateC12");
+  assert.ok(plan.length >= 3, plan.join(","));
+});

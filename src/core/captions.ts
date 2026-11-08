@@ -96,9 +96,9 @@ export const DEMO_SPEAKER: { [map: string]: string } = { airport: "Gate agent", 
 
 export const DEMO_SPEECH: { [map: string]: { heard: string; lang: string; english: string } } = {
   airport: {
-    heard: "Atención por favor: el vuelo IB3104 a Lisboa embarca ahora por la puerta C12.",
+    heard: "Atención por favor: el vuelo 212 a Madrid embarca ahora por la puerta C12.",
     lang: "es",
-    english: "Attention please: flight IB3104 to Lisbon is now boarding at gate C12.",
+    english: "Attention please: flight 212 to Madrid is now boarding at gate C12.",
   },
   mall: {
     heard: "Bonjour ! Une table pour deux ? Il y a de la place près de la fenêtre.",

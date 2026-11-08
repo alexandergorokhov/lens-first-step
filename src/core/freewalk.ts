@@ -1310,6 +1310,26 @@ export interface GateOffer {
   gate: string;
   label: string;
   flags: string[];
+  // No flight set for the trip: it may be someone else's flight, so the question says so (R2-10).
+  beta: boolean;
+}
+
+// R2-10: your flight, from what you say ("before my flight 212", "my flight is IB3104"), as "212" or
+// "IB3104"; null when none is named. Plain words, no LLM.
+export function parseFlight(text: string): string | null {
+  const m = /\bflight\s+(?:number\s+|is\s+|no\.?\s+)?([a-z]{2}\s?\d{2,4}|\d{2,4})\b/i.exec(text);
+  return m ? m[1].replace(/\s+/g, "").toUpperCase() : null;
+}
+
+// Does what was heard name this flight? ("flight IB 3104" counts as IB3104.)
+function namesFlight(heard: string, flight: string): boolean {
+  const h = heard.toUpperCase().replace(/\b([A-Z]{2})\s+(\d)/g, "$1$2");
+  return new RegExp("(^|[^A-Z0-9])" + flight + "([^A-Z0-9]|$)").test(h);
+}
+
+// The question on the card: plain with your flight set, flagged beta without.
+export function rerouteQuestion(o: GateOffer): string {
+  return "Re-route to " + o.label + "?" + (o.beta ? " Beta: is this your flight?" : "");
 }
 
 const TRIP_FLAGS: [string, RegExp][] = [
@@ -1318,14 +1338,16 @@ const TRIP_FLAGS: [string, RegExp][] = [
   ["cancelled", /\b(cancelled|canceled)\b/],
 ];
 
-export function gateChangeOffer(map: FwMap, heard: string, current: string | null): GateOffer | null {
+export function gateChangeOffer(map: FwMap, heard: string, current: string | null, flight: string | null = null): GateOffer | null {
+  // With your flight set, only announcements for it count (R2-10).
+  if (flight && !namesFlight(heard, flight)) return null;
   const said = joinCodes(words(heard));
   for (const n of map.nodes) {
     const m = n.kind === "destination" && n.label ? /^gate\s+([a-z]\d+)$/i.exec(n.label) : null;
     if (!m || said.indexOf(m[1].toLowerCase()) < 0) continue;
     if (n.id === current) return null;
     const plain = words(heard).join(" ");
-    return { gate: n.id, label: n.label!, flags: TRIP_FLAGS.filter(([, re]) => re.test(plain)).map(([f]) => f) };
+    return { gate: n.id, label: n.label!, flags: TRIP_FLAGS.filter(([, re]) => re.test(plain)).map(([f]) => f), beta: !flight };
   }
   return null;
 }

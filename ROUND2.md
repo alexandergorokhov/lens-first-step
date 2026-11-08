@@ -75,7 +75,9 @@ Root causes found:
 - [ ] R2-8 Stills check (`tools/demo-video/airport-shots.mjs`) at each demo pose, then Lens Studio: LEAF
       `visual-demos`, re-record, edit with voice-over -> `pathpal-demos-v3.mp4`. Needs the lens-studio MCP.
 
-- [ ] R2-10 Gate change only for MY flight (beta). Lower priority than R2-2..R2-8; test first.
+- [ ] R2-10 Gate change only for MY flight (beta). **Core done** (R10-R10d: `parseFlight`, `gateChangeOffer(...,
+      flight)`, `rerouteQuestion`; demo 1 says "before my flight 212"); Lens wired, **not compiled yet**
+      (Lens Studio quit). The voice-over should say you give your flight number so it listens for it. Lower priority than R2-2..R2-8; test first.
       Today `gateChangeOffer` (`src/core/freewalk.ts`) offers "Re-route to Gate X?" for ANY announcement naming
       another gate, so someone else's flight would trigger it.
       1. The trip holds an optional flight code ("IB3104", "212"), set from what I say or type ("my flight is
@@ -137,6 +139,11 @@ Root causes found:
 - [ ] R2-28 v4 review (2:40, `pathpal-demos-v4.mp4`): the crop shows a sliver of the preview toolbar; a white
       blank frame at the lift; the camera ends inside the café front (stop farther out); at the escalator top
       it faces a wall close up; in Free walk it brushes a vending fridge.
+- [ ] R2-29 The gate agent spoke of flight IB3104 to Lisbon while the trip is flight 212 to Madrid: now
+      "flight 212 to Madrid" (test R29). **Done in core.**
+- [ ] R2-30 Still seen by hand: walking through the stairs/escalator when changing floors, and far shops
+      popping in and out (draw distance / culling of the stand-in shop meshes?). Check the models; fix, or keep
+      demo 2 on one floor. "Otherwise it is no good presentation."
 - [ ] R2-16 Re-record v4 with the voice-over table updated for R2-11 and R2-15.
       **Contest rules (hard limits):** under 3 minutes, posted on YouTube, the real Lens running in the Lens
       Studio preview (a narrated screen recording of the preview is fine). No renders made outside Lens Studio

@@ -65,3 +65,15 @@ campus "Room change Lecture Hall 1 → Lab 2", room "Change to the door" (card
 - **Fixed (review round):** a change made before the scan is no longer lost when the map loads (X31).
 - Pressing the button again after the change re-shows the card and chime with no route change.
 - X32 (change after arrival resumes navigation) still has no test.
+
+### Requirement: Only my flight's gate change (R2-10, beta)
+The trip SHALL take its flight from what you say ("before my flight 212", `parseFlight`, no LLM). With a
+flight set, a heard announcement SHALL offer "Re-route to Gate X?" only when it names that flight and a
+different gate; with none set, any other gate offers it, flagged "Beta: is this your flight?". It never
+re-routes without your Yes. The demo's gate agent speaks of the same flight (212 to Madrid).
+
+#### Scenario: DCH-R10 Someone else's flight
+- **GIVEN** the trip's flight 212, heading to C12
+- **WHEN** "flight 845 to Paris now boards at gate B16" is heard
+- **THEN** nothing is offered; "flight 212 ... gate B14" offers Gate B14
+- Verified by: R10, R10b, R10c, R10d, R29 (Node)
