@@ -61,10 +61,11 @@ const SHAKE_CM = 4
 const POINTER_HEIGHT_CM = 55
 const POINTER_LENGTH_CM = 110
 // The reason card (R2-14): its size (cm), its height over the pointer's tip, read from a few metres.
-const REASON_W_CM = 34
-const REASON_H_CM = 6
-const REASON_ABOVE_CM = 22
-const REASON_DISTANCE_CM = 300
+// About 1.5x the first version (R2-25, "make it a bit bigger so it is easier to read").
+const REASON_W_CM = 52
+const REASON_H_CM = 9
+const REASON_ABOVE_CM = 28
+const REASON_DISTANCE_CM = 450
 // The floor arrow near your feet toward the companion when it is out of view.
 const FLOOR_ARROW_CM = 34
 const FLOOR_ARROW_COLOR = new vec4(0.4, 0.85, 1, ARROW_OPACITY)

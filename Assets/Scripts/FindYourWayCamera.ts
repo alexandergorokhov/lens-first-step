@@ -17,7 +17,8 @@ export const CAM = {
   lookAheadM: 2.5, // the heading looks at the way this far ahead
   maxTurnDegS: 60, // never turns faster
   rideSpeed: 0.6, // an escalator's pace (m/s)
-  rideRunM: 2.5, // stepping on and off in line with an escalator
+  rideRunM: 2.5, // stepping on in line with an escalator
+  rideOffM: 1.2, // and off: short, so the view at the top is the floor ahead, not a wall up close
   liftStandM: 1.8, // standing this far in front of a lift's doors
   sampleM: 0.05,
 };
@@ -125,7 +126,7 @@ export function planWalk(pts: XYZ[], startHeading: number, ride?: { rideFrom: nu
   return out;
 }
 
-// An escalator ridden straight: on CAM.rideRunM before its foot and off as far past its top, in line.
+// An escalator ridden straight: on CAM.rideRunM before its foot and off CAM.rideOffM past its top, in line.
 // planWalk(rideLine(foot, top), h, {rideFrom: 1, rideTo: 2}).
 export function rideLine(foot: XYZ, top: XYZ): XYZ[] {
   const l = flat(foot, top);
@@ -134,7 +135,7 @@ export function rideLine(foot: XYZ, top: XYZ): XYZ[] {
     { x: foot.x - ax.x * CAM.rideRunM, y: foot.y, z: foot.z - ax.z * CAM.rideRunM },
     { ...foot },
     { ...top },
-    { x: top.x + ax.x * CAM.rideRunM, y: top.y, z: top.z + ax.z * CAM.rideRunM },
+    { x: top.x + ax.x * CAM.rideOffM, y: top.y, z: top.z + ax.z * CAM.rideOffM },
   ];
 }
 

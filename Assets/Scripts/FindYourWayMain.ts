@@ -2645,6 +2645,8 @@ export class FindYourWayMain extends BaseScriptComponent {
   isPlacesMuted(): boolean { return this.placesMuted }
   // A raised hand (or the Jump button): jump, or after a bump, play again.
   jump(): boolean { return this.playTime.jump() }
+  // Test hook: the Control panel's Play (folded away in the demos), for the video's play moment (R2-27).
+  debugTogglePlay(): void { this.playTime.toggle() }
   throwTreat(): void { this.playTime.throwTreat() }
   canPlayNow(): boolean { return this.playTime.gate.canPlay }
   isSeatedNow(): boolean { return this.playTime.seated.seated }

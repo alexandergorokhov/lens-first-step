@@ -162,11 +162,12 @@ Updated Nov 7 by the pitch session to match the story (pitch/pathpal-story.md). 
 | Beat | Line |
 | --- | --- |
 | demo 1: airport, wheelchair | There's no GPS indoors. Pathpal guides you on Snap Specs, hands free. Here, an airport, in a wheelchair. |
-| talk | I just say what I need: coffee, a bathroom, then my gate. |
+| talk | I say what I need, and my flight number, so it listens for my flight: coffee, a bathroom, my gate. |
 | leg 1 | It plans the stops in order, step-free: lifts only, never stairs or escalators. I just follow my robot. |
 | announcement | An announcement in Spanish, captioned in English. It names a new gate. |
 | question | Pathpal asks first; it never changes my trip on its own. Yes: re-routed to B14, still step-free. |
 | arrived | The gate agent speaks Spanish; I read it in English. Captions help if you can't hear, too. |
+| play | Waiting to board? A quick game with my robot. |
 | demo 2: mall, follow the dog | In a mall, I just follow my dog. Easier than reading a map. |
 | leg | It waits for me at the escalator, then leads on to the food court. |
 | arrived | The host speaks French; I read it in English. |

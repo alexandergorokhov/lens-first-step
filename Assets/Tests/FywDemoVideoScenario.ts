@@ -105,6 +105,20 @@ export class FywDemoVideoScenario extends Scenario {
     await this.lineDone(run)
     // The gate agent at B14 speaks of B14: no "Re-route to …?" at the gate you are at.
     expect(run.main.getRerouteText(), "no re-route question at the gate").toBe(null)
+    // Waiting to board: a quick game with the companion (R2-27).
+    run.main.debugTogglePlay()
+    const t = getTime()
+    while (run.main.getHopPhase() !== "running" && getTime() - t < 3) await hold(run, 0.1)
+    if (run.main.getHopPhase() === "running") {
+      this.mark("play")
+      for (let k = 0; k < 4; k++) {
+        await hold(run, 1.1)
+        run.main.jump()
+      }
+      await this.lineDone(run, 1)
+      run.main.debugTogglePlay()
+      await hold(run, 0.8)
+    } else log("visual-demos: Hop did not start at the gate (" + run.main.getHopPhase() + ")")
     await closeDemo(run.main)
 
     this.mark("demo 2: mall, follow the dog")

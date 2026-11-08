@@ -44,7 +44,7 @@ test("CAM3 an escalator is ridden straight along its axis, at ride pace, steppin
   const line = rideLine(foot, top);
   // On before the foot and off after the top, in line with the escalator.
   assert.ok(Math.abs(line[0].x - 10) < 1e-9 && line[0].z < foot.z - CAM.rideRunM + 1e-9);
-  assert.ok(Math.abs(line[line.length - 1].x - 10) < 1e-9 && line[line.length - 1].z > top.z + CAM.rideRunM - 1e-9);
+  assert.ok(Math.abs(line[line.length - 1].x - 10) < 1e-9 && line[line.length - 1].z > top.z + CAM.rideOffM - 1e-9);
   const poses = planWalk(line, 0, { rideFrom: 1, rideTo: 2 });
   check(poses, CAM.walkSpeed, "escalator");
   const onIt = poses.filter((p) => p.y > 0.2 && p.y < 4.8);
