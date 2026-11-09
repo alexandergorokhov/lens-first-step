@@ -142,3 +142,12 @@ test("N9 the edit: quiet walking plays faster, every line and beat at 1x, a lift
   // Lines stay in order and never overlap in the edit.
   for (let i = 1; i < plan.lines.length; i++) assert.ok(plan.lines[i].at >= plan.lines[i - 1].at + speakSeconds(NARRATION[plan.lines[i - 1].index].line) - 1e-6, "overlap at " + i);
 });
+
+test("N10 the edit keeps the whole game at 1x, from 'play' to 'play end' (R2-43: the play is obvious)", async () => {
+  const { editPlan } = await import("../narration.ts");
+  const marks = parseMarks(["[VID] 0.00 demo 2: mall, follow the dog", "[VID] 20.0 arrived Bakery", "[VID] 40.0 play", "[VID] 48.0 play end", "[VID] 70.0 END", "[VID] 75.0 CUT"].join("\n"));
+  const plan = editPlan(marks, undefined, 75);
+  const at1x = plan.segs.filter((s) => s.speed === 1 && s.from <= 40 + 1e-6 && s.to >= 48 - 1e-6);
+  assert.equal(at1x.length, 1, JSON.stringify(plan.segs));
+  assert.ok(plan.outAt(48) - plan.outAt(40) >= 8 - 1e-6, "8 s of play stays 8 s");
+});

@@ -100,11 +100,13 @@ export class FywDemoVideoScenario extends Scenario {
     this.mark("play")
     // Look down at the lane, so the dog and the obstacles show whole (R2-42).
     await tiltTo(run, 12, 0.8)
-    for (let k = 0; k < 5; k++) {
+    // At least 7 s of play, all kept at 1x in the edit (R2-43): the game reads as a game.
+    for (let k = 0; k < 7; k++) {
       await hold(run, 1.1)
       run.main.jump()
     }
     await this.lineDone(run, 1)
+    this.mark("play end")
     run.main.debugTogglePlay()
     await tiltTo(run, 0, 0.8)
   }
@@ -151,10 +153,15 @@ export class FywDemoVideoScenario extends Scenario {
     await this.lineDone(run, 2.5)
     const r = await freeWalkRobotTrip(run)
     this.mark("pointed " + r.pointed.join(",") + " boxes " + r.boxes.join(","))
-    await turnTo(run, 0, 1)
-    await this.lineDone(run, 1)
-    // The last line is said over the last view, then the take ends.
+    // The last view (R2-44): turn down the hall and walk on behind the robot, the shops either side.
+    await turnTo(run, 90, 1.8)
+    await tiltTo(run, 6, 0.8)
+    await hold(run, 2.5)
+    await this.lineDone(run, 0.5)
+    // The last line is said over the walk on, then the take ends.
     this.mark("END")
+    const p = run.main.getDebugPose()!.pos
+    await glide(run, [p, {x: p.x + 9, y: p.y, z: p.z}])
     await this.lineDone(run, 0.5)
     await closeDemo(run.main)
     print("[VID] " + (getTime() - this.t0).toFixed(2) + " CUT")

@@ -170,6 +170,8 @@ Root causes found:
 - [ ] R2-41 The dog's route to the Bakery ran past it to the far junction and doubled back: the map joins the
       Bakery only to gBW. `routePoints` now leaves the corridor beside a place (`cutEndDetour`; test R41).
       Found also: a floor change left the Free walk companion stuck in "point"; it now leads again.
+- [ ] R2-43 The play at least 7 s, all at 1x in the edit ("play" .. "play end" marks; test N10).
+- [ ] R2-44 A better last view: down the hall, walking on behind the robot (no plant up close).
 - [ ] R2-37 No ring: the chime on notices, stops and catches is off (`CHIME_ON`; test R37).
 - [ ] R2-36 The Go to a place panel more ordered: Talk (mic icon) and Where to? alike, Walk and Step-Free
       alike, the preview note as a footnote at the bottom.

@@ -89,8 +89,12 @@ export function editPlan(marks: Mark[], seconds: number[] | undefined, end: numb
   const busy: [number, number][] = placed.map((p) => [p.start - EDIT.padS, p.end + EDIT.padS]);
   const cuts: [number, number][] = [];
   let rideIn: number | null = null;
+  let playAt: number | null = null;
   for (const m of marks) {
     if (m.what === "ride in") { rideIn = m.t; continue; }
+    // The game plays at 1x from start to end, so it reads as a game (R2-43).
+    if (m.what === "play") playAt = m.t;
+    if (m.what === "play end" && playAt !== null) { busy.push([playAt, m.t + EDIT.beatAfterS]); playAt = null; continue; }
     if (m.what === "ride out" && rideIn !== null) { cuts.push([rideIn + EDIT.rideTrimS, m.t - EDIT.rideTrimS / 2]); rideIn = null; continue; }
     if (/^(T0|CUT)/.test(m.what)) continue;
     busy.push([m.t - EDIT.beatBeforeS, m.t + EDIT.beatAfterS]);
