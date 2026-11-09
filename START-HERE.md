@@ -1,6 +1,6 @@
 # Start here (for a developer or a coding agent)
 
-Pathpal ("Find Your Way Inside"): an indoor-navigation Lens for Snap Specs, built for the Learn AR with SPECS
+Pathpal (first called "Find Your Way Inside"): an indoor-navigation Lens for Snap Specs, built for the Learn AR with SPECS
 hackathon. A companion (dog or robot) walks ahead of you to where you're going, step-free when you need it, and
 points at shops you like in Free walk. Everything runs in the Lens Studio preview; no Specs hardware was used.
 

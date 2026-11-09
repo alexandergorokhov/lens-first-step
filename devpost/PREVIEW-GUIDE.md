@@ -1,4 +1,4 @@
-# Find Your Way Inside: try it in the Lens Studio preview
+# Pathpal: try it in the Lens Studio preview
 
 No glasses needed. Everything below runs in Lens Studio's Preview panel on your laptop.
 

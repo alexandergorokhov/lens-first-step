@@ -15,8 +15,7 @@ Start here. Each file below says what it is for.
 
 | File | What it is |
 |---|---|
-| [PITCH-POLISHED.md](PITCH-POLISHED.md) | Devpost text for Pathpal (Nov 7). Replaces DESCRIPTION.md. |
-| [DESCRIPTION.md](DESCRIPTION.md) | Older Devpost draft, still titled "Find Your Way Inside". |
+| [DESCRIPTION.md](DESCRIPTION.md) | The Devpost text for Pathpal. |
 | [VIDEO-SHOTLIST.md](VIDEO-SHOTLIST.md) | The demo video plan: airport, recorded from the preview. |
 | [SOCIAL.md](SOCIAL.md) | Draft social posts. |
 

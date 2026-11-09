@@ -46,8 +46,7 @@ Video: `devpost/video/pathpal-demos-v8.mp4` (2:29, narrated, git-ignored). Leave
 - [ ] R2-28 Free walk: the robot passes close to a vending fridge.
 - [ ] R2-9 (question for Alex) Should the LLM read the announcement and propose the action? Today a rule matcher
       does; you always confirm.
-- [ ] Final submission: upload to YouTube, Devpost text (`devpost/DESCRIPTION.md`), make the repo public after
-      the `devpost/` polish.
+- [ ] Final submission: upload to YouTube, put the link in `devpost/DESCRIPTION.md` (VIDEO LINK) and on Devpost.
 
 ## Contest rules (hard limits)
 

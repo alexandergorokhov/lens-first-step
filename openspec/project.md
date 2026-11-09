@@ -1,8 +1,8 @@
-# Project: Find Your Way Inside
+# Project: Pathpal
 
 ## Purpose
 
-"Find Your Way Inside" is a Lens for Snap SPECS that guides a traveller through an indoor (or
+Pathpal (first called "Find Your Way Inside") is a Lens for Snap SPECS that guides a traveller through an indoor (or
 mixed indoor/outdoor) place with a semi-transparent blue line on the floor. The traveller picks
 **Walk** or **Step-Free (wheelchair)** once, "scans" the "you are here" sign at the entrance, and
 the line leads them to their destination (an airport gate in the demo). The line re-routes when

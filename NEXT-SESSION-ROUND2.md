@@ -28,5 +28,4 @@ Plan and open items: `ROUND2.md`. Branch `companion-polish`, last commit `aad4d4
 
 ## Don't touch / don't commit
 - `Assets/Scene.scene` editor churn; the other session's files: `Assets/Tests/Fyw*Video*.ts`, `FywMallVideoBase.ts`,
-  its `FindYourWayLeafIndex.ts` edits, `.gitattributes`, `AGENTS.md`, `devpost/PITCH-POLISHED.md`,
-  `devpost/README.md`, `devpost/design-brief-clean.md`.
+  its `FindYourWayLeafIndex.ts` edits, `.gitattributes` (Lens Studio regenerates it).

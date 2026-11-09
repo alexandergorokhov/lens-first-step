@@ -1,4 +1,4 @@
-# Scenarios: Find Your Way Inside
+# Scenarios: Pathpal
 
 Every scenario and where it is tested.
 

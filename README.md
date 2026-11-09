@@ -1,4 +1,4 @@
-# Find Your Way Inside
+# Pathpal
 
 **Any building, mapped by walking. No camera, step-free safe, with a companion to keep you company while you wait.**
 
@@ -10,7 +10,7 @@ A Lens for Snap Specs, built for the Learn AR with SPECS hackathon. Everything r
 
 There is no GPS indoors. In a big airport, hospital, campus or mall, a phone map makes you look down and work out which way you are facing. That's hardest for the people who most need help: wheelchair users, parents with strollers, people carrying bags, and first-time visitors.
 
-Find Your Way Inside puts the route on the floor in front of you. You scan the "You are here" sign once: its code tells the Lens where you stand, and its web address downloads that building's map. A line leads you to where you're going, floor by floor, and a small companion can walk ahead of you.
+Pathpal (first called Find Your Way Inside) puts the route on the floor in front of you. You scan the "You are here" sign once: its code tells the Lens where you stand, and its web address downloads that building's map. A line leads you to where you're going, floor by floor, and a small companion can walk ahead of you.
 
 ## What it does
 
@@ -21,13 +21,13 @@ Each feature below passed its LEAF test, run inside the Lens and pressing the re
 - **Route line on the floor:** shows the next 10 m only, goes round corners, and has an arrow at the edge of the view when the next turn is out of view.
 - **Walk and Step-Free.** Walk takes the shortest route, escalators included. Step-Free never uses stairs or escalators.
 - **No step-free route?** Then the line leads to the nearest assistance point.
-- **Plans change:** a destination change (such as a gate change) or a closed lift re-routes from where you are, with a card and a chime.
+- **Plans change:** a destination change (such as a gate change) or a closed lift re-routes from where you are, with a card and a spoken line.
 - **Floors:** a distance pill with your floor, the distance, the floors to go and the time, plus a cue before each floor change.
 - **Arrival** card within 3 m of the destination.
 - **Any building from one map file:** an airport, a hospital, a campus, a room and a two-floor shopping mall all run with no code change. Maps download with a 5 s timeout and fall back to the copy in the Lens; a badge says "online map" or "offline map".
 - **Walk up stairs, ramps and escalators** in the preview: the feet follow the steps.
 - **Map builder (Learn this place):** walk a place and it becomes a map. Your path records itself, a height change starts a new floor, and the **Mark shop** button stores the shop you face. Upload hands the map to a laptop tool that checks and publishes it. A saved map survives a reload.
-- **Companion (dog, robot or rover):** stays about 7 m ahead of you, drawn almost solid,, waits at the foot of stairs, escalators and lifts, stops at a shop's door instead of walking in, and never changes the route. Pick it before a walk.
+- **Companion (dog, robot or rover):** stays about 7 m ahead of you, drawn almost solid, waits at the foot of stairs, escalators and lifts, stops at a shop's door instead of walking in, and never changes the route. Pick it before a walk.
 - **Pointing that stays in view:** at a matching shop within about 8 m the companion steps aside from its 7 m lead, points for a few seconds in the view you look along (never behind you) and goes back to the lead, about 10 s apart, in Free walk, Go to a place and Tour. If it has been out of view for 2 s, a faint arrow on the floor near your feet points to it.
 - **Showing preset:** one Inspector switch (`showingPreset` on FindYourWay) starts at the airport's entrance sign with demo controls hidden, the dog on and Walk preselected. The Options panel adds **Restart showing**, **Demo: gate change** and an Airport ↔ Preview room map switch.
 - **Free walk:** browse with no destination. The companion stops at shops matching your preferences, stays in front when you turn around, and says when there are "3 picks upstairs". Look at any shop and a small card shows Sponsored (if paid) and two of its offers; pinch the gold button for up to 3. Sponsored shops are always labelled, and paying never changes a route.
@@ -87,7 +87,7 @@ All tests run locally; no CI service is used.
 ## How it was built
 
 - **Planned first.** The Devpost Learn `/plan-lens` interview produced the design brief in [`devpost/design-brief.md`](devpost/design-brief.md) (easier to read: [`devpost/design-brief-clean.md`](devpost/design-brief-clean.md); all documents: [`devpost/README.md`](devpost/README.md)). Requirements are in `openspec/specs`.
-- **Built with an AI coding agent** using Snap's CLAD plugin and the Lens Studio MCP server, test-first: a failing Node or LEAF test, then the code. Through the MCP, the agent ran the LEAF scenarios in the preview and read their results from the log, captured preview screenshots for review, and generated the companion models and the chime with CLAD's generators.
+- **Built with an AI coding agent** using Snap's CLAD plugin and the Lens Studio MCP server, test-first: a failing Node or LEAF test, then the code. Through the MCP, the agent ran the LEAF scenarios in the preview and read their results from the log, captured preview screenshots for review, and generated the companion models and a chime (now switched off) with CLAD's generators.
 - **One shared core.** `src/core` is plain TypeScript with no Lens APIs. It runs in Node for tests, and the Lens keeps byte-identical copies in `Assets/Scripts` (checked by `npm run sync:check`).
 - **Routing** is a plain Dijkstra search over the map's graph: `shortestTree` in [`src/core/router.ts`](src/core/router.ts). Step-Free is the same search with stairs and escalators left out. An A* version for big maps is tested to give exactly the same routes.
 - **Lens:** Lens Studio, Spectacles Interaction Kit and UI Kit, in TypeScript.
@@ -98,7 +98,7 @@ All tests run locally; no CI service is used.
 - **The building** is a stand-in model built from the map file. It shows in Lens Studio only, because on Specs you see the real building.
 - **Saved preferences** are a preset labelled as a demo.
 - **Shop names, offers and sponsored places** are invented demo data.
-- **Voice and captions:** the preview has no microphone. Talk types in a set sentence, and the captions play a sample announcement with a set translation. On Specs both use Snap's speech recognition; live translation needs the LLM gateway, which is not wired yet.
+- **Voice and captions:** the preview has no microphone. Talk types in a set sentence, and the captions play a sample announcement with a set translation. On Specs both use Snap's speech recognition; live translation uses the same LLM gateway (wired; it needs a gateway token, which is not in this repo).
 - **Floor changes:** you walk up stand-in stairs and escalators, and lifts use a button, because the preview can't ride a lift.
 
 ## Credits

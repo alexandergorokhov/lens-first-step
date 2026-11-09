@@ -1,6 +1,6 @@
 # Specs index and traceability
 
-Capabilities of "Find Your Way Inside" (see `../project.md` for context and conventions).
+Capabilities of Pathpal (first called "Find Your Way Inside") (see `../project.md` for context and conventions).
 
 | Capability | Spec |
 |---|---|
