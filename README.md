@@ -4,6 +4,8 @@
 
 A Lens for Snap Specs, built for the Learn AR with SPECS hackathon. Everything runs and is demoed in the Lens Studio preview: no Specs hardware was used.
 
+**Working on the code?** Start with [`START-HERE.md`](START-HERE.md).
+
 ## The problem
 
 There is no GPS indoors. In a big airport, hospital, campus or mall, a phone map makes you look down and work out which way you are facing. That's hardest for the people who most need help: wheelchair users, parents with strollers, people carrying bags, and first-time visitors.
