@@ -1931,8 +1931,15 @@ export class FindYourWayMain extends BaseScriptComponent {
     const cam = this.camera.getTransform().getWorldPosition()
     const rot = quat.angleAxis(this.yawAngle() + (this.debugPose.heading * Math.PI) / 180, vec3.up())
     const p = this.local(this.debugPose.pos)
-    const pos = cam.sub(new vec3(0, this.eye(), 0)).sub(rot.multiplyVec3(p))
-    this.building.getTransform().setWorldRotation(rot)
+    let pos = cam.sub(new vec3(0, this.eye(), 0)).sub(rot.multiplyVec3(p))
+    let r = rot
+    // Looking down a little (the take's camera, R2-42): the world turns up about the camera's right axis.
+    if (Math.abs(this.debugPitchDeg) > 0.01) {
+      const q = quat.angleAxis((this.debugPitchDeg * Math.PI) / 180, this.camera.getTransform().right)
+      r = q.multiply(rot)
+      pos = cam.add(q.multiplyVec3(pos.sub(cam)))
+    }
+    this.building.getTransform().setWorldRotation(r)
     this.building.getTransform().setWorldPosition(pos)
   }
 
@@ -2610,6 +2617,11 @@ export class FindYourWayMain extends BaseScriptComponent {
   // Building-local cm of a point given in map metres (for view-angle checks in tests).
   mapToLocal(x: number, y: number, z: number): vec3 { return this.local({x, y, z}) }
 
+  // The take's camera looks down this many degrees (0: level); the preview's view is narrow, so the floor a
+  // few metres ahead sits at the bottom edge when level (R2-42).
+  private debugPitchDeg = 0
+  debugSetPitch(deg: number): void { this.debugPitchDeg = deg }
+  getDebugPitch(): number { return this.debugPitchDeg }
   debugSetPose(x: number, y: number, z: number, headingDeg: number): void {
     this.debugPose = {pos: {x, y, z}, heading: headingDeg}
   }
@@ -2835,6 +2847,7 @@ export class FindYourWayMain extends BaseScriptComponent {
 
   debugClearPose(): void {
     this.debugPose = null
+    this.debugPitchDeg = 0
     this.viewFollowsPose = false
     this.placeBuilding()
   }

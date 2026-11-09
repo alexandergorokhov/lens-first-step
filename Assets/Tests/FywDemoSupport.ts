@@ -356,13 +356,17 @@ export async function freeWalkRobotTrip(run: DemoRun, beforeWalk?: () => Promise
   await walk(run, [pose(run), {x: 30, y: 0, z: 10}, {x: cafe.x + 9, y: 0, z: 10}])
   await hold(run, 2)
   await turnTo(run, lookAt(cafe), 1.2)
+  await tiltTo(run, 9, 0.8)
   await hold(run, 4)
+  await tiltTo(run, 0, 0.8)
   await turnTo(run, 90, 2)
   await hold(run, 2)
   await walk(run, [pose(run), {x: threads.x - 8, y: 0, z: 10}])
   await hold(run, 2)
   await turnTo(run, lookAt(threads), 1.2)
+  await tiltTo(run, 9, 0.8)
   await hold(run, 4)
+  await tiltTo(run, 0, 0.8)
   run.onStep = watch
   return {pointed, boxes, reasons, picks}
 }
@@ -409,5 +413,19 @@ export function watchCleanScreen(run: DemoRun, seen: string[]): void {
     const ph = run.main.getPhase()
     if (ph !== "nav" && ph !== "arrived" && ph !== "free") return
     for (const t of offendingTexts(run.main)) if (seen.indexOf(t) < 0) seen.push(t)
+  }
+}
+
+// Tilts the take's camera down to `deg` (0: level) over `seconds`, gently (R2-42).
+export async function tiltTo(run: DemoRun, deg: number, seconds: number): Promise<void> {
+  const from = run.main.getDebugPitch()
+  const t0 = getTime()
+  for (;;) {
+    const k = Math.min(1, (getTime() - t0) / Math.max(0.01, seconds))
+    const e = k * k * (3 - 2 * k)
+    run.main.debugSetPitch(from + (deg - from) * e)
+    if (k >= 1) return
+    await sleep(1)
+    run.onStep()
   }
 }

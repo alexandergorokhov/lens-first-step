@@ -5,7 +5,7 @@ import {FindYourWayMain} from "../Scripts/FindYourWayMain"
 import {log} from "./FindYourWayLeafSupport"
 import {pressButton} from "../Scripts/FindYourWayWidgetsUI"
 import {waitFor} from "./FindYourWayLeafSupport"
-import {closeDemo, cutAt, DemoRun, freeWalkRobotTrip, glide, hold, mallPetTrip, openDemo, routeAhead, talk, turnTo, walkLeg} from "./FywDemoSupport"
+import {closeDemo, cutAt, DemoRun, freeWalkRobotTrip, glide, hold, mallPetTrip, openDemo, routeAhead, talk, tiltTo, turnTo, walkLeg} from "./FywDemoSupport"
 import {nodePos} from "./FywBrief2Support"
 import {isBeat, NARRATION, NARRATION_GAP_S, speakSeconds} from "../Scripts/FindYourWayNarration"
 
@@ -98,13 +98,15 @@ export class FywDemoVideoScenario extends Scenario {
       return
     }
     this.mark("play")
+    // Look down at the lane, so the dog and the obstacles show whole (R2-42).
+    await tiltTo(run, 12, 0.8)
     for (let k = 0; k < 5; k++) {
       await hold(run, 1.1)
       run.main.jump()
     }
     await this.lineDone(run, 1)
     run.main.debugTogglePlay()
-    await hold(run, 0.8)
+    await tiltTo(run, 0, 0.8)
   }
 
   async run(): Promise<void> {
