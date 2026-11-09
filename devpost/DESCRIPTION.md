@@ -14,7 +14,7 @@ For the full pitch details, see the presentation: `Pathpal presentation.pdf` in 
 
 ## Demo video
 
-VIDEO LINK (YouTube, under 3 minutes): the real Lens running in the Lens Studio preview, narrated, ending with a short run recorded by hand in the preview. To replay
+https://www.youtube.com/watch?v=B4anmB5f2Lo (2:58): the real Lens running in the Lens Studio preview, narrated, ending with a short run recorded by hand in the preview. To replay
 each demo yourself, see "Replay the demos from the video" in `devpost/PREVIEW-GUIDE.md`.
 
 ## Inspiration
