@@ -91,3 +91,7 @@ The Preview Panel shows live runtime transforms; the Scene Panel shows authored 
 Verify assumptions early — a quick prototype can save hours of debugging a plan built on wrong foundations. Build incrementally: confirm each layer renders before adding the next.
 
 <!-- END Lens Studio managed AGENTS block -->
+
+## Project Documents
+
+Before planning or changing a feature, read `devpost/README.md`: it lists the planning and submission documents. The plan is `devpost/design-brief-clean.md` (the approved original is `devpost/design-brief.md`; never edit it). Requirements are in `openspec/specs`, and `devpost/SCENARIOS.md` maps every scenario to its test.
