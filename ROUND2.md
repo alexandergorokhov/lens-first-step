@@ -1,188 +1,61 @@
-# Pathpal — Round 2 (Nov 7): what we have, what's planned
+# Pathpal — Round 2: what we have, what's open
 
-Shared between two sessions:
-- **Builder session** (Claude, in Lens Studio + Node): works the checklist below, test first (TDD), ticks boxes,
-  commits each finished item on `companion-polish`.
-- **Iteration session** (Alex + another Claude): edits the **"Open for iteration"** parts only — the voice-over
-  script, the café look, priorities. Don't edit code files the builder is on (listed per item) to avoid clashes.
+Branch `companion-polish`. Work test first (TDD), keep specs, tests and docs in step, commit and push each batch.
+The voice-over table below is read by test N1 (`src/core/tests/narration.test.ts`): change it together with
+`src/core/narration.ts`.
 
-## What we have now (pushed, `021da8a`)
+## What we have now (Nov 9, `aad4d4c`, npm test 635)
 
-Three demos, played from the Inspector's **Demo preset** (or recorded in one take by LEAF `visual-demos`):
+Three demos, played from the Inspector's **Demo preset** (steps for judges: `devpost/PREVIEW-GUIDE.md`, "Replay
+the demos from the video"), or recorded in one take by LEAF `visual-demos`:
 
-1. **Airport, wheelchair** — Talk: "I need coffee and a bathroom before my flight at gate 12C". The plan is
-   Café > Accessible toilet > Gate C12, all step-free (lifts only). On the way, a Spanish gate-change
-   announcement is captioned in English; "Re-route to Gate B14?" Yes; the companion leads to B14, where the gate
-   agent speaks (Spanish -> English captions).
-2. **Mall, follow the dog** — Talk: "Take me to the food court". Walk mode; the dog waits at the escalator; the
-   food court host speaks (French -> English).
-3. **Free walk with the robot** — no destination; the robot leads and points at Bean There Café and Threads;
-   look 2 s at a shop -> offers card.
+1. **Airport, wheelchair, robot**: Talk "coffee and a bathroom before my flight 212 at gate 12C". Café > accessible
+   toilet > gate, step-free (lifts only). A Spanish gate-change announcement for flight 212, captioned in English;
+   "Re-route to Gate B14?" Yes; the gate agent speaks Spanish, captioned in English.
+2. **Mall, follow the dog**: Talk "Bakery", one floor; the baker speaks French; then a 7 s Hop game with the dog,
+   5 m ahead.
+3. **Free walk with the robot**: it asks what you're into, goes on about 8 m and points at matching shops with a
+   big reason card ("Clothes · your pick"); a 2 s look shows the offers card (1.5x, marked sponsored).
 
-Also in: the companion speaks (Kokoro clips + a caption at the companion, Voice on/off), AI picks the place
-(LLM via Snap's Remote Service Gateway on Specs; offline matcher in the preview), live captions with
-translation, clean screen, theme, animated Quaternius robot and Shiba Inu.
+Also: companion voice and captions, live captions with translation, Offline mode, See map, clean screen, lean
+Control panel in the demos (folded tab upper left, see-through), Restart always there, no chime.
 
-Video: `devpost/video/pathpal-demos-v2.mp4` (2:55).
+Video: `devpost/video/pathpal-demos-v8.mp4` (2:29, narrated, git-ignored). Leaves ~30 s for Alex's own hand run.
 
-How the gate change works today: the announcement is captioned (and translated by the LLM on Specs); a
-**rule matcher** (`gateChangeOffer`, `src/core/freewalk.ts`) spots another gate code in the caption and asks
-"Re-route to Gate B14?". On Yes the route changes, keeping Step-Free. The LLM does not choose the action.
+## Done (tests in `src/core/tests/*-review.test.ts`, `camera.test.ts`, `narration.test.ts`, `captions.test.ts`)
 
-## Alex's review of v2 (Nov 7)
+- v2 review: floors back in the airport GLB (R2-1), nothing walked through (R2-2), café with detail (R2-3), robot
+  in demo 1 (R2-4), companion 7 m ahead (R2-5), transcript 2x (R2-6), voice-over (R2-7), take re-recorded (R2-8).
+- R2-10 gate change only for my flight; R2-11 demo 2 to a real place (now the Bakery, one floor).
+- v3 review: R2-12 see-through tab, R2-13 smooth take camera, R2-14/25 reason card, R2-15 preferences by voice,
+  R2-16 video under 3 min, R2-17 calm companion, R2-18 Offline mode, R2-19 Hide demo controls, R2-20 See map,
+  R2-21 airport stairs contrast, R2-22 gate names on the map, R2-23 pick a place first, R2-24 all places reachable,
+  R2-27 play with the pet, R2-29 the gate agent names flight 212.
+- v6 review: R2-32/38 play 5 m ahead in the mall, R2-33 tab upper left, R2-34/39 robot points from ~8 m,
+  R2-35/40 reason card 2x, R2-36 Go to a place panel ordered, R2-37 no chime, R2-41 no detour to the Bakery,
+  R2-43 play 7 s at 1x, R2-44 last view, R2-45 tab label bigger, R2-46 offers 1.5x, R2-47 lean Control panel,
+  R2-48 Restart, R2-49 judge replay guide.
 
-"You walk through walls; the café needs more detail; it feels like you walk over stuff. Wheelchair demo: robot.
-Companion 7 m ahead. Bigger transcript. Add a voice-over explaining what happens and the features. Keep the render
-polished. Overall: I like it."
+## Open
 
-Root causes found:
-- **Upper floors were missing in the Lens airport.** `export-airport.mjs` skipped every mesh with two materials,
-  which is every floor slab. In the Lens you rolled through the air over the ground floor; the "bars" were the
-  check-in stanchions 6 m below.
-- **Shops are solid white boxes behind pale glass.** The demo stops 1.8 m from the café, so the view is one flat
-  blue panel. Same at the toilet door.
-- **Companion lead is already 7 m** (`companionLeadM`) but the view clamp (`VIEW_FAR_M` 6) pulls it in; check in
-  the take.
-- **Captions are small:** Body text at 70 cm on a 27 cm-wide band.
+- [ ] R2-50 Re-record (v9) so the video shows R2-45..48 (bigger tab label and offers, lean panel, Restart).
+- [ ] R2-51 Alex's hand-run clip (~30 s): mall A to B, then Free walk and a sponsored shop; join it after v9.
+- [ ] R2-26/30 Mall floor change: escalator sides walkable by hand, the floor line cuts through you going up;
+      the fBW-fBM corridor runs over the up escalator (needs a gist map update: Alex's OK). Demo 2 avoids it.
+- [ ] R2-30 Far shops popping in and out, seen by hand once (not reproduced; no distance hiding in code).
+- [ ] R2-28 Free walk: the robot passes close to a vending fridge.
+- [ ] R2-9 (question for Alex) Should the LLM read the announcement and propose the action? Today a rule matcher
+      does; you always confirm.
+- [ ] Final submission: upload to YouTube, Devpost text (`devpost/DESCRIPTION.md`), make the repo public after
+      the `devpost/` polish.
 
-## Checklist (builder) — TDD: failing test, fix, green, tick
+## Contest rules (hard limits)
 
-- [x] R2-1 Floors back in the GLB: `tools/demo-video/glb-parts.mjs` (one part per material), test
-      `airport-glb.test.ts` GLB1-2. Re-export `npm run airport:glb` (with R2-3).
-- [x] R2-2 Nothing walked through: AM tests also check balustrades, outer walls, glass fronts; the demo stops
-      ≥ 3 m from a front / door, facing it. Files: `airport-model.test.ts`, `Assets/Tests/FywDemoSupport.ts`.
-- [x] R2-3 Café with detail (open front, counter, espresso machine, pastry case, menu boards, barista, tables
-      outside as FURNITURE); other shops get open fronts with shelves. Files: `tools/demo-video/airport.js`,
-      `layout.mjs`; then `npm run airport:glb`, `npm run airport:solids`.
-- [x] R2-4 Wheelchair demo uses the robot (`demo.ts`, test D2).
-- [ ] R2-5 Companion 7 m ahead in all three demos. Core holds 7 m at wheelchair pace (pet.test P-R2); the Lens
-      already has `companionLeadM` 7. Left: measure it in the new take (R2-8).
-- [ ] R2-6 Bigger transcript: live captions, "Heard: …" line, companion caption about 2x (sizes in core, test).
-      **Code done, `8f1658b` (not pushed: SSH to github timed out).** Sizes in `TRANSCRIPT` (`src/core/captions.ts`,
-      test CP-R2-6/6b): captions 2x, band 40 cm, 33 chars a row; Heard 1.5x (2x needs ~5 lines in the 31 cm
-      panel), grows to 3 rows via `setTextHeight`; companion 2x, 100 cm. npm test 581/581, TS compiles.
-      **Left (needs the Preview panel open):** run `visual-demos` / capture: band inside the view at y -11.5
-      (`FindYourWayHudUI.ts`), Heard panel grows and doesn't overlap, companion caption readable. Then tick.
-- [ ] R2-7 Voice-over: one line per beat, Kokoro clips (`tools/voice`), placed at the take's `[VID]` marks and
-      mixed into the edit. Test: `narration.ts` (every beat has a line, no overlap, fits before the next beat).
-      **Node side done** (`narration.test.ts` N1-N8): `src/core/narration.ts` holds this file's table (N1 fails if
-      they differ: after editing the table, update `NARRATION` and re-run `make-narration.py`). A line starts on
-      its mark, or just after the line before (at most 1.5 s late). Clips: `tools/voice/make-narration.py`
-      -> `devpost/video/narration/` (12 clips, 2.4-6.9 s). Mix: `tools/voice/narration-mix.mjs <raw> <take.log>
-      <T0 s> <out>` (smoke-tested on the v2 raw). The v2 take had no "talk" and no demo-2 "leg" mark: the take
-      (`FywDemoVideoScenario.ts`) now marks both and waits for each line before the next action it controls.
-      **Left:** compile the take in Lens (not compiled yet: lens-studio MCP was down) and record it (R2-8).
-- [ ] R2-8 Stills check (`tools/demo-video/airport-shots.mjs`) at each demo pose, then Lens Studio: LEAF
-      `visual-demos`, re-record, edit with voice-over -> `pathpal-demos-v3.mp4`. Needs the lens-studio MCP.
-
-- [ ] R2-10 Gate change only for MY flight (beta). **Core done** (R10-R10d: `parseFlight`, `gateChangeOffer(...,
-      flight)`, `rerouteQuestion`; demo 1 says "before my flight 212"); Lens wired, **not compiled yet**
-      (Lens Studio quit). The voice-over should say you give your flight number so it listens for it. Lower priority than R2-2..R2-8; test first.
-      Today `gateChangeOffer` (`src/core/freewalk.ts`) offers "Re-route to Gate X?" for ANY announcement naming
-      another gate, so someone else's flight would trigger it.
-      1. The trip holds an optional flight code ("IB3104", "212"), set from what I say or type ("my flight is
-         212", or a flight code inside the Talk sentence), parsed in core, no LLM.
-      2. `gateChangeOffer` takes the flight code. If set: offer only when the announcement names that flight AND
-         a different gate. If not set: today's behaviour, and the card says "Beta: is this your flight?".
-      3. Never re-route without my Yes. Listening stays tied to the captions switch.
-      4. Demo 1: the trip's flight is 212, so GATE_CHANGE_SPEECH ("flight 212 ... gate B14") still triggers. Add a
-         second scripted line for another flight and check it does NOT trigger.
-      Tests first: flight parsed from "coffee and a bathroom before my flight 212 at gate 12C"; offer when flight +
-      new gate match; no offer for another flight; no offer for my own gate; no flight set gives the old
-      behaviour + Beta label. Lens copies byte-identical (`npm run sync`), `npm test`, commit on companion-polish.
-- [ ] R2-11 Demo 2 destination: a restaurant instead of the food court (Alex: "asking for a table for two").
-      Easier option: **Sushi Bar** — already in the mall map, same floor as the food court (y 5), so the same
-      escalator leg and dog wait; change the Talk phrase ("Take me to the Sushi Bar"), the destination check in
-      the take, and the host's line (French -> "A table for two? Right this way."). The sunglasses option (Luma
-      Optics, also y 5, "how much are the Acme sunglasses?") needs a shop-assistant reply and a price in the
-      offers data: more work. Tests: matcher -> sushi, host line on arrival, LEAF take.
-
-### Alex's review of v3 (Nov 8): "I like how it starts to settle. The airport coffee is great."
-
-- [ ] R2-12 The "Control" dock rectangle semi-transparent (`FindYourWayDock.ts`; alpha in core, test).
-- [ ] R2-13 Smooth, elegant recording: no walking through objects, no flat-wall views, no rendering glitches; the
-      lift ride (airport) and the escalator ride (mall) smooth: slow in/out, no snaps or jumps, steady heading.
-      Test the take's path in core (no jumps in pose or heading between frames, rides eased); stills check.
-- [ ] R2-14 Free walk: the pointing line names the preference that picked the shop ("Clothes · your pick"), from
-      the map's interest labels (core `pointReason`, test).
-- [ ] R2-15 Free walk starts by asking for preferences: "Same as last time: Café, Clothes? Or tell me what
-      you're into." You answer in free text (voice); the answer maps to the map's interest categories (LLM on
-      Specs, offline matcher in the preview, like Talk); "same as last time" keeps the saved ones. The companion
-      then watches for shops in those categories. Core: `parsePrefs`, `prefsPrompt`, `parsePrefsReply` (tests).
-- [ ] R2-11 (above) now: demo 2 goes to the **Sushi Bar** (small restaurant look: counter, stools, lanterns,
-      menu) and the host asks in French "A table for two?" with English captions.
-- [ ] R2-17 Calm companion in Free walk ("it runs all over the place; it's a helper, not a child to chase"):
-      no running around you when you turn, no dashes; it walks at about your pace, turns gently and goes to a
-      shop only to point. Core `FreeCompanion` (tests: max speed, max turn rate, no side switch on a glance).
-- [ ] R2-18 Offline mode (Alex, Nov 8): a switch in the Control panel that simulates no internet. The map
-      stays (bundled with the Lens / last copy); no LLM and no map download. Voice still works: the plain
-      matcher reads the map's own data (place names, categories, interest words, destination codes like
-      "12C"), so "take me to the food court", "coffee and a bathroom", "I'm into fashion" all work offline.
-      Phrases only the LLM would get ("somewhere to sit and eat sushi") say "didn't catch that" and point
-      to the no-voice ways: **Where to?** (a list of the map's places) and **Pick on the map** (tap a
-      place on the floor plan). Core: `offlineMode` decides what is used (test); documented in README and
-      devpost/PREVIEW-GUIDE.md.
-- [ ] R2-19 **Hide demo controls** (Alex: "I'd like to show the Free walk tour myself in the mall"): a switch in
-      the Control panel hides the Demo controls panel (and shows it again).
-- [ ] R2-20 **Map on the left**: the "online map / offline map" badge only says where the map came from
-      (downloaded from the web, or the copy inside the Lens): make that plain or drop it. **See map** shows the
-      map at the left of your view, semi-transparent, following your head, with you and the route on it;
-      the same button then says **Hide map** and removes it.
-- [ ] R2-21 Airport stairs almost invisible on Go to a place: give them contrast (tread nosings, darker risers,
-      handrails) in the airport model (`tools/demo-video/airport.js`, then `npm run airport:glb`).
-- [ ] R2-22 The airport map shows a couple of gates by name (C12, B14, ...) so they can be pointed out on the
-      map panel.
-- [ ] R2-25 The "· your pick" card bigger, easy to read (Alex: "I like how it landed").
-- [ ] R2-26 Mall floor change: you can still walk through the stairs/escalator sides by hand, and the floor
-      line cuts through you going up. Fix (solid sides, line drawn on the treads) or keep demo 2 on one floor.
-- [ ] R2-27 The video shows a short "play with the pet" moment (Hop / catch while you wait).
-- [ ] R2-28 v4 review (2:40, `pathpal-demos-v4.mp4`): the crop shows a sliver of the preview toolbar; a white
-      blank frame at the lift; the camera ends inside the café front (stop farther out); at the escalator top
-      it faces a wall close up; in Free walk it brushes a vending fridge.
-- [ ] R2-29 The gate agent spoke of flight IB3104 to Lisbon while the trip is flight 212 to Madrid: now
-      "flight 212 to Madrid" (test R29). **Done in core.**
-- [ ] R2-30 Still seen by hand: walking through the stairs/escalator when changing floors, and far shops
-      popping in and out (draw distance / culling of the stand-in shop meshes?). Check the models; fix, or keep
-      demo 2 on one floor. "Otherwise it is no good presentation."
-- [ ] R2-16 Re-record v4 with the voice-over table updated for R2-11 and R2-15.
-      **Contest rules (hard limits):** under 3 minutes, posted on YouTube, the real Lens running in the Lens
-      Studio preview (a narrated screen recording of the preview is fine). No renders made outside Lens Studio
-      (no three.js shots), no trademarks, no copyrighted music (own or CC0 only, or none).
-      v3 is 4:25, so v4 must lose ~1:30. Budget: demo 1 ~75 s, demo 2 ~40 s, demo 3 ~45 s, open + end ~10 s
-      (= 2:50). How: shorter holds in the take; walking at a brisk pace; long plain-walking stretches sped up
-      in the edit (between marks, never under a voice-over line); lift ride as a short dissolve.
-      Test: the take's planned length (marks + lines) is under 170 s; the edit tool refuses a cut over 179 s;
-      no outside footage in the edit (only the Preview recording, title cards made in the edit).
-
-## Open for iteration (the other session edits these)
-
-### Alex's review of v6 (Nov 8)
-- [ ] R2-32 The play moment: we did not see the game. The Hop lane starts a couple of steps ahead
-      (`HOP_AHEAD_M` 3 m), and it moves to the mall: after the Bakery, a game with the dog (tests R32, R32b).
-- [ ] R2-33 The folded Control tab: upper-left corner, more see-through (0.25; test R33).
-- [ ] R2-34 Free walk: the robot points from at least 3.5 m ahead, in view (`pointNearM`; test R34); the take
-      walks the middle of the hall, so the shops show from a few metres.
-- [ ] R2-35 The reason card over the pointer bigger (`REASON_CARD`, Headline1, 80 cm; test R35).
-- [ ] R2-38 Play: the Hop lane 5 m ahead (`HOP_AHEAD_M`; test R32): still too close at 3 m.
-- [ ] R2-39 Free walk: the robot goes on about 8 m and points (`pointNearM` 8; test R34); the take stops
-      well short of the café and Threads and looks at them, so the robot, its card and the shop show together.
-- [ ] R2-40 The reason card twice as big (`REASON_CARD` 160 x 28 cm; test R35).
-- [ ] R2-41 The dog's route to the Bakery ran past it to the far junction and doubled back: the map joins the
-      Bakery only to gBW. `routePoints` now leaves the corridor beside a place (`cutEndDetour`; test R41).
-      Found also: a floor change left the Free walk companion stuck in "point"; it now leads again.
-- [ ] R2-43 The play at least 7 s, all at 1x in the edit ("play" .. "play end" marks; test N10).
-- [ ] R2-44 A better last view: down the hall, walking on behind the robot (no plant up close).
-- [ ] R2-45 The folded Control tab's label bigger (Headline1 on an 18 x 6 cm tab; test R45).
-- [ ] R2-46 The offers card's letters 1.5x (`OFFER_CARD_SCALE`; test R46).
-- [ ] R2-47 A lean Control panel in the demos (`LEAN_CONTROL_HIDDEN`; test R47).
-- [ ] R2-48 **Restart** always in the Control panel (test R48).
-- [ ] R2-49 PREVIEW-GUIDE: "Replay the demos from the video (for judges)" (docs test).
-- [ ] R2-37 No ring: the chime on notices, stops and catches is off (`CHIME_ON`; test R37).
-- [ ] R2-36 The Go to a place panel more ordered: Talk (mic icon) and Where to? alike, Walk and Step-Free
-      alike, the preview note as a footnote at the bottom.
+Under 3 minutes, on YouTube, the real Lens in the Lens Studio preview (narrated screen recording is fine). No
+renders made outside Lens Studio, no trademarks, no copyrighted music.
 
 ### Voice-over script (R2-7 reads this table)
-Updated Nov 7 by the pitch session to match the story (pitch/pathpal-story.md). Short, plain, one or two sentences a beat; about 2.5 words per second. Beat = the `[VID]` mark it starts on.
+Short, plain, one or two sentences a beat; about 2.5 words per second. Beat = the `[VID]` mark it starts on.
 
 | Beat | Line |
 | --- | --- |
@@ -199,10 +72,3 @@ Updated Nov 7 by the pitch session to match the story (pitch/pathpal-story.md). 
 | demo 3: Free walk with the robot | No destination? Free walk. It asks what I'm into today, and I just say it. |
 | pointed | It points at shops that match, and says why. A two-second look shows offers, always marked sponsored. |
 | END | Pathpal. No GPS indoors? Follow your companion. |
-
-### Café look (R2-3)
-Ideas welcome: colours, a name ("Café" today), what's on the counter, seating.
-
-### Questions for Alex
-- R2-9: should the **LLM** read the announcement and propose the action (re-route / keep / ask the gate
-  agent), with you confirming? Today a rule matcher proposes it.
