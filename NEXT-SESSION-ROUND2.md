@@ -87,3 +87,14 @@ unstaged; stage with `git hash-object` + `git update-index` as done for `4161355
 - When the test count changes, update it in `devpost/SCENARIOS.md`, `devpost/PREVIEW-GUIDE.md`,
   `openspec/specs/README.md` and `README.md` (the docs test checks it).
 - No local paths (`C:\...`) in `.md` files (test T12 fails).
+
+## Nov 8, night: v7
+- v7: `devpost/video/pathpal-demos-v7.mp4` (2:20, leaves ~40 s for Alex's own hand-run clip under 3 min).
+  Edit: `node tools/voice/narration-mix.mjs devpost/video/demos-raw16.mkv <take16 marks shifted -5.6 s> 35.17
+  out.mp4 1156:1258:20:86`; quiet stretches now 4x (`EDIT.fast`).
+- Recording: write `.mkv` (survives a forced stop), `-t 720`, and keep Lens Studio on top (another window over
+  it was recorded once). Don't edit Lens scripts during a take: Lens recompiles and restarts it.
+- The take's camera can look down (`debugSetPitch`, `tiltTo`): the preview's view is narrow vertically, so the
+  floor within ~8 m sits at the bottom edge when level.
+- LLM: wired (`FindYourWayAsk.ts`, Remote Service Gateway) but no token is set, so the plain matcher answers.
+  A token would be saved in `Assets/Scene.scene` (tracked): keep it out of commits.

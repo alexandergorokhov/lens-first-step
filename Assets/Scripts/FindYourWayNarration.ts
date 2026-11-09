@@ -79,7 +79,7 @@ export function placeNarration(marks: Mark[], seconds?: number[]): { placed: Pla
 // ── The edit (ROUND2.md R2-16: the video must be under 3 minutes) ─────────────────────────────────
 // Quiet stretches (no voice-over line, no beat on screen) play faster; a lift ride ("ride in" .. "ride
 // out" marks) is cut out and joined with a short dissolve. Everything said and every beat plays at 1x.
-export const EDIT = { fast: 3, padS: 0.6, beatBeforeS: 0.8, beatAfterS: 1.6, minQuietS: 2.5, rideTrimS: 0.2, xfadeS: 0.5, maxS: 179 };
+export const EDIT = { fast: 4, padS: 0.6, beatBeforeS: 0.8, beatAfterS: 1.6, minQuietS: 2.5, rideTrimS: 0.2, xfadeS: 0.5, maxS: 179 };
 export type EditSeg = { from: number; to: number; speed: number; dissolve: boolean };
 
 // Segments of the take (seconds since its T0, up to end) to keep, each at its speed; dissolve: joined to
