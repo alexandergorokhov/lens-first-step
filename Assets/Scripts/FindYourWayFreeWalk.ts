@@ -78,8 +78,8 @@ export const FREE_DEFAULTS: FreeSettings = {
   listAwayM: 5,
   cooldownSeconds: 10,
   asideM: 1.2,
-  // A few steps out (ROUND2.md R2-34): close up it hides under the view and its pointer goes unseen.
-  pointNearM: 3.5,
+  // Well out (ROUND2.md R2-34, R2-39): about 8 m, so you see it and the shop it points at together.
+  pointNearM: 8,
 };
 
 // How fast it may turn (deg/s): it turns like a walker, not a spinning top.
@@ -893,6 +893,7 @@ export class FreeWalk {
         // It comes along on a floor change, and never hints back the way you came.
         this.done[floorKey(levelOf(this.map, pos.y), pet.pos.y > pos.y)] = true;
         this.stop = null;
+        this.pointState = "lead";
         pet = { pos: this.spotAhead(pos, dir), heading: pet.heading, mood: "lead" };
       }
       if (this.stop) {

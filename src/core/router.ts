@@ -668,10 +668,26 @@ export interface Vec3 {
 
 export function routePoints(map: MapData, route: RouteResult): Vec3[] {
   if (route.status !== "route" && route.status !== "arrived") return [];
-  return route.nodes.map((id) => {
+  return cutEndDetour(route.nodes.map((id) => {
     const n = findNode(map, id) as MapNode;
     return { x: n.x, y: n.y, z: n.z };
-  });
+  }));
+}
+
+// A place hanging off a junction past it (ROUND2.md R2-41): in [.., A, B, C] where B is the corridor's
+// junction and C the place, the route would run on to B and double back. When C sits beside the corridor
+// A-B (it projects inside it, on the same floor), the route leaves the corridor right beside C instead.
+export function cutEndDetour<T extends Vec3>(pts: T[]): T[] {
+  if (pts.length < 3) return pts;
+  const a = pts[pts.length - 3], b = pts[pts.length - 2], c = pts[pts.length - 1];
+  if (Math.abs(a.y - b.y) > 0.01 || Math.abs(b.y - c.y) > 0.01) return pts;
+  const dx = b.x - a.x, dz = b.z - a.z;
+  const len2 = dx * dx + dz * dz;
+  if (len2 < 1e-9) return pts;
+  const t = ((c.x - a.x) * dx + (c.z - a.z) * dz) / len2;
+  if (t <= 0.02 || t >= 0.98) return pts;
+  const p = { ...b, x: a.x + dx * t, z: a.z + dz * t };
+  return pts.slice(0, pts.length - 2).concat([p, c]);
 }
 
 function dist3(a: Vec3, b: Vec3): number {

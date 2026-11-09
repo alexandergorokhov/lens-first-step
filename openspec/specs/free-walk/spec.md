@@ -109,8 +109,8 @@ the picks show under **Heard**; the walk starts after a short read. Picks are sa
 ### Requirement: The pointer says why (R2-14)
 While the companion points at a shop it SHALL show a small card at the pointer's tip naming the
 preference that matched, by the map's label: "Clothes · your pick" (`pointReason`). Floor hints show no card.
-The card SHALL be big enough to read from where it points (`REASON_CARD`, R2-35), and the companion SHALL
-point from at least `pointNearM` (3.5 m) ahead, in view, so you see it and what it points at (R2-34).
+The card SHALL be big enough to read from where it points (`REASON_CARD`, 160 cm wide; R2-35, R2-40), and the
+companion SHALL point from about `pointNearM` (8 m) ahead, in view, so you see it and the shop together (R2-34, R2-39).
 
 #### Scenario: FW-R14 Reason card
 - **THEN** pointing at Threads with Clothes picked shows "Clothes · your pick"

@@ -163,6 +163,13 @@ Root causes found:
 - [ ] R2-34 Free walk: the robot points from at least 3.5 m ahead, in view (`pointNearM`; test R34); the take
       walks the middle of the hall, so the shops show from a few metres.
 - [ ] R2-35 The reason card over the pointer bigger (`REASON_CARD`, Headline1, 80 cm; test R35).
+- [ ] R2-38 Play: the Hop lane 5 m ahead (`HOP_AHEAD_M`; test R32): still too close at 3 m.
+- [ ] R2-39 Free walk: the robot goes on about 8 m and points (`pointNearM` 8; test R34); the take stops
+      well short of the café and Threads and looks at them, so the robot, its card and the shop show together.
+- [ ] R2-40 The reason card twice as big (`REASON_CARD` 160 x 28 cm; test R35).
+- [ ] R2-41 The dog's route to the Bakery ran past it to the far junction and doubled back: the map joins the
+      Bakery only to gBW. `routePoints` now leaves the corridor beside a place (`cutEndDetour`; test R41).
+      Found also: a floor change left the Free walk companion stuck in "point"; it now leads again.
 - [ ] R2-37 No ring: the chime on notices, stops and catches is off (`CHIME_ON`; test R37).
 - [ ] R2-36 The Go to a place panel more ordered: Talk (mic icon) and Where to? alike, Walk and Step-Free
       alike, the preview note as a footnote at the bottom.

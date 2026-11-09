@@ -131,4 +131,6 @@ The shared core (router, geometry, demo, place) and the bundled maps are copied 
 - **Fixed (review round):** the Walk "no route" message is shown in Walk mode (X8, via `noticeFor`).
 - **Fixed (review round):** change detection includes connections (X53); ask-staff guidance is
   tracked (X54); leaving the destination is no longer stuck (X38b).
+- A place beside a corridor but joined to a junction past it is reached from beside it: the drawn route
+  (`routePoints`, `cutEndDetour`) never runs past it and doubles back (R2-41; test R41).
 - Off-route re-routes are silent (no card or chime); the brief does not ask for one.

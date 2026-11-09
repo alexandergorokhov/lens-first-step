@@ -62,7 +62,7 @@ import {MultiStopTrip, orderStops} from "./FindYourWayTrip"
 import {mapLogLines, tripAfterSaving} from "./FindYourWayMapping"
 import {peekPlace} from "./FindYourWayPeek"
 import {demoSettings, DemoSettings, showingSettings, StartSettings} from "./FindYourWayDemo"
-import {destinationsOf, FreeWalk, gateChangeOffer, interestList, LookBoxes, matchDestination, OfferDismissals, sayItPhrase, ShopLook, typedSoFar, typingSeconds, planAsk, askPrompt, parseAskReply, llmStops, ASK_LLM_TIMEOUT_S, VOICE_FALLBACK_S, walkableRoute, CLEAN_FREE_WALK, OFFER_LOOK_S, parseFlight, rerouteQuestion, parsePrefs, parsePrefsReply, prefsPrompt, prefsQuestion} from "./FindYourWayFreeWalk"
+import {destinationsOf, FREE_DEFAULTS, FreeWalk, gateChangeOffer, interestList, LookBoxes, matchDestination, OfferDismissals, sayItPhrase, ShopLook, typedSoFar, typingSeconds, planAsk, askPrompt, parseAskReply, llmStops, ASK_LLM_TIMEOUT_S, VOICE_FALLBACK_S, walkableRoute, CLEAN_FREE_WALK, OFFER_LOOK_S, parseFlight, rerouteQuestion, parsePrefs, parsePrefsReply, prefsPrompt, prefsQuestion} from "./FindYourWayFreeWalk"
 import {arrivalCardOn, CHIME_ON, cleanAllows, CONTROL_TAB_CORNER, connectivity, notCaught, OptionsDock, SEE_MAP, tripTarget, routeLineAheadM, walkingHud} from "./FindYourWayDock"
 import {FindYourWayOfferBoxesUI} from "./FindYourWayOfferBoxesUI"
 import {FindYourWayHomePanelUI} from "./FindYourWayHomePanelUI"
@@ -2328,7 +2328,8 @@ export class FindYourWayMain extends BaseScriptComponent {
 
   // A pointing spot kept in the cone you look along (out to the companion's lead, + an aside step).
   private keepInView(spot: Vec3, user: Vec3, look: number): Vec3 {
-    return clampToView(user, look, spot, VIEW_HALF_DEG, Math.max(VIEW_FAR_M, this.companionLeadM + 1.5))
+    // Far enough for where it points from (FREE_DEFAULTS.pointNearM, about 8 m; R2-39).
+    return clampToView(user, look, spot, VIEW_HALF_DEG, Math.max(VIEW_FAR_M, this.companionLeadM + 1.5, FREE_DEFAULTS.pointNearM + 1))
   }
 
   // The small floor arrow near your feet toward the companion, after ~2 s out of view.
@@ -2575,6 +2576,8 @@ export class FindYourWayMain extends BaseScriptComponent {
   getDestinationId(): string { return this.nav ? this.nav.to : this.tripDestination || this.place.destination }
   getStartId(): string { return this.place.start }
   getRouteStatus(): string { return this.nav ? this.nav.route.status : "none" }
+  // The route as drawn (map metres), with a place beside a corridor left from beside it (R2-41).
+  getRoutePoints(): Vec3[] { return this.routeMapPoints().map((p) => ({x: p.x, y: p.y, z: p.z})) }
   getRouteNodes(): string[] { return this.nav && this.nav.route.status === "route" ? this.nav.route.nodes.slice() : [] }
   getRouteEdgeKinds(): string[] {
     return this.nav && this.nav.route.status === "route" ? this.nav.route.edges.map((e) => e.kind) : []

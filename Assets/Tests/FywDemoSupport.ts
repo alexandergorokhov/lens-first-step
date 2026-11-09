@@ -310,7 +310,8 @@ export async function mallPetTrip(run: DemoRun, beforeWalk?: () => Promise<void>
     log("demo mall: dog at " + JSON.stringify(p) + ", foot " + footId + " mood " + main.getCompanionMood())
     await walk(run, routeFrom(run, nodes[k - 1] || null), () => main.getPhase() === "arrived")
   } else {
-    await walk(run, routeFrom(run, null), () => main.getPhase() === "arrived")
+    // Along the route as drawn: straight off the corridor to the Bakery, as the dog goes (R2-41).
+    await walk(run, [pose(run)].concat(main.getRoutePoints().slice(1)), () => main.getPhase() === "arrived")
   }
   await waitFor(() => main.getPhase() === "arrived", 5000, "arrived at " + main.getDestinationId())
   return {waitedAt, dogNearFoot}
@@ -349,15 +350,19 @@ export async function freeWalkRobotTrip(run: DemoRun, beforeWalk?: () => Promise
   }
   const cafe = nodePos(main, "cafe"), threads = nodePos(main, "threads")
   // In from the sign, west past the café (look at it), then east past Threads (look at it).
-  // Along the middle of the hall (z 10), so the shops and the robot pointing at them show from a few metres (R2-34).
-  await walk(run, [pose(run), {x: 30, y: 0, z: 10}, {x: cafe.x + 1, y: 0, z: 10}])
-  await hold(run, 1.5)
-  await turnTo(run, 180, 0.8)
-  await hold(run, 2.5)
-  await walk(run, [pose(run), {x: threads.x, y: 0, z: 10}])
-  await hold(run, 1.5)
-  await turnTo(run, 180, 0.8)
-  await hold(run, 2.5)
+  // Along the middle of the hall (z 10). The robot goes on about 8 m and points (R2-39): stop well short of
+  // each shop and look at it, so the robot, its card and the shop show together, and the look opens the offers.
+  const lookAt = (p: Vec3) => (Math.atan2(p.x - pose(run).x, (p.z + 2) - pose(run).z) * 180) / Math.PI
+  await walk(run, [pose(run), {x: 30, y: 0, z: 10}, {x: cafe.x + 9, y: 0, z: 10}])
+  await hold(run, 2)
+  await turnTo(run, lookAt(cafe), 1.2)
+  await hold(run, 4)
+  await turnTo(run, 90, 2)
+  await hold(run, 2)
+  await walk(run, [pose(run), {x: threads.x - 8, y: 0, z: 10}])
+  await hold(run, 2)
+  await turnTo(run, lookAt(threads), 1.2)
+  await hold(run, 4)
   run.onStep = watch
   return {pointed, boxes, reasons, picks}
 }

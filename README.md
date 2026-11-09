@@ -70,7 +70,7 @@ Each feature below passed its LEAF test, run inside the Lens and pressing the re
 npm test
 ```
 
-There are 628 tests (offline: 578 pass, 1 skipped). One downloads the maps from the public gist; offline, set `OFFLINE=1` to skip it. The run first checks that the Lens's copies of the core files match `src/core`; after editing `src/core`, run `npm run sync`.
+There are 629 tests (offline: 578 pass, 1 skipped). One downloads the maps from the public gist; offline, set `OFFLINE=1` to skip it. The run first checks that the Lens's copies of the core files match `src/core`; after editing `src/core`, run `npm run sync`.
 
 **LEAF tests** run inside the Lens:
 1. Select **LeafIndex** in the Scene Hierarchy and tick **autoRun**. To run only some, type their ids in **only**, separated by commas.
@@ -84,7 +84,7 @@ All tests run locally; no CI service is used.
 
 ## How it was built
 
-- **Planned first.** The Devpost Learn `/plan-lens` interview produced the design brief in [`devpost/design-brief.md`](devpost/design-brief.md). Requirements are in `openspec/specs`.
+- **Planned first.** The Devpost Learn `/plan-lens` interview produced the design brief in [`devpost/design-brief.md`](devpost/design-brief.md) (easier to read: [`devpost/design-brief-clean.md`](devpost/design-brief-clean.md); all documents: [`devpost/README.md`](devpost/README.md)). Requirements are in `openspec/specs`.
 - **Built with an AI coding agent** using Snap's CLAD plugin and the Lens Studio MCP server, test-first: a failing Node or LEAF test, then the code. Through the MCP, the agent ran the LEAF scenarios in the preview and read their results from the log, captured preview screenshots for review, and generated the companion models and the chime with CLAD's generators.
 - **One shared core.** `src/core` is plain TypeScript with no Lens APIs. It runs in Node for tests, and the Lens keeps byte-identical copies in `Assets/Scripts` (checked by `npm run sync:check`).
 - **Routing** is a plain Dijkstra search over the map's graph: `shortestTree` in [`src/core/router.ts`](src/core/router.ts). Step-Free is the same search with stairs and escalators left out. An A* version for big maps is tested to give exactly the same routes.
