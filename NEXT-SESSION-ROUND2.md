@@ -98,3 +98,5 @@ unstaged; stage with `git hash-object` + `git update-index` as done for `4161355
   floor within ~8 m sits at the bottom edge when level.
 - LLM: wired (`FindYourWayAsk.ts`, Remote Service Gateway) but no token is set, so the plain matcher answers.
   A token would be saved in `Assets/Scene.scene` (tracked): keep it out of commits.
+- v8: `devpost/video/pathpal-demos-v8.mp4` (2:29): the play kept whole at 1x, last view walks on behind the robot.
+  Raw `demos-raw19.mkv`, T0' 36.5. Don't open videos while recording (a Media Player window got recorded once).
