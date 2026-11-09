@@ -85,11 +85,16 @@ export class FywSh1ShowingPresetScenario extends Scenario {
       main.restartShowing()
       await toModePanel(it, main)
       expect(main.getPreselectedMode(), "nothing preselected without the preset").toBe(null)
+      // Without the preset a place is picked first (R2-23), as by Where to?.
+      main.debugPickDefaultDestination()
       await tap(it, "WalkButton")
       await waitFor(() => main.getPhase() === "nav", 8000, "Walk")
       await sleep(300)
       expect(shown("ShowingGateChangeButton"), "no Demo: gate change without the preset").toBe(false)
-      expect(shown("RestartShowingButton"), "no Restart showing without the preset").toBe(false)
+      // Restart is always there now (R2-48).
+      // (Its row is on; the panel itself may be folded to the tab at this point.)
+      log("sh1: restart row " + main.isRestartRowOn() + ", phase " + main.getPhase())
+      expect(main.isRestartRowOn(), "Restart without the preset too").toBe(true)
       log("sh1 pass")
     } finally {
       main.debugSetShowingPreset(false)

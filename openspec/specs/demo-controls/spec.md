@@ -84,8 +84,19 @@ SHALL be the mall.
 ### Requirement: Control panel switches for showing by hand (R2-12, R2-19)
 The folded Control tab SHALL be see-through (opacity 0.25, `CONTROL_TAB_OPACITY`), with a label big enough to read (`CONTROL_TAB_SIZE`, R2-45), and, in the preview, sit in
 the upper-left corner of the view (`CONTROL_TAB_CORNER`, R2-33; test R33). The Control panel SHALL
-have **Hide demo controls** / **Show demo controls**, which takes the Demo controls panel out of sight and
+have **Restart** (always: it starts the current demo or trip again from the sign; R2-48) and, outside the demo
+presets, **Hide demo controls** / **Show demo controls**, which takes the Demo controls panel out of sight and
 back, so a walk can be shown by hand.
 
 #### Scenario: DC-R19 Hide the demo controls
 - Verified by: R12 (Node); Hide demo controls by eye in the preview
+
+### Requirement: A lean Control panel in the demos (R2-47)
+In the three demo presets the Control panel SHALL leave out the rows a viewer does not need: Swap model, Places,
+Hide demo controls, Throw a treat, Demo: gate change and the map switch (`LEAN_CONTROL_HIDDEN`). The rest stay.
+
+#### Scenario: DC-R47 Lean panel
+- **WHEN** a demo preset is on and the Control panel is open
+- **THEN** only Hide, the companion, Voice, Offline, See map, Play / Jump, Next stop, End walk, Play announcement
+  (airport) and Restart can show
+- Verified by: R47, R48 (Node) | sh1-showing-preset

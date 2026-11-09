@@ -82,6 +82,16 @@ export const CHIME_ON = false;
 // In the preview the folded tab sits in the upper-left corner of the view, out of the way (R2-33):
 // its offset from the camera (cm; x right, y up, -z ahead).
 export const CONTROL_TAB_CORNER = { x: -18, y: 21, z: -100 };
+// A lean Control panel in the demo presets (R2-47): these rows are for building and testing, not for a viewer.
+export const LEAN_CONTROL_HIDDEN = ["ModelButton", "PlacesButton", "DemoControlsButton", "ThrowButton", "ShowingGateChangeButton", "ShowingMapButton"];
+// Whether a Control panel row shows: its own state says it may (wanted), and the demos keep the panel lean.
+export function controlRowShown(row: string, wanted: boolean, demo: boolean): boolean {
+  return wanted && !(demo && LEAN_CONTROL_HIDDEN.indexOf(row) >= 0);
+}
+// Restart (R2-48): always in the Control panel; starts the current demo, or the trip, again from the sign.
+// Not while playing (then only Stop and Jump show).
+export const RESTART_LABEL = "Restart";
+export function restartShown(playing: boolean): boolean { return !playing; }
 // The folded tab's size (cm) and its label's text role: big enough to read (R2-45).
 export const CONTROL_TAB_SIZE = { wCm: 18, hCm: 6, role: "Headline1" };
 

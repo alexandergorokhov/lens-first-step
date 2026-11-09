@@ -222,6 +222,8 @@ export function rectsOverlap(a: VRect, b: VRect): number {
 
 // What the wearer sees on that plane (cm, full size; the preview is about 40 x 45, Specs a bit more).
 export const OFFER_VIEW = { w: 38, h: 40 };
+// The offers card in the corner of the view, this much bigger than first built: letters easy to read (R2-46).
+export const OFFER_CARD_SCALE = 1.5;
 
 export function offersSlot(card: { w: number; h: number }, panels: VRect[], slots = OFFER_SLOTS): { x: number; y: number } {
   // Every slot is pulled in so the whole card stays inside the view.

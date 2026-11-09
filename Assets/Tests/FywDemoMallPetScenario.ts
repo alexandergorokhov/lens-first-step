@@ -16,6 +16,9 @@ export class FywDemoMallPetScenario extends Scenario {
     const r = await mallPetTrip(run)
     expect(r.waitedAt, "no floor change on the way").toBe(null)
     expect(main.getArrivalText() !== null && main.getArrivalText()!.toLowerCase().indexOf("bakery") >= 0, "arrived: " + main.getArrivalText()).toBe(true)
+    // A lean Control panel in the demos, with Restart (R2-47, R2-48).
+    expect(main.isControlLean(), "lean Control panel").toBe(true)
+    expect(main.isRestartRowOn(), "Restart in the Control panel").toBe(true)
     await closeDemo(main)
     log("demo-mall-pet pass")
   }

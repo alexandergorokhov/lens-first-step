@@ -110,3 +110,32 @@ test("R45 the folded Control tab's label is big enough to read (Headline1 on a w
   const left = (Math.atan2(-(CONTROL_TAB_CORNER.x - CONTROL_TAB_SIZE.wCm / 2), -CONTROL_TAB_CORNER.z) * 180) / Math.PI;
   assert.ok(left <= 15.5, "left edge at " + left.toFixed(1) + " deg");
 });
+
+test("R46 the offers card's letters are 1.5x, and the card still fits the view", async () => {
+  const { OFFER_CARD_SCALE, OFFER_VIEW } = await import("../view.ts");
+  assert.ok(OFFER_CARD_SCALE >= 1.5, "scale " + OFFER_CARD_SCALE);
+  // The card is 16 cm wide before the panel scale (0.82) and about 11 cm tall.
+  assert.ok(16 * 0.82 * OFFER_CARD_SCALE <= OFFER_VIEW.w * 0.6, "leaves room in the view");
+  assert.ok(11 * 0.82 * OFFER_CARD_SCALE <= OFFER_VIEW.h * 0.5);
+});
+
+test("R47 a lean Control panel in the demos: the rows a viewer doesn't need are out; the essentials stay", async () => {
+  const { LEAN_CONTROL_HIDDEN, controlRowShown } = await import("../dock.ts");
+  for (const r of ["ModelButton", "PlacesButton", "DemoControlsButton", "ThrowButton", "ShowingGateChangeButton", "ShowingMapButton"]) {
+    assert.ok(LEAN_CONTROL_HIDDEN.indexOf(r) >= 0, r + " hidden in the demos");
+    assert.equal(controlRowShown(r, true, true), false);
+    assert.equal(controlRowShown(r, true, false), true, r + " stays in the full app");
+  }
+  for (const r of ["HideOptionsButton", "CompanionButton", "VoiceButton", "OfflineButton", "MiniMallButton", "PlayButton", "JumpButton", "NextStopButton", "EndWalkButton", "PlayAnnouncementButton", "RestartShowingButton"]) {
+    assert.equal(controlRowShown(r, true, true), true, r + " stays in the demos");
+  }
+  // A row its own state hides stays hidden.
+  assert.equal(controlRowShown("PlayButton", false, false), false);
+});
+
+test("R48 Restart is always in the Control panel: it starts the current demo (or trip) again from the sign", async () => {
+  const { RESTART_LABEL, restartShown } = await import("../dock.ts");
+  assert.equal(RESTART_LABEL, "Restart");
+  assert.equal(restartShown(false), true);
+  assert.equal(restartShown(true), false, "not while playing: only Stop and Jump then");
+});

@@ -8,25 +8,49 @@ No glasses needed. Everything below runs in Lens Studio's Preview panel on your 
 2. In the **Preview** panel, set device **SPECS 27**, mode **Interactive** and scene **Plane**. The stand-in building is solid in Lens Studio only, so an empty scene lets it read as a place you walk through.
 3. Click **reset preview** (the circular arrow) so the Lens starts fresh. It opens in the shopping mall.
 
-## The three demos (one Inspector setting each)
+## Replay the demos from the video (for judges)
 
-Select **FindYourWay** in the Scene Hierarchy, pick **Demo preset** in the Inspector, then click **reset preview**.
-The Lens opens ready: the sign is scanned for you, the screen stays clear while you walk (only the floor line, the
-companion, the turn arrow and the offer boxes), and there are no demo controls. Set it back to **Off** for the full app.
+Each demo in the video is one Inspector setting. Nothing needs to be typed, and no glasses are needed.
 
-**1. Airport, wheelchair, "in your own words".** Preset **1 Airport, wheelchair**. Seated view, Step-Free picked.
-Click **Talk**. In the preview the Lens can't hear you (speech recognition runs on Specs), so the sentence types itself
-in: "I need coffee and a bathroom before my flight at gate 12C". The panel shows the plan, Café, then Accessible toilet,
-then Gate C12, and the robot sets off. Follow it with W A S D (Shift + A / D to turn): through Lift 1 (click its button
-inside the lift), to the café, the accessible toilet, then down the C pier lift to Gate C12. Each stop shows a card for 3 s,
-then the robot leads on. **Heard a gate change:** on the way, open **Control** and click **Play announcement**. A sample announcement types in at the bottom in Spanish, then shows in English ("…now boards at gate B14"); the Lens asks **Re-route to Gate B14?** **Yes** sends you there step-free; **No** keeps your trip. Preview only: a sample announcement and translation; on Specs the captions come from live speech. Nothing is recorded or stored.
+1. Open the project and set up the Preview panel as in **Open it** above.
+2. Select **FindYourWay** in the Scene Hierarchy. In the Inspector, pick a **Demo preset** (below).
+3. Click **reset preview** (the circular arrow), then click inside the Preview panel so it gets your keys.
 
-**2. Mall, follow the dog.** Preset **2 Mall, follow the dog**. Walk picked. Click **Talk**: "Take me to the food
-court". Follow the dog; it waits at the foot of the escalator until you get there, then rides up with you.
+The Lens opens at the entrance sign, already scanned, with a clear screen: only the floor line, the companion, the
+turn arrow and the offer boxes. Move with **W A S D**, turn with **Shift + A / D** (or right-drag), click to press a
+button. The small **Control** tab in the top-left corner opens the in-trip controls; in the demos it shows only what a
+viewer needs. To play a demo again, click **Restart** in it (or **reset preview**). Set **Demo preset** back to **Off (settings below)** for the full app.
 
-**3. Free walk with the robot.** Preset **3 Mall, Free walk with the robot**. Coffee and clothes are picked: click
-**Keep them and walk**. The robot walks ahead and stops to wave at **Bean There Café** and **Threads**. Look at a shop
-(turn toward it) and its two offer boxes appear.
+The preview has no microphone (speech recognition runs on Specs), so when you click **Talk** the demo's sentence
+types itself in, as if you had said it.
+
+**Demo 1: airport, in a wheelchair.** Preset **1 Airport, wheelchair, Talk: gate 12C**. Seated view, Step-Free picked.
+1. Click **Talk**. It types "I need coffee and a bathroom before my flight 212 at gate 12C". The flight number tells
+   the Lens which announcements are yours. The plan shows Café, Accessible toilet, Gate C12, and the robot sets off.
+2. Follow the robot: lifts only, never stairs or escalators. Inside a lift, click its button. Each stop shows a card
+   for 3 s, then the robot leads on.
+3. On the way to the gate, open **Control** and click **Play announcement**. A sample announcement for flight 212 to
+   Madrid types in, in Spanish, then shows in English. The Lens asks **Re-route to Gate B14?** Click **Yes**: the
+   robot leads to B14, still step-free. At B14 the gate agent speaks Spanish, captioned in English.
+
+**Demo 2: mall, follow the dog.** Preset **2 Mall, follow the dog, Talk: Bakery**. Walk picked.
+1. Click **Talk**. It types "Take me to the Bakery". The dog leads along the ground floor and waits whenever you stop.
+2. At the Bakery the baker speaks French, captioned in English.
+3. Play while you wait: stand still for 2 s, open **Control** and click **Play while you wait**. The dog runs a short
+   lane ahead of you; click **Jump** (on Specs, raise a hand) to hop the obstacles. Click it again to stop.
+
+**Demo 3: Free walk with the robot.** Preset **3 Mall, Free walk with the robot**.
+1. The robot asks "Same as last time: Books? Or tell me what you're into." Click **Talk: say what you like**. It types
+   "A coffee, and I'm into fashion today": Café and Clothes are picked and the walk starts.
+2. Walk west down the middle of the hall with **W**. The robot goes on about 8 m, stops at **Bean There Café** and
+   points; the card over its pointer says why: **Café · your pick**.
+3. Look at the café for 2 s: its offers open, marked **Sponsored**. Paying never makes the robot stop; only your
+   picks do. Turn east and walk on: it points at **Threads** (**Clothes · your pick**).
+
+**The whole take, as recorded.** The video is one LEAF scenario, `visual-demos`, playing the three demos in a row
+with the real buttons (about 5 minutes). Select **LeafIndex**, type `visual-demos` in **only**, tick **autoRun**, and
+reset the preview. The camera walks by itself; the Logger prints a `[VID]` line at each beat. Afterwards, untick
+**autoRun** and don't save the project with it ticked, or the take starts every time the project opens.
 
 Caption for recordings: "Voice shown as typed in the preview; live speech on Specs."
 
@@ -117,6 +141,7 @@ The **Options** panel sits at the left of your view (on Specs, at waist height):
 - **See map** shows the mini mall with your route on it.
 - **Play while you wait** appears on a trip when you stand still with the companion on. Raise a hand to jump, or click **Jump**.
 - **Throw a treat** throws for the companion to fetch.
+- **Restart** starts the current demo, or the trip, again from the sign.
 - **End walk** goes back to the four choices. A trip you start next keeps the companion and your preferences.
 
 Pinching and pulling a hand toward you shows a small model of your route. That needs hand tracking, so the mouse cannot do it.
@@ -154,7 +179,7 @@ Write **logic proven** next to what tests and the preview show working, and **fe
 npm test
 ```
 
-Expect `pass 631`, `fail 0`. One test downloads the maps from the public gist; with no internet, set `OFFLINE=1` to skip it (`pass 578`, `skipped 1`). The run first checks that the Lens copies match `src/core`. After editing `src/core`, run `npm run sync`.
+Expect `pass 635`, `fail 0`. One test downloads the maps from the public gist; with no internet, set `OFFLINE=1` to skip it (`pass 578`, `skipped 1`). The run first checks that the Lens copies match `src/core`. After editing `src/core`, run `npm run sync`.
 
 **LEAF tests** run inside the Lens, pressing the real buttons:
 

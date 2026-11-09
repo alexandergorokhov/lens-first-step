@@ -77,3 +77,22 @@ test("docs: the test counts quoted in the docs match a real run", { skip: !!proc
   assert.ok(readme, "README.md states the Node test count as 'There are <n> tests'");
   assert.equal(Number(readme[1]), expected, "README.md count");
 });
+
+test("docs: PREVIEW-GUIDE tells judges how to replay each demo, by the preset's Inspector label and its phrase", async () => {
+  const { demoSettings } = await import("../demo.ts");
+  const guide = read("devpost/PREVIEW-GUIDE.md");
+  const sec = guide.split("## Replay the demos")[1];
+  assert.ok(sec, "a 'Replay the demos' section");
+  const body = sec.split("\n## ")[0];
+  const main = read("Assets/Scripts/FindYourWayMain.ts");
+  for (const id of ["airportWheelchair", "mallPet", "freeWalkRobot"]) {
+    const m = main.match(new RegExp('ComboBoxItem\\("([^"]+)", "' + id + '"\\)'));
+    assert.ok(m, "preset " + id + " in the Inspector");
+    assert.ok(body.includes("**" + m![1] + "**"), "the guide names the preset as the Inspector shows it: " + m![1]);
+    const d = demoSettings(id)!;
+    const phrase = d.open === "freeWalk" ? d.prefsPhrase : d.talkPhrase;
+    assert.ok(body.includes(phrase), "the guide quotes what the preview types in: " + phrase);
+  }
+  // The whole recorded take, and the autoRun warning.
+  assert.ok(body.includes("visual-demos") && /untick\s+\*\*autoRun\*\*/i.test(body));
+});

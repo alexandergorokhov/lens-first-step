@@ -5,6 +5,7 @@
 // catch hints and score). Must not: decide when a gate changes or which map is used.
 
 import {cardClock} from "./FindYourWayPlace"
+import {OFFER_CARD_SCALE} from "./FindYourWayView"
 import {addButton, addIcon, addRow, addText, CARD_TINT, easeOutCubic, makePanel, obj, Panel, PANEL_SCALE, TAB_TINT} from "./FindYourWayWidgetsUI"
 import {THEME} from "./FindYourWayTheme"
 import {TRANSCRIPT} from "./FindYourWayCaptions"
@@ -138,7 +139,9 @@ export class FindYourWayHudUI extends BaseScriptComponent {
     ;[this.play, this.playText] = line("PlayLine", this.playPosition, 24, "Raise your hand: Pet jumps")
 
     // Offers: a small see-through card in the top-right corner, never across the way ahead.
-    this.offers = obj(this.sceneObject, "OffersCard", new vec3(11.5, 5.0, -70))
+    // 1.5x (R2-46), still inside the view at its corner.
+    this.offers = obj(this.sceneObject, "OffersCard", new vec3(9, 5.0, -70))
+    this.offers.getTransform().setLocalScale(vec3.one().uniformScale(OFFER_CARD_SCALE))
     const op = makePanel(this.offers, 16, 0.8, 0.2, undefined, CARD_TINT)
     this.offersPanel = op
     const gold = new vec4(THEME.sponsored[0], THEME.sponsored[1], THEME.sponsored[2], 1)
@@ -211,7 +214,7 @@ export class FindYourWayHudUI extends BaseScriptComponent {
   }
   getOffersSize(): {w: number; h: number} {
     const s = this.offersPanel.plate.size
-    return {w: s.x * PANEL_SCALE, h: s.y * PANEL_SCALE}
+    return {w: s.x * PANEL_SCALE * OFFER_CARD_SCALE, h: s.y * PANEL_SCALE * OFFER_CARD_SCALE}
   }
   getOffers(): {title: string; lines: string[]} | null { return this.offers.enabled ? this.offersShown : null }
   getOffersTag(): string { return this.offers.enabled && this.offerTag.getSceneObject().enabled ? this.offerTag.text : "" }

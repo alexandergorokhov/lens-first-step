@@ -250,7 +250,7 @@ export class FindYourWayMain extends BaseScriptComponent {
   @widget(new ComboBoxWidget([
     new ComboBoxItem("Off (settings below)", "off"),
     new ComboBoxItem("1 Airport, wheelchair, Talk: gate 12C", "airportWheelchair"),
-    new ComboBoxItem("2 Mall, follow the dog, Talk: food court", "mallPet"),
+    new ComboBoxItem("2 Mall, follow the dog, Talk: Bakery", "mallPet"),
     new ComboBoxItem("3 Mall, Free walk with the robot", "freeWalkRobot"),
   ]))
   demo: string = "off"
@@ -1526,7 +1526,9 @@ export class FindYourWayMain extends BaseScriptComponent {
     if (this.phase !== "mode") return
     // No place picked yet: pick one first, never a guessed route (R2-23).
     const tour = this.askTrip || (!!this.tourIds && this.tourIds.length > 0) || !!this.stops
-    if (tripTarget({picked: this.tripDestination, override: this.destinationOverride, tour}) === null) {
+    // The showing preset is one pinch to the map's own destination: that counts as picked.
+    const picked = this.tripDestination || (this.showingPreset ? this.place.destination : null)
+    if (tripTarget({picked, override: this.destinationOverride, tour}) === null) {
       this.modePanel.setNote("Pick a place first: Talk, Where to? or Pick on the map")
       this.openWhereTo()
       return
@@ -2456,6 +2458,8 @@ export class FindYourWayMain extends BaseScriptComponent {
     this.dock.update(on, this.appPanel.isPlaying() || this.appPanel.isNextStopShown(), this.cleanScreen)
     this.hud.setCardsMuted(!cleanAllows("notice", this.cleanScreen, on))
     this.appPanel.setCollapsed(this.dock.isCollapsed())
+    // In the demo presets the panel is lean (R2-47).
+    this.appPanel.setLean(!!this.demoSet)
     // A clear view while walking: no map badge, score chip or play hint until you stand still.
     // Almost screenless while walking: the pill, cue and badge live in the Control panel.
     const q = walkingHud(on, this.playTime.gate.canPlay || this.appPanel.isPlaying(), this.phase === "arrived", this.cleanScreen)
@@ -2584,6 +2588,9 @@ export class FindYourWayMain extends BaseScriptComponent {
   getStartId(): string { return this.place.start }
   getRouteStatus(): string { return this.nav ? this.nav.route.status : "none" }
   // The route as drawn (map metres), with a place beside a corridor left from beside it (R2-41).
+  // Test hooks: the Control panel's Restart row (R2-48) and its lean look in the demos (R2-47).
+  isRestartRowOn(): boolean { return !!this.appPanel && this.appPanel.isRestartRowOn() }
+  isControlLean(): boolean { return !!this.appPanel && this.appPanel.isLean() }
   getRoutePoints(): Vec3[] { return this.routeMapPoints().map((p) => ({x: p.x, y: p.y, z: p.z})) }
   getRouteNodes(): string[] { return this.nav && this.nav.route.status === "route" ? this.nav.route.nodes.slice() : [] }
   getRouteEdgeKinds(): string[] {

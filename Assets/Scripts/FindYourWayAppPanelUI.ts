@@ -8,7 +8,7 @@
 import {FlexItem} from "SpectaclesUIKit.lspkg/Scripts/Components/Layout2D/Flex/FlexItem"
 import {addButton, addText, LabeledButton, makePanel, obj, Panel, TextRole} from "./FindYourWayWidgetsUI"
 import {icon} from "./FindYourWayIconsUI"
-import {CONTROL_TAB_OPACITY, CONTROL_TAB_SIZE, OptionsDock} from "./FindYourWayDock"
+import {CONTROL_TAB_OPACITY, CONTROL_TAB_SIZE, controlRowShown, OptionsDock, RESTART_LABEL, restartShown} from "./FindYourWayDock"
 
 export interface AppPanelHandlers {
   onCompanion: () => void
@@ -106,7 +106,7 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
       h.onAnnouncement || none, TEXT, FONT)
     this.showingMap = addButton(panel.content, "ShowingMapButton", "Map: Preview room", WIDTH, BUTTON_H, icon("map"),
       h.onShowingMap || none, TEXT, FONT)
-    this.restartShowing = addButton(panel.content, "RestartShowingButton", "Restart showing", WIDTH, BUTTON_H, icon("restart_alt"),
+    this.restartShowing = addButton(panel.content, "RestartShowingButton", RESTART_LABEL, WIDTH, BUTTON_H, icon("restart_alt"),
       h.onRestartShowing || none, TEXT, FONT)
     // Folded once the trip starts (Main's OptionsDock): only a small "Options" tab stays.
     const toggle = h.onToggleOptions || none
@@ -133,9 +133,20 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
     this.relayout()
   }
 
+  // The demos keep the panel lean (R2-47): rows a viewer doesn't need stay out.
+  private lean = false
+  setLean(on: boolean): void {
+    if (on === this.lean) return
+    this.lean = on
+    this.relayout()
+  }
+  isLean(): boolean { return this.lean }
+  isRestartRowOn(): boolean { return !!this.restartShowing && this.restartShowing.so.enabled }
+
   // Re-lays out the column with only the shown rows (FlexLayout keeps disabled items' space).
   private relayout(): void {
     if (this.rows.length === 0) return
+    for (const r of this.rows) if (r.enabled && !controlRowShown(r.name, true, this.lean)) r.enabled = false
     const key = this.rows.map((r) => (r.enabled ? "1" : "0")).join("")
     if (key === this.layoutKey) return
     this.layoutKey = key
@@ -202,7 +213,8 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
   setShowing(restart: boolean, gate: boolean, mapLabel: string | null): void {
     if (!this.restartShowing) return
     const show = (b: LabeledButton, on: boolean) => { if (b.so.enabled !== on) b.so.enabled = on }
-    show(this.restartShowing, restart && !this.playing)
+    // Restart is always there (R2-48), not only in the showing preset.
+    show(this.restartShowing, restartShown(this.playing))
     show(this.showingGate, gate && !this.playing)
     show(this.showingMap, mapLabel !== null && !this.playing)
     if (mapLabel !== null && this.showingMap.label.text !== mapLabel) this.showingMap.label.text = mapLabel
