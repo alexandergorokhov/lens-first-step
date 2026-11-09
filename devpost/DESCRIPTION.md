@@ -8,9 +8,13 @@ The text for the Devpost project page (from the Nov 7 polished pitch, updated No
 
 No GPS indoors? Pathpal is your companion: it leads you step-free, hands free, and captions what's said around you.
 
+## Full pitch
+
+For the full pitch details, see the presentation: `Pathpal presentation.pdf` in the repo root (9 slides).
+
 ## Demo video
 
-VIDEO LINK (YouTube, under 3 minutes): the real Lens running in the Lens Studio preview, narrated. To replay
+VIDEO LINK (YouTube, under 3 minutes): the real Lens running in the Lens Studio preview, narrated, ending with a short run recorded by hand in the preview. To replay
 each demo yourself, see "Replay the demos from the video" in `devpost/PREVIEW-GUIDE.md`.
 
 ## Inspiration
