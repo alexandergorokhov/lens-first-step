@@ -101,3 +101,12 @@ test("R41 a place off a corridor: the route leaves the corridor beside it, never
   const straight = [{ x: 0, y: 0, z: 0 }, { x: 10, y: 0, z: 0 }, { x: 10, y: 0, z: 5 }];
   assert.deepEqual(cutEndDetour(straight), straight);
 });
+
+test("R45 the folded Control tab's label is big enough to read (Headline1 on a wider tab), still in the corner", async () => {
+  const { CONTROL_TAB_SIZE, CONTROL_TAB_CORNER } = await import("../dock.ts");
+  assert.equal(CONTROL_TAB_SIZE.role, "Headline1");
+  assert.ok(CONTROL_TAB_SIZE.wCm >= 16 && CONTROL_TAB_SIZE.hCm >= 5.5, JSON.stringify(CONTROL_TAB_SIZE));
+  // The tab's left edge stays inside the preview's view (about 16° to the left at 1 m).
+  const left = (Math.atan2(-(CONTROL_TAB_CORNER.x - CONTROL_TAB_SIZE.wCm / 2), -CONTROL_TAB_CORNER.z) * 180) / Math.PI;
+  assert.ok(left <= 15.5, "left edge at " + left.toFixed(1) + " deg");
+});

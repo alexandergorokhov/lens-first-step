@@ -82,7 +82,7 @@ SHALL be the mall.
   (checked against `src/core/data/index.json` by "A1/C13 the maps index is the one list…").
 
 ### Requirement: Control panel switches for showing by hand (R2-12, R2-19)
-The folded Control tab SHALL be see-through (opacity 0.25, `CONTROL_TAB_OPACITY`) and, in the preview, sit in
+The folded Control tab SHALL be see-through (opacity 0.25, `CONTROL_TAB_OPACITY`), with a label big enough to read (`CONTROL_TAB_SIZE`, R2-45), and, in the preview, sit in
 the upper-left corner of the view (`CONTROL_TAB_CORNER`, R2-33; test R33). The Control panel SHALL
 have **Hide demo controls** / **Show demo controls**, which takes the Demo controls panel out of sight and
 back, so a walk can be shown by hand.

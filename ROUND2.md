@@ -172,6 +172,7 @@ Root causes found:
       Found also: a floor change left the Free walk companion stuck in "point"; it now leads again.
 - [ ] R2-43 The play at least 7 s, all at 1x in the edit ("play" .. "play end" marks; test N10).
 - [ ] R2-44 A better last view: down the hall, walking on behind the robot (no plant up close).
+- [ ] R2-45 The folded Control tab's label bigger (Headline1 on an 18 x 6 cm tab; test R45).
 - [ ] R2-37 No ring: the chime on notices, stops and catches is off (`CHIME_ON`; test R37).
 - [ ] R2-36 The Go to a place panel more ordered: Talk (mic icon) and Where to? alike, Walk and Step-Free
       alike, the preview note as a footnote at the bottom.

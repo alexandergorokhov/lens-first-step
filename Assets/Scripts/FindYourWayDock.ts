@@ -81,7 +81,9 @@ export const CONTROL_TAB_OPACITY = 0.25;
 export const CHIME_ON = false;
 // In the preview the folded tab sits in the upper-left corner of the view, out of the way (R2-33):
 // its offset from the camera (cm; x right, y up, -z ahead).
-export const CONTROL_TAB_CORNER = { x: -21, y: 22, z: -100 };
+export const CONTROL_TAB_CORNER = { x: -18, y: 21, z: -100 };
+// The folded tab's size (cm) and its label's text role: big enough to read (R2-45).
+export const CONTROL_TAB_SIZE = { wCm: 18, hCm: 6, role: "Headline1" };
 
 // Offline mode (ROUND2.md R2-18): simulates no internet. The map stays (bundled with the Lens or the last
 // copy); the LLM and the map download are off. Voice still works: the plain matcher reads the map itself.

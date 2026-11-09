@@ -6,9 +6,9 @@
 // Must not: decide when play is allowed or change the route (Main and the core logic do).
 
 import {FlexItem} from "SpectaclesUIKit.lspkg/Scripts/Components/Layout2D/Flex/FlexItem"
-import {addButton, addText, LabeledButton, makePanel, obj, Panel} from "./FindYourWayWidgetsUI"
+import {addButton, addText, LabeledButton, makePanel, obj, Panel, TextRole} from "./FindYourWayWidgetsUI"
 import {icon} from "./FindYourWayIconsUI"
-import {CONTROL_TAB_OPACITY, OptionsDock} from "./FindYourWayDock"
+import {CONTROL_TAB_OPACITY, CONTROL_TAB_SIZE, OptionsDock} from "./FindYourWayDock"
 
 export interface AppPanelHandlers {
   onCompanion: () => void
@@ -41,8 +41,9 @@ const BUTTON_H = 4.2
 const TEXT = new vec4(1, 1, 1, 1)
 const PLAY_SCALE = 0.7
 const FONT = 110
-// The folded panel: one small tab (cm).
-const TAB_W = 12
+// The folded panel: one tab (cm), its label big enough to read (R2-45).
+const TAB_W = CONTROL_TAB_SIZE.wCm
+const TAB_H = CONTROL_TAB_SIZE.hCm
 
 @component
 export class FindYourWayAppPanelUI extends BaseScriptComponent {
@@ -111,7 +112,8 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
     const toggle = h.onToggleOptions || none
     this.hideBtn = addButton(panel.content, "HideOptionsButton", "Hide", WIDTH, BUTTON_H, null, toggle, TEXT, FONT)
     this.tabRoot = obj(this.sceneObject, "OptionsTab", new vec3(0, 0, 0.6))
-    const tab = addButton(this.tabRoot, "OptionsTabButton", OptionsDock.TITLE, TAB_W, BUTTON_H, null, toggle, TEXT, FONT)
+    const tab = addButton(this.tabRoot, "OptionsTabButton", OptionsDock.TITLE, TAB_W, TAB_H, null, toggle, TEXT, FONT,
+      CONTROL_TAB_SIZE.role as TextRole)
     // See-through, so the view shows behind it (R2-12).
     tab.button.onInitialized.add(() => { tab.button.opacity = CONTROL_TAB_OPACITY })
     this.tabRoot.enabled = false
@@ -213,7 +215,7 @@ export class FindYourWayAppPanelUI extends BaseScriptComponent {
     this.collapsed = on
     this.panel.content.enabled = !on
     this.tabRoot.enabled = on
-    if (on) this.panel.plate.size = new vec2(TAB_W + 2, BUTTON_H + 2)
+    if (on) this.panel.plate.size = new vec2(TAB_W + 2, TAB_H + 2)
     else {
       this.layoutKey = ""
       this.relayout()
