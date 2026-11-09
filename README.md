@@ -4,7 +4,7 @@
 
 A Lens for Snap Specs, built for the Learn AR with SPECS hackathon. Everything runs and is demoed in the Lens Studio preview: no Specs hardware was used.
 
-**Working on the code?** Start with [`START-HERE.md`](START-HERE.md).
+**Presentation:** [Pathpal presentation (PDF, 9 slides)](Pathpal%20presentation.pdf). **Working on the code?** Start with [`START-HERE.md`](START-HERE.md).
 
 ## The problem
 
